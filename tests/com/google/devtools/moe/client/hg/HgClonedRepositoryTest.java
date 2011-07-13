@@ -29,11 +29,11 @@ public class HgClonedRepositoryTest extends TestCase {
 
     String repositoryName = "mockrepo";
     String repositoryURL = "http://foo/hg";
-    String localCloneTempDir = "/tmp/hg_clone_mockrepo_12345";
+    String localCloneTempDir = "/tmp/hg_tipclone_mockrepo_12345";
 
     // Mock AppContext.RUN.fileSystem.getTemporaryDirectory()
     FileSystem mockFS = control.createMock(FileSystem.class);
-    expect(mockFS.getTemporaryDirectory("hg_clone_" + repositoryName + "_"))
+    expect(mockFS.getTemporaryDirectory("hg_tipclone_" + repositoryName + "_"))
         .andReturn(new File(localCloneTempDir));
     AppContext.RUN.fileSystem = mockFS;
 
@@ -45,6 +45,7 @@ public class HgClonedRepositoryTest extends TestCase {
               "hg",
               ImmutableList.<String>of(
                   "clone",
+                  "--rev=tip",
                   repositoryURL,
                   localCloneTempDir),
               "" /*stdinData*/,

@@ -36,7 +36,8 @@ public class CheckConfigDirectiveTest extends TestCase {
     AppContextForTesting.initForTest();
     ((InMemoryProjectContextFactory)AppContext.RUN.contextFactory).projectConfigs.put(
         "moe_config.txt",
-        "{\"name\": \"foo\", \"repositories\": {}}");
+        "{\"name\": \"foo\", \"repositories\": " +
+        "{\"public\": {\"type\": \"dummy\"}}}");
     CheckConfigDirective d = new CheckConfigDirective();
     d.getFlags().configFilename = "moe_config.txt";
     assertEquals(0, d.perform());

@@ -47,7 +47,7 @@ public class ParserTest extends TestCase {
     try {
       Parser.parseOption(tokenize(s));
       fail("Successfully parsed invalid string: " + s);
-    } catch (Exception e) {}
+    } catch (Parser.ParseError e) {}
   }
 
   public void assertOptionsResult(String s, ImmutableMap<String, String> expected) {
@@ -85,12 +85,15 @@ public class ParserTest extends TestCase {
     assertEquals(options, r.options);
   }
 
-  public void assertParseTermCompletelyFails(String input) {
+  public void assertParseTermCompletelyFails(
+      String input, String errorMessage) {
     try {
       Term r = Parser.parseTermCompletely(input);
       fail(String.format("Successfully parsed invalid string: %s into %s and %s",
                          input, r.identifier, r.options.toString()));
-    } catch (Exception e) {}
+    } catch (Parser.ParseError e) {
+      assertEquals(errorMessage, e.error);
+    }
   }
 
   public void testParseTermCompletely() throws Exception {
@@ -104,12 +107,18 @@ public class ParserTest extends TestCase {
     assertParseTermCompletely("internal(foo=bar, baz=quux)",
                               "internal", ImmutableMap.of("foo", "bar", "baz", "quux"));
 
-    assertParseTermCompletelyFails("");
-    assertParseTermCompletelyFails(" ");
-    assertParseTermCompletelyFails("internal(");
-    assertParseTermCompletelyFails("internal)");
-    assertParseTermCompletelyFails("internal(a=b c=d)");
-    assertParseTermCompletelyFails("internal foo");
+    assertParseTermCompletelyFails("",
+        "expected word during identifier parseToken[EOF], line 1");
+    assertParseTermCompletelyFails(" ",
+        "expected word during identifier parseToken[EOF], line 1");
+    assertParseTermCompletelyFails("internal(",
+        "options not terminated by \")\"");
+    assertParseTermCompletelyFails("internal)",
+        "unexpected text after expression: Token[')'], line 1");
+    assertParseTermCompletelyFails("internal(a=b c=d)",
+        "text after option must be \",\" or \")\"");
+    assertParseTermCompletelyFails("internal foo",
+        "unexpected text after expression: Token[foo], line 1");
   }
 
   public void assertParseTerm(String input, String identifier,
@@ -119,12 +128,14 @@ public class ParserTest extends TestCase {
     assertEquals(options, r.options);
   }
 
-  public void assertParseTermFails(String input) {
+  public void assertParseTermFails(String input, String errorMessage) {
     try {
       Term r = Parser.parseTerm(Parser.tokenize(input));
       fail(String.format("Successfully parsed invalid string: %s into %s and %s",
                          input, r.identifier, r.options.toString()));
-    } catch (Exception e) {}
+    } catch (Parser.ParseError e) {
+      assertEquals(errorMessage, e.error);
+    }
   }
 
   public void testParseTerm() throws Exception {
@@ -143,20 +154,35 @@ public class ParserTest extends TestCase {
     // So the error will be thrown next time we try to parse anything, or check that it's exhausted.
     assertParseTerm("internal)", "internal", ImmutableMap.<String, String>of());
 
-    assertParseTermFails("");
-    assertParseTermFails(" ");
-    assertParseTermFails("internal(");
-    assertParseTermFails("internal(a=b c=d)");
+    assertParseTermFails("",
+        "expected word during identifier parseToken[EOF], line 1");
+    assertParseTermFails(" ",
+        "expected word during identifier parseToken[EOF], line 1");
+    assertParseTermFails("internal(",
+        "options not terminated by \")\"");
+    assertParseTermFails("internal(a=b c=d)",
+        "text after option must be \",\" or \")\"");
   }
 
   public void testParsePipe() throws Exception {
     assertEquals(Operator.EDIT, Parser.parseOperator(Parser.tokenize("|")));
     assertEquals(Operator.TRANSLATE, Parser.parseOperator(Parser.tokenize(">")));
-    try {
-      Parser.parseOperator(Parser.tokenize("a"));
-      fail();
-    } catch (Parser.ParseError p) {}
+
+    assertParseOperatorFails("a",
+        "Invalid operator \"Token[a], line 1\"");
+    assertParseOperatorFails("-",
+        "Invalid operator \"Token['-'], line 1\"");
   }
+
+  public void assertParseOperatorFails(String input, String errorMessage) {
+    try {
+      Parser.parseOperator(Parser.tokenize(input));
+      fail();
+    } catch (Parser.ParseError p) {
+      assertEquals(errorMessage, p.error);
+    }
+  }
+
 
   public void assertOperationListRoundTrip(String expected, String input) throws Exception {
     List<Operation> terms = Parser.parseOperationList(tokenize(input));

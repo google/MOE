@@ -39,5 +39,10 @@ public class Revision {
               Objects.equal(revId, revisionObj.revId));
     }
     return false;
+  }  
+  
+  @Override
+  public String toString() {
+    return this.repositoryName + "{" + revId + "}";
   }
 }

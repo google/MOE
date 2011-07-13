@@ -15,12 +15,20 @@ import java.util.Set;
  */
 public class DummyDb implements Db {
 
-  public DummyDb() {}
+  public boolean returnEquivalences;
+
+  public DummyDb(boolean returnEquivalences) {
+    this.returnEquivalences = returnEquivalences;
+  }
 
   public void noteEquivalence(Equivalence equivalence) {}
 
   public Set<Revision> findEquivalences(Revision revision, String otherRepository) {
-    return ImmutableSet.of(new Revision("1", otherRepository),
-                           new Revision("2", otherRepository));
+    if (!returnEquivalences) {
+      return ImmutableSet.of();
+    } else {
+      return ImmutableSet.of(new Revision("1", otherRepository),
+                             new Revision("2", otherRepository));
+    }
   }
 }

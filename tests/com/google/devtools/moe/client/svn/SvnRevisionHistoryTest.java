@@ -5,14 +5,18 @@ package com.google.devtools.moe.client.svn;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner;
+import com.google.devtools.moe.client.CommandRunner.CommandException;
+import com.google.devtools.moe.client.database.EquivalenceMatcher;
 import com.google.devtools.moe.client.repositories.Revision;
+import com.google.devtools.moe.client.repositories.RevisionMatcher;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.testing.AppContextForTesting;
+import com.google.devtools.moe.client.testing.DummyDb;
 
+import junit.framework.TestCase;
 import org.easymock.EasyMock;
 import static org.easymock.EasyMock.expect;
 import org.easymock.IMocksControl;
-import junit.framework.TestCase;
 
 import java.util.List;
 
@@ -47,7 +51,9 @@ public class SvnRevisionHistoryTest extends TestCase {
           ImmutableList.of("--no-auth-cache", "log", "--xml", "-l", "1", "-r", "2:1",
                            "http://foo/svn/trunk/"),
           "", "")).andReturn("<log><logentry revision=\"2\" /></log>");
-    } catch (Exception e) {}
+    } catch (CommandException e) {
+      throw new RuntimeException(e);
+    }
     control.replay();
     SvnRevisionHistory history = new SvnRevisionHistory("internal_svn",
         "http://foo/svn/trunk/");
@@ -99,7 +105,9 @@ public class SvnRevisionHistoryTest extends TestCase {
                              "<author>user@google.com</author>" +
                              "<date>zzzz-nn-ee</date>" +
                              "<msg>description</msg></logentry></log>");
-    } catch (Exception e) {}
+    } catch (CommandException e) {
+      throw new RuntimeException(e);
+    }
     control.replay();
     SvnRevisionHistory history = new SvnRevisionHistory("internal_svn",
         "http://foo/svn/trunk/");
@@ -109,6 +117,74 @@ public class SvnRevisionHistoryTest extends TestCase {
     assertEquals("yyyy-mm-dd", result.date);
     assertEquals("message", result.description);
     assertEquals(ImmutableList.of(new Revision("2", "internal_svn")), result.parents);
+    control.verify();
+  }
+
+  public void testFindNewRevisions() {
+    AppContextForTesting.initForTest();
+    IMocksControl control = EasyMock.createControl();
+    CommandRunner cmd = control.createMock(CommandRunner.class);
+    AppContext.RUN.cmd = cmd;
+    DummyDb db = new DummyDb(false);
+
+    // Mock call for findHighestRevision
+    try {
+      expect(cmd.runCommand(
+          "svn",
+          ImmutableList.of("--no-auth-cache", "log", "--xml", "-l", "1", "-r", "HEAD:1",
+                           "http://foo/svn/trunk/"),
+          "", "")).andReturn("<log><logentry revision=\"3\">" +
+                             "<author>uid@google.com</author>" +
+                             "<date>yyyy-mm-dd</date>" +
+                             "<msg>description</msg></logentry></log>");
+    } catch (CommandException e) {
+      throw new RuntimeException(e);
+    }
+
+    // revision 3 metadata
+    try {
+      expect(cmd.runCommand(
+          "svn",
+          ImmutableList.of("--no-auth-cache", "log", "--xml", "-l", "2", "-r", "3:1",
+                           "http://foo/svn/trunk/"),
+          "", "")).andReturn("<log><logentry revision=\"3\">" +
+                             "<author>uid@google.com</author>" +
+                             "<date>yyyy-mm-dd</date>" +
+                             "<msg>message</msg></logentry>" +
+                             "<logentry revision =\"2\">" +
+                             "<author>user@google.com</author>" +
+                             "<date>zzzz-nn-ee</date>" +
+                             "<msg>description</msg></logentry></log>");
+    } catch (CommandException e) {
+      throw new RuntimeException(e);
+    }
+
+
+    // revision 2 metadata
+    try {
+      expect(cmd.runCommand(
+          "svn",
+          ImmutableList.of("--no-auth-cache", "log", "--xml", "-l", "2", "-r", "2:1",
+                           "http://foo/svn/trunk/"),
+          "", "")).andReturn("<log><logentry revision=\"2\">" +
+                             "<author>uid@google.com</author>" +
+                             "<date>yyyy-mm-dd</date>" +
+                             "<msg>description</msg></logentry></log>");
+    } catch (CommandException e) {
+      throw new RuntimeException(e);
+    }
+
+    control.replay();
+    SvnRevisionHistory history = new SvnRevisionHistory("internal_svn",
+        "http://foo/svn/trunk/");
+    RevisionMatcher matcher = new EquivalenceMatcher("public", db);
+    ImmutableList<Revision> newRevisions = ImmutableList.copyOf(
+        history.findRevisions(null, matcher));
+    assertEquals(2, newRevisions.size());
+    assertEquals("internal_svn", newRevisions.get(0).repositoryName);
+    assertEquals("3", newRevisions.get(0).revId);
+    assertEquals("internal_svn", newRevisions.get(1).repositoryName);
+    assertEquals("2", newRevisions.get(1).revId);
     control.verify();
   }
 }

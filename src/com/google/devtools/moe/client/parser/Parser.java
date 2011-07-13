@@ -214,10 +214,11 @@ public class Parser {
     try {
       int operator = input.nextToken();
       try {
-        Operator result = Operator.getOperator((char)operator);
+        Operator result = Operator.getOperator((char) operator);
         return result;
       } catch (IllegalArgumentException e) {
-        throw new ParseError(String.format("Invalid operator \"%s\"", String.valueOf(operator)));
+        throw new ParseError(
+            String.format("Invalid operator \"%s\"", input.toString()));
       }
     } catch (IOException e) {
       throw new ParseError(e.getMessage());

@@ -3,10 +3,12 @@
 package com.google.devtools.moe.client.svn;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
+import com.google.devtools.moe.client.repositories.RevisionMatcher;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 
 import org.w3c.dom.Document;
@@ -15,6 +17,7 @@ import org.xml.sax.InputSource;
 
 import java.io.StringReader;
 import java.util.List;
+import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -129,9 +132,10 @@ public class SvnRevisionHistory implements RevisionHistory {
       throw new MoeProblem("Could not parse xml log: " + log + e.getMessage());
     }
   }
-    /**
-     * Helper function for parseMetadata
-     */
+
+  /**
+   * Helper function for parseMetadata
+   */
   private RevisionMetadata parseMetadataNodeList(String revId, NodeList nlEntries,
                                                  ImmutableList<Revision> parents) {
     if (nlEntries.getLength() != 0) {
@@ -142,5 +146,29 @@ public class SvnRevisionHistory implements RevisionHistory {
     } else {
       return new RevisionMetadata(revId, "", "", "", parents);
     }
+  }
+
+  /**
+   * Starting at specified revision, recur until a matching revision is found
+   *
+   * @param revision  the revision to start at.  If null, then start at head revision
+   * @param matcher  the matcher to apply
+   */
+  public Set<Revision> findRevisions(Revision revision, RevisionMatcher matcher) {
+    ImmutableSet.Builder<Revision> resultBuilder = ImmutableSet.builder();
+    if (revision == null) {
+      revision = findHighestRevision("");
+    }
+    while (!matcher.matches(revision)) {
+      resultBuilder.add(revision);
+      RevisionMetadata metadata = getMetadata(revision);
+      // Revisions in svn have at most one parent
+      if (!metadata.parents.isEmpty()) {
+        revision = metadata.parents.get(0);
+      } else {
+        return resultBuilder.build();
+      }
+    }
+    return resultBuilder.build();
   }
 }

@@ -2,6 +2,7 @@
 
 package com.google.devtools.moe.client.project;
 
+import com.google.common.collect.Lists;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
@@ -12,16 +13,21 @@ import java.util.List;
  * @author nicksantos@google.com (Nick Santos)
  */
 public class RepositoryConfig {
-  private RepositoryType type;
+  // Initializing this to nil allows it to be used in switch
+  // statements without any NPEs.
+  private RepositoryType type = RepositoryType.nil;
+
   private String url;
   @SerializedName("project_space")
   private String projectSpace;
+
   @SerializedName("build_target")
   private String buildTarget;
-  // MOE: begin_strip
-  @SerializedName("in_components")
-  private boolean inComponents;
-  // MOE: end_strip
+
+  @SerializedName("package")
+  private String buildTargetPackage;
+
+
   private List<String> paths;
 
   private RepositoryConfig() {} // Constructed by gson
@@ -39,16 +45,14 @@ public class RepositoryConfig {
   }
 
   public List<String> getPaths() {
-    return paths;
+    List<String> result = paths == null ? Lists.<String>newArrayList() :
+        Lists.newArrayList(paths);
+    return result;
   }
 
   public String getBuildTarget() {
-    return buildTarget;
+    String result = buildTarget;
+    return result;
   }
 
-  // MOE: begin_strip
-  public boolean getInComponents() {
-    return inComponents;
-  }
-  // MOE: end_strip
 }

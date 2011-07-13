@@ -9,9 +9,12 @@ import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.MoeProblem;
+import com.google.devtools.moe.client.database.EquivalenceMatcher;
 import com.google.devtools.moe.client.repositories.Revision;
+import com.google.devtools.moe.client.repositories.RevisionMatcher;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.testing.AppContextForTesting;
+import com.google.devtools.moe.client.testing.DummyDb;
 
 import junit.framework.TestCase;
 
@@ -29,7 +32,7 @@ public class HgRevisionHistoryTest extends TestCase {
   private IMocksControl control;
   private CommandRunner cmd;
   private String repositoryName = "mockrepo";
-  private String localCloneTempDir = "/tmp/hg_clone_mockrepo_12345";
+  private String localCloneTempDir = "/tmp/hg_tipclone_mockrepo_12345";
 
   @Override public void setUp() {
     AppContextForTesting.initForTest();
@@ -44,10 +47,15 @@ public class HgRevisionHistoryTest extends TestCase {
     AppContext.RUN.cmd = null;
   }
 
-  public void testFindHighestRevision() {
-    // Mock cloned repo
+  private HgClonedRepository mockClonedRepo() {
     HgClonedRepository mockRepo = control.createMock(HgClonedRepository.class);
     expect(mockRepo.getLocalTempDir()).andReturn(new File(localCloneTempDir));
+    return mockRepo;
+  }
+
+  public void testFindHighestRevision() {
+    // Mock cloned repo
+    HgClonedRepository mockRepo = mockClonedRepo();
     expect(mockRepo.getRepositoryName()).andReturn(repositoryName);
 
     // Mock 'hg log' command
@@ -64,7 +72,9 @@ public class HgRevisionHistoryTest extends TestCase {
               "" /*stdinData*/,
               "" /*workingDirectory*/))
           .andReturn("mockChangesetID");
-    } catch (CommandException e) { throw new RuntimeException(e); }
+    } catch (CommandException e) {
+      throw new RuntimeException(e);
+    }
 
     // Run test
     control.replay();
@@ -79,8 +89,7 @@ public class HgRevisionHistoryTest extends TestCase {
 
   public void testFindHighestRevision_nonExistentChangesetThrows() {
     // Mock cloned repo
-    HgClonedRepository mockRepo = control.createMock(HgClonedRepository.class);
-    expect(mockRepo.getLocalTempDir()).andReturn(new File(localCloneTempDir));
+    HgClonedRepository mockRepo = mockClonedRepo();
 
     // Mock 'hg log' command
     try {
@@ -102,7 +111,9 @@ public class HgRevisionHistoryTest extends TestCase {
                   "mock stdout",
                   "mock stderr: unknown revision",
                   255 /* Hg error code for unknown rev */));
-    } catch (CommandException e) { throw new RuntimeException(e); }
+    } catch (CommandException e) {
+      throw new RuntimeException(e);
+    }
 
     // Run test
     control.replay();
@@ -118,8 +129,7 @@ public class HgRevisionHistoryTest extends TestCase {
 
   public void testGetMetadata() {
     // Mock cloned repo
-    HgClonedRepository mockRepo = control.createMock(HgClonedRepository.class);
-    expect(mockRepo.getLocalTempDir()).andReturn(new File(localCloneTempDir));
+    HgClonedRepository mockRepo = mockClonedRepo();
     expect(mockRepo.getRepositoryName()).andReturn(repositoryName);
 
     // Mock 'hg log' command
@@ -139,7 +149,9 @@ public class HgRevisionHistoryTest extends TestCase {
               "" /*stdinData*/,
               "" /*workingDirectory*/))
           .andReturn("2 < uid@google.com < date < description < parent1 parent2");
-    } catch (CommandException e) { throw new RuntimeException(e); }
+    } catch (CommandException e) {
+      throw new RuntimeException(e);
+    }
     expect(mockRepo.getRepositoryName()).andReturn(repositoryName);
     expect(mockRepo.getRepositoryName()).andReturn(repositoryName);
     // Run test
@@ -159,8 +171,7 @@ public class HgRevisionHistoryTest extends TestCase {
 
   public void testGetEscapedMetadata() {
     // Mock cloned repo
-    HgClonedRepository mockRepo = control.createMock(HgClonedRepository.class);
-    expect(mockRepo.getLocalTempDir()).andReturn(new File(localCloneTempDir));
+    HgClonedRepository mockRepo = mockClonedRepo();
     expect(mockRepo.getRepositoryName()).andReturn(repositoryName);
 
     // Mock 'hg log' command
@@ -180,7 +191,9 @@ public class HgRevisionHistoryTest extends TestCase {
               "" /*stdinData*/,
               "" /*workingDirectory*/))
           .andReturn("2 < u&ltid@google.com < &ampamp < &gtdescription < parent");
-    } catch (CommandException e) { throw new RuntimeException(e); }
+    } catch (CommandException e) {
+      throw new RuntimeException(e);
+    }
     expect(mockRepo.getRepositoryName()).andReturn(repositoryName);
     // Run test
     control.replay();
@@ -214,5 +227,124 @@ public class HgRevisionHistoryTest extends TestCase {
     assertEquals("date2", rs.get(1).date);
     assertEquals("bar", rs.get(1).description);
     assertEquals(ImmutableList.<Revision>of(), rs.get(1).parents);
+  }
+
+  public void testFindHeadRevisions() {
+    // Mock cloned repo
+    HgClonedRepository mockRepo = mockClonedRepo();
+    expect(mockRepo.getRepositoryName()).andReturn(repositoryName);
+
+    // Mock 'hg heads' command
+    try {
+      expect(
+          cmd.runCommand(
+              "hg",
+              ImmutableList.<String>of(
+                  "heads",
+                  "--template='{node}\n'",
+                  localCloneTempDir),
+              "" /*stdinData*/,
+              "" /*workingDirectory*/))
+          .andReturn("mockChangesetID1\nmockChangesetID2");
+    } catch (CommandException e) {
+      throw new RuntimeException(e);
+    }
+    expect(mockRepo.getRepositoryName()).andReturn(repositoryName);
+    // Run test
+    control.replay();
+
+    HgRevisionHistory rh = new HgRevisionHistory(mockRepo);
+    ImmutableList<Revision> revs = ImmutableList.copyOf(rh.findHeadRevisions());
+    assertEquals(repositoryName, revs.get(0).repositoryName);
+    assertEquals("mockChangesetID1", revs.get(0).revId);
+    assertEquals(repositoryName, revs.get(1).repositoryName);
+    assertEquals("mockChangesetID2", revs.get(1).revId);
+
+    control.verify();
+  }
+
+  public void testFindNewRevisions() {
+    // Mock cloned repo
+    HgClonedRepository mockRepo = mockClonedRepo();
+    expect(mockRepo.getRepositoryName()).andReturn(repositoryName);
+    DummyDb db = new DummyDb(false);
+
+    // Mock 'hg heads' command
+    try {
+      expect(
+          cmd.runCommand(
+              "hg",
+              ImmutableList.<String>of(
+                  "heads",
+                  "--template='{node}\n'",
+                  localCloneTempDir),
+              "" /*stdinData*/,
+              "" /*workingDirectory*/))
+          .andReturn("mockChangesetID");
+    } catch (CommandException e) {
+      throw new RuntimeException(e);
+    }
+    expect(mockRepo.getRepositoryName()).andReturn(repositoryName);
+
+    expect(mockRepo.getLocalTempDir()).andReturn(new File(localCloneTempDir));
+    expect(mockRepo.getRepositoryName()).andReturn(repositoryName);
+
+    // Mock 'hg log' command
+    try {
+      expect(
+          cmd.runCommand(
+              "hg",
+              ImmutableList.<String>of(
+                  "log",
+                  "--rev=mockChangesetID",
+                  "--limit=1",
+                  "--template='{node|escape} < {author|escape} < " +
+                              "{date|date|escape} < {desc|escape} < " +
+                              "{parents|escape}'",
+                  "--debug",
+                  localCloneTempDir),
+              "" /*stdinData*/,
+              "" /*workingDirectory*/))
+          .andReturn("mockChangesetID < uid@google.com < date < description < parent");
+    } catch (CommandException e) {
+      throw new RuntimeException(e);
+    }
+    expect(mockRepo.getRepositoryName()).andReturn(repositoryName);
+
+    expect(mockRepo.getLocalTempDir()).andReturn(new File(localCloneTempDir));
+
+    // Mock 'hg log' command
+    try {
+      expect(
+          cmd.runCommand(
+              "hg",
+              ImmutableList.<String>of(
+                  "log",
+                  "--rev=parent",
+                  "--limit=1",
+                  "--template='{node|escape} < {author|escape} < " +
+                              "{date|date|escape} < {desc|escape} < " +
+                              "{parents|escape}'",
+                  "--debug",
+                  localCloneTempDir),
+              "" /*stdinData*/,
+              "" /*workingDirectory*/))
+          .andReturn("parent < uid@google.com < date < description < ");
+    } catch (CommandException e) {
+      throw new RuntimeException(e);
+    }
+
+    // Run test
+    control.replay();
+    HgRevisionHistory rh = new HgRevisionHistory(mockRepo);
+    RevisionMatcher matcher = new EquivalenceMatcher("public", db);
+    ImmutableList<Revision> newRevisions = ImmutableList.copyOf(rh.findRevisions(null, matcher));
+    assertEquals(2, newRevisions.size());
+    assertEquals(repositoryName, newRevisions.get(0).repositoryName);
+    assertEquals("mockChangesetID", newRevisions.get(0).revId);
+    assertEquals(repositoryName, newRevisions.get(1).repositoryName);
+    assertEquals("parent", newRevisions.get(1).revId);
+
+    control.verify();
   }
 }

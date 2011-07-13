@@ -35,19 +35,26 @@ public class HgRepository {
       throw new InvalidProject("Hg repository config missing \"url\".");
     }
 
-    HgClonedRepository clonedRepo = new HgClonedRepository(name, url);
-    clonedRepo.cloneLocally();
+    HgClonedRepository tipClone = new HgClonedRepository(name, url);
+    tipClone.cloneLocally();
 
-    HgRevisionHistory rh = new HgRevisionHistory(clonedRepo);
+    HgRevisionHistory rh = new HgRevisionHistory(tipClone);
 
-    // TODO(user): Implement HgCodebaseCreator and HgWriterCreator.
-    return new Repository(name, rh, null, null);
+    String projectSpace = config.getProjectSpace();
+    if (projectSpace == null) {
+      projectSpace = "public";
+    }
+
+    HgCodebaseCreator cc = new HgCodebaseCreator(tipClone, rh, projectSpace);
+
+    // TODO(user): Implement HgWriterCreator.
+    return new Repository(name, rh, cc, null);
   }
 
   // TODO(user): Move this to an instance method on HgClonedRepository, so that all Hg command
   // calls implicitly occur in the context of a local cloned repo. Furthermore, via this command,
   // replace all absolute paths in command calls with paths relative to the local clone.
-  /*package*/ static String runHgCommand(List<String> args, String workingDirectory)
+  static String runHgCommand(List<String> args, String workingDirectory)
       throws CommandRunner.CommandException {
     return AppContext.RUN.cmd.runCommand("hg", args, "", workingDirectory);
   }

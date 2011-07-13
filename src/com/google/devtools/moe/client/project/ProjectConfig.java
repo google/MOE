@@ -4,6 +4,7 @@ package com.google.devtools.moe.client.project;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializationContext;
@@ -11,6 +12,7 @@ import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+import com.google.gson.annotations.SerializedName;
 
 import java.lang.reflect.Type;
 import java.util.Collections;
@@ -28,13 +30,36 @@ public class ProjectConfig {
   private Map<String, EditorConfig> editors;
   private List<TranslatorConfig> translators;
 
+  @SerializedName("internal_repository")
+  private RepositoryConfig internalRepository;
+
+  @SerializedName("public_repository")
+  private RepositoryConfig publicRepository;
+
   private ProjectConfig() {} // Constructed by gson
 
   public String getName() {
     return name;
   }
 
-  public Map<String, RepositoryConfig> getRepositoryConfigs() {
+  public Map<String, RepositoryConfig> getRepositoryConfigs()
+      throws InvalidProject {
+    if (repositories == null) {
+      repositories = Maps.newHashMap();
+    }
+
+    // For backwards compatibility with old MOE configs.
+    if (internalRepository != null) {
+      if (repositories.put("internal", internalRepository) != null) {
+        throw new InvalidProject("Internal repository specified twice");
+      }
+    }
+    if (publicRepository != null) {
+      if (repositories.put("public", publicRepository) != null) {
+        throw new InvalidProject("Public repository specified twice");
+      }
+    }
+
     return Collections.unmodifiableMap(repositories);
   }
 
@@ -84,7 +109,7 @@ public class ProjectConfig {
       } else if (config.getName() == null ||
           config.getName().isEmpty()) {
         throw new InvalidProject("Must specify a name");
-      } else if (config.getRepositoryConfigs() == null) {
+      } else if (config.getRepositoryConfigs().isEmpty()) {
         throw new InvalidProject("Must specify repositories");
       }
       return config;
