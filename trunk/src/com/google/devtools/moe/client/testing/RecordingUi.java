@@ -12,14 +12,18 @@ import com.google.devtools.moe.client.Ui;
 public class RecordingUi extends Ui {
 
   public String lastInfo;
+  public String lastError;
 
   public RecordingUi() {
     lastInfo = null;
+    lastError = null;
   }
 
   public void info(String msg) {
     lastInfo = msg;
   }
 
-  public void error(String msg) {}
+  public void error(String msg) {
+    lastError = msg;
+  }
 }

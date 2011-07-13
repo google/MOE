@@ -3,21 +3,21 @@
 package com.google.devtools.moe.client.directives;
 
 import com.google.devtools.moe.client.AppContext;
-import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.codebase.Evaluator;
-import com.google.devtools.moe.client.writer.DraftRevision;
-import com.google.devtools.moe.client.writer.WritingError;
-import com.google.devtools.moe.client.writer.Writer;
-import com.google.devtools.moe.client.writer.WriterEvaluator;
+import com.google.devtools.moe.client.logic.ChangeLogic;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.ProjectContext;
+import com.google.devtools.moe.client.writer.DraftRevision;
+import com.google.devtools.moe.client.writer.Writer;
+import com.google.devtools.moe.client.writer.WriterEvaluator;
+import com.google.devtools.moe.client.writer.WritingError;
 
 import org.kohsuke.args4j.Option;
 
 /**
- * Create a Change in a source control system.
+ * Create a Change in a source control system using command line flags.
  *
  * @author dbentley@google.com (Daniel Bentley)
  */
@@ -74,15 +74,8 @@ public class ChangeDirective implements Directive {
       return 1;
     }
 
-    DraftRevision r;
-    try {
-      Ui.Task t = AppContext.RUN.ui.pushTask(
-          "push_codebase",
-          "Putting files from Codebase into Writer");
-      r = destination.putCodebase(c);
-      AppContext.RUN.ui.popTask(t, "");
-    } catch (WritingError e) {
-      AppContext.RUN.ui.error(e.getMessage());
+    DraftRevision r = ChangeLogic.change(c, destination);
+    if (r == null) {
       return 1;
     }
 

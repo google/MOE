@@ -7,6 +7,8 @@ import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.Repository;
 import com.google.devtools.moe.client.repositories.Revision;
+import com.google.devtools.moe.client.repositories.RevisionExpression;
+import com.google.devtools.moe.client.repositories.RevisionExpression.RevisionExpressionError;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
 
 import org.kohsuke.args4j.Option;
@@ -22,10 +24,12 @@ public class HighestRevisionDirective implements Directive {
 
   public HighestRevisionDirective() {}
 
+  @Override
   public HighestRevisionOptions getFlags() {
     return options;
   }
 
+  @Override
   public int perform() {
     ProjectContext context;
     if (options.configFilename.isEmpty()) {
@@ -43,7 +47,16 @@ public class HighestRevisionDirective implements Directive {
       AppContext.RUN.ui.error("No --repository specified");
       return 1;
     }
-    Repository r = context.repositories.get(options.repository);
+    
+    RevisionExpression re;
+    try {
+      re = RevisionExpression.parse(options.repository);
+    } catch (RevisionExpressionError e) {
+      AppContext.RUN.ui.error(e.getMessage());
+      return 1;
+    }
+    
+    Repository r = context.repositories.get(re.repoId);
     if (r == null) {
       AppContext.RUN.ui.error("No repository " + options.repository);
       return 1;
@@ -54,7 +67,16 @@ public class HighestRevisionDirective implements Directive {
       AppContext.RUN.ui.error("Repository " + r.name + " does not support revision history.");
       return 1;
     }
-    Revision rev = rh.findHighestRevision(options.revision);
+    
+    Revision rev;
+    if (re.revIds.isEmpty()) {
+      rev = rh.findHighestRevision("");
+    } else if (re.revIds.size() == 1) {
+      rev = rh.findHighestRevision(re.revIds.get(0));
+    } else {
+      AppContext.RUN.ui.error("Only one revision can be specified for this directive.");
+      return 1;
+    }
     AppContext.RUN.ui.info("Highest revision in repository \"" + r.name + "\": " + rev.revId);
     return 0;
   }
@@ -66,9 +88,6 @@ public class HighestRevisionDirective implements Directive {
     @Option(name = "--repository",
             usage = "Which repository to find the head revision for")
     String repository = "";
-    @Option(name = "--revision",
-            usage = "Highest revision to consider")
-    String revision = "";
   }
 
 }

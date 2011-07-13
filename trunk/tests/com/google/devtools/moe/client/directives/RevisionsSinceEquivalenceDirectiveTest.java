@@ -11,25 +11,25 @@ import junit.framework.TestCase;
 
 /**
  */
-public class FindEquivalenceDirectiveTest extends TestCase {
+public class RevisionsSinceEquivalenceDirectiveTest extends TestCase {
 
   @Override
   public void setUp() {
     AppContextForTesting.initForTest();
   }
 
-  public void testFindEquivalenceDirective() throws Exception {
+  public void testPickRevisions() throws Exception {
     ((InMemoryProjectContextFactory) AppContext.RUN.contextFactory).projectConfigs.put(
         "moe_config.txt",
-        "{\"name\": \"test\",\"repositories\": {\"internal\": {\"type\": \"dummy\"}}}");
-    FindEquivalenceDirective d = new FindEquivalenceDirective();
+        "{\"name\": \"foo\", \"repositories\": {" +
+        "\"internal\": {\"type\": \"dummy\"}}}");
+    RevisionsSinceEquivalenceDirective d = new RevisionsSinceEquivalenceDirective();
     d.getFlags().configFilename = "moe_config.txt";
     d.getFlags().dbLocation = "dummy";
-    d.getFlags().revision = "internal{1}";
-    d.getFlags().inRepository = "public";
+    d.getFlags().fromRepository = "internal{1}";
+    d.getFlags().toRepository = "public";
     assertEquals(0, d.perform());
-    assertEquals(
-        "\"internal{1}\" == \"public{1,2}\"",
-        ((RecordingUi) AppContext.RUN.ui).lastInfo);
+    assertEquals("Revisions found: internal{1}",
+                 ((RecordingUi) AppContext.RUN.ui).lastInfo);
   }
 }

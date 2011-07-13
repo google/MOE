@@ -9,9 +9,11 @@ import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.MoeProblem;
 
 import java.io.File;
+import java.io.IOException;
 
 /**
- * An object encapsulating a cloned Hg repository, as backed by an actual clone to local disk
+ * An object encapsulating a cloned Hg repository at tip, as backed by an actual 'hg clone' to local
+ * disk
  *
  */
 public class HgClonedRepository {
@@ -23,36 +25,38 @@ public class HgClonedRepository {
 
   // TODO(user): Support instantiation from an existing local repo (so that no actual cloning
   // occurs).
-  /*package*/ HgClonedRepository(String repositoryName, String repositoryUrl) {
+  HgClonedRepository(String repositoryName, String repositoryUrl) {
     this.repositoryName = repositoryName;
     this.repositoryUrl = repositoryUrl;
     clonedLocally = false;
   }
 
-  /*package*/ String getRepositoryName() { return repositoryName; }
+  String getRepositoryName() {
+    return repositoryName;
+  }
 
-  /*package*/ String getRepositoryUrl() { return repositoryUrl; }
+  String getRepositoryUrl() {
+    return repositoryUrl;
+  }
 
-  /*package*/ File getLocalTempDir() {
-    Preconditions.checkArgument(clonedLocally);
+  File getLocalTempDir() {
+    Preconditions.checkState(clonedLocally);
     return localCloneTempDir;
   }
 
-  /*package*/ boolean isClonedLocally() { return clonedLocally; }
+  boolean isClonedLocally() {
+    return clonedLocally;
+  }
 
-  /**
-   * Clone repo at given URL to disk.
-   */
-  // TODO(user): Implement clean-up.
-  /*package*/ void cloneLocally() {
-    Preconditions.checkArgument(!clonedLocally);
+  void cloneLocally() {
+    Preconditions.checkState(!clonedLocally);
     localCloneTempDir = AppContext.RUN.fileSystem.getTemporaryDirectory(
-        String.format("hg_clone_%s_", repositoryName));
-
+        String.format("hg_tipclone_%s_", repositoryName));
     try {
       HgRepository.runHgCommand(
           ImmutableList.<String>of(
               "clone",
+              "--rev=tip",
               repositoryUrl,
               localCloneTempDir.getAbsolutePath()),
           "" /*workingDirectory*/);
@@ -60,5 +64,37 @@ public class HgClonedRepository {
     } catch (CommandException e) {
       throw new MoeProblem("Could not clone from hg repo at " + repositoryUrl + ": " + e.stderr);
     }
+  }
+
+  /**
+   * Archive this repo (currently at tip) to local disk at a given revision.
+   *
+   * @param revId the changeset ID at which to make a clone of this repo (non-null, non-empty)
+   * @return the location of the archive
+   */
+  File archiveAtRevId(String revId) {
+    Preconditions.checkState(clonedLocally);
+    Preconditions.checkArgument(revId != null && !revId.isEmpty());
+    File archiveLocation = AppContext.RUN.fileSystem.getTemporaryDirectory(
+        String.format("hg_archive_%s_%s_", repositoryName, revId));
+    try {
+      HgRepository.runHgCommand(
+          ImmutableList.<String>of(
+              "archive",
+              "--rev=" + revId,
+              archiveLocation.getAbsolutePath()),
+          localCloneTempDir.getAbsolutePath() /*workingDirectory*/);
+      clonedLocally = true;
+
+      AppContext.RUN.fileSystem.deleteRecursively(new File(archiveLocation, ".hg_archival.txt"));
+    } catch (CommandException e) {
+      throw new MoeProblem(
+          "Could not archive hg clone at " + localCloneTempDir.getAbsolutePath() + ": " + e.stderr);
+    } catch (IOException e) {
+      throw new MoeProblem(
+          "IOException archiving clone at " + localCloneTempDir.getAbsolutePath() +
+          " to revision " + revId + ": " + e);
+    }
+    return archiveLocation;
   }
 }

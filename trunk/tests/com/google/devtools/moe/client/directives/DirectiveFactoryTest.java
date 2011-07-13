@@ -13,4 +13,8 @@ public class DirectiveFactoryTest extends TestCase {
     Directive d = DirectiveFactory.makeDirective("hello");
     assertTrue(d instanceof HelloDirective);
   }
+
+  public void testBadInput() throws Exception {
+    assertNull(DirectiveFactory.makeDirective("galsjdlkfj"));
+  }
 }

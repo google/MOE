@@ -4,9 +4,9 @@ package com.google.devtools.moe.client.testing;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.moe.client.codebase.Codebase;
-import com.google.devtools.moe.client.codebase.CodebaseExpression;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.codebase.CodebaseCreator;
+import com.google.devtools.moe.client.codebase.CodebaseExpression;
 import com.google.devtools.moe.client.parser.Term;
 
 import java.io.File;
@@ -34,7 +34,7 @@ public class DummyCodebaseCreator implements CodebaseCreator {
 
 
     return new Codebase(
-        new File("/dummy/path"), "public",
+        new File("/dummy/path"), projectSpace,
         new CodebaseExpression(new Term(name, ImmutableMap.<String, String>of())));
   }
 

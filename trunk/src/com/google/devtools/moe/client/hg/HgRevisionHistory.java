@@ -4,13 +4,16 @@ package com.google.devtools.moe.client.hg;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
+import com.google.devtools.moe.client.repositories.RevisionMatcher;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -20,10 +23,10 @@ import java.util.regex.Pattern;
  */
 public class HgRevisionHistory implements RevisionHistory {
 
-  private final HgClonedRepository repo;
+  private final HgClonedRepository tipClone;
 
-  /*package*/ HgRevisionHistory(HgClonedRepository repo) {
-    this.repo = repo;
+  HgRevisionHistory(HgClonedRepository tipClone) {
+    this.tipClone = tipClone;
   }
 
   /**
@@ -46,7 +49,7 @@ public class HgRevisionHistory implements RevisionHistory {
         "--limit=1",
         // Format output as "changesetID" alone.
         "--template='{node}'",
-        repo.getLocalTempDir().getAbsolutePath());
+        tipClone.getLocalTempDir().getAbsolutePath());
 
     String changesetID;
     try {
@@ -61,7 +64,7 @@ public class HgRevisionHistory implements RevisionHistory {
               e.stderr));
     }
 
-    return new Revision(changesetID, repo.getRepositoryName());
+    return new Revision(changesetID, tipClone.getRepositoryName());
   }
 
   /**
@@ -70,10 +73,10 @@ public class HgRevisionHistory implements RevisionHistory {
    * @param revision  the revision to parse metadata for
    */
   public RevisionMetadata getMetadata(Revision revision) {
-    if (!repo.getRepositoryName().equals(revision.repositoryName)) {
+    if (!tipClone.getRepositoryName().equals(revision.repositoryName)) {
       throw new MoeProblem(
           String.format("Could not get metadata: Revision %s is in repository %s instead of %s",
-                        revision.revId, revision.repositoryName, repo.getRepositoryName()));
+                        revision.revId, revision.repositoryName, tipClone.getRepositoryName()));
     }
     ImmutableList<String> args = ImmutableList.of(
         "log",
@@ -85,7 +88,7 @@ public class HgRevisionHistory implements RevisionHistory {
                     "{desc|escape} < {parents|escape}'",
         // Use the debug option to get all parents
         "--debug",
-        repo.getLocalTempDir().getAbsolutePath());
+        tipClone.getLocalTempDir().getAbsolutePath());
     String log;
     try {
       log = HgRepository.runHgCommand(args, "");
@@ -129,7 +132,7 @@ public class HgRevisionHistory implements RevisionHistory {
         // group 5 contains all of the parents, each separated by a space
         for (String parent : Splitter.on(" ").split(unescape(m.group(5)))) {
           if (!parent.isEmpty()) {
-            parentBuilder.add(new Revision(parent, repo.getRepositoryName()));
+            parentBuilder.add(new Revision(parent, tipClone.getRepositoryName()));
           }
         }
         result.add(new RevisionMetadata(unescape(m.group(1)), unescape(m.group(2)),
@@ -138,5 +141,64 @@ public class HgRevisionHistory implements RevisionHistory {
       }
     }
     return result.build();
+  }
+
+  /**
+   * Pull the changeset IDs for all head revisions.
+   * Returns a List of Revision objects corresponding to those changesets.
+   */
+  public List<Revision> findHeadRevisions() {
+    ImmutableList<String> args = ImmutableList.of(
+        "heads",
+        // Format output as "changesetID"s alone.
+        "--template='{node}\n'",
+        tipClone.getLocalTempDir().getAbsolutePath());
+    String heads;
+    try {
+      heads = HgRepository.runHgCommand(args, "");
+    } catch (CommandException e) {
+      throw new MoeProblem(
+          String.format("Failed hg run: %s %d %s %s",
+                        args.toString(),
+                        e.returnStatus,
+                        e.stdout,
+                        e.stderr));
+    }
+    ImmutableList.Builder<Revision> result = ImmutableList.<Revision>builder();
+    for (String changesetID : Splitter.on("\n").split(heads)) {
+      result.add(new Revision(changesetID, tipClone.getRepositoryName()));
+    }
+    return result.build();
+  }
+
+  /**
+   * Starting at specified revision, recur until a matching revision is found
+   *
+   * @param revision  the revision to start at.  If null, then start at head revision
+   * @param matcher  the matcher to apply
+   */
+  public Set<Revision> findRevisions(Revision revision, RevisionMatcher matcher) {
+    ImmutableSet.Builder<Revision> resultBuilder = ImmutableSet.builder();
+    if (revision != null) {
+      findRevisionsRecursiveHelper(revision, matcher, resultBuilder);
+    } else {
+      // may be many heads in hg
+      for (Revision r : findHeadRevisions()) {
+        findRevisionsRecursiveHelper(r, matcher, resultBuilder);
+      }
+    }
+    return resultBuilder.build();
+  }
+
+  private void findRevisionsRecursiveHelper(Revision revision, RevisionMatcher matcher,
+                                            ImmutableSet.Builder<Revision> resultBuilder) {
+    //TODO(user): this may exhaust the stack space; consider switching to an iterative solution
+    if (!matcher.matches(revision)) {
+      resultBuilder.add(revision);
+      RevisionMetadata metadata = getMetadata(revision);
+      for (Revision parent : metadata.parents) {
+        findRevisionsRecursiveHelper(parent, matcher, resultBuilder);
+      }
+    }
   }
 }

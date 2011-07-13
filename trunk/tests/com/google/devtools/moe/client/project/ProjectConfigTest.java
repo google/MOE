@@ -11,15 +11,29 @@ public class ProjectConfigTest extends TestCase {
 
   public void testValidConfig() throws Exception {
     ProjectConfig p = ProjectConfig.makeProjectConfigFromConfigText(
-        "{\"name\": \"foo\", \"repositories\": {}}");
+        "{\"name\": \"foo\", \"repositories\": {\"public\": {}}}");
     assertEquals(p.getName(), "foo");
   }
 
   public void testInvalidConfig() throws Exception {
+    assertInvalidConfig(
+        "{}",
+        "Must specify a name");
+  }
+
+  public void testInvalidConfig2() throws Exception {
+    assertInvalidConfig(
+        "{\"name\": \"foo\", \"repositories\": {}}",
+        "Must specify repositories");
+  }
+
+  private void assertInvalidConfig(String text, String error) {
     try {
-      ProjectConfig.makeProjectConfigFromConfigText("{}");
+      ProjectConfig.makeProjectConfigFromConfigText(text);
       fail();
-    } catch (InvalidProject e) {}
+    } catch (InvalidProject e) {
+      assertEquals(error, e.explanation);
+    }
   }
 
   public void testConfigWithMultipleRepositories() throws Exception {
