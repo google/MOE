@@ -6,15 +6,14 @@ import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.codebase.Evaluator;
+import com.google.devtools.moe.client.logic.DiffCodebasesLogic;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.ProjectContext;
-import com.google.devtools.moe.client.tools.CodebaseDifference;
-import com.google.devtools.moe.client.tools.PatchCodebaseDifferenceRenderer;
 
 import org.kohsuke.args4j.Option;
 
 /**
- * Print the head revision of a repository.
+ * Print the diff of two Codebases.
  *
  * @author dbentley@google.com (Daniel Bentley)
  */
@@ -24,30 +23,18 @@ public class DiffCodebasesDirective implements Directive {
 
   public DiffCodebasesDirective() {}
 
+  @Override
   public DiffCodebasesOptions getFlags() {
     return options;
   }
 
+  @Override
   public int perform() {
     ProjectContext context;
-    if (options.configFilename.isEmpty()) {
-      AppContext.RUN.ui.error("No --config_file specified.");
-      return 1;
-    }
     try {
       context = AppContext.RUN.contextFactory.makeProjectContext(options.configFilename);
     } catch (InvalidProject e) {
       AppContext.RUN.ui.error(e.explanation);
-      return 1;
-    }
-
-    if (options.codebase1.isEmpty()) {
-      AppContext.RUN.ui.error("No --codebase1 specified.");
-      return 1;
-    }
-
-    if (options.codebase2.isEmpty()) {
-      AppContext.RUN.ui.error("No --codebase2 specified.");
       return 1;
     }
 
@@ -69,29 +56,18 @@ public class DiffCodebasesDirective implements Directive {
       return 1;
     }
 
-    CodebaseDifference diff = CodebaseDifference.diffCodebases(codebase1, codebase2);
-
-    if (diff.areDifferent()) {
-      AppContext.RUN.ui.info(
-          String.format("Codebases \"%s\" and \"%s\" differ:\n%s",
-                        codebase1.toString(), codebase2.toString(),
-                        new PatchCodebaseDifferenceRenderer().render(diff)));
-    } else {
-      AppContext.RUN.ui.info(
-          String.format("Codebases \"%s\" and \"%s\" are identical",
-                        codebase1.toString(), codebase2.toString()));
-    }
+    DiffCodebasesLogic.printDiff(codebase1, codebase2);
     return 0;
   }
 
   static class DiffCodebasesOptions extends MoeOptions {
-    @Option(name = "--config_file",
+    @Option(name = "--config_file", required = true,
             usage = "Location of MOE config file")
     String configFilename = "";
-    @Option(name = "--codebase1",
+    @Option(name = "--codebase1", required = true,
             usage = "Codebase1 expression")
     String codebase1 = "";
-    @Option(name = "--codebase2",
+    @Option(name = "--codebase2", required = true,
             usage = "Codebase2 expression")
     String codebase2 = "";
   }

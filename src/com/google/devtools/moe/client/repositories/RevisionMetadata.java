@@ -42,4 +42,10 @@ public class RevisionMetadata {
     }
     return false;
   }
+
+  @Override
+  public String toString() {
+    return String.format("id: %s\nauthor: %s\ndate: %s\ndescription: %s\nparents: %s",
+        id, author, date, description, parents);
+  }
 }

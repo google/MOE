@@ -5,8 +5,8 @@ package com.google.devtools.moe.client.directives;
 import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.database.Db;
-import com.google.devtools.moe.client.database.EquivalenceMatcher;
 import com.google.devtools.moe.client.database.FileDb;
+import com.google.devtools.moe.client.logic.RevisionsSinceEquivalenceLogic;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.Repository;
@@ -14,13 +14,9 @@ import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionExpression;
 import com.google.devtools.moe.client.repositories.RevisionExpression.RevisionExpressionError;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
-import com.google.devtools.moe.client.repositories.RevisionMatcher;
 import com.google.devtools.moe.client.testing.DummyDb;
 
 import org.kohsuke.args4j.Option;
-
-import java.util.Iterator;
-import java.util.Set;
 
 /**
  * Get all Revisions since last Equivalence
@@ -30,17 +26,15 @@ public class RevisionsSinceEquivalenceDirective implements Directive {
 
   private final RevisionsSinceEquivalenceOptions options = new RevisionsSinceEquivalenceOptions();
 
+  @Override
   public RevisionsSinceEquivalenceOptions getFlags() {
     return options;
   }
   public RevisionsSinceEquivalenceDirective() {}
 
+  @Override
   public int perform() {
     ProjectContext context;
-    if (options.configFilename.isEmpty()) {
-      AppContext.RUN.ui.error("No --config_file specified.");
-      return 1;
-    }
     try {
       context = AppContext.RUN.contextFactory.makeProjectContext(options.configFilename);
     } catch (InvalidProject e) {
@@ -49,10 +43,6 @@ public class RevisionsSinceEquivalenceDirective implements Directive {
     }
 
     Db db;
-    if (options.dbLocation.isEmpty()) {
-      System.err.println("No --db specified.");
-      return 1;
-    }
     if (options.dbLocation.equals("dummy")) {
       db = new DummyDb(false);
     } else {
@@ -66,10 +56,6 @@ public class RevisionsSinceEquivalenceDirective implements Directive {
     }
 
     RevisionExpression re;
-    if (options.fromRepository.isEmpty()) {
-      System.err.println("No --from_repository specified.");
-      return 1;
-    }
     try {
       re = RevisionExpression.parse(options.fromRepository);
     } catch (RevisionExpressionError e) {
@@ -96,37 +82,22 @@ public class RevisionsSinceEquivalenceDirective implements Directive {
       return 1;
     }
 
-    if (options.toRepository.isEmpty()) {
-      AppContext.RUN.ui.error("No --to_repository specified.");
-      return 1;
-    }
-    RevisionMatcher matcher = new EquivalenceMatcher(options.toRepository, db);
-
-    Set<Revision> revisions = rh.findRevisions(rev, matcher);
-    StringBuilder result = new StringBuilder();
-    Iterator<Revision> it = revisions.iterator();
-    while (it.hasNext()) {
-      result.append(it.next().toString());
-      if (it.hasNext()) {
-        result.append(", ");
-      }
-    }
-    AppContext.RUN.ui.info("Revisions found: " +
-                            result.toString());
+    RevisionsSinceEquivalenceLogic.printRevisionsSinceEquivalence
+        (options.toRepository, rev, db, rh);
     return 0;
   }
 
   static class RevisionsSinceEquivalenceOptions extends MoeOptions {
-    @Option(name = "--config_file",
+    @Option(name = "--config_file", required = true,
             usage = "Location of MOE config file")
     String configFilename = "";
-    @Option(name = "--db",
+    @Option(name = "--db", required = true,
             usage = "Location of MOE database")
     String dbLocation = "";
-    @Option(name = "--from_repository",
+    @Option(name = "--from_repository", required = true,
             usage = "Revision expression describing repository to find Revisions in")
     String fromRepository = "";
-    @Option(name = "--to_repository",
+    @Option(name = "--to_repository", required = true,
             usage = "Name of Repository to check for Equivalences in")
     String toRepository = "";
   }

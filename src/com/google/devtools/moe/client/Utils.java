@@ -56,6 +56,31 @@ public class Utils {
     }
     return ImmutableSet.copyOf(result);
   }
+  
+  /**
+   * Expands the specified File to a new temporary directory, or returns null if the file
+   * type is unsupported.
+   * @param inputFile The File to be extracted.
+   * @return File pointing to a directory, or null.
+   * @throws CommandException 
+   * @throws IOException 
+   */
+  public static File expandToDirectory(File inputFile) throws IOException, CommandException {
+    // If the specified path already is a directory, return it without modification.
+    if (inputFile.isDirectory())
+    {
+      return inputFile;
+    }
+    
+    // Determine the file type by looking at the file extension.    
+    String lowerName = inputFile.getName().toLowerCase();
+    if (lowerName.endsWith(".tar.gz") || lowerName.endsWith(".tar")) {
+      return Utils.expandTar(inputFile);
+    }
+    
+    // If this file extension is unknown, return null.
+    return null;
+  }
 
   public static File expandTar(File tar) throws IOException, CommandException {
     File expandedDir = AppContext.RUN.fileSystem.getTemporaryDirectory("expanded_tar_");

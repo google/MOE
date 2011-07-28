@@ -2,9 +2,10 @@
 
 package com.google.devtools.moe.client.codebase;
 
+import static org.easymock.EasyMock.expect;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import com.google.devtools.moe.client.editors.Editor;
 import com.google.devtools.moe.client.editors.Translator;
 import com.google.devtools.moe.client.editors.TranslatorPath;
@@ -13,11 +14,12 @@ import com.google.devtools.moe.client.parser.Term;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.Repository;
 import com.google.devtools.moe.client.testing.AppContextForTesting;
+import com.google.devtools.moe.client.testing.FileCodebaseCreator;
+
+import junit.framework.TestCase;
 
 import org.easymock.EasyMock;
-import static org.easymock.EasyMock.expect;
 import org.easymock.IMocksControl;
-import junit.framework.TestCase;
 
 import java.io.File;
 
@@ -103,5 +105,19 @@ public class EvaluatorTest extends TestCase {
     assertEquals(finalDir, c.getPath());
     assertEquals("public", c.getProjectSpace());
     assertEquals("foo>public|bar", c.getExpression().toString());
+  }
+  
+  public void testGetCodebaseCreator() throws Exception {
+    // Test the .getCodebaseCreator() method with the "file" keyword.
+    CodebaseCreator cc = Evaluator.getCodebaseCreator("file", 
+                                                      ImmutableMap.<String, Repository>of());
+    assertEquals(FileCodebaseCreator.class, cc.getClass());
+    
+    // Test the .getCodebaseCreator() method with an arbitrary repository.
+    CodebaseCreator mockcc = EasyMock.createMock(CodebaseCreator.class);
+    Repository mockRepository = new Repository("test", null, mockcc, null);
+    cc = Evaluator.getCodebaseCreator(
+        "test", ImmutableMap.<String, Repository>of("test", mockRepository));
+    assertSame(mockcc, cc);
   }
 }

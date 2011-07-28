@@ -73,6 +73,11 @@ public class ProjectContext {
 
   public static Repository makeRepositoryFromConfig(
       String repositoryName, RepositoryConfig config) throws InvalidProject {
+    if (repositoryName.equals("file")) {
+      throw new InvalidProject(
+          "Invalid repository name (reserved keyword): \"" + repositoryName + "\"");
+    }
+
     switch (config.getType()) {
       case svn:
         return SvnRepository.makeSvnRepositoryFromConfig(

@@ -39,16 +39,14 @@ public class OneMigrationDirective implements Directive {
 
   public OneMigrationDirective() {}
 
+  @Override
   public OneMigrationOptions getFlags() {
     return options;
   }
 
+  @Override
   public int perform() {
     ProjectContext context;
-    if (options.configFilename.isEmpty()) {
-      AppContext.RUN.ui.error("No --config_file specified.");
-      return 1;
-    }
     try {
       context = AppContext.RUN.contextFactory.makeProjectContext(options.configFilename);
     } catch (InvalidProject e) {
@@ -57,10 +55,6 @@ public class OneMigrationDirective implements Directive {
     }
 
     Db db;
-    if (options.dbLocation.isEmpty()) {
-      AppContext.RUN.ui.error("No --db specified.");
-      return 1;
-    }
     if (options.dbLocation.equals("dummy")) {
       db = new DummyDb(true);
     } else {
@@ -71,16 +65,6 @@ public class OneMigrationDirective implements Directive {
         AppContext.RUN.ui.error(e.explanation);
         return 1;
       }
-    }
-
-    if (options.fromRevision.isEmpty()) {
-      AppContext.RUN.ui.error("No --from_revision specified.");
-      return 1;
-    }
-
-    if (options.toRevision.isEmpty()) {
-      AppContext.RUN.ui.error("No --to_revision specified.");
-      return 1;
     }
 
     RevisionExpression fromRe;
@@ -129,11 +113,6 @@ public class OneMigrationDirective implements Directive {
       return 1;
     }
 
-    if (options.revisionsToMigrate.isEmpty()) {
-      AppContext.RUN.ui.error("No --revisions_to_migrate specified.");
-      return 1;
-    }
-
     AppContext.RUN.ui.info(
         String.format("Creating a change in \"%s\" with revisions \"%s\"",
                       toRe.repoId, options.revisionsToMigrate));
@@ -160,19 +139,19 @@ public class OneMigrationDirective implements Directive {
   }
 
   static class OneMigrationOptions extends MoeOptions {
-    @Option(name = "--config_file",
+    @Option(name = "--config_file", required = true,
             usage = "Location of MOE config file")
     String configFilename = "";
-    @Option(name = "--db",
+    @Option(name = "--db", required = true,
             usage = "Location of MOE database")
     String dbLocation = "";
-    @Option(name = "--from_revision",
+    @Option(name = "--from_revision", required = true,
             usage = "Revision expression of source")
     String fromRevision = "";
-    @Option(name = "--to_revision",
+    @Option(name = "--to_revision", required = true,
             usage = "Revsion expression of destination")
     String toRevision = "";
-    @Option(name = "--revisions_to_migrate",
+    @Option(name = "--revisions_to_migrate", required = true,
             usage = "Revision expression")
     String revisionsToMigrate = "";
   }
