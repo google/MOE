@@ -3,6 +3,8 @@
 package com.google.devtools.moe.client.codebase;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.devtools.moe.client.AppContext;
+import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.editors.Editor;
 import com.google.devtools.moe.client.editors.Translator;
 import com.google.devtools.moe.client.editors.TranslatorPath;
@@ -13,11 +15,9 @@ import com.google.devtools.moe.client.parser.Parser;
 import com.google.devtools.moe.client.parser.Term;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.Repository;
-import com.google.devtools.moe.client.AppContext;
-import com.google.devtools.moe.client.Ui;
+import com.google.devtools.moe.client.testing.FileCodebaseCreator;
 
 import java.io.File;
-import java.lang.IllegalArgumentException;
 import java.util.Map;
 
 /**
@@ -60,7 +60,7 @@ public class Evaluator {
       File currentDirectory = initialCodebase.getPath();
       String currentProjectSpace = initialCodebase.getProjectSpace();
 
-      for (Operation op: e.operations) {
+      for (Operation op : e.operations) {
         if (op.operator == Operator.EDIT) {
           currentDirectory = edit(currentDirectory, op.term, context.editors);
         } else if (op.operator == Operator.TRANSLATE) {
@@ -91,15 +91,7 @@ public class Evaluator {
    */
   static Codebase create(Term creator, Map<String, Repository> repositories)
       throws CodebaseCreationError {
-    Repository r = repositories.get(creator.identifier);
-    if (r == null) {
-      throw new CodebaseCreationError(String.format("no repository %s", creator.identifier));
-    }
-    CodebaseCreator cc = r.codebaseCreator;
-    if (cc == null) {
-      throw new CodebaseCreationError(String.format(
-          "repository %s cannot create Codebases", creator.identifier));
-    }
+    CodebaseCreator cc = getCodebaseCreator(creator.identifier, repositories);
     Ui.Task createTask = AppContext.RUN.ui.pushTask(
         "create_codebase",
         String.format("Creating from \"%s\"", creator));
@@ -111,6 +103,33 @@ public class Evaluator {
       AppContext.RUN.ui.popTask(createTask, "Error");
       throw ex;
     }
+  }
+  
+  /**
+   * Returns a CodebaseCreator which is described by the specified identifier.
+   * @param identifier The repository identifier.
+   * @param repositories A map of all known repositories.
+   * @return A valid CodebaseCreator.
+   * @throws CodebaseCreationError When no CodebaseCreator or properly named Repository was found.
+   */
+  static CodebaseCreator getCodebaseCreator(String identifier, 
+                                            Map<String, Repository> repositories) 
+                                                throws CodebaseCreationError {
+    // Check for keywords which might resemble a special codebase creator. 
+    if (identifier.equals("file")) {
+      return new FileCodebaseCreator();
+    } else {
+      // Otherwise take the creator specified with the repository.
+      Repository r = repositories.get(identifier);       
+      if (r != null) {
+        if (r.codebaseCreator == null) {
+          throw new CodebaseCreationError(String.format(
+              "repository %s cannot create Codebases", identifier));
+        }
+        return r.codebaseCreator;
+      }
+    }
+    throw new CodebaseCreationError(String.format("no repository %s", identifier));
   }
 
   /**
@@ -169,7 +188,7 @@ public class Evaluator {
             "Translating %s from project space \"%s\" to \"%s\"",
             input.getAbsolutePath(), fromProjectSpace, translateTerm.identifier));
     try {
-      for (TranslatorStep s: translator.steps) {
+      for (TranslatorStep s : translator.steps) {
         // TODO(dbentley): there's currently no way to invoke a Translator with options to the
         // sub-editors. That's maybe suboptimal. But for now, there's no way to pass
         // options to editors at all. This latter is more suboptimal, but fortunately shadows

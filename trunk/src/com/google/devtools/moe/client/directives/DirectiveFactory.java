@@ -29,8 +29,10 @@ public class DirectiveFactory {
         new DiffCodebasesDirective()),
     REVISIONS_SINCE_EQUIVALENCE("Prints revisions since the last equivalence",
         new RevisionsSinceEquivalenceDirective()),
+    DETERMINE_METADATA("Conglomerates the metadata for a set of revisions",
+        new DetermineMetadataDirective()),
     ONE_MIGRATION("Performs a single migration",
-        new OneMigrationDirective()),
+        new OneMigrationDirective())
     ;
 
     private final String desc;

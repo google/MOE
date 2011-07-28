@@ -36,7 +36,7 @@ public class HgRepository {
     }
 
     HgClonedRepository tipClone = new HgClonedRepository(name, url);
-    tipClone.cloneLocally();
+    tipClone.cloneLocallyAtTip();
 
     HgRevisionHistory rh = new HgRevisionHistory(tipClone);
 
@@ -47,8 +47,9 @@ public class HgRepository {
 
     HgCodebaseCreator cc = new HgCodebaseCreator(tipClone, rh, projectSpace);
 
-    // TODO(user): Implement HgWriterCreator.
-    return new Repository(name, rh, cc, null);
+    HgWriterCreator wc = new HgWriterCreator(tipClone, rh, projectSpace);
+
+    return new Repository(name, rh, cc, wc);
   }
 
   // TODO(user): Move this to an instance method on HgClonedRepository, so that all Hg command

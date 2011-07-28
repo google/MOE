@@ -48,7 +48,7 @@ public class HgRevisionHistory implements RevisionHistory {
         // Ensure one revision only, to be safe.
         "--limit=1",
         // Format output as "changesetID" alone.
-        "--template='{node}'",
+        "--template={node}",
         tipClone.getLocalTempDir().getAbsolutePath());
 
     String changesetID;

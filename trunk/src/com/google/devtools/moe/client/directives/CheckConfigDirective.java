@@ -19,15 +19,13 @@ public class CheckConfigDirective implements Directive {
 
   public CheckConfigDirective() {}
 
+  @Override
   public CheckConfigOptions getFlags() {
     return options;
   }
 
+  @Override
   public int perform() {
-    if (options.configFilename.isEmpty()) {
-      System.err.println("No --config_file specified.");
-      return 1;
-    }
     try {
       ProjectContext context = AppContext.RUN.contextFactory.makeProjectContext(
           options.configFilename);
@@ -39,7 +37,7 @@ public class CheckConfigDirective implements Directive {
   }
 
   static class CheckConfigOptions extends MoeOptions {
-    @Option(name = "--config_file",
+    @Option(name = "--config_file", required = true,
         usage = "Location of MOE config file")
     String configFilename = "";
   }

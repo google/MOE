@@ -22,6 +22,8 @@ public class HgClonedRepository {
   private final String repositoryUrl;
   private File localCloneTempDir;
   private boolean clonedLocally;
+  /** The revision of this clone, an Hg changeset ID */
+  private String revId;
 
   // TODO(user): Support instantiation from an existing local repo (so that no actual cloning
   // occurs).
@@ -29,6 +31,7 @@ public class HgClonedRepository {
     this.repositoryName = repositoryName;
     this.repositoryUrl = repositoryUrl;
     clonedLocally = false;
+    revId = null;
   }
 
   String getRepositoryName() {
@@ -48,19 +51,33 @@ public class HgClonedRepository {
     return clonedLocally;
   }
 
-  void cloneLocally() {
+  void cloneLocallyAtTip() {
     Preconditions.checkState(!clonedLocally);
     localCloneTempDir = AppContext.RUN.fileSystem.getTemporaryDirectory(
-        String.format("hg_tipclone_%s_", repositoryName));
+        String.format("hg_clone_%s_", repositoryName));
     try {
       HgRepository.runHgCommand(
           ImmutableList.<String>of(
               "clone",
-              "--rev=tip",
+              "--update=tip",
               repositoryUrl,
               localCloneTempDir.getAbsolutePath()),
           "" /*workingDirectory*/);
       clonedLocally = true;
+      this.revId = "tip";
+    } catch (CommandException e) {
+      throw new MoeProblem("Could not clone from hg repo at " + repositoryUrl + ": " + e.stderr);
+    }
+  }
+
+  void updateToRevId(String revId) {
+    Preconditions.checkState(clonedLocally);
+    Preconditions.checkState("tip".equals(this.revId));
+    try {
+      HgRepository.runHgCommand(
+          ImmutableList.<String>of("update", revId),
+          localCloneTempDir.getAbsolutePath());
+      this.revId = revId;
     } catch (CommandException e) {
       throw new MoeProblem("Could not clone from hg repo at " + repositoryUrl + ": " + e.stderr);
     }

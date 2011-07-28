@@ -14,6 +14,7 @@ import static org.easymock.EasyMock.expect;
 import org.easymock.IMocksControl;
 
 import java.io.File;
+import java.util.List;
 
 /**
  * @author dbentley@google.com (Daniel Bentley)
@@ -49,6 +50,58 @@ public class UtilsTest extends TestCase {
           new File("/dev/null"));
       fail();
     } catch (MoeProblem p) {}
+  }
+  
+  /**
+   * Confirms that the expandToDirectory()-method calls the proper expand methods for
+   * known archive types. 
+   * @throws Exception
+   */
+  public void testExpandToDirectory() throws Exception {
+    // Set up the test environment.
+    AppContextForTesting.initForTest();
+    String filePath = "/foo/bar.tar";
+    File file = new File(filePath);
+    
+    FileSystem mockfs = EasyMock.createMock(FileSystem.class);
+    expect(mockfs.getTemporaryDirectory(EasyMock.<String>anyObject()))
+        .andReturn(new File("/test"));
+    mockfs.makeDirs(EasyMock.<File>anyObject());
+    EasyMock.expectLastCall().once();
+    EasyMock.replay(mockfs);
+    AppContext.RUN.fileSystem = mockfs;
+
+    CommandRunner mockcmd = EasyMock.createMock(CommandRunner.class);
+    expect(mockcmd.runCommand(EasyMock.<String>anyObject(), 
+                              EasyMock.<List<String>>anyObject(), 
+                              EasyMock.<String>anyObject(), 
+                              EasyMock.<String>anyObject())).andReturn(null);
+    EasyMock.replay(mockcmd);
+    AppContext.RUN.cmd = mockcmd;
+    
+    // Run the .expandToDirectory method.
+    File directory = Utils.expandToDirectory(file);
+    assertNotNull(directory);    
+    assertEquals("/test", directory.toString());
+    
+    EasyMock.verify(mockfs);
+    EasyMock.verify(mockcmd);
+  }
+    
+  /**
+   * Confirms that the expandToDirectory()-method will return null when handed a unsupported
+   * file extension.
+   * @throws Exception
+   */
+  public void testUnsupportedExpandToDirectory() throws Exception {
+    // Set up the test environment.
+    AppContextForTesting.initForTest();
+    String filePath = "/foo/bar.unsupportedArchive";
+    File file = new File(filePath);
+
+    // Run the .expandToDirectory method.
+    File directory = Utils.expandToDirectory(file);
+    assertNull(directory);    
   }
 
   public void testExpandTar() throws Exception {

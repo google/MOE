@@ -27,30 +27,18 @@ public class ChangeDirective implements Directive {
 
   public ChangeDirective() {}
 
+  @Override
   public ChangeOptions getFlags() {
     return options;
   }
 
+  @Override
   public int perform() {
     ProjectContext context;
-    if (options.configFilename.isEmpty()) {
-      AppContext.RUN.ui.error("No --config_file specified.");
-      return 1;
-    }
     try {
       context = AppContext.RUN.contextFactory.makeProjectContext(options.configFilename);
     } catch (InvalidProject e) {
       AppContext.RUN.ui.error(e.explanation);
-      return 1;
-    }
-
-    if (options.codebase.isEmpty()) {
-      AppContext.RUN.ui.error("No --codebase specified.");
-      return 1;
-    }
-
-    if (options.destination.isEmpty()) {
-      AppContext.RUN.ui.error("No --destination specified.");
       return 1;
     }
 
@@ -84,15 +72,14 @@ public class ChangeDirective implements Directive {
   }
 
   static class ChangeOptions extends MoeOptions {
-    @Option(name = "--config_file",
+    @Option(name = "--config_file", required = true,
             usage = "Location of MOE config file")
     String configFilename = "";
-    @Option(name = "--codebase",
+    @Option(name = "--codebase", required = true,
             usage = "Codebase expression to evaluate")
     String codebase = "";
-    @Option(name = "--destination",
+    @Option(name = "--destination", required = true,
             usage = "Expression of destination writer")
     String destination = "";
   }
-
 }

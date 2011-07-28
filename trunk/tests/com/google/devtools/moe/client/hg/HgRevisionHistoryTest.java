@@ -67,7 +67,7 @@ public class HgRevisionHistoryTest extends TestCase {
                   "log",
                   "--rev=tip",
                   "--limit=1",
-                  "--template='{node}'",
+                  "--template={node}",
                   localCloneTempDir),
               "" /*stdinData*/,
               "" /*workingDirectory*/))
@@ -100,7 +100,7 @@ public class HgRevisionHistoryTest extends TestCase {
                   "log",
                   "--rev=bogusChangeset",
                   "--limit=1",
-                  "--template='{node}'",
+                  "--template={node}",
                   localCloneTempDir),
               "" /*stdinData*/,
               "" /*workingDirectory*/))

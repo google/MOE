@@ -23,25 +23,18 @@ public class CreateCodebaseDirective implements Directive {
 
   public CreateCodebaseDirective() {}
 
+  @Override
   public CreateCodebaseOptions getFlags() {
     return options;
   }
 
+  @Override
   public int perform() {
     ProjectContext context;
-    if (options.configFilename.isEmpty()) {
-      AppContext.RUN.ui.error("No --config_file specified.");
-      return 1;
-    }
     try {
       context = AppContext.RUN.contextFactory.makeProjectContext(options.configFilename);
     } catch (InvalidProject e) {
       AppContext.RUN.ui.error(e.explanation);
-      return 1;
-    }
-
-    if (options.codebase.isEmpty()) {
-      AppContext.RUN.ui.error("No --codebase specified.");
       return 1;
     }
 
@@ -58,10 +51,10 @@ public class CreateCodebaseDirective implements Directive {
   }
 
   static class CreateCodebaseOptions extends MoeOptions {
-    @Option(name = "--config_file",
+    @Option(name = "--config_file", required = true,
             usage = "Location of MOE config file")
     String configFilename = "";
-    @Option(name = "--codebase",
+    @Option(name = "--codebase", required = true,
             usage = "Codebase expression to evaluate")
     String codebase = "";
   }

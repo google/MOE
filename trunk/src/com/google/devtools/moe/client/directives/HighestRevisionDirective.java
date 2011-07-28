@@ -3,6 +3,7 @@
 package com.google.devtools.moe.client.directives;
 
 import com.google.devtools.moe.client.AppContext;
+import com.google.devtools.moe.client.logic.HighestRevisionLogic;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.Repository;
@@ -32,19 +33,10 @@ public class HighestRevisionDirective implements Directive {
   @Override
   public int perform() {
     ProjectContext context;
-    if (options.configFilename.isEmpty()) {
-      System.err.println("No --config_file specified.");
-      return 1;
-    }
     try {
       context = AppContext.RUN.contextFactory.makeProjectContext(options.configFilename);
     } catch (InvalidProject e) {
       System.err.println(e.explanation);
-      return 1;
-    }
-
-    if (options.repository.isEmpty()) {
-      AppContext.RUN.ui.error("No --repository specified");
       return 1;
     }
     
@@ -68,13 +60,8 @@ public class HighestRevisionDirective implements Directive {
       return 1;
     }
     
-    Revision rev;
-    if (re.revIds.isEmpty()) {
-      rev = rh.findHighestRevision("");
-    } else if (re.revIds.size() == 1) {
-      rev = rh.findHighestRevision(re.revIds.get(0));
-    } else {
-      AppContext.RUN.ui.error("Only one revision can be specified for this directive.");
+    Revision rev = HighestRevisionLogic.highestRevision(re, rh);
+    if (rev == null) {
       return 1;
     }
     AppContext.RUN.ui.info("Highest revision in repository \"" + r.name + "\": " + rev.revId);
@@ -82,10 +69,10 @@ public class HighestRevisionDirective implements Directive {
   }
 
   static class HighestRevisionOptions extends MoeOptions {
-    @Option(name = "--config_file",
+    @Option(name = "--config_file", required = true,
             usage = "Location of MOE config file")
     String configFilename = "";
-    @Option(name = "--repository",
+    @Option(name = "--repository", required = true,
             usage = "Which repository to find the head revision for")
     String repository = "";
   }
