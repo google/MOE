@@ -30,6 +30,7 @@ To compile using Ant:
       </classpath>
     </javac>
   </target>
+</project>
 }}}
 
 == moe.sh ==
