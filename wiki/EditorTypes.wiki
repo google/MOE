@@ -2,7 +2,7 @@
 
 = Introduction =
 
-What follows are descriptions of the different editors and any special fields that they require. Refer to the MOE Config File example to see editors in a config file.
+What follows are descriptions of the different editors and any special fields that they require. Refer to the [Config] example to see editors in a config file.
 
 = Editors =
 
