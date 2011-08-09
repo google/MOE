@@ -1,3 +1,9 @@
+#DEPRECATED
+Java-MOE now packages the external dependences in lib/. 
+A build.xml and README describing how to compile, run, and test Java-MOE can be found in the project trunk.
+Alternatively, a precompiled .jar can be found on the Downloads page.
+
+
 #summary How to compile MOE-java
 
 
