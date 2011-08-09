@@ -31,7 +31,7 @@ $ Moe highest_revision --config_file moe_config.txt --repository googlecode
 Reading config file from moe_config.txt... Done
 Highest revision in repository "googlecode": 5
 }}}
-Note that the --repository flag takes a RevisionExpression stating the repository and the max revision to look from. If no max revision is specified, the default is HEAD.
+Note that the --repository flag takes a [ExpressionLanguages#Revision_Expressions Revision Expression] stating the repository and the max revision to look from. If no max revision is specified, the default is HEAD.
 
 ==create_codebase==
 Gets the latest version of a repository as in another repository. For instance, if we want to get the latest version of our code as in the repository "googlecode", we run:
@@ -43,7 +43,7 @@ Evaluating Codebase "googlecode"...
 DONE: Evaluating Codebase "googlecode": /tmp/svn_export_googlecode_5_8020984248422681827
 Codebase "googlecode" created at /tmp/svn_export_googlecode_5_8020984248422681827
 }}}
-The --codebase flag takes a Codebase Expression.
+The --codebase flag takes a [ExpressionLanguages#Codebase_Expressions Codebase Expression].
 
 ==change==
 Creates a (pending) change.
@@ -59,7 +59,7 @@ Creating Writer "googlecode"... /tmp/svn_writer_7_2455561459661896424
 Putting files from Codebase into Writer... Done
 Created Draft Revisions: /tmp/svn_writer_7_2455561459661896424
 }}}
-The Expression Language page describes in more detail how to specify additional options, as --codebase and --destination both take Codebase Expressions.
+The [ExpressionLanguages Expression Language] page describes in more detail how to specify additional options, as --codebase and --destination both take Codebase Expressions.
 In the example above, a useful option is to be able to specify a translator. To do this to translate the codebase created from the internal repository from an internal project space to a public project space, use
 {{{
 $ Moe change --config_file moe_config.txt --codebase "internal>public" --destination "googlecode"
@@ -80,7 +80,8 @@ Created Draft Revision: /tmp/svn_writer_5_1004792749160326091
 
 ==find_equivalence==
 Equivalences between revisions are stored in the MOE database and can be accessed using the find_equivalence directive.
-The --revision flag takes a Revision Expression describing the revision to find equivalences to in the repository given to the --in_repository flag.
+
+The --revision flag takes a [ExpressionLanguages#Revision_Expressions Revision Expression] describing the revision to find equivalences to in the repository given to the --in_repository flag.
 {{{
 $ Moe find_equivalence --config_file "moe_config.txt" --db "moe_db.txt" --revision "googlecode{2}" --in_repository "internal"
 Reading config file from moe_config.txt... Done
@@ -88,7 +89,7 @@ Reading config file from moe_config.txt... Done
 }}}
 
 ==revisions_since_equivalence==
-This finds all of the revisions in a repository since the last equivalence between that repository and another repository. The --from_repository flag takes a Revision Expression, allowing optional specification of the highest revision in that repository to consider. Note that to_repository is just the name of the other repository.
+This finds all of the revisions in a repository since the last equivalence between that repository and another repository. The --from_repository flag takes a [ExpressionLanguages#Revision_Expressions Revision Expression], allowing optional specification of the highest revision in that repository to consider. Note that to_repository is just the name of the other repository.
 {{{
 $ Moe revisions_since_equivalence --config_file "moe_config.txt" --db "moe_db.txt" --from_repository "internal{12345678}" --to_repository "googlecode"
 Reading config file from moe_config.txt... Done
@@ -96,7 +97,7 @@ Revisions found: internal{12345678}, internal{12345677}, internal{12345676}
 }}}
 
 ==diff_codebases==
-Prints the diff between two codebases, which are specified by Codebase Expressions. For example, you could diff "`googlecode(revision=5)`" with "`googlecode(revision=6)`" to see what changes revision 6 made to 5. Or you could diff "`internal>public`" with "`googlecode`" to see what differences the translated internal repository has with the head revision of the googlecode repository. This directive generates both codebases and then diffs them.
+Prints the diff between two codebases, which are specified by [ExpressionLanguages#Codebase_Expressions Codebase Expressions]. For example, you could diff "`googlecode(revision=5)`" with "`googlecode(revision=6)`" to see what changes revision 6 made to 5. Or you could diff "`internal>public`" with "`googlecode`" to see what differences the translated internal repository has with the head revision of the googlecode repository. This directive generates both codebases and then diffs them.
 {{{
 $ Moe diff_codebases --config_file moe_config.txt --codebase1 "internal>public" --codebase2 "googlecode"
 Reading config file from moe_config.txt... Done
@@ -115,7 +116,7 @@ Codebases "internal>public" and "googlecode" are identical
 }}}
 
 ==determine_metadata==
-This directive combines the metadata (i.e. author, date, description, and parents) of the revisions specified by the Revision Expression. The migration directive makes use of this directive when combining multiple changes in one repository into one change in another repository. Generally, users won't explicitly use this directive.
+This directive combines the metadata (i.e. author, date, description, and parents) of the revisions specified by the [ExpressionLanguages#Revision_Expressions Revision Expression]. The migration directive makes use of this directive when combining multiple changes in one repository into one change in another repository. Generally, users won't explicitly use this directive.
 {{{
 $ Moe determine_metadata --config_file moe_config.txt --revisions "googlecode{3,4}"
 Reading config file from moe_config.txt... Done
