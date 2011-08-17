@@ -5,8 +5,6 @@ package com.google.devtools.moe.client;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
-import com.google.devtools.moe.client.FileSystem;
-import com.google.devtools.moe.client.Utils;
 
 import junit.framework.TestCase;
 import java.io.File;
@@ -93,6 +91,15 @@ public class SystemFileSystemTest extends TestCase {
     assertEquals(true, fs.isReadable(foo));
   }
 
+  public void testSetExecutable() throws Exception {
+    FileSystem fs = new SystemFileSystem();
+    File tempDir = Files.createTempDir();
+    File foo = new File(tempDir, "foo");
+    Files.touch(foo);
+    fs.setExecutable(foo);
+    assertEquals(true, foo.canExecute());
+  }
+
   public void testMakeDirsForFile() throws Exception {
     FileSystem fs = new SystemFileSystem();
     File tempDir = Files.createTempDir();
@@ -124,6 +131,14 @@ public class SystemFileSystemTest extends TestCase {
     Files.write("Contents!", foo, Charsets.UTF_8);
     fs.copyFile(foo, bar);
     assertEquals(true, Files.equal(foo, bar));
+  }
+
+  public void testWrite() throws Exception {
+    FileSystem fs = new SystemFileSystem();
+    File tempDir = Files.createTempDir();
+    File foo = new File(tempDir, "foo");
+    fs.write("Contents!", foo);
+    assertEquals("Contents!", Files.toString(foo, Charsets.UTF_8));
   }
 
   public void testDeleteRecursively() throws Exception {

@@ -10,6 +10,7 @@ import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Utils;
 import com.google.devtools.moe.client.codebase.Codebase;
+import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.writer.DraftRevision;
 import com.google.devtools.moe.client.writer.Writer;
 import com.google.devtools.moe.client.writer.WritingError;
@@ -61,6 +62,19 @@ public class HgWriter implements Writer {
     }
 
     return new HgDraftRevision(revClone);
+  }
+
+  @Override
+  public DraftRevision putCodebase(Codebase c, RevisionMetadata rm) throws WritingError {
+    DraftRevision dr = putCodebase(c);
+    // Generate a shell script to commit repo with description and author
+    String message = String.format("hg commit -m \"%s\" -u \"%s\"\nhg push",
+                                   rm.description, rm.author);
+    Utils.makeShellScript(message, revClone.getLocalTempDir().getAbsolutePath() + "/hg_commit.sh");
+
+    AppContext.RUN.ui.info(String.format("To commit, run: cd %s && ./hg_commit.sh && cd -",
+                                         revClone.getLocalTempDir().getAbsolutePath()));
+    return dr;
   }
 
   private void putFile(String relativeFilename, Codebase c) throws CommandException {

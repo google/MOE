@@ -48,7 +48,7 @@ public class DetermineMetadataDirective implements Directive {
       return 1;
     }
 
-    RevisionMetadata rm = DetermineMetadataLogic.determine(context, revs);
+    RevisionMetadata rm = DetermineMetadataLogic.determine(context, revs, null);
     AppContext.RUN.ui.info(rm.toString());
     return 0;
   }

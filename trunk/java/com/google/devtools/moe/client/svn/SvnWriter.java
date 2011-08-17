@@ -4,19 +4,20 @@ package com.google.devtools.moe.client.svn;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
-import com.google.devtools.moe.client.codebase.Codebase;
-import com.google.devtools.moe.client.writer.DraftRevision;
-import com.google.devtools.moe.client.writer.WritingError;
-import com.google.devtools.moe.client.writer.Writer;
-import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Utils;
+import com.google.devtools.moe.client.codebase.Codebase;
+import com.google.devtools.moe.client.repositories.Revision;
+import com.google.devtools.moe.client.repositories.RevisionMetadata;
+import com.google.devtools.moe.client.writer.DraftRevision;
+import com.google.devtools.moe.client.writer.Writer;
+import com.google.devtools.moe.client.writer.WritingError;
 
-import java.io.IOException;
 import java.io.File;
+import java.io.IOException;
 import java.util.Set;
 
 /**
@@ -36,6 +37,7 @@ public class SvnWriter implements Writer {
     this.projectSpace = projectSpace;
   }
 
+  @Override
   public File getRoot() {
     return rootDirectory;
   }
@@ -49,6 +51,7 @@ public class SvnWriter implements Writer {
     }
   }
 
+  @Override
   public DraftRevision putCodebase(Codebase c) throws WritingError {
     c.checkProjectSpace(projectSpace);
     Set<String> codebaseFiles = c.getRelativeFilenames();
@@ -64,6 +67,20 @@ public class SvnWriter implements Writer {
     }
 
     return new SvnDraftRevision(rootDirectory);
+  }
+
+  @Override
+  public DraftRevision putCodebase(Codebase c, RevisionMetadata rm) throws WritingError {
+    DraftRevision dr = putCodebase(c);
+    // Generate a shell script to commit repo with author and description
+    String script = String.format("svn commit -m \"%s\"\n" +
+                                  "svn propset -r HEAD svn:author \"%s\" --revprop",
+                                  rm.description, rm.author);
+    Utils.makeShellScript(script, rootDirectory.getAbsolutePath() + "/svn_commit.sh");
+
+    AppContext.RUN.ui.info(String.format("To submit, run: cd %s && ./svn_commit.sh && cd -",
+                                         rootDirectory.getAbsolutePath()));
+    return dr;
   }
 
   /**

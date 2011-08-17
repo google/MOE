@@ -36,7 +36,8 @@ public class DetermineMetadataDirectiveTest extends TestCase {
     d.getFlags().revisionExpression = "internal{1,2}";
     assertEquals(0, d.perform());
     RevisionMetadata rm = new RevisionMetadata("1, 2", "author, author", "date, date",
-        "description\n-------------\ndescription",
+        "description\n\tChange on date by author\n-------------\ndescription\n\t" +
+        "Change on date by author",
         ImmutableList.of(new Revision("parent", "internal"),
         new Revision("parent", "internal")));
     assertEquals(rm.toString(), ((RecordingUi) AppContext.RUN.ui).lastInfo);
@@ -56,7 +57,8 @@ public class DetermineMetadataDirectiveTest extends TestCase {
     d.getFlags().revisionExpression = "internal{7}";
     assertEquals(0, d.perform());
     RevisionMetadata rm = new RevisionMetadata("7", "author", "date",
-        "description", ImmutableList.of(new Revision("parent", "internal")));
+        "description\n\tChange on date by author",
+        ImmutableList.of(new Revision("parent", "internal")));
     assertEquals(rm.toString(), ((RecordingUi) AppContext.RUN.ui).lastInfo);
   }
 }

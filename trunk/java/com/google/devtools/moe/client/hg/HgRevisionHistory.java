@@ -115,7 +115,7 @@ public class HgRevisionHistory implements RevisionHistory {
    * Unescape text that was escaped by hg escape
    */
   private static String unescape(String text) {
-    return text.replaceAll("&lt", "<").replaceAll("&gt", ">").replaceAll("&amp", "&");
+    return text.replaceAll("&lt;", "<").replaceAll("&gt;", ">").replaceAll("&amp;", "&");
   }
 
   /** Parse the output of Hg into RevisionMetadata
