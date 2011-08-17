@@ -14,6 +14,8 @@ import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseExpression;
 import com.google.devtools.moe.client.parser.Term;
+import com.google.devtools.moe.client.repositories.Revision;
+import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.testing.AppContextForTesting;
 import com.google.devtools.moe.client.writer.DraftRevision;
 
@@ -40,7 +42,7 @@ public class HgWriterTest extends TestCase {
   final File writerRoot = new File("/writer");
   final String projectSpace = "public";
   final CodebaseExpression cExp = new CodebaseExpression(
-      new Term(projectSpace, ImmutableMap.<String,String>of()));
+      new Term(projectSpace, ImmutableMap.<String, String>of()));
 
   /* Helper methods */
 
@@ -143,6 +145,31 @@ public class HgWriterTest extends TestCase {
 
     HgWriter w = new HgWriter(mockRevClone, projectSpace);
     DraftRevision dr = w.putCodebase(codebase);
+
+    control.verify();
+  }
+
+  public void testPutCodebase_editFileWithMetadata() throws Exception {
+    expect(mockFs.findFiles(codebaseRoot)).andReturn(
+        ImmutableSet.<File>of(new File(codebaseRoot, "file1")));
+    expect(mockFs.findFiles(writerRoot))
+        .andReturn(ImmutableSet.<File>of(new File(writerRoot, "file1")));
+
+    expect(mockFs.exists(new File(codebaseRoot, "file1"))).andReturn(true);
+    expect(mockFs.exists(new File(writerRoot, "file1"))).andReturn(true);
+
+    mockFs.makeDirsForFile(new File(writerRoot, "file1"));
+    mockFs.copyFile(new File(codebaseRoot, "file1"), new File(writerRoot, "file1"));
+
+    File script = new File("/writer/hg_commit.sh");
+    mockFs.write("#!/bin/sh\nhg commit -m \"desc\" -u \"author\"\nhg push", script);
+    mockFs.setExecutable(script);
+    control.replay();
+
+    HgWriter w = new HgWriter(mockRevClone, projectSpace);
+    RevisionMetadata rm = new RevisionMetadata("rev1", "author", "data", "desc",
+                                               ImmutableList.<Revision>of());
+    DraftRevision dr = w.putCodebase(codebase, rm);
 
     control.verify();
   }

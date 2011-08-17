@@ -3,9 +3,8 @@
 package com.google.devtools.moe.client;
 
 import java.io.File;
-import java.util.Set;
-
 import java.io.IOException;
+import java.util.Set;
 
 /**
  * Interface for MOE to interact with the local filesystem.
@@ -64,6 +63,7 @@ public interface FileSystem {
    * Returns whether the file is readable
    */
   public boolean isReadable(File f);
+
   /**
    * Makes a file executable.
    */
@@ -83,6 +83,11 @@ public interface FileSystem {
    * Copy File src's contents into dest.
    */
   public void copyFile(File src, File dest) throws IOException;
+
+  /**
+   * Write contents to File f.
+   */
+  public void write(String contents, File f) throws IOException;
 
   /**
    * Deletes a file or directory and all contents recursively.

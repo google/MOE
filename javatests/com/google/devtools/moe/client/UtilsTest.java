@@ -51,10 +51,10 @@ public class UtilsTest extends TestCase {
       fail();
     } catch (MoeProblem p) {}
   }
-  
+
   /**
    * Confirms that the expandToDirectory()-method calls the proper expand methods for
-   * known archive types. 
+   * known archive types.
    * @throws Exception
    */
   public void testExpandToDirectory() throws Exception {
@@ -62,7 +62,7 @@ public class UtilsTest extends TestCase {
     AppContextForTesting.initForTest();
     String filePath = "/foo/bar.tar";
     File file = new File(filePath);
-    
+
     FileSystem mockfs = EasyMock.createMock(FileSystem.class);
     expect(mockfs.getTemporaryDirectory(EasyMock.<String>anyObject()))
         .andReturn(new File("/test"));
@@ -72,22 +72,22 @@ public class UtilsTest extends TestCase {
     AppContext.RUN.fileSystem = mockfs;
 
     CommandRunner mockcmd = EasyMock.createMock(CommandRunner.class);
-    expect(mockcmd.runCommand(EasyMock.<String>anyObject(), 
-                              EasyMock.<List<String>>anyObject(), 
-                              EasyMock.<String>anyObject(), 
+    expect(mockcmd.runCommand(EasyMock.<String>anyObject(),
+                              EasyMock.<List<String>>anyObject(),
+                              EasyMock.<String>anyObject(),
                               EasyMock.<String>anyObject())).andReturn(null);
     EasyMock.replay(mockcmd);
     AppContext.RUN.cmd = mockcmd;
-    
+
     // Run the .expandToDirectory method.
     File directory = Utils.expandToDirectory(file);
-    assertNotNull(directory);    
+    assertNotNull(directory);
     assertEquals("/test", directory.toString());
-    
+
     EasyMock.verify(mockfs);
     EasyMock.verify(mockcmd);
   }
-    
+
   /**
    * Confirms that the expandToDirectory()-method will return null when handed a unsupported
    * file extension.
@@ -101,7 +101,7 @@ public class UtilsTest extends TestCase {
 
     // Run the .expandToDirectory method.
     File directory = Utils.expandToDirectory(file);
-    assertNull(directory);    
+    assertNull(directory);
   }
 
   public void testExpandTar() throws Exception {
@@ -161,5 +161,22 @@ public class UtilsTest extends TestCase {
 
       fail();
     } catch (MoeProblem p) {}
+  }
+
+  public void testMakeShellScript() throws Exception {
+    AppContextForTesting.initForTest();
+    IMocksControl control = EasyMock.createControl();
+    FileSystem fileSystem = control.createMock(FileSystem.class);
+    CommandRunner cmd = control.createMock(CommandRunner.class);
+    AppContext.RUN.cmd = cmd;
+    AppContext.RUN.fileSystem = fileSystem;
+    File script = new File("/path/to/script");
+
+    fileSystem.write("#!/bin/sh\nmessage contents", script);
+    fileSystem.setExecutable(script);
+
+    control.replay();
+    Utils.makeShellScript("message contents", "/path/to/script");
+    control.verify();
   }
 }

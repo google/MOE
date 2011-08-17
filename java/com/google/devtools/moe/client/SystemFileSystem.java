@@ -2,6 +2,7 @@
 
 package com.google.devtools.moe.client;
 
+import com.google.common.base.Charsets;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
@@ -90,6 +91,10 @@ public class SystemFileSystem implements FileSystem {
 
   public void copyFile(File src, File dest) throws IOException {
     Files.copy(src, dest);
+  }
+
+  public void write(String contents, File f) throws IOException {
+    Files.write(contents, f, Charsets.UTF_8);
   }
 
   public void deleteRecursively(File file) throws IOException {

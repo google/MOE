@@ -186,7 +186,7 @@ public class HgRevisionHistoryTest extends TestCase {
                   "--debug"),
               "" /*stdinData*/,
               localCloneTempDir /*workingDirectory*/))
-          .andReturn("2 < u&ltid@google.com < &ampamp < &gtdescription < 1:parent");
+          .andReturn("2 < u&lt;id@google.com < &amp;amp < &gt;description < 1:parent");
     } catch (CommandException e) {
       throw new RuntimeException(e);
     }

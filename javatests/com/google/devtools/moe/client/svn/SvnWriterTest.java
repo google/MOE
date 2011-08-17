@@ -11,16 +11,18 @@ import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseExpression;
-import com.google.devtools.moe.client.writer.DraftRevision;
 import com.google.devtools.moe.client.parser.Term;
+import com.google.devtools.moe.client.repositories.Revision;
+import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.testing.AppContextForTesting;
+import com.google.devtools.moe.client.writer.DraftRevision;
 
+import junit.framework.TestCase;
 import org.easymock.EasyMock;
 import static org.easymock.EasyMock.expect;
 import org.easymock.IMocksControl;
 import java.io.File;
 import java.util.List;
-import junit.framework.TestCase;
 
 /**
  * @author dbentley@google.com (Daniel Bentley)
@@ -202,4 +204,33 @@ public class SvnWriterTest extends TestCase {
     control.verify();
   }
 
+  public void testPutEmptyCodebaseWithMetadata() throws Exception {
+    AppContextForTesting.initForTest();
+    IMocksControl control = EasyMock.createControl();
+    SvnRevisionHistory revisionHistory = control.createMock(SvnRevisionHistory.class);
+    FileSystem fileSystem = control.createMock(FileSystem.class);
+    CommandRunner cmd = control.createMock(CommandRunner.class);
+    AppContext.RUN.cmd = cmd;
+    AppContext.RUN.fileSystem = fileSystem;
+
+    expect(fileSystem.findFiles(f("/codebase"))).andReturn(ImmutableSet.<File>of());
+    expect(fileSystem.findFiles(f("/writer"))).andReturn(
+        ImmutableSet.<File>of(f("/writer/.svn/")));
+
+    File script = new File("/writer/svn_commit.sh");
+    fileSystem.write("#!/bin/sh\nsvn commit -m \"desc\"\n" +
+                 "svn propset -r HEAD svn:author \"author\" --revprop",
+                 script);
+    fileSystem.setExecutable(script);
+
+    control.replay();
+    Codebase c = new Codebase(f("/codebase"), "public",
+                              e("public", ImmutableMap.<String, String>of()));
+    RevisionMetadata rm = new RevisionMetadata("rev1", "author", "data", "desc",
+                                               ImmutableList.<Revision>of());
+    SvnWriter e = new SvnWriter("", null, f("/writer"), "public");
+    DraftRevision r = e.putCodebase(c, rm);
+    control.verify();
+    assertEquals("/writer", r.getLocation());
+  }
 }

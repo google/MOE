@@ -129,7 +129,7 @@ public class OneMigrationDirective implements Directive {
         options.revisionsToMigrate);
       return 1;
     }
-    DraftRevision r = OneMigrationLogic.migrate(db, c, destination, revs);
+    DraftRevision r = OneMigrationLogic.migrate(db, c, destination, revs, context);
     if (r == null) {
       return 1;
     }
