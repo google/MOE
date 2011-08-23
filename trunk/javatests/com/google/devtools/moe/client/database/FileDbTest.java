@@ -2,18 +2,28 @@
 
 package com.google.devtools.moe.client.database;
 
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.io.Files;
+import com.google.devtools.moe.client.AppContext;
+import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.repositories.Revision;
+import com.google.devtools.moe.client.testing.AppContextForTesting;
+
+import junit.framework.TestCase;
+import org.easymock.EasyMock;
+import static org.easymock.EasyMock.expect;
+import org.easymock.IMocksControl;
 
 import java.io.File;
-import junit.framework.TestCase;
 
 /**
  */
 public class FileDbTest extends TestCase {
+
+  @Override
+  public void setUp() {
+    AppContextForTesting.initForTest();
+  }
 
   public void testValidDb() throws Exception {
     FileDb db = new FileDb(FileDb.makeDbFromDbText(
@@ -51,29 +61,37 @@ public class FileDbTest extends TestCase {
   }
 
   public void testMakeDbFromFile() throws Exception {
-    File tempDir = Files.createTempDir();
-    File dbFile = new File(tempDir.getPath() + "/db");
-    Files.touch(dbFile);
+    IMocksControl control = EasyMock.createControl();
+    FileSystem fileSystem = control.createMock(FileSystem.class);
+    AppContext.RUN.fileSystem = fileSystem;
+
+    File dbFile = new File("/path/to/db");
     String dbText =
         "{\"equivalences\":[{\"rev1\":" +
         "{\"revId\":\"r1\",\"repositoryName\":\"name1\"},\"rev2\":" +
         "{\"revId\":\"r2\",\"repositoryName\":\"name2\"}}]}";
-    Files.write(dbText, dbFile, Charsets.UTF_8);
+    expect(fileSystem.fileToString(dbFile)).andReturn(dbText);
+    control.replay();
     FileDb db = new FileDb(FileDb.makeDbFromDbText(dbText));
     assertEquals((new FileDb(FileDb.makeDbFromFile(dbFile.getPath()))).getEquivalences(),
                  db.getEquivalences());
+    control.verify();
   }
 
   public void testWriteDbToFile() throws Exception {
-    File tempDir = Files.createTempDir();
-    File dbWrittenFile = new File(tempDir.getPath() + "/dbWrite");
-    Files.touch(dbWrittenFile);
+    IMocksControl control = EasyMock.createControl();
+    FileSystem fileSystem = control.createMock(FileSystem.class);
+    AppContext.RUN.fileSystem = fileSystem;
+
+    File dbFile = new File("/path/to/db");
     String dbText =
         "{\"equivalences\":[{\"rev1\":" +
         "{\"revId\":\"r1\",\"repositoryName\":\"name1\"},\"rev2\":" +
         "{\"revId\":\"r2\",\"repositoryName\":\"name2\"}}]}";
+    fileSystem.write(dbText, dbFile);
+    control.replay();
     FileDb db = new FileDb(FileDb.makeDbFromDbText(dbText));
-    FileDb.writeDbToFile(db, dbWrittenFile.getPath());
-    assertEquals(Files.toString(dbWrittenFile, Charsets.UTF_8), dbText);
+    FileDb.writeDbToFile(db, dbFile.getPath());
+    control.verify();
   }
 }

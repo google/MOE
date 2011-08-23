@@ -4,6 +4,7 @@ package com.google.devtools.moe.client.hg;
 
 import static org.easymock.EasyMock.expect;
 
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner;
@@ -78,7 +79,7 @@ public class HgRevisionHistoryTest extends TestCase {
     // Run test
     control.replay();
 
-    HgRevisionHistory rh = new HgRevisionHistory(mockRepo);
+    HgRevisionHistory rh = new HgRevisionHistory(Suppliers.ofInstance(mockRepo));
     Revision rev = rh.findHighestRevision(null);
     assertEquals(repositoryName, rev.repositoryName);
     assertEquals("mockChangesetID", rev.revId);
@@ -117,7 +118,7 @@ public class HgRevisionHistoryTest extends TestCase {
     control.replay();
 
     try {
-      HgRevisionHistory rh = new HgRevisionHistory(mockRepo);
+      HgRevisionHistory rh = new HgRevisionHistory(Suppliers.ofInstance(mockRepo));
       Revision rev = rh.findHighestRevision("bogusChangeset");
       fail("'hg log' didn't fail on bogus changeset ID");
     } catch (MoeProblem expected) {}
@@ -154,7 +155,7 @@ public class HgRevisionHistoryTest extends TestCase {
     // Run test
     control.replay();
 
-    HgRevisionHistory rh = new HgRevisionHistory(mockRepo);
+    HgRevisionHistory rh = new HgRevisionHistory(Suppliers.ofInstance(mockRepo));
     RevisionMetadata result = rh.getMetadata(new Revision("2", "mockrepo"));
     assertEquals("2", result.id);
     assertEquals("uid@google.com", result.author);
@@ -194,7 +195,7 @@ public class HgRevisionHistoryTest extends TestCase {
     // Run test
     control.replay();
 
-    HgRevisionHistory rh = new HgRevisionHistory(mockRepo);
+    HgRevisionHistory rh = new HgRevisionHistory(Suppliers.ofInstance(mockRepo));
     RevisionMetadata result = rh.getMetadata(new Revision("2", "mockrepo"));
     assertEquals("2", result.id);
     assertEquals("u<id@google.com", result.author);
@@ -205,8 +206,8 @@ public class HgRevisionHistoryTest extends TestCase {
   }
 
   public void testParseMetadata() {
-    HgRevisionHistory rh = new HgRevisionHistory(new HgClonedRepository(repositoryName,
-                                                                        localCloneTempDir));
+    HgRevisionHistory rh = new HgRevisionHistory(Suppliers.ofInstance(
+        new HgClonedRepository(repositoryName, localCloneTempDir)));
     List<RevisionMetadata> rs = rh.parseMetadata(
         "1 < foo@google.com < date1 < foo < 1:p1 -1:p2\n");
     assertEquals(1, rs.size());
@@ -230,10 +231,10 @@ public class HgRevisionHistoryTest extends TestCase {
               "hg",
               ImmutableList.<String>of(
                   "heads",
-                  "--template='{node}\n'"),
+                  "--template={node}\n"),
               "" /*stdinData*/,
               localCloneTempDir /*workingDirectory*/))
-          .andReturn("mockChangesetID1\nmockChangesetID2");
+          .andReturn("mockChangesetID1\nmockChangesetID2\n");
     } catch (CommandException e) {
       throw new RuntimeException(e);
     }
@@ -241,7 +242,7 @@ public class HgRevisionHistoryTest extends TestCase {
     // Run test
     control.replay();
 
-    HgRevisionHistory rh = new HgRevisionHistory(mockRepo);
+    HgRevisionHistory rh = new HgRevisionHistory(Suppliers.ofInstance(mockRepo));
     ImmutableList<Revision> revs = ImmutableList.copyOf(rh.findHeadRevisions());
     assertEquals(repositoryName, revs.get(0).repositoryName);
     assertEquals("mockChangesetID1", revs.get(0).revId);
@@ -264,10 +265,10 @@ public class HgRevisionHistoryTest extends TestCase {
               "hg",
               ImmutableList.<String>of(
                   "heads",
-                  "--template='{node}\n'"),
+                  "--template={node}\n"),
               "" /*stdinData*/,
               localCloneTempDir /*workingDirectory*/))
-          .andReturn("mockChangesetID");
+          .andReturn("mockChangesetID\n");
     } catch (CommandException e) {
       throw new RuntimeException(e);
     }
@@ -321,7 +322,7 @@ public class HgRevisionHistoryTest extends TestCase {
 
     // Run test
     control.replay();
-    HgRevisionHistory rh = new HgRevisionHistory(mockRepo);
+    HgRevisionHistory rh = new HgRevisionHistory(Suppliers.ofInstance(mockRepo));
     RevisionMatcher matcher = new EquivalenceMatcher("public", db);
     ImmutableList<Revision> newRevisions = ImmutableList.copyOf(rh.findRevisions(null, matcher));
     assertEquals(2, newRevisions.size());

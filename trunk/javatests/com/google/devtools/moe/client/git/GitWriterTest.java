@@ -1,6 +1,6 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
-package com.google.devtools.moe.client.hg;
+package com.google.devtools.moe.client.git;
 
 import static org.easymock.EasyMock.expect;
 
@@ -9,14 +9,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.AppContext;
-import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseExpression;
 import com.google.devtools.moe.client.parser.Term;
-import com.google.devtools.moe.client.repositories.Revision;
-import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.testing.AppContextForTesting;
 import com.google.devtools.moe.client.writer.DraftRevision;
 
@@ -28,16 +25,16 @@ import org.easymock.IMocksControl;
 import java.io.File;
 
 /**
- * Test HgWriter by expect()ing file system calls and hg commands to add/remove files.
+ * Test GitWriter by expect()ing file system calls and git commands to add/remove files.
  *
+ * @author michaelpb@gmail.com (Michael Bethencourt)
  */
-public class HgWriterTest extends TestCase {
+public class GitWriterTest extends TestCase {
 
   IMocksControl control;
   FileSystem mockFs;
-  CommandRunner mockCmd;
   Codebase codebase;
-  HgClonedRepository mockRevClone;
+  GitClonedRepository mockRevClone;
 
   final File codebaseRoot = new File("/codebase");
   final File writerRoot = new File("/writer");
@@ -47,9 +44,9 @@ public class HgWriterTest extends TestCase {
 
   /* Helper methods */
 
-  private void expectHgCmd(String... args) throws CommandException {
-    expect(mockCmd.runCommand("hg", ImmutableList.copyOf(args), "", writerRoot.getAbsolutePath()))
-        .andReturn("" /*stdout*/);
+  private void expectGitCmd(String... args) throws CommandException {
+    expect(mockRevClone.runGitCommand(ImmutableList.copyOf(args)))
+        .andReturn("" /* stdout */);
   }
 
   /* End helper methods */
@@ -58,30 +55,25 @@ public class HgWriterTest extends TestCase {
     AppContextForTesting.initForTest();
     control = EasyMock.createControl();
     mockFs = control.createMock(FileSystem.class);
-    mockCmd = control.createMock(CommandRunner.class);
-    AppContext.RUN.cmd = mockCmd;
     AppContext.RUN.fileSystem = mockFs;
     codebase = new Codebase(codebaseRoot, projectSpace, cExp);
-    mockRevClone = control.createMock(HgClonedRepository.class);
+    mockRevClone = control.createMock(GitClonedRepository.class);
 
     expect(mockRevClone.getLocalTempDir()).andReturn(writerRoot).anyTimes();
   }
 
   public void testPutCodebase_emptyCodebase() throws Exception {
-
-    // Define the files in the codebase and in the writer (hg repo).
+    // Define the files in the codebase and in the writer (git repo).
     expect(mockFs.findFiles(codebaseRoot)).andReturn(ImmutableSet.<File>of());
     expect(mockFs.findFiles(writerRoot)).andReturn(ImmutableSet.<File>of(
-        new File(writerRoot, ".hg"),
-        new File(writerRoot, ".hgignore"),
-        new File(writerRoot, ".hg/branch"),
-        new File(writerRoot, ".hg/cache/tags")));
+        // Doesn't seem to matter that much what we return here, other than .git.
+        new File(writerRoot, ".git/branches")));
 
-    // Expect no other mockFs calls from HgWriter.putFile().
+    // Expect no other mockFs calls from GitWriter.putFile().
 
     control.replay();
 
-    HgWriter w = new HgWriter(Suppliers.ofInstance(mockRevClone), projectSpace);
+    GitWriter w = new GitWriter(Suppliers.ofInstance(mockRevClone), projectSpace);
     DraftRevision dr = w.putCodebase(codebase);
 
     control.verify();
@@ -90,7 +82,6 @@ public class HgWriterTest extends TestCase {
   }
 
   public void testPutCodebase_addFile() throws Exception {
-
     expect(mockFs.findFiles(codebaseRoot)).andReturn(
         ImmutableSet.<File>of(new File(codebaseRoot, "file1")));
     expect(mockFs.findFiles(writerRoot)).andReturn(ImmutableSet.<File>of());
@@ -100,18 +91,17 @@ public class HgWriterTest extends TestCase {
 
     mockFs.makeDirsForFile(new File(writerRoot, "file1"));
     mockFs.copyFile(new File(codebaseRoot, "file1"), new File(writerRoot, "file1"));
-    expectHgCmd("add", "file1");
+    expectGitCmd("add", "file1");
 
     control.replay();
 
-    HgWriter w = new HgWriter(Suppliers.ofInstance(mockRevClone), projectSpace);
+    GitWriter w = new GitWriter(Suppliers.ofInstance(mockRevClone), projectSpace);
     DraftRevision dr = w.putCodebase(codebase);
 
     control.verify();
   }
 
   public void testPutCodebase_editFile() throws Exception {
-
     expect(mockFs.findFiles(codebaseRoot)).andReturn(
         ImmutableSet.<File>of(new File(codebaseRoot, "file1")));
     expect(mockFs.findFiles(writerRoot))
@@ -125,14 +115,13 @@ public class HgWriterTest extends TestCase {
 
     control.replay();
 
-    HgWriter w = new HgWriter(Suppliers.ofInstance(mockRevClone), projectSpace);
+    GitWriter w = new GitWriter(Suppliers.ofInstance(mockRevClone), projectSpace);
     DraftRevision dr = w.putCodebase(codebase);
 
     control.verify();
   }
 
   public void testPutCodebase_removeFile() throws Exception {
-
     expect(mockFs.findFiles(codebaseRoot)).andReturn(ImmutableSet.<File>of());
     expect(mockFs.findFiles(writerRoot))
         .andReturn(ImmutableSet.<File>of(new File(writerRoot, "file1")));
@@ -140,37 +129,12 @@ public class HgWriterTest extends TestCase {
     expect(mockFs.exists(new File(codebaseRoot, "file1"))).andReturn(false);
     expect(mockFs.exists(new File(writerRoot, "file1"))).andReturn(true);
 
-    expectHgCmd("rm", "file1");
+    expectGitCmd("rm", "file1");
 
     control.replay();
 
-    HgWriter w = new HgWriter(Suppliers.ofInstance(mockRevClone), projectSpace);
+    GitWriter w = new GitWriter(Suppliers.ofInstance(mockRevClone), projectSpace);
     DraftRevision dr = w.putCodebase(codebase);
-
-    control.verify();
-  }
-
-  public void testPutCodebase_editFileWithMetadata() throws Exception {
-    expect(mockFs.findFiles(codebaseRoot)).andReturn(
-        ImmutableSet.<File>of(new File(codebaseRoot, "file1")));
-    expect(mockFs.findFiles(writerRoot))
-        .andReturn(ImmutableSet.<File>of(new File(writerRoot, "file1")));
-
-    expect(mockFs.exists(new File(codebaseRoot, "file1"))).andReturn(true);
-    expect(mockFs.exists(new File(writerRoot, "file1"))).andReturn(true);
-
-    mockFs.makeDirsForFile(new File(writerRoot, "file1"));
-    mockFs.copyFile(new File(codebaseRoot, "file1"), new File(writerRoot, "file1"));
-
-    File script = new File("/writer/hg_commit.sh");
-    mockFs.write("#!/bin/sh\nhg commit -m \"desc\" -u \"author\"\nhg push", script);
-    mockFs.setExecutable(script);
-    control.replay();
-
-    HgWriter w = new HgWriter(Suppliers.ofInstance(mockRevClone), projectSpace);
-    RevisionMetadata rm = new RevisionMetadata("rev1", "author", "data", "desc",
-                                               ImmutableList.<Revision>of());
-    DraftRevision dr = w.putCodebase(codebase, rm);
 
     control.verify();
   }

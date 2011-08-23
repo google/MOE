@@ -2,6 +2,7 @@
 
 package com.google.devtools.moe.client.hg;
 
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.Utils;
 import com.google.devtools.moe.client.repositories.Revision;
@@ -18,12 +19,13 @@ import java.util.Map;
  */
 public class HgWriterCreator implements WriterCreator {
 
-  private final HgClonedRepository tipClone;
+  private final Supplier<HgClonedRepository> tipCloneSupplier;
   private final HgRevisionHistory revHistory;
   private final String projectSpace;
 
-  HgWriterCreator(HgClonedRepository tipClone, HgRevisionHistory revHistory, String projectSpace) {
-    this.tipClone = tipClone;
+  HgWriterCreator(Supplier<HgClonedRepository> tipCloneSupplier, HgRevisionHistory revHistory,
+      String projectSpace) {
+    this.tipCloneSupplier = tipCloneSupplier;
     this.revHistory = revHistory;
     this.projectSpace = projectSpace;
   }
@@ -33,7 +35,7 @@ public class HgWriterCreator implements WriterCreator {
     Utils.checkKeys(options, ImmutableSet.of("revision"));
     // Sanity check: make sure the given revision exists.
     Revision rev = revHistory.findHighestRevision(options.get("revision"));
-    tipClone.updateToRevId(rev.revId);
-    return new HgWriter(tipClone, projectSpace);
+    tipCloneSupplier.get().updateToRevId(rev.revId);
+    return new HgWriter(tipCloneSupplier, projectSpace);
   }
 }

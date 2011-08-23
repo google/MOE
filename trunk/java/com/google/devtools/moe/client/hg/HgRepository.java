@@ -3,6 +3,8 @@
 package com.google.devtools.moe.client.hg;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.project.InvalidProject;
@@ -26,35 +28,43 @@ public class HgRepository {
    *
    * @throws InvalidProject if RepositoryConfig is missing a repo URL.
    */
-  public static Repository makeHgRepositoryFromConfig(String name, RepositoryConfig config)
-      throws InvalidProject {
+  public static Repository makeHgRepositoryFromConfig(final String name,
+      RepositoryConfig config) throws InvalidProject {
     Preconditions.checkArgument(config.getType() == RepositoryType.hg);
 
-    String url = config.getUrl();
+    final String url = config.getUrl();
     if (url == null || url.isEmpty()) {
       throw new InvalidProject("Hg repository config missing \"url\".");
     }
 
-    HgClonedRepository tipClone = new HgClonedRepository(name, url);
-    tipClone.cloneLocallyAtTip();
+    // Using a Supplier makes it possible to clone the repo lazily.
+    // There are Directives such as CheckConfigDirective that need a Repository
+    // but should not clone the repository as a side-effect. Therefore, this
+    // makes it possible to create a Repository without forcing a clone.
+    Supplier<HgClonedRepository> tipCloneSupplier = Suppliers.memoize(
+        new Supplier<HgClonedRepository>() {
+          @Override
+          public HgClonedRepository get() {
+            HgClonedRepository tipClone = new HgClonedRepository(name, url);
+            tipClone.cloneLocallyAtTip();
+            return tipClone;
+          }
+    });
 
-    HgRevisionHistory rh = new HgRevisionHistory(tipClone);
+    HgRevisionHistory rh = new HgRevisionHistory(tipCloneSupplier);
 
     String projectSpace = config.getProjectSpace();
     if (projectSpace == null) {
       projectSpace = "public";
     }
 
-    HgCodebaseCreator cc = new HgCodebaseCreator(tipClone, rh, projectSpace);
+    HgCodebaseCreator cc = new HgCodebaseCreator(tipCloneSupplier, rh, projectSpace);
 
-    HgWriterCreator wc = new HgWriterCreator(tipClone, rh, projectSpace);
+    HgWriterCreator wc = new HgWriterCreator(tipCloneSupplier, rh, projectSpace);
 
     return new Repository(name, rh, cc, wc);
   }
 
-  // TODO(user): Move this to an instance method on HgClonedRepository, so that all Hg command
-  // calls implicitly occur in the context of a local cloned repo. Furthermore, via this command,
-  // replace all absolute paths in command calls with paths relative to the local clone.
   static String runHgCommand(List<String> args, String workingDirectory)
       throws CommandRunner.CommandException {
     return AppContext.RUN.cmd.runCommand("hg", args, "", workingDirectory);

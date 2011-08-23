@@ -1,6 +1,6 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
-package com.google.devtools.moe.client.hg;
+package com.google.devtools.moe.client.git;
 
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
@@ -14,24 +14,24 @@ import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.writer.DraftRevision;
 import com.google.devtools.moe.client.writer.Writer;
-import com.google.devtools.moe.client.writer.WritingError;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Set;
 
 /**
- * Writer implementation for Hg. Construct it with an HgClonedRepository at some revision.
- * putCodebase() will modify that clone per the given Codebase (which could be from any repo, Hg or
+ * Writer implementation for Git. Construct it with an GitClonedRepository at some revision.
+ * putCodebase() will modify that clone per the given Codebase (which could be from any repo, Git or
  * not).
  *
+ * @author michaelpb@gmail.com (Michael Bethencourt)
  */
-public class HgWriter implements Writer {
+public class GitWriter implements Writer {
 
-  private final Supplier<HgClonedRepository> revCloneSupplier;
+  private final Supplier<GitClonedRepository> revCloneSupplier;
   private final String projectSpace;
 
-  HgWriter(Supplier<HgClonedRepository> revCloneSupplier, String projectSpace) {
+  GitWriter(Supplier<GitClonedRepository> revCloneSupplier, String projectSpace) {
     this.revCloneSupplier = revCloneSupplier;
     this.projectSpace = projectSpace;
   }
@@ -42,15 +42,15 @@ public class HgWriter implements Writer {
   }
 
   @Override
-  public DraftRevision putCodebase(Codebase c) throws WritingError {
+  public DraftRevision putCodebase(Codebase c) {
     c.checkProjectSpace(projectSpace);
     Set<String> codebaseFiles = c.getRelativeFilenames();
     Set<String> writerRepoFiles = Utils.filterByRegEx(
         Utils.makeFilenamesRelative(
             AppContext.RUN.fileSystem.findFiles(getRoot()),
             getRoot()),
-        // Filter out paths and files that start with '.hg'.
-        "^\\.hg.*");
+        // Filter out paths and files that start with '.git'.
+        "^\\.git.*");
 
     Set<String> union = Sets.union(codebaseFiles, writerRepoFiles);
 
@@ -58,23 +58,27 @@ public class HgWriter implements Writer {
       try {
         putFile(filename, c);
       } catch (CommandException e) {
-        throw new MoeProblem("problem occurred while running hg: " + e.stderr);
+        throw new MoeProblem("problem occurred while running git: " + e.stderr);
       }
     }
 
-    return new HgDraftRevision(revCloneSupplier);
+    return new GitDraftRevision(revCloneSupplier);
   }
 
   @Override
-  public DraftRevision putCodebase(Codebase c, RevisionMetadata rm) throws WritingError {
+  public DraftRevision putCodebase(Codebase c, RevisionMetadata rm) {
     DraftRevision dr = putCodebase(c);
-    // Generate a shell script to commit repo with description and author
-    String message = String.format("hg commit -m \"%s\" -u \"%s\"\nhg push",
-                                   rm.description, rm.author);
-    Utils.makeShellScript(message,
-        revCloneSupplier.get().getLocalTempDir().getAbsolutePath() + "/hg_commit.sh");
 
-    AppContext.RUN.ui.info(String.format("To commit, run: cd %s && ./hg_commit.sh && cd -",
+    // Generate a shell script to commit repo with description and author.
+    // TODO(user): Git allows you to specify a --author="user <user@foo.com>" tag when committing
+    // but the given author needs to be a valid, registered author of this repo. That is hard to
+    // guarantee so, the author is appended to the description for now.
+    String message = String.format("git commit -m \"%s\" \ngitq push", (rm.description +
+        " (original change by " + rm.author + ")"));
+    Utils.makeShellScript(message,
+        revCloneSupplier.get().getLocalTempDir().getAbsolutePath() + "/git_commit.sh");
+
+    AppContext.RUN.ui.info(String.format("To commit, run: cd %s && ./git_commit.sh && cd -",
         revCloneSupplier.get().getLocalTempDir().getAbsolutePath()));
     return dr;
   }
@@ -93,9 +97,7 @@ public class HgWriter implements Writer {
     }
 
     if (!srcExists) {
-      HgRepository.runHgCommand(
-          ImmutableList.of("rm", relativeFilename),
-          getRoot().getAbsolutePath());
+      revCloneSupplier.get().runGitCommand(ImmutableList.of("rm", relativeFilename));
       return;
     }
 
@@ -107,9 +109,7 @@ public class HgWriter implements Writer {
     }
 
     if (!destExists) {
-      HgRepository.runHgCommand(
-          ImmutableList.of("add", relativeFilename),
-          getRoot().getAbsolutePath());
+      revCloneSupplier.get().runGitCommand(ImmutableList.of("add", relativeFilename));
     }
   }
 }
