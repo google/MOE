@@ -13,6 +13,7 @@ package com.google.devtools.moe.client.project;
 public enum RepositoryType {
   svn,
   hg,
+  git,
   dummy,
   nil;
 

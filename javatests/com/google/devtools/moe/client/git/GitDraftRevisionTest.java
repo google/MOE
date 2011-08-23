@@ -1,6 +1,6 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
-package com.google.devtools.moe.client.hg;
+package com.google.devtools.moe.client.git;
 
 import static org.easymock.EasyMock.expect;
 
@@ -14,22 +14,22 @@ import org.easymock.IMocksControl;
 import java.io.File;
 
 /**
- * Unit tests for HgDraftRevision.
+ * Unit tests for GitDraftRevision.
  *
+ * @author michaelpb@gmail.com (Michael Bethencourt)
  */
-public class HgDraftRevisionTest extends TestCase {
+public class GitDraftRevisionTest extends TestCase {
 
   public void testGetLocation() {
-
     final File mockRepoPath = new File("/mockrepo");
 
     IMocksControl control = EasyMock.createControl();
-    HgClonedRepository mockRevClone = control.createMock(HgClonedRepository.class);
+    GitClonedRepository mockRevClone = control.createMock(GitClonedRepository.class);
     expect(mockRevClone.getLocalTempDir()).andReturn(mockRepoPath);
 
     control.replay();
 
-    HgDraftRevision dr = new HgDraftRevision(Suppliers.ofInstance(mockRevClone));
+    GitDraftRevision dr = new GitDraftRevision(Suppliers.ofInstance(mockRevClone));
     assertEquals(mockRepoPath.getAbsolutePath(), dr.getLocation());
 
     control.verify();

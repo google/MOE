@@ -33,6 +33,8 @@ public class DirectiveFactory {
         new DetermineMetadataDirective()),
     ONE_MIGRATION("Performs a single migration",
         new OneMigrationDirective()),
+    MERGE_CODEBASES("Merges three codebases into a new codebase",
+        new MergeCodebasesDirective()),
     MIGRATE("Determines and performs migration(s)", new MigrateDirective()),
     MAGIC("Performs all migrations listed in config", new MigrateDirective())
     ;

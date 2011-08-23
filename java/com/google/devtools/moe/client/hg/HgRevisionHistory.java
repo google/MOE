@@ -3,6 +3,7 @@
 package com.google.devtools.moe.client.hg;
 
 import com.google.common.base.Splitter;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
@@ -23,10 +24,10 @@ import java.util.regex.Pattern;
  */
 public class HgRevisionHistory implements RevisionHistory {
 
-  private final HgClonedRepository tipClone;
+  private final Supplier<HgClonedRepository> tipCloneSupplier;
 
-  HgRevisionHistory(HgClonedRepository tipClone) {
-    this.tipClone = tipClone;
+  HgRevisionHistory(Supplier<HgClonedRepository> tipCloneSupplier) {
+    this.tipCloneSupplier = tipCloneSupplier;
   }
 
   /**
@@ -51,6 +52,7 @@ public class HgRevisionHistory implements RevisionHistory {
         "--template={node}");
 
     String changesetID;
+    HgClonedRepository tipClone = tipCloneSupplier.get();
     try {
       changesetID = HgRepository.runHgCommand(args, tipClone.getLocalTempDir().getAbsolutePath());
     } catch (CommandException e) {
@@ -72,6 +74,7 @@ public class HgRevisionHistory implements RevisionHistory {
    * @param revision  the revision to parse metadata for
    */
   public RevisionMetadata getMetadata(Revision revision) {
+    HgClonedRepository tipClone = tipCloneSupplier.get();
     if (!tipClone.getRepositoryName().equals(revision.repositoryName)) {
       throw new MoeProblem(
           String.format("Could not get metadata: Revision %s is in repository %s instead of %s",
@@ -136,7 +139,7 @@ public class HgRevisionHistory implements RevisionHistory {
           String[] parentParts = parent.split(":");
           if (!parentParts[0].equals("-1")) {
             parent = parentParts[1];
-            parentBuilder.add(new Revision(parent, tipClone.getRepositoryName()));
+            parentBuilder.add(new Revision(parent, tipCloneSupplier.get().getRepositoryName()));
           }
         }
       }
@@ -155,8 +158,9 @@ public class HgRevisionHistory implements RevisionHistory {
     ImmutableList<String> args = ImmutableList.of(
         "heads",
         // Format output as "changesetID"s alone.
-        "--template='{node}\n'");
+        "--template={node}\n");
     String heads;
+    HgClonedRepository tipClone = tipCloneSupplier.get();
     try {
       heads = HgRepository.runHgCommand(args, tipClone.getLocalTempDir().getAbsolutePath());
     } catch (CommandException e) {
@@ -168,7 +172,7 @@ public class HgRevisionHistory implements RevisionHistory {
                         e.stderr));
     }
     ImmutableList.Builder<Revision> result = ImmutableList.<Revision>builder();
-    for (String changesetID : Splitter.on("\n").split(heads)) {
+    for (String changesetID : Splitter.on("\n").omitEmptyStrings().split(heads)) {
       result.add(new Revision(changesetID, tipClone.getRepositoryName()));
     }
     return result.build();

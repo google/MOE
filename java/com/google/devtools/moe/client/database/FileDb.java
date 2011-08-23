@@ -2,10 +2,9 @@
 
 package com.google.devtools.moe.client.database;
 
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import com.google.common.io.Files;
+import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.repositories.Revision;
@@ -81,7 +80,7 @@ public class FileDb implements Db {
 
   public static DbStorage makeDbFromFile(String path) throws MoeProblem {
     try {
-      String dbText = Files.toString(new File(path), Charsets.UTF_8);
+      String dbText = AppContext.RUN.fileSystem.fileToString(new File(path));
       try {
         return makeDbFromDbText(dbText);
       } catch (InvalidProject e) {
@@ -97,7 +96,7 @@ public class FileDb implements Db {
       File dbFile = new File(path);
       Gson gson = new Gson();
       String dbText = gson.toJson(d.db);
-      Files.write(dbText, dbFile, Charsets.UTF_8);
+      AppContext.RUN.fileSystem.write(dbText, dbFile);
     } catch (IOException e) {
       throw new MoeProblem(e.getMessage());
     }

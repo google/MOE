@@ -2,6 +2,7 @@
 
 package com.google.devtools.moe.client.hg;
 
+import com.google.common.base.Supplier;
 import com.google.devtools.moe.client.writer.DraftRevision;
 
 /**
@@ -10,14 +11,14 @@ import com.google.devtools.moe.client.writer.DraftRevision;
  */
 public class HgDraftRevision implements DraftRevision {
 
-  private final HgClonedRepository revClone;
+  private final Supplier<HgClonedRepository> revCloneSupplier;
 
-  HgDraftRevision(HgClonedRepository revClone) {
-    this.revClone = revClone;
+  HgDraftRevision(Supplier<HgClonedRepository> revCloneSupplier) {
+    this.revCloneSupplier = revCloneSupplier;
   }
 
   @Override
   public String getLocation() {
-    return revClone.getLocalTempDir().getAbsolutePath();
+    return revCloneSupplier.get().getLocalTempDir().getAbsolutePath();
   }
 }

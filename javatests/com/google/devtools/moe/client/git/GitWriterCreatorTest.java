@@ -1,6 +1,6 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
-package com.google.devtools.moe.client.hg;
+package com.google.devtools.moe.client.git;
 
 import static org.easymock.EasyMock.expect;
 
@@ -16,36 +16,37 @@ import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
 
 /**
- * Unit tests for HgWriterCreator.
+ * Unit tests for GitWriterCreator.
  *
+ * @author michaelpb@gmail.com (Michael Bethencourt)
  */
-public class HgWriterCreatorTest extends TestCase {
+public class GitWriterCreatorTest extends TestCase {
 
   public void testCreate() throws Exception {
     AppContextForTesting.initForTest();
     IMocksControl control = EasyMock.createControl();
 
-    HgClonedRepository mockTipClone = control.createMock(HgClonedRepository.class);
-    HgRevisionHistory mockRevHistory = control.createMock(HgRevisionHistory.class);
+    GitClonedRepository mockHeadClone = control.createMock(GitClonedRepository.class);
+    GitRevisionHistory mockRevHistory = control.createMock(GitRevisionHistory.class);
 
     String revId = "mockChangesetId";
-    String repoName = "mockHgRepo";
+    String repoName = "mockGitRepo";
     String projectSpace = "public";
 
     expect(mockRevHistory.findHighestRevision(revId)).andReturn(new Revision(revId, repoName));
-    mockTipClone.updateToRevId(revId);
+    mockHeadClone.updateToRevId(revId);
 
     control.replay();
 
     // No asserts, just check expected completion/failure.
 
-    HgWriterCreator wc = new HgWriterCreator(Suppliers.ofInstance(mockTipClone), mockRevHistory,
-        projectSpace);
-    HgWriter w = (HgWriter) wc.create(ImmutableMap.of("revision", revId));
+    GitWriterCreator wc = new GitWriterCreator(Suppliers.ofInstance(mockHeadClone), 
+        mockRevHistory, projectSpace);
+    GitWriter w = (GitWriter) wc.create(ImmutableMap.of("revision", revId));
 
     try {
-      HgWriter w2 = (HgWriter) wc.create(ImmutableMap.of("iron vise", revId));
-      fail("HgWriterCreator.create() didn't fail when given options without 'revision' key.");
+      GitWriter w2 = (GitWriter) wc.create(ImmutableMap.of("iron vise", revId));
+      fail("GitWriterCreator.create() didn't fail when given options without 'revision' key.");
     } catch (MoeProblem expected) {}
 
     control.verify();

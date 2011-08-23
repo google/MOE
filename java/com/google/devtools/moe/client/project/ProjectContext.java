@@ -13,6 +13,7 @@ import com.google.devtools.moe.client.editors.ShellEditor;
 import com.google.devtools.moe.client.editors.Translator;
 import com.google.devtools.moe.client.editors.TranslatorPath;
 import com.google.devtools.moe.client.editors.TranslatorStep;
+import com.google.devtools.moe.client.git.GitRepository;
 import com.google.devtools.moe.client.hg.HgRepository;
 import com.google.devtools.moe.client.migrations.Migration;
 import com.google.devtools.moe.client.migrations.MigrationConfig;
@@ -95,6 +96,8 @@ public class ProjectContext {
             repositoryName, config);
       case hg:
         return HgRepository.makeHgRepositoryFromConfig(repositoryName, config);
+      case git:
+        return GitRepository.makeGitRepositoryFromConfig(repositoryName, config);
       case dummy:
         return DummyRepository.makeDummyRepository(repositoryName, config);
       default:

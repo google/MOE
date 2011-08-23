@@ -2,6 +2,7 @@
 
 package com.google.devtools.moe.client.hg;
 
+import com.google.common.base.Supplier;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.codebase.CodebaseCreator;
@@ -19,13 +20,14 @@ import java.util.Map;
  */
 public class HgCodebaseCreator implements CodebaseCreator {
 
-  private final HgClonedRepository tipClone;
+  private final Supplier<HgClonedRepository> tipCloneSupplier;
   private final HgRevisionHistory revisionHistory;
   private final String projectSpace;
 
   HgCodebaseCreator(
-      HgClonedRepository tipClone, HgRevisionHistory revisionHistory, String projectSpace) {
-    this.tipClone = tipClone;
+      Supplier<HgClonedRepository> tipCloneSupplier, HgRevisionHistory revisionHistory,
+      String projectSpace) {
+    this.tipCloneSupplier = tipCloneSupplier;
     this.revisionHistory = revisionHistory;
     this.projectSpace = projectSpace;
   }
@@ -33,6 +35,7 @@ public class HgCodebaseCreator implements CodebaseCreator {
   @Override
   public Codebase create(Map<String, String> options) throws CodebaseCreationError {
     Revision rev = revisionHistory.findHighestRevision(options.get("revision"));
+    HgClonedRepository tipClone = tipCloneSupplier.get();
     File archiveLocation = tipClone.archiveAtRevId(rev.revId);
     return new Codebase(
         archiveLocation,

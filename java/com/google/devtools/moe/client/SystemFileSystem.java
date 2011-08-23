@@ -117,4 +117,8 @@ public class SystemFileSystem implements FileSystem {
     os.close();
     return extractedFile;
   }
+
+  public String fileToString(File f) throws IOException {
+      return Files.toString(f, Charsets.UTF_8);
+  }
 }

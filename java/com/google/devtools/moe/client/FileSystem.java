@@ -102,4 +102,9 @@ public interface FileSystem {
    * @return a path to the resource in the file system
    */
   public File getResourceAsFile(String resource) throws IOException;
+
+  /**
+   * Reads all characters from f into a String
+   */
+  public String fileToString(File f) throws IOException;
 }

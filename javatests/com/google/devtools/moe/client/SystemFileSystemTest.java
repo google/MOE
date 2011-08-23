@@ -154,5 +154,11 @@ public class SystemFileSystemTest extends TestCase {
     assertEquals(false, bar.exists());
   }
 
-
+  public void testFileToString() throws Exception {
+    FileSystem fs = new SystemFileSystem();
+    File tempDir = Files.createTempDir();
+    File foo = new File(tempDir, "foo");
+    Files.write("Contents!", foo, Charsets.UTF_8);
+    assertEquals("Contents!", fs.fileToString(foo));
+  }
 }
