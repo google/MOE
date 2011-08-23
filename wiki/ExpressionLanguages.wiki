@@ -42,20 +42,24 @@ An expression is evaluated by (com.google.devtools.moe.client.codebase.Evaluator
     *  invokes an editor if the operator is "|", in which case the identifier is the name of the editor to invoke
 
 Example Codebase Expressions:
-  *  `googleinternal`
+  *  `'googleinternal'`
   the repository "googleinternal" at head
-  *  `googlecode`
+  *  `'googlecode'`
   the repository "googlecode" at head
-  *  `googlecode(revision=45)`
+  *  `'googlecode(revision=45)'`
   the repository "googlecode" at revision 45
-  *  `googlecode(revision=45)>internal`
+  *  `'googlecode(revision=45)>internal'`
   translate the repository "googlecode" at revision 45 to the project space "internal"
-  *  `googlecode|patch(file="/path/to/patch.txt")`
+  *  `'googlecode|patch(file="/path/to/patch.txt")'`
   apply the patch file "/path/to/patch.txt" to the repository "googlecode" at revision 45
-  *  `googlecode|patch(file="/path/to/patch.txt")>internal`
+  *  `'googlecode|patch(file="/path/to/patch.txt")>internal'`
   apply the patch file then translate
-  *  `googlecode>internal|patch(file="/path/to/patch.txt")`
+  *  `'googlecode>internal|patch(file="/path/to/patch.txt")'`
   apply the patch file after translating (e.g. if the patch file was made by someone developing against the internal project space)
+
+Special Codebase Expressions:
+  *  `'file(path="path/to/repo", projectspace="internal")'`
+  The special codebase identifier 'file' will tell MOE to build the codebase from the files in the location specified by the path option. A projectspace can also be given. The default is public. The 'file' codebase can be useful for testing MOE on files stored locally rather than in a version control system. As of August 2011, you can only create 'file' codebases. Writing to a 'file' codebase is not supported. Specifying a 'file' codebase as the --destination in a MOE change directive will cause an error.
 
 == Revision Expressions ==
 Related to Codebase Expressions are Revision Expressions. These describe one or more revisions in a particular repository.
@@ -66,7 +70,7 @@ A Revision Expression consists of:
   *  Revision name(s): (optional) a list of one or more revisions separated by commas
 
 Example Revision Expressions:
-  *  googlecode{123,456,789}
+  *  `'googlecode{123,456,789}'`
   revisions 123, 456, and 789 of repository "googlecode"
-  *  internal
+  *  `'internal'`
   the head revision of repository "internal"
