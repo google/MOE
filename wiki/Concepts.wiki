@@ -44,3 +44,15 @@ Editors must be configured in the config.
 
 ==Equivalence==
 In MOE, two revisions are equivalent when they represent the same files as they appear in their respective repositories. The purpose of MOE is to get projects into equivalence whenever they get out of it.
+
+==Migration==
+A Migration represents the series of changes needed to make one repository equivalent to another. It has four properties:
+  *  name: String. The name of the migration, as given in the MOE config.
+  *  fromRepository: String. The name of the repository to make equivalent.
+  * toRepository: String. The name of the repository to make fromRepository equivalent to.
+  *  separateRevisions: Boolean.
+    *  false: Combine all separate revisions in one repository into one big change in the other repository.
+    *  true: Let all separate revisions in one repository remain separate changes in the other repository [NOTE: this is not yet supported].
+  * metadataScrubberConfig:
+    *  usernamesToScrub: `List<String>`. All names to scrub from the metadata of a MOE commit.
+    *  scrubConfidentialWords: Boolean. You must implement this yourself.
