@@ -150,3 +150,25 @@ Creating a change in "googlecode" with revisions "internal{22651520,22648237}"
 Putting files from Codebase into Writer... Done
 Created Draft Revision: /tmp/svn_writer_5_1251170501963695488
 }}}
+
+==migrate==
+The migrate directive performs a migration as specified by the migration section of the [Config MOE config]. It determines which revisions are new since equivalence, and passes those to the one_migration directive, after performing the specified metadata scrubbing. Note the line starting with "To commit", which gives instructions on how to commit the change made by migrate.
+{{{
+$ Moe migrate --config_file moe_config.txt --db moe_db.txt --name test
+Reading config file from moe_config.txt... Done
+Performing migration 'test'... 
+    Evaluating Codebase "internal>public"... 
+        Creating from "internal"... /tmp/hg_archive_internal_4c0c54c3045deea0ea0d94fc13969734b7642b3d_1483780837009036036
+        Translating /tmp/hg_archive_internal_4c0c54c3045deea0ea0d94fc13969734b7642b3d_1483780837009036036 from project space "internal" to "public"... 
+            Editing /tmp/hg_archive_internal_4c0c54c3045deea0ea0d94fc13969734b7642b3d_1483780837009036036 with editor "scrub_step"... /tmp/expanded_tar_494920102821593557
+        DONE: Translating /tmp/hg_archive_internal_4c0c54c3045deea0ea0d94fc13969734b7642b3d_1483780837009036036 from project space "internal" to "public": /tmp/expanded_tar_494920102821593557
+    DONE: Evaluating Codebase "internal>public": /tmp/expanded_tar_494920102821593557
+    Creating Writer "googlecode"... /tmp/hg_clone_googlecode_4614611359151548813
+    Putting files from Codebase into Writer... 
+        To commit, run: cd /tmp/hg_clone_googlecode_4614611359151548813 && ./hg_commit.sh && cd -
+    DONE: Putting files from Codebase into Writer: Done
+DONE: Performing migration 'test': Done
+Created Draft Revisions:
+/tmp/hg_clone_googlecode_4614611359151548813 in repository googlecode
+}}}
+The one or more --name flags are optional; when omitted, migrate performs all migrations listed in the config.
