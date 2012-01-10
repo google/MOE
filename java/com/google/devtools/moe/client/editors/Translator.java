@@ -1,32 +1,25 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.editors;
 
-import java.util.List;
+import com.google.devtools.moe.client.codebase.Codebase;
+import com.google.devtools.moe.client.codebase.CodebaseCreationError;
+import com.google.devtools.moe.client.project.ProjectContext;
+
+import java.util.Map;
 
 /**
- * A Translator translates a Codebase from one project space to another.
+ * An interface for translating a Codebase via a series of steps. This is similar to the
+ * {@link Editor} interface, but Translators are used in a particular context, i.e. the migration
+ * of one repository's changes into another repository.
  *
- * For now, it is only the data. This is an odd design decision, I realize.
- *
- * I worry that a lot of the logic (checking input project space, setting output project space)
- * would be needlessly repeated.
- *
- * @author dbentley@google.com (Daniel Bentley)
  */
-public class Translator {
+public interface Translator {
 
-  public final String fromProjectSpace;
-  public final String toProjectSpace;
-  public final List<TranslatorStep> steps;
+  /**
+   * Translate the given Codebase, and return the result.
+   */
+  Codebase translate(Codebase toTranslate, Map<String, String> options, ProjectContext context)
+      throws CodebaseCreationError;
 
-  public Translator(String fromProjectSpace, String toProjectSpace, List<TranslatorStep> steps) {
-    this.fromProjectSpace = fromProjectSpace;
-    this.toProjectSpace = toProjectSpace;
-    this.steps = steps;
-  }
-
-  public TranslatorPath getTranslatorPath() {
-    return new TranslatorPath(fromProjectSpace, toProjectSpace);
-  }
 }

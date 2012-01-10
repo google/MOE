@@ -1,4 +1,4 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.codebase;
 
@@ -10,6 +10,7 @@ import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.MoeProblem;
+import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.parser.Term;
 import com.google.devtools.moe.client.tools.FileDifference;
 
@@ -35,7 +36,7 @@ public class CodebaseMerger {
     this.destinationCodebase = destinationCodebase;
 
     File mergedDir = AppContext.RUN.fileSystem.getTemporaryDirectory("merged_codebase_");
-    CodebaseExpression mergedExpression = new CodebaseExpression(
+    RepositoryExpression mergedExpression = new RepositoryExpression(
         new Term("merged", ImmutableMap.<String, String>of()));
     this.mergedCodebase = new Codebase(mergedDir, "merged", mergedExpression);
 
@@ -78,6 +79,26 @@ public class CodebaseMerger {
         failedToMergeFiles.size(), failedToMergeFiles.toString()));
   }
 
+  private static boolean areDifferent(String filename, File x, File y) {
+    return FileDifference.CONCRETE_FILE_DIFFER.diffFiles(filename, x, y).isDifferent();
+  }
+
+  /**
+   * Copy the destFile into the merged codebase. This is where the output of merge will be
+   * written to.
+   */
+  private File copyToMergedCodebase(String filename, File destFile) {
+    FileSystem fs = AppContext.RUN.fileSystem;
+    File mergedFile = mergedCodebase.getFile(filename);
+    try {
+      fs.makeDirsForFile(mergedFile);
+      fs.copyFile(destFile, mergedFile);
+      return mergedFile;
+    } catch (IOException e) {
+      throw new MoeProblem(e.getMessage());
+    }
+  }
+
   /**
    * Given a filename, this method finds the file with that name in each of the three codebases.
    * Using the UNIX merge(1) tool, those three files are merged and the result is placed in the
@@ -94,25 +115,14 @@ public class CodebaseMerger {
   public void generateMergedFile(String filename) {
     FileSystem fs = AppContext.RUN.fileSystem;
 
-    // Check that the files exist in their respective repositories. If not, assign them the null
-    // device.
     File origFile = originalCodebase.getFile(filename);
     boolean origExists = fs.exists(origFile);
-    if (!origExists) {
-      origFile = new File("/dev/null");
-    }
 
     File destFile = destinationCodebase.getFile(filename);
     boolean destExists = fs.exists(destFile);
-    if (!destExists) {
-      destFile = new File("/dev/null");
-    }
 
     File modFile = modifiedCodebase.getFile(filename);
     boolean modExists = fs.exists(modFile);
-    if (!modExists) {
-      modFile = new File("/dev/null");
-    }
 
     if (!destExists && !modExists) {
       // This should never be thrown since generateMergedFile(...) is only called on filesToMerge
@@ -120,36 +130,40 @@ public class CodebaseMerger {
       throw new MoeProblem(
           String.format("%s doesn't exist in either %s nor %s. This should not be possible.",
           filename, destinationCodebase, modifiedCodebase));
-    }
 
-    // The file no longer exists in either the modified or destination codebases.
-    if (origExists && !(destExists && modExists)) {
-      // Figure out which one still exists.
-      File existingFile = (destExists) ? destFile : modFile;
-      // If the file is unchanged from the original in either the modified or destination, defer
-      // to its deletion in the other. Otherwise we can continue since a merge conflict will occur
-      // which is what we want to happen.
-      if (FileDifference.CONCRETE_FILE_DIFFER.diffFiles(filename, origFile, existingFile) == null) {
+    } else if (origExists && modExists && !destExists) {
+      if (areDifferent(filename, origFile, modFile)) {
+        // Proceed and merge in /dev/null, which should produce a merge conflict (incoming edit on
+        // delete).
+        destFile = new File("/dev/null");
+      } else {
+        // Defer to deletion in destination codebase.
         return;
       }
+
+    } else if (origExists && !modExists && destExists) {
+      // Blindly follow deletion of the original file by not copying it into the merged codebase.
+      return;
+
+    } else if (!origExists && !(modExists && destExists)) {
+      // File exists only in modified or destination codebase, so just copy it over.
+      File existingFile = (modExists ? modFile : destFile);
+      copyToMergedCodebase(filename, existingFile);
+      return;
+
+    } else if (!origExists && modExists && destExists) {
+      // Merge both new files (conflict expected).
+      origFile = new File("/dev/null");
     }
 
-    // Copy the destFile into the merged codebase. This is where the output of merge will be
-    // written to.
-    File mergedFile = mergedCodebase.getFile(filename);
-    try {
-      fs.makeDirsForFile(mergedFile);
-      fs.copyFile(destFile, mergedFile);
-    } catch (IOException e) {
-      throw new MoeProblem(e.getMessage());
-    }
+    File mergedFile = copyToMergedCodebase(filename, destFile);
 
     String mergeOutput;
     try {
       // Merges the changes that lead from origFile to modFile into mergedFile (which is a copy
       // of destFile). After, mergedFile will have the combined changes of modFile and destFile.
       mergeOutput = AppContext.RUN.cmd.runCommand("merge", ImmutableList.of(
-          mergedFile.getAbsolutePath(), origFile.getAbsolutePath(), modFile.getAbsolutePath()), "",
+          mergedFile.getAbsolutePath(), origFile.getAbsolutePath(), modFile.getAbsolutePath()),
           this.mergedCodebase.getPath().getAbsolutePath());
       // Return status was 0 and the merge was successful. Note it.
       mergedFiles.add(mergedFile.getAbsolutePath().toString());
@@ -159,9 +173,12 @@ public class CodebaseMerger {
         failedToMergeFiles.add(mergedFile.getAbsolutePath().toString());
       } else {
         throw new MoeProblem(
-            String.format("Merge returned with unexpected status %d when trying to run "
-            + "\"merge -p %s %s %s\"", e.returnStatus, destFile.getAbsolutePath(),
-            origFile.getAbsolutePath(), modFile.getAbsolutePath()));
+            String.format(
+                "Merge returned with unexpected status %d when trying to run \"merge -p %s %s %s\"",
+                e.returnStatus,
+                destFile.getAbsolutePath(),
+                origFile.getAbsolutePath(),
+                modFile.getAbsolutePath()));
       }
     }
   }

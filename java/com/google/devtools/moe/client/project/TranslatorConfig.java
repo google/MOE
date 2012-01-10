@@ -1,4 +1,4 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.project;
 
@@ -17,6 +17,8 @@ public class TranslatorConfig {
   @SerializedName("to_project_space")
   private String toProjectSpace;
   private List<StepConfig> steps;
+  @SerializedName("inverse")
+  private boolean isInverse;
 
   public TranslatorConfig() {} // Constructed by gson
 
@@ -30,5 +32,24 @@ public class TranslatorConfig {
 
   public List<StepConfig> getSteps() {
     return steps;
+  }
+
+  public boolean isInverse() {
+    return isInverse;
+  }
+
+  void validate() throws InvalidProject {
+    InvalidProject.assertNotEmpty(
+        fromProjectSpace, "Translator requires from_project_space");
+    InvalidProject.assertNotEmpty(
+        toProjectSpace, "Translator requires to_project_space");
+    if (isInverse) {
+      InvalidProject.assertTrue(steps == null, "Inverse translator can't have steps");
+    } else {
+      InvalidProject.assertTrue(steps != null, "Translator requires steps");
+      for (StepConfig s : steps) {
+        s.validate();
+      }
+    }
   }
 }

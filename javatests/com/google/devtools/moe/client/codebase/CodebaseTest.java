@@ -1,8 +1,9 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.codebase;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.parser.Term;
 import com.google.devtools.moe.client.MoeProblem;
 
@@ -18,13 +19,13 @@ public class CodebaseTest extends TestCase {
     Codebase c = new Codebase(
             new File("/foo"),
             "internal",
-            new CodebaseExpression(new Term("foo", ImmutableMap.<String, String>of())));
+            new RepositoryExpression(new Term("foo", ImmutableMap.<String, String>of())));
     c.checkProjectSpace("internal");
     try {
       c = new Codebase(
               new File("/foo"),
               "internal",
-              new CodebaseExpression(new Term("foo", ImmutableMap.<String, String>of())));
+              new RepositoryExpression(new Term("foo", ImmutableMap.<String, String>of())));
       c.checkProjectSpace("public");
       fail();
     } catch (MoeProblem p) {}

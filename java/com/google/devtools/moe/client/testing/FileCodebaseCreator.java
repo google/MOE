@@ -1,4 +1,4 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.testing;
 
@@ -10,7 +10,7 @@ import com.google.devtools.moe.client.Utils;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.codebase.CodebaseCreator;
-import com.google.devtools.moe.client.codebase.CodebaseExpression;
+import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.parser.Term;
 
 import java.io.File;
@@ -25,17 +25,7 @@ public class FileCodebaseCreator implements CodebaseCreator  {
   private static final String PATH_OPTION = "path";
   private static final String PROJECT_SPACE_OPTION = "projectspace";
 
-  /**
-   * This CodebaseCreator subverts the "CodebaseCreator"-interface as it does not implement the
-   * getProjectSpace() property, which is only used by the OneMigrationDirective. In order to
-   * implement this method a reference to the options provided with the creation term would be
-   * required.
-   */
-  public String getProjectSpace() {
-    throw new UnsupportedOperationException("The getProjectSpace() operation is not available " +
-                                            "for a FileCodebaseCreator.");
-  }
-
+  @Override
   public Codebase create(Map<String, String> options) throws CodebaseCreationError {
     // Validate that the options passed are valid.
     Utils.checkKeys(options, ImmutableSet.of(PATH_OPTION, PROJECT_SPACE_OPTION));
@@ -53,7 +43,7 @@ public class FileCodebaseCreator implements CodebaseCreator  {
     String projectSpace = options.containsKey(PROJECT_SPACE_OPTION)
                           ? options.get(PROJECT_SPACE_OPTION)
                           : "public";
-    CodebaseExpression expression = new CodebaseExpression(new Term("file", options));
+    RepositoryExpression expression = new RepositoryExpression(new Term("file", options));
     return new Codebase(codebasePath, projectSpace, expression);
   }
 

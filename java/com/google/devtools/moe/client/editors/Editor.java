@@ -1,11 +1,10 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.editors;
 
 import com.google.devtools.moe.client.codebase.Codebase;
-import com.google.devtools.moe.client.codebase.CodebaseCreationError;
+import com.google.devtools.moe.client.project.ProjectContext;
 
-import java.io.File;
 import java.util.Map;
 
 /**
@@ -21,13 +20,12 @@ public interface Editor {
   public String getDescription();
 
   /**
-   * Edits a Directory's contents (not in-place).
+   * Takes in a Codebase and returns a new, edited version of that Codebase.
    *
-   * @param input  the Directory to edit
+   * @param input  the Codebase to edit
+   * @param context  the ProjectContext for this Editor's project
    * @param options  command-line parameters
-   *
-   * @returns a directory containing the edited contents
+   * @return a new Codebase that is an edited version of the input
    */
-  public File edit(File input, Map<String, String> options) throws CodebaseCreationError;
-
+  public Codebase edit(Codebase input, ProjectContext context, Map<String, String> options);
 }

@@ -1,14 +1,16 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.svn;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreator;
+import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.testing.AppContextForTesting;
 
@@ -33,6 +35,11 @@ public class SvnCodebaseCreatorTest extends TestCase {
     CommandRunner cmd = control.createMock(CommandRunner.class);
     AppContext.RUN.cmd = cmd;
     AppContext.RUN.fileSystem = fileSystem;
+    
+    RepositoryConfig mockConfig = control.createMock(RepositoryConfig.class);
+    expect(mockConfig.getUrl()).andReturn("http://foo/svn/trunk/").anyTimes();
+    expect(mockConfig.getProjectSpace()).andReturn("internal").anyTimes();
+    expect(mockConfig.getIgnoreFileRes()).andReturn(ImmutableList.<String>of()).anyTimes();
 
     expect(revisionHistory.findHighestRevision("46")).andReturn(result);
     expect(fileSystem.getTemporaryDirectory("svn_export_testing_45_")).
@@ -40,10 +47,13 @@ public class SvnCodebaseCreatorTest extends TestCase {
     expect(cmd.runCommand(
         "svn",
         ImmutableList.of("--no-auth-cache", "export", "http://foo/svn/trunk/", "-r", "45",
-                         "/dummy/path/45"), "", "")).andReturn("");
+                         "/dummy/path/45"), "")).andReturn("");
+    // Short-circuit Utils.filterFiles for ignore_files_re.
+    expect(AppContext.RUN.fileSystem.findFiles(new File("/dummy/path/45")))
+        .andReturn(ImmutableSet.<File>of());
+
     control.replay();
-    CodebaseCreator cc = new SvnCodebaseCreator("testing", "http://foo/svn/trunk/", "internal",
-                                                revisionHistory);
+    CodebaseCreator cc = new SvnCodebaseCreator("testing", mockConfig, revisionHistory);
     Codebase r = cc.create(ImmutableMap.of("revision", "46"));
     assertEquals("/dummy/path/45", r.getPath().getAbsolutePath());
     assertEquals("internal", r.getProjectSpace());

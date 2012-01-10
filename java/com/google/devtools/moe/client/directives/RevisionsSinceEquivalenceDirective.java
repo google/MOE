@@ -1,22 +1,21 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.directives;
 
 import com.google.devtools.moe.client.AppContext;
+import com.google.devtools.moe.client.MoeOptions;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.database.Db;
 import com.google.devtools.moe.client.database.FileDb;
 import com.google.devtools.moe.client.logic.RevisionsSinceEquivalenceLogic;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.ProjectContext;
-import com.google.devtools.moe.client.repositories.Repository;
 import com.google.devtools.moe.client.repositories.Revision;
-import com.google.devtools.moe.client.repositories.RevisionExpression;
-import com.google.devtools.moe.client.repositories.RevisionExpression.RevisionExpressionError;
-import com.google.devtools.moe.client.repositories.RevisionHistory;
 import com.google.devtools.moe.client.testing.DummyDb;
 
 import org.kohsuke.args4j.Option;
+
+import java.util.List;
 
 /**
  * Get all Revisions since last Equivalence
@@ -38,7 +37,7 @@ public class RevisionsSinceEquivalenceDirective implements Directive {
     try {
       context = AppContext.RUN.contextFactory.makeProjectContext(options.configFilename);
     } catch (InvalidProject e) {
-      AppContext.RUN.ui.error(e.explanation);
+      AppContext.RUN.ui.error(e, "Error creating project");
       return 1;
     }
 
@@ -48,42 +47,22 @@ public class RevisionsSinceEquivalenceDirective implements Directive {
     } else {
       // TODO(user): also allow for url dbLocation types
       try {
-        db = new FileDb(FileDb.makeDbFromFile(options.dbLocation));
+        db = FileDb.makeDbFromFile(options.dbLocation);
       } catch (MoeProblem e) {
-        System.err.println(e.explanation);
+        AppContext.RUN.ui.error(e, "Couldn't create DB");
         return 1;
       }
     }
 
-    RevisionExpression re;
-    try {
-      re = RevisionExpression.parse(options.fromRepository);
-    } catch (RevisionExpressionError e) {
-      AppContext.RUN.ui.error(e.getMessage());
-      return 1;
-    }
-    Repository r = context.repositories.get(re.repoId);
-    if (r == null) {
-      AppContext.RUN.ui.error("No repository" + re.repoId + ".");
-      return 1;
-    }
-    RevisionHistory rh = r.revisionHistory;
-    if (rh == null) {
-      AppContext.RUN.ui.error("Repository " + r.name + " does not support revision history.");
-      return 1;
-    }
-    Revision rev;
-    if (re.revIds.isEmpty()) {
-      rev = rh.findHighestRevision("");
-    } else if (re.revIds.size() == 1) {
-      rev = rh.findHighestRevision(re.revIds.get(0));
-    } else {
-      AppContext.RUN.ui.error("Only one revision can be specified for this directive.");
-      return 1;
-    }
+    List<Revision> revisionsSinceEquivalence =
+        RevisionsSinceEquivalenceLogic.getRevisionsSinceEquivalence(
+            options.fromRepository, options.toRepository, db, context);
 
-    RevisionsSinceEquivalenceLogic.printRevisionsSinceEquivalence
-        (options.toRepository, rev, db, rh);
+    AppContext.RUN.ui.info(
+        "Found " + revisionsSinceEquivalence.size() + " revisions since equivalence.");
+    for (Revision rev : revisionsSinceEquivalence) {
+      AppContext.RUN.ui.info("  Revision: " + rev);
+    }
     return 0;
   }
 

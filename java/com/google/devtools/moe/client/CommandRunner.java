@@ -1,4 +1,4 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client;
 
@@ -36,7 +36,6 @@ public interface CommandRunner {
    *
    * @param cmd  the binary to invoke. If not a path, it will be resolved.
    * @param args  the arguments to pass to the binary
-   * @param stdinData  data to pass to the stdin of the commands
    * @param workingDirectory  the directory to run in
    *
    * @returns the output of the command
@@ -44,7 +43,7 @@ public interface CommandRunner {
    *
    * TODO(dbentley): make it easier to do error-handling
    */
-  String runCommand(String cmd, List<String> args, String stdinData, String workingDirectory)
+  String runCommand(String cmd, List<String> args, String workingDirectory)
       throws CommandException;
 
 }

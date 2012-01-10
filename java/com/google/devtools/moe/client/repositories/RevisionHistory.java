@@ -1,6 +1,9 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.repositories;
+
+import com.google.devtools.moe.client.database.Equivalence;
+import com.google.devtools.moe.client.database.EquivalenceMatcher;
 
 import java.util.Set;
 
@@ -39,4 +42,22 @@ public interface RevisionHistory {
    */
   //TODO(user): allow specifying multiple Revisions (for case of multiple heads)
   public Set<Revision> findRevisions(Revision revision, RevisionMatcher matcher);
+
+  /**
+   * This is the maximum number of parents to examine when in findLastEquivalence(...). MOE will
+   * give up trying to find an equivalence after this limit is reached to prevent the successive
+   * calls to getMetadata(...) from causing MOE to hang.
+   */
+  public static final int MAX_PARENTS_TO_EXAMINE = 400;
+
+  /**
+   * Starting at specified revision, recur until an equivalence is found in the matcher's
+   * other repository.
+   *
+   * @param revision  the Revision to start at
+   * @param matcher  the EquivalenceMatcher to apply
+   *
+   * @return the most recent Equivalence
+   */
+  public Equivalence findLastEquivalence(Revision revision, EquivalenceMatcher matcher);
 }

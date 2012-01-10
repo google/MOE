@@ -1,4 +1,4 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.directives;
 
@@ -40,7 +40,7 @@ public class HighestRevisionDirectiveTest extends TestCase {
         "\"internal\": {\"type\": \"dummy\"}}}");
     HighestRevisionDirective d = new HighestRevisionDirective();
     d.getFlags().configFilename = "moe_config.txt";
-    d.getFlags().repository = "internal{4}";
+    d.getFlags().repository = "internal(revision=4)";
     assertEquals(0, d.perform());
     assertEquals(
         "Highest revision in repository \"internal\": 4",

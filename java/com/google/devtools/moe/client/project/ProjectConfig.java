@@ -1,7 +1,9 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.project;
 
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -30,7 +32,8 @@ public class ProjectConfig {
   private Map<String, RepositoryConfig> repositories;
   private Map<String, EditorConfig> editors;
   private List<TranslatorConfig> translators;
-  private List<MigrationConfig> migrations;
+  @SerializedName("migrations")
+  private List<MigrationConfig> migrationConfigs;
 
   @SerializedName("internal_repository")
   private RepositoryConfig internalRepository;
@@ -46,22 +49,7 @@ public class ProjectConfig {
 
   public Map<String, RepositoryConfig> getRepositoryConfigs()
       throws InvalidProject {
-    if (repositories == null) {
-      repositories = Maps.newHashMap();
-    }
-
-    // For backwards compatibility with old MOE configs.
-    if (internalRepository != null) {
-      if (repositories.put("internal", internalRepository) != null) {
-        throw new InvalidProject("Internal repository specified twice");
-      }
-    }
-    if (publicRepository != null) {
-      if (repositories.put("public", publicRepository) != null) {
-        throw new InvalidProject("Public repository specified twice");
-      }
-    }
-
+    Preconditions.checkNotNull(repositories);
     return Collections.unmodifiableMap(repositories);
   }
 
@@ -79,11 +67,11 @@ public class ProjectConfig {
     return Collections.unmodifiableList(translators);
   }
 
-  public List<MigrationConfig> getMigrations() {
-    if (migrations == null) {
-      migrations = ImmutableList.of();
+  public List<MigrationConfig> getMigrationConfigs() {
+    if (migrationConfigs == null) {
+      migrationConfigs = ImmutableList.of();
     }
-    return Collections.unmodifiableList(migrations);
+    return Collections.unmodifiableList(migrationConfigs);
   }
 
   /**
@@ -108,6 +96,53 @@ public class ProjectConfig {
     return gson;
   }
 
+  void validate() throws InvalidProject {
+    if (repositories == null) {
+      repositories = Maps.newHashMap();
+    }
+
+    if (internalRepository != null) {
+      // For backwards compatibility with old MOE configs,
+      // normalize the internal repostiory.
+      InvalidProject.assertTrue(
+          repositories.put("internal", internalRepository) == null,
+          "Internal repository specified twice");
+
+      internalRepository = null;
+    }
+
+    if (publicRepository != null) {
+      // For backwards compatibility with old MOE configs,
+      // normalize the public repostiory.
+      InvalidProject.assertTrue(
+          repositories.put("public", publicRepository) == null,
+          "Public repository specified twice");
+
+      publicRepository = null;
+    }
+
+    InvalidProject.assertFalse(
+        Strings.isNullOrEmpty(getName()), "Must specify a name");
+    InvalidProject.assertFalse(
+        getRepositoryConfigs().isEmpty(), "Must specify repositories");
+
+    for (RepositoryConfig r : repositories.values()) {
+      r.validate();
+    }
+
+    for (EditorConfig e : getEditorConfigs().values()) {
+      e.validate();
+    }
+
+    for (TranslatorConfig t : getTranslators()) {
+      t.validate();
+    }
+
+    for (MigrationConfig m : getMigrationConfigs()) {
+      m.validate();
+    }
+  }
+
   public static ProjectConfig makeProjectConfigFromConfigText(String configText)
       throws InvalidProject {
     try {
@@ -115,12 +150,9 @@ public class ProjectConfig {
       ProjectConfig config = gson.fromJson(configText, ProjectConfig.class);
       if (config == null) {
         throw new InvalidProject("Could not parse MOE config");
-      } else if (config.getName() == null ||
-          config.getName().isEmpty()) {
-        throw new InvalidProject("Must specify a name");
-      } else if (config.getRepositoryConfigs().isEmpty()) {
-        throw new InvalidProject("Must specify repositories");
       }
+
+      config.validate();
       return config;
     } catch (JsonParseException e) {
       throw new InvalidProject("Could not parse MOE config: " + e.getMessage());

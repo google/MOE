@@ -1,11 +1,11 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.editors;
 
-import com.google.devtools.moe.client.codebase.CodebaseCreationError;
+import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.project.EditorConfig;
+import com.google.devtools.moe.client.project.ProjectContext;
 
-import java.io.File;
 import java.util.Map;
 
 /**
@@ -13,29 +13,33 @@ import java.util.Map;
  *
  * @author dbentley@google.com (Daniel Bentley)
  */
-public class IdentityEditor implements Editor {
+public class IdentityEditor implements Editor, InverseEditor {
   
   IdentityEditor() {}
 
   /**
    * Returns a description of what this editor will do.
    */
+  @Override
   public String getDescription() {
     return "identity";
   }
 
   /**
-   * Edits a Directory (returning a new Directory, because modifying in-place is bad).
-   *
-   * @param input  the directory to edit
-   * @param options  command-line parameters
+   * Takes in a Codebase and returns it unedited. Not particularly useful.
    */
-  public File edit(File input, Map<String, String> options) throws CodebaseCreationError {
+  @Override
+  public Codebase edit(Codebase input, ProjectContext context, Map<String, String> options) {
+    return input;
+  }
+
+  @Override
+  public Codebase inverseEdit(Codebase input, Codebase referenceFrom, Codebase referenceTo,
+      ProjectContext context, Map<String, String> options) {
     return input;
   }
 
   public static IdentityEditor makeIdentityEditor(String editorName, EditorConfig editor) {
     return new IdentityEditor();
   }
-
 }

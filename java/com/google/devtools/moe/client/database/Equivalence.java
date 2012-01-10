@@ -1,4 +1,4 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.database;
 
@@ -6,7 +6,7 @@ import com.google.devtools.moe.client.repositories.Revision;
 
 /**
  * An Equivalence holds two Revisions which represent the same files as they appear
- * in different respositories
+ * in different repositories
  *
  * Two Revisions are equivalent when an Equivalence contains both in any order
  *
@@ -38,6 +38,18 @@ public class Equivalence {
     return rev1.equals(revision) || rev2.equals(revision);
   }
 
+  /** @return the Revision in this Equivalence for the given repository name */
+  public Revision getRevisionForRepository(String repositoryName) {
+    if (rev1.repositoryName.equals(repositoryName)) {
+      return rev1;
+    } else if (rev2.repositoryName.equals(repositoryName)) {
+      return rev2;
+    } else {
+      throw new IllegalArgumentException(
+          "Equivalence " + this + " doesn't have revision for " + repositoryName);
+    }
+  }
+
   /**
    * @param revision  the other Revision in this Equivalence
    *
@@ -46,20 +58,24 @@ public class Equivalence {
    */
   public Revision getOtherRevision(Revision revision) {
     if (hasRevision(revision)) {
-      if (rev1.equals(revision)) {
-        return rev2;
-      } else {
-        return rev1;
-      }
+      return rev1.equals(revision) ? rev2 : rev1;
     }
     return null;
   }
 
+  /**
+   * We override hashCode() so that it is commutative such that two Equivalences with the same
+   * Revisions but switched in order will still have the same hash since those two Equivalences are
+   * considered equal by the override of equals(...).
+   */
   @Override
   public int hashCode() {
     return rev1.hashCode() + rev2.hashCode();
   }
 
+  /**
+   * The order of the Revisions does not matter when checking for equality between Equivalences.
+   */
   @Override
   public boolean equals(Object obj) {
     if (obj instanceof Equivalence) {
@@ -68,5 +84,10 @@ public class Equivalence {
               equivalenceObj.hasRevision(rev2));
     }
     return false;
+  }
+
+  @Override
+  public String toString() {
+    return (rev1.toString() + " == " + rev2.toString());
   }
 }

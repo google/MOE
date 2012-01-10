@@ -1,7 +1,8 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
@@ -19,10 +20,15 @@ import java.util.List;
  */
 public class SystemCommandRunner implements CommandRunner {
 
-  public String runCommand(String cmd, List<String> args, String stdinData, String workingDirectory)
+  public String runCommand(String cmd, List<String> args, String workingDirectory)
       throws CommandException {
     ImmutableList<String> cmdArgs = (new ImmutableList.Builder<String>()).add(cmd).
         addAll(args).build();
+
+    if (AppContext.RUN != null) {
+      AppContext.RUN.ui.debug(
+          workingDirectory + "$ " + Joiner.on(" ").join(cmdArgs));
+    }
 
     ProcessBuilder pb = new ProcessBuilder(cmdArgs);
     if (workingDirectory != null && !workingDirectory.isEmpty()) {
@@ -33,9 +39,6 @@ public class SystemCommandRunner implements CommandRunner {
     String stdoutData, stderrData;
     try {
       p = pb.start();
-      if (stdinData != null && !stdinData.isEmpty()) {
-        p.getOutputStream().write(stdinData.getBytes());
-      }
       p.getOutputStream().close();
       // We need to read data from the output steams.
       // Why? Because if we don't read from them, then the process we have started will fill the

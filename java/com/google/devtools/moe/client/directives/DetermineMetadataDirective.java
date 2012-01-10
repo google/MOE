@@ -1,14 +1,16 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.directives;
 
 import com.google.devtools.moe.client.AppContext;
+import com.google.devtools.moe.client.MoeOptions;
 import com.google.devtools.moe.client.logic.DetermineMetadataLogic;
+import com.google.devtools.moe.client.parser.Parser;
+import com.google.devtools.moe.client.parser.Parser.ParseError;
+import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.Revision;
-import com.google.devtools.moe.client.repositories.RevisionEvaluator;
-import com.google.devtools.moe.client.repositories.RevisionExpression.RevisionExpressionError;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 
 import org.kohsuke.args4j.Option;
@@ -31,22 +33,20 @@ public class DetermineMetadataDirective implements Directive {
     try {
       context = AppContext.RUN.contextFactory.makeProjectContext(options.configFilename);
     } catch (InvalidProject e) {
-      AppContext.RUN.ui.error(e.explanation);
+      AppContext.RUN.ui.error(e, "Error creating project");
       return 1;
     }
 
-    List<Revision> revs;
+    RepositoryExpression repoEx;
     try {
-      revs = RevisionEvaluator.parseAndEvaluate(options.revisionExpression, context);
-    } catch (RevisionExpressionError e) {
-      AppContext.RUN.ui.error(e.getMessage());
+      repoEx = Parser.parseRepositoryExpression(options.repositoryExpression);
+    } catch (ParseError e) {
+      AppContext.RUN.ui.error(
+          e, "Couldn't parse " + options.repositoryExpression);
       return 1;
     }
-    if (revs.isEmpty()) {
-      AppContext.RUN.ui.error(String.format(
-          "No revisions found for expression: %s", options.revisionExpression));
-      return 1;
-    }
+
+    List<Revision> revs = Revision.fromRepositoryExpression(repoEx, context);
 
     RevisionMetadata rm = DetermineMetadataLogic.determine(context, revs, null);
     AppContext.RUN.ui.info(rm.toString());
@@ -63,7 +63,7 @@ public class DetermineMetadataDirective implements Directive {
             usage = "Location of MOE config file")
     String configFilename = "";
     @Option(name = "--revisions", required = true,
-            usage = "Revision expression to determine metadata for")
-    String revisionExpression = "";
+            usage = "Repository expression to get metadata for, e.g. 'internal(revision=3,4)'")
+    String repositoryExpression = "";
   }
 }

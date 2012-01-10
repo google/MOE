@@ -1,4 +1,4 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.writer;
 
@@ -23,7 +23,7 @@ public interface Writer {
    *
    * @throws WritingError if an error occurred
    */
-  public DraftRevision putCodebase(Codebase c) throws WritingError;
+  DraftRevision putCodebase(Codebase c) throws WritingError;
 
   /**
    * Makes a draft revision in which the Source Control system behind this Writer contains c and
@@ -36,10 +36,15 @@ public interface Writer {
    *
    * @throws WritingError if an error occurred
    */
-  public DraftRevision putCodebase(Codebase c, RevisionMetadata rm) throws WritingError;
+  DraftRevision putCodebase(Codebase c, RevisionMetadata rm) throws WritingError;
 
   /**
    * Returns a conceptual root for the writer.
    */
-  public File getRoot();
+  File getRoot();
+  
+  /**
+   * Print out (to Ui) instructions for pushing any changes in this Writer to the remote source.
+   */
+  void printPushMessage();
 }

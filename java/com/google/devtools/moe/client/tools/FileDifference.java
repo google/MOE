@@ -1,4 +1,4 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.tools;
 
@@ -57,6 +57,11 @@ public class FileDifference {
     this.contentDiff = contentDiff;
   }
 
+  /** @return whether this FileDifference in fact indicates a difference between files */
+  public boolean isDifferent() {
+    return executability != Comparison.SAME || existence != Comparison.SAME || contentDiff != null;
+  }
+
   /**
    * A FileDiffer diffs files. This exists as an interface instead of as a static function
    * so that we can mock it out.
@@ -74,7 +79,21 @@ public class FileDifference {
     public FileDifference diffFiles(String relativeFilename, File file1, File file2);
   }
 
+  /**
+   * Error code returned by diff when files are different.
+   */
+  private static final int DIFF_ERROR_CODE_FILES_DIFFERENT = 1;
+
+  /**
+   * Error code returned by diff when at least one file is binary.
+   * Note: This error code is also returned when neither file exists, so a separate check must be
+   * done to distinguish between the two error cases, if necessary.
+   */
+  private static final int DIFF_ERROR_CODE_FILES_BINARY = 2;
+
   public static class ConcreteFileDiffer implements FileDiffer {
+
+    @Override
     public FileDifference diffFiles(String relativeFilename, File file1, File file2) {
       // Diff their existence.
       FileSystem fileSystem = AppContext.RUN.fileSystem;
@@ -97,20 +116,17 @@ public class FileDifference {
        AppContext.RUN.cmd.runCommand(
             "diff",
             // -N treats absent files as empty.
-            ImmutableList.of("-N", file1.getAbsolutePath(), file2.getAbsolutePath()), "", "");
+            ImmutableList.of("-N", file1.getAbsolutePath(), file2.getAbsolutePath()), "");
       } catch (CommandRunner.CommandException e) {
-        if (e.returnStatus != 1) {
+        if (e.returnStatus != DIFF_ERROR_CODE_FILES_DIFFERENT &&
+            e.returnStatus != DIFF_ERROR_CODE_FILES_BINARY) {
           throw new MoeProblem(String.format("diff returned unknown status: %d", e.returnStatus));
         }
         contentDiff = e.stdout;
       }
 
-      if (executability != Comparison.SAME || contentDiff != null) {
-        return new FileDifference(relativeFilename, file1, file2,
-                                  existence, executability, contentDiff);
-      }
-
-      return null;
+      return new FileDifference(
+          relativeFilename, file1, file2, existence, executability, contentDiff);
     }
   }
 

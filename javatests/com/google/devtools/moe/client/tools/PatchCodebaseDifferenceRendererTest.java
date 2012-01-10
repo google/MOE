@@ -1,10 +1,10 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.tools;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.codebase.Codebase;
-import com.google.devtools.moe.client.testing.TestUtils;
+import com.google.devtools.moe.client.parser.RepositoryExpression;
 
 import junit.framework.TestCase;
 
@@ -14,10 +14,16 @@ import java.io.File;
  * @author dbentley@google.com (Daniel Bentley)
  */
 public class PatchCodebaseDifferenceRendererTest extends TestCase {
+  
+  private static Codebase makeCodebase(String name) throws Exception {
+    return new Codebase(new File("/" + name), "public",
+                        new RepositoryExpression(name));
+  }
+
   public void testRender() throws Exception {
 
-    Codebase c1 = TestUtils.makeCodebase("c1");
-    Codebase c2 = TestUtils.makeCodebase("c2");
+    Codebase c1 = makeCodebase("c1");
+    Codebase c2 = makeCodebase("c2");
 
     ImmutableSet.Builder<FileDifference> diffs = ImmutableSet.builder();
 

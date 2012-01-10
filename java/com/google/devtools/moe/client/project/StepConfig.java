@@ -1,4 +1,4 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.project;
 
@@ -24,5 +24,11 @@ public class StepConfig {
 
   public EditorConfig getEditorConfig() {
     return editorConfig;
+  }
+
+  void validate() throws InvalidProject {
+    InvalidProject.assertNotEmpty(name, "Missing name in step");
+    InvalidProject.assertNotNull(editorConfig, "Missing editor in step");
+    editorConfig.validate();
   }
 }

@@ -1,4 +1,4 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.database;
 
@@ -32,5 +32,12 @@ public class EquivalenceTest extends TestCase {
     Equivalence e2 = new Equivalence(r2, r1);
     assertTrue(e1.equals(e2));
     assertTrue(e2.equals(e1));
+  }
+
+  public void testToString() throws Exception {
+    Revision r1 = new Revision("r1", "name1");
+    Revision r2 = new Revision("r2", "name2");
+    Equivalence e1 = new Equivalence(r1, r2);
+    assertEquals("name1{r1} == name2{r2}", e1.toString());
   }
 }

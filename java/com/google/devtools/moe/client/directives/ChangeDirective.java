@@ -1,17 +1,18 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.directives;
 
 import com.google.devtools.moe.client.AppContext;
+import com.google.devtools.moe.client.MoeOptions;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
-import com.google.devtools.moe.client.codebase.Evaluator;
 import com.google.devtools.moe.client.logic.ChangeLogic;
+import com.google.devtools.moe.client.parser.Parser;
+import com.google.devtools.moe.client.parser.Parser.ParseError;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.writer.DraftRevision;
 import com.google.devtools.moe.client.writer.Writer;
-import com.google.devtools.moe.client.writer.WriterEvaluator;
 import com.google.devtools.moe.client.writer.WritingError;
 
 import org.kohsuke.args4j.Option;
@@ -38,7 +39,7 @@ public class ChangeDirective implements Directive {
     try {
       context = AppContext.RUN.contextFactory.makeProjectContext(options.configFilename);
     } catch (InvalidProject e) {
-      AppContext.RUN.ui.error(e.explanation);
+      AppContext.RUN.ui.error(e, "Error creating project");
       return 1;
     }
 
@@ -48,17 +49,23 @@ public class ChangeDirective implements Directive {
 
     Codebase c;
     try {
-      c = Evaluator.parseAndEvaluate(options.codebase, context);
+      c = Parser.parseExpression(options.codebase).createCodebase(context);
+    } catch (ParseError e) {
+      AppContext.RUN.ui.error(e, "Error parsing codebase");
+      return 1;
     } catch (CodebaseCreationError e) {
-      AppContext.RUN.ui.error(e.getMessage());
+      AppContext.RUN.ui.error(e, "Error creating codebase");
       return 1;
     }
 
     Writer destination;
     try {
-      destination = WriterEvaluator.parseAndEvaluate(options.destination, context);
+      destination = Parser.parseRepositoryExpression(options.destination).createWriter(context);
+    } catch (ParseError e) {
+      AppContext.RUN.ui.error(e, "Error parsing change destination");
+      return 1;
     } catch (WritingError e) {
-      AppContext.RUN.ui.error(e.getMessage());
+      AppContext.RUN.ui.error(e, "Error writing change");
       return 1;
     }
 

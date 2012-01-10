@@ -1,4 +1,4 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.editors;
 
@@ -7,8 +7,9 @@ import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Utils;
-import com.google.devtools.moe.client.codebase.CodebaseCreationError;
+import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.project.EditorConfig;
+import com.google.devtools.moe.client.project.ProjectContext;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,17 +30,17 @@ public class PatchingEditor implements Editor {
   /**
    * Returns a description of what this editor will do.
    */
+  @Override
   public String getDescription() {
     return name;
   }
 
   /**
-   * Edits a Directory.
-   *
-   * @param input  the directory to edit
-   * @param options  command-line parameters
+   * Applies a patch to copied contents of the input Codebase, returning a new Codebase with the
+   * results of the patch.
    */
-  public File edit(File input, Map<String, String> options) throws CodebaseCreationError {
+  @Override
+  public Codebase edit(Codebase input, ProjectContext context, Map<String, String> options) {
     File tempDir = AppContext.RUN.fileSystem.getTemporaryDirectory("patcher_run_");
     String patchFilePath = options.get("file");
     if (patchFilePath == null || patchFilePath.equals("")) {
@@ -51,7 +52,7 @@ public class PatchingEditor implements Editor {
             "cannot read file %s", patchFilePath));
       }
       try {
-       Utils.copyDirectory(input, tempDir);
+       Utils.copyDirectory(input.getPath(), tempDir);
       } catch (IOException e) {
         throw new MoeProblem(e.getMessage());
       } catch (CommandRunner.CommandException e) {
@@ -63,12 +64,11 @@ public class PatchingEditor implements Editor {
             ImmutableList.of(
                 "-p0",
                 "--input=" + patchFilePath),
-            "",
             tempDir.getAbsolutePath());
       } catch (CommandRunner.CommandException e) {
         throw new MoeProblem(e.getMessage());
       }
-      return tempDir;
+      return new Codebase(tempDir, input.getProjectSpace(), input.getExpression());
     }
   }
 
@@ -76,5 +76,4 @@ public class PatchingEditor implements Editor {
     // TODO(user): Don't ignore the config
     return new PatchingEditor(editorName);
   }
-
 }

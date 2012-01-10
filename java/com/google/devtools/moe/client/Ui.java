@@ -1,4 +1,4 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client;
 
@@ -27,10 +27,16 @@ public abstract class Ui {
 
   /**
    * Reports an error to the user.
-   *
-   * @param msg  the error message.
    */
   public abstract void error(String msg);
+
+  /**
+   * Reports an error to the user.
+   */
+  public abstract void error(Throwable e, String msg);
+
+  /** Sends a debug message to the logs. */
+  public abstract void debug(String msg);
 
   public static class Task {
     public final String taskName;

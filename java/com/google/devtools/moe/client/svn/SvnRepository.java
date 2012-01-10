@@ -1,4 +1,4 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.svn;
 
@@ -35,9 +35,9 @@ public class SvnRepository {
       projectSpace = "public";
     }
 
-    SvnCodebaseCreator cc = new SvnCodebaseCreator(name, url, projectSpace, rh);
+    SvnCodebaseCreator cc = new SvnCodebaseCreator(name, config, rh);
 
-    SvnWriterCreator ec = new SvnWriterCreator(name, url, projectSpace, rh);
+    SvnWriterCreator ec = new SvnWriterCreator(config, rh);
 
     return new Repository(name, rh, cc, ec);
   }
@@ -46,6 +46,6 @@ public class SvnRepository {
       throws CommandRunner.CommandException {
     ImmutableList.Builder<String> withAuthArgs = new ImmutableList.Builder<String>();
     withAuthArgs.add("--no-auth-cache").addAll(args);
-    return AppContext.RUN.cmd.runCommand("svn", withAuthArgs.build(), "", workingDirectory);
+    return AppContext.RUN.cmd.runCommand("svn", withAuthArgs.build(), workingDirectory);
   }
 }

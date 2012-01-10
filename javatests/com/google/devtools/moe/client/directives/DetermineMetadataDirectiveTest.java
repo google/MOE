@@ -1,4 +1,4 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.directives;
 
@@ -33,11 +33,10 @@ public class DetermineMetadataDirectiveTest extends TestCase {
         "\"internal\": {\"type\": \"dummy\"}}}");
     DetermineMetadataDirective d = new DetermineMetadataDirective();
     d.getFlags().configFilename = "moe_config.txt";
-    d.getFlags().revisionExpression = "internal{1,2}";
+    d.getFlags().repositoryExpression = "internal(revision=\"1,2\")";
     assertEquals(0, d.perform());
     RevisionMetadata rm = new RevisionMetadata("1, 2", "author, author", "date, date",
-        "description\n\tChange on date by author\n-------------\ndescription\n\t" +
-        "Change on date by author",
+        "description\n-------------\ndescription",
         ImmutableList.of(new Revision("parent", "internal"),
         new Revision("parent", "internal")));
     assertEquals(rm.toString(), ((RecordingUi) AppContext.RUN.ui).lastInfo);
@@ -54,10 +53,9 @@ public class DetermineMetadataDirectiveTest extends TestCase {
         "\"internal\": {\"type\": \"dummy\"}}}");
     DetermineMetadataDirective d = new DetermineMetadataDirective();
     d.getFlags().configFilename = "moe_config.txt";
-    d.getFlags().revisionExpression = "internal{7}";
+    d.getFlags().repositoryExpression = "internal(revision=7)";
     assertEquals(0, d.perform());
-    RevisionMetadata rm = new RevisionMetadata("7", "author", "date",
-        "description\n\tChange on date by author",
+    RevisionMetadata rm = new RevisionMetadata("7", "author", "date", "description",
         ImmutableList.of(new Revision("parent", "internal")));
     assertEquals(rm.toString(), ((RecordingUi) AppContext.RUN.ui).lastInfo);
   }

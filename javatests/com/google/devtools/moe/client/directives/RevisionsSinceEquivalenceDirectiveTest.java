@@ -1,4 +1,4 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.directives;
 
@@ -26,10 +26,11 @@ public class RevisionsSinceEquivalenceDirectiveTest extends TestCase {
     RevisionsSinceEquivalenceDirective d = new RevisionsSinceEquivalenceDirective();
     d.getFlags().configFilename = "moe_config.txt";
     d.getFlags().dbLocation = "dummy";
-    d.getFlags().fromRepository = "internal{1}";
+    d.getFlags().fromRepository = "internal";
     d.getFlags().toRepository = "public";
     assertEquals(0, d.perform());
-    assertEquals("Revisions found: internal{1}",
+    // DummyRepository.findRevisions() always returns revId "migrate" with any RevisionMatcher.
+    assertEquals("  Revision: internal{migrate}",
                  ((RecordingUi) AppContext.RUN.ui).lastInfo);
   }
 }

@@ -1,4 +1,4 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client;
 
@@ -6,12 +6,17 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 /**
  * Ui that outputs to System.out and System.err
  *
  * @author dbentley@google.com (Daniel Bentley)
  */
 public class SystemUi extends Ui {
+  private final Logger logger =
+      Logger.getLogger(SystemUi.class.getName());
 
   // We store the task that is the current output, if any, so that we can special case a Task that
   // is popped right after it is pushed. In this case, we can output: "Doing...Done" on one line.
@@ -38,23 +43,47 @@ public class SystemUi extends Ui {
     return indentation + Joiner.on("\n" + indentation).join(Splitter.on('\n').split(msg));
   }
 
+  @Override
   public void info(String msg) {
     clearOutput();
-    System.out.println(indent(msg));
+    logHelper(indent(msg));
   }
 
-  public void error(String msg) {
+  public void debug(String msg) {
+    logger.log(Level.INFO, msg);
+  }
+
+  private void logHelper(String msg) {
+    System.out.println(msg);
+    logger.log(Level.INFO, msg);
+  }
+
+  @Override public void error(String msg) {
     clearOutput();
-    System.err.println(String.format("ERROR: %s", msg));
+    logger.log(Level.SEVERE, msg);
   }
 
+  @Override public void error(Throwable e, String msg) {
+    clearOutput();
+
+    // Do not expose the stack trace to the user. Just send it to the INFO logs.
+    logger.log(Level.SEVERE, msg + ": " + e.getMessage());
+    logger.log(Level.INFO, msg, e);
+  }
+
+  @Override
   public Ui.Task pushTask(String task, String description) {
     clearOutput();
-    System.out.print(indent(description + "... "));
+
+    String indented = indent(description + "... ");
+    System.out.print(indented);
+    logger.log(Level.INFO, indented);
+
     currentOutput = super.pushTask(task, description);
     return currentOutput;
   }
 
+  @Override
   public void popTask(Ui.Task task, String result) {
     super.popTask(task, result);
     if (result.isEmpty()) {
@@ -62,10 +91,11 @@ public class SystemUi extends Ui {
     }
     if (currentOutput == task) {
       // The last thing we printed was starting this task
-      System.out.println(result);
+      logHelper(result);
     } else {
       // We need to print the description again
-      System.out.println(indent("DONE: " + task.description + ": " + result));
+      logHelper(
+          indent("DONE: " + task.description + ": " + result));
     }
     currentOutput = null;
   }

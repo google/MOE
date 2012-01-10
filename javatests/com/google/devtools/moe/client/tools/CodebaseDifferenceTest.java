@@ -1,4 +1,4 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.tools;
 
@@ -6,6 +6,7 @@ import static org.easymock.EasyMock.expect;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.codebase.Codebase;
+import com.google.devtools.moe.client.tools.FileDifference.Comparison;
 
 import junit.framework.TestCase;
 
@@ -33,7 +34,8 @@ public class CodebaseDifferenceTest extends TestCase {
     expect(c2.getRelativeFilenames()).andReturn(ImmutableSet.of("foo"));
     expect(c1.getFile("foo")).andReturn(f1);
     expect(c2.getFile("foo")).andReturn(f2);
-    expect(differ.diffFiles("foo", f1, f2)).andReturn(null);
+    expect(differ.diffFiles("foo", f1, f2)).andReturn(
+        new FileDifference("foo", f1, f2, Comparison.SAME, Comparison.SAME, null));
 
     control.replay();
     CodebaseDifference d = CodebaseDifference.diffCodebases(c1, c2, differ);
@@ -54,13 +56,14 @@ public class CodebaseDifferenceTest extends TestCase {
     expect(c2.getRelativeFilenames()).andReturn(ImmutableSet.of("foo"));
     expect(c1.getFile("foo")).andReturn(f1);
     expect(c2.getFile("foo")).andReturn(f2);
-    expect(differ.diffFiles("foo", f1, f2)).andReturn(null);
+    expect(differ.diffFiles("foo", f1, f2)).andReturn(
+        new FileDifference("foo", f1, f2, Comparison.ONLY1, Comparison.SAME, null));
 
     control.replay();
     CodebaseDifference d = CodebaseDifference.diffCodebases(c1, c2, differ);
     control.verify();
 
-    assertEquals(false, d.areDifferent());
+    assertEquals(true, d.areDifferent());
   }
 
 }

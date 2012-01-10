@@ -1,4 +1,4 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client;
 
@@ -14,6 +14,8 @@ public class UiTest extends TestCase {
   class NoOpUi extends Ui {
     public void info(String msg) {}
     public void error(String msg) {}
+    public void error(Throwable e, String msg) {}
+    public void debug(String msg) {}
   }
 
   public void testStackHelpers() throws Exception {

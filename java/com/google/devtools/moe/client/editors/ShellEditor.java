@@ -1,18 +1,19 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.editors;
 
+import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Utils;
+import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.project.EditorConfig;
+import com.google.devtools.moe.client.project.ProjectContext;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
-import java.util.Vector;
 
 /**
  * An editor that will run the shell command specified in the
@@ -40,35 +41,33 @@ public class ShellEditor implements Editor {
   }
 
   /**
-   * Edits a Directory. Copies the input, runs the shell commands and
-   * returns the result.
+   * Runs this editor's shell commands on a copy of the input Codebase's contents and returns a
+   * new Codebase containing the edited contents.
    *
-   * @param input  the directory to edit
-   * @param options  command-line parameters
+   * @param input the Codebase to edit
+   * @param context the ProjectContext for this project
+   * @param options a map containing any command line options such as a specific revision
    */
   @Override
-  public File edit(File input, Map<String, String> options) {
+  public Codebase edit(Codebase input, ProjectContext context, Map<String, String> options) {
     File tempDir = AppContext.RUN.fileSystem.getTemporaryDirectory("shell_run_");
     try {
-     Utils.copyDirectory(input, tempDir);
+     Utils.copyDirectory(input.getPath(), tempDir);
     } catch (IOException e) {
       throw new MoeProblem(e.getMessage());
     } catch (CommandRunner.CommandException e) {
       throw new MoeProblem(e.getMessage());
     }
     try {
-      List<String> argsList = new Vector<String>();
-      argsList.add("-c");
-      argsList.add(this.commandString);
-      AppContext.RUN.cmd.runCommand("bash", argsList, "", tempDir.getAbsolutePath());
+      AppContext.RUN.cmd.runCommand("bash", ImmutableList.of("-c", this.commandString),
+          tempDir.getAbsolutePath());
     } catch (CommandRunner.CommandException e) {
       throw new MoeProblem(e.getMessage());
     }
-    return tempDir;
+    return new Codebase(tempDir, input.getProjectSpace(), input.getExpression());
   }
 
   public static ShellEditor makeShellEditor(String editorName, EditorConfig config) {
     return new ShellEditor(editorName, config.getCommandString());
   }
-
 }

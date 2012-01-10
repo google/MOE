@@ -1,4 +1,4 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client;
 
@@ -32,6 +32,7 @@ public interface FileSystem {
   /**
    * Returns an array of files and directories under path.
    */
+  // TODO(user): Return List instead of array.
   public File[] listFiles(File path);
 
   /**
@@ -68,6 +69,11 @@ public interface FileSystem {
    * Makes a file executable.
    */
   public void setExecutable(File f);
+
+  /**
+   * Makes a file non-executable.
+   */
+  public void setNonExecutable(File f);
 
   /**
    * Make the parent directory for f exist.
