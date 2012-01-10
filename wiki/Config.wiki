@@ -65,7 +65,7 @@ A config file consists of three main sections. An example MOE configuration foll
       }
     }]
   }],
-  "migrations:"[{    **MIGRATION SECTION**
+  "migrations":[{    **MIGRATION SECTION**
     "name":"publicize_project",
     "from_repository":"internal",
     "to_repository":"googlecode",
