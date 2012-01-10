@@ -1,4 +1,4 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client;
 
@@ -81,6 +81,10 @@ public class SystemFileSystem implements FileSystem {
     f.setExecutable(true);
   }
 
+  public void setNonExecutable(File f) {
+    f.setExecutable(false);
+  }
+
   public void makeDirsForFile(File f) throws IOException {
     Files.createParentDirs(f);
   }
@@ -91,6 +95,7 @@ public class SystemFileSystem implements FileSystem {
 
   public void copyFile(File src, File dest) throws IOException {
     Files.copy(src, dest);
+    dest.setExecutable(src.canExecute());
   }
 
   public void write(String contents, File f) throws IOException {

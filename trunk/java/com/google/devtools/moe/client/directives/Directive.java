@@ -1,6 +1,8 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.directives;
+
+import com.google.devtools.moe.client.MoeOptions;
 
 /**
  * A Directive is what MOE should do in this run.

@@ -1,4 +1,4 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.testing;
 
@@ -26,7 +26,13 @@ public class DummyWriter implements Writer {
     return new DummyDraftRevision();
   }
 
+  @Override
   public File getRoot() {
     return new File("/foo");
+  }
+
+  @Override
+  public void printPushMessage() {
+    // No op.
   }
 }

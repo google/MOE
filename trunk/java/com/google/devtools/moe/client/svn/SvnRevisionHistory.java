@@ -1,11 +1,14 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.svn;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.MoeProblem;
+import com.google.devtools.moe.client.database.Equivalence;
+import com.google.devtools.moe.client.database.EquivalenceMatcher;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
 import com.google.devtools.moe.client.repositories.RevisionMatcher;
@@ -182,5 +185,42 @@ public class SvnRevisionHistory implements RevisionHistory {
       }
     }
     return resultBuilder.build();
+  }
+
+  /**
+   * Starting at specified revision, check for an equivalence in the matcher's other repository. If
+   * there isn't one, find the revision's parent and check that for equivalence. Continue until you
+   * find an equivalence, or the revision you are examining has no parents, or if the number of
+   * parents that have been examined exceeds RevisionHistory.MAX_PARENTS_TO_EXAMINE.
+   *
+   * @param revision  the Revision to start at
+   * @param matcher  the RevisionMatcher to apply
+   *
+   * @return the most recent Equivalence
+   */
+  @Override
+  public Equivalence findLastEquivalence(Revision revision, EquivalenceMatcher matcher) {
+    int parentsExamined = 0;
+    AppContext.RUN.ui.info(String.format("Looking for an equivalence with repository %s starting "
+        + "from revision %s...", matcher.repositoryName, revision.toString()));
+    while (!matcher.matches(revision) && (parentsExamined < MAX_PARENTS_TO_EXAMINE)) {
+      RevisionMetadata metadata = getMetadata(revision);
+      // Revisions in svn have at most one parent
+      if (!metadata.parents.isEmpty()) {
+        revision = metadata.parents.get(0);
+        parentsExamined++;
+      } else {
+        // The beginning of the history was reached and no equivalence was found
+        return null;
+      }
+    }
+    // The maximum number of parents where examined and an equivalence was not found.
+    if (parentsExamined >= MAX_PARENTS_TO_EXAMINE) {
+      AppContext.RUN.ui.info(String.format("No equivalence with repository %s starting from "
+          + "revision %s was found after examining %d parent revisions. Null was returned.", 
+          matcher.repositoryName, revision.toString(), MAX_PARENTS_TO_EXAMINE));
+      return null;
+    }
+    return matcher.getEquivalence(revision);
   }
 }

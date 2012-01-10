@@ -1,10 +1,11 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.parser;
 
 import static com.google.devtools.moe.client.parser.Parser.tokenize;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.devtools.moe.client.parser.Parser.ParseError;
 
 import junit.framework.TestCase;
 
@@ -15,6 +16,8 @@ import java.util.Map;
  * @author dbentley@google.com (Daniel Bentley)
  */
 public class ParserTest extends TestCase {
+
+  private static final Map<String, String> EMPTY_MAP = ImmutableMap.<String, String>of();
 
   void assertOptionFail(String s) {
     try {
@@ -92,7 +95,7 @@ public class ParserTest extends TestCase {
       fail(String.format("Successfully parsed invalid string: %s into %s and %s",
                          input, r.identifier, r.options.toString()));
     } catch (Parser.ParseError e) {
-      assertEquals(errorMessage, e.error);
+      assertEquals("Cannot parse: " + errorMessage, e.getMessage());
     }
   }
 
@@ -134,7 +137,7 @@ public class ParserTest extends TestCase {
       fail(String.format("Successfully parsed invalid string: %s into %s and %s",
                          input, r.identifier, r.options.toString()));
     } catch (Parser.ParseError e) {
-      assertEquals(errorMessage, e.error);
+      assertEquals("Cannot parse: " + errorMessage, e.getMessage());
     }
   }
 
@@ -178,8 +181,8 @@ public class ParserTest extends TestCase {
     try {
       Parser.parseOperator(Parser.tokenize(input));
       fail();
-    } catch (Parser.ParseError p) {
-      assertEquals(errorMessage, p.error);
+    } catch (Parser.ParseError e) {
+      assertEquals("Cannot parse: " + errorMessage, e.getMessage());
     }
   }
 
@@ -199,6 +202,66 @@ public class ParserTest extends TestCase {
     assertOperationListRoundTrip("|foo|bar", "| foo  |  bar");
     assertOperationListRoundTrip("|foo(baz=quux)|bar", "|foo(baz=quux)|bar");
     assertOperationListRoundTrip(">public|editor", ">public|editor");
- }
+  }
 
+  private void testParseExHelper(String exString, Expression ex) throws Exception {
+    assertEquals(exString, ex.toString());
+    assertEquals(ex, Parser.parseExpression(exString));    
+  }
+
+  public void testParseExpression() throws Exception {
+
+    testParseExHelper("internal", new RepositoryExpression(new Term("internal", EMPTY_MAP)));
+
+    testParseExHelper("internal(revision=1)",
+        new RepositoryExpression(new Term("internal", ImmutableMap.of("revision", "1"))));
+
+    testParseExHelper("internal>public",
+        new RepositoryExpression("internal").translateTo("public"));
+
+    testParseExHelper("internal(revision=1)>public",
+        new RepositoryExpression("internal").atRevision("1").translateTo("public"));
+
+    testParseExHelper("internal|editor",
+        new RepositoryExpression(new Term("internal", EMPTY_MAP)).editWith("editor", EMPTY_MAP));
+
+    testParseExHelper("internal(revision=1)|editor",
+        new RepositoryExpression(new Term("internal", ImmutableMap.of("revision", "1")))
+            .editWith("editor", EMPTY_MAP));
+
+    testParseExHelper("internal|editor(locale=\"en_US\")",
+        new RepositoryExpression(new Term("internal", EMPTY_MAP))
+            .editWith("editor", ImmutableMap.of("locale", "en_US")));
+
+    testParseExHelper("internal(revision=1)|editor(locale=\"en_US\")",
+        new RepositoryExpression("internal").withOption("revision", "1")
+            .editWith("editor", ImmutableMap.of("locale", "en_US")));
+
+    testParseExHelper("internal(revision=1)|editor(locale=\"en_US\")>public",
+        new RepositoryExpression(new Term("internal", ImmutableMap.of("revision", "1")))
+            .editWith("editor", ImmutableMap.of("locale", "en_US"))
+            .translateTo("public"));    
+  }
+  
+  private void testParseRepoExHelper(String exString, RepositoryExpression ex) throws Exception {
+    assertEquals(exString, ex.toString());
+    assertEquals(ex, Parser.parseRepositoryExpression(exString));    
+  }
+
+  public void testParseRepositoryExpression() throws Exception {
+    testParseRepoExHelper("internal", new RepositoryExpression(new Term("internal", EMPTY_MAP)));
+
+    testParseRepoExHelper("internal(revision=1)",
+        new RepositoryExpression("internal").atRevision("1"));
+    
+    testParseRepoExHelper("file(path=\"/tmp\",projectSpace=internal)",
+        new RepositoryExpression("file")
+            .withOption("path", "/tmp")
+            .withOption("projectSpace", "internal"));
+    
+    try {
+      Parser.parseRepositoryExpression("internal(revision=1)>public");
+      fail("Expression w/ translation should have failed parsing as RepositoryExpression.");
+    } catch (ParseError expected) {}
+  }
 }

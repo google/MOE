@@ -1,14 +1,15 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.database;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
 
 import java.io.File;
@@ -16,42 +17,35 @@ import java.io.IOException;
 import java.util.Set;
 
 /**
- * Access to MOE's database when kept as a file
+ * A file-backed implementation of MOE {@link Db}.
  *
  */
 public class FileDb implements Db {
 
-  private final DbStorage db;
+  private static final Gson FILE_DB_GSON = new GsonBuilder().setPrettyPrinting().create();
 
-  public FileDb (DbStorage db) {
-    this.db = db;
+  private final DbStorage dbStorage;
+
+  public FileDb (DbStorage dbStorage) {
+    this.dbStorage = dbStorage;
   }
 
   /**
    * @return all Equivalences stored in the database
    */
   public Set<Equivalence> getEquivalences() {
-    return ImmutableSet.copyOf(db.equivalences);
+    return ImmutableSet.copyOf(dbStorage.getEquivalences());
   }
 
-  /**
-   * @param equivalence  the Equivalence to add to the database
-   */
+  @Override
   public void noteEquivalence(Equivalence equivalence) {
-    db.equivalences.add(equivalence);
+    dbStorage.addEquivalence(equivalence);
   }
 
-  /**
-   *  @param revision  the Revision to find equivalent revisions for. Two Revisions are equivalent
-   *                   when there is an Equivalence containing them in the database.
-   *  @param otherRepository  the Repository to find equivalent revisions in
-   *
-   *  @return all Revisions in otherRepository (have repositoryName of otherRepository) in some
-   *          Equivalence with revision, or an empty set if none.
-   */
+  @Override
   public Set<Revision> findEquivalences(Revision revision, String otherRepository) {
-    Set<Revision> equivalentToRevision = Sets.newHashSet();
-    for (Equivalence e : db.equivalences) {
+    ImmutableSet.Builder<Revision> equivalentToRevision = ImmutableSet.builder();
+    for (Equivalence e : dbStorage.getEquivalences()) {
       if (e.hasRevision(revision)) {
         Revision otherRevision = e.getOtherRevision(revision);
         if (otherRevision.repositoryName.equals(otherRepository)) {
@@ -59,26 +53,38 @@ public class FileDb implements Db {
         }
       }
     }
-    return ImmutableSet.copyOf(equivalentToRevision);
+    return equivalentToRevision.build();
   }
 
-  public static DbStorage makeDbFromDbText (String dbText)
-      throws InvalidProject {
+  @Override
+  public void noteMigration(SubmittedMigration migration) {
+    dbStorage.addMigration(migration);
+  }
+
+  @VisibleForTesting
+  public String toJsonString() {
+    return FILE_DB_GSON.toJson(dbStorage);
+  }
+
+  @Override
+  public void writeToLocation(String dbLocation) {
     try {
-      Gson gson = new Gson();
-      DbStorage db = gson.fromJson(dbText, DbStorage.class);
-      if (db == null) {
-        throw new InvalidProject("Could not parse MOE DB");
-      } else if (db.equivalences == null) {
-        throw new InvalidProject("MOE DB is missing equivalences");
-      }
-      return db;
+      AppContext.RUN.fileSystem.write(toJsonString(), new File(dbLocation));
+    } catch (IOException e) {
+      throw new MoeProblem(e.getMessage());
+    }
+  }
+
+  public static FileDb makeDbFromDbText(String dbText) throws InvalidProject {
+    try {
+      DbStorage dbStorage = FILE_DB_GSON.fromJson(dbText, DbStorage.class);
+      return new FileDb(dbStorage);
     } catch (JsonParseException e) {
       throw new InvalidProject("Could not parse MOE DB: " + e.getMessage());
     }
   }
 
-  public static DbStorage makeDbFromFile(String path) throws MoeProblem {
+  public static FileDb makeDbFromFile(String path) throws MoeProblem {
     try {
       String dbText = AppContext.RUN.fileSystem.fileToString(new File(path));
       try {
@@ -86,17 +92,6 @@ public class FileDb implements Db {
       } catch (InvalidProject e) {
         throw new MoeProblem(e.getMessage());
       }
-    } catch (IOException e) {
-      throw new MoeProblem(e.getMessage());
-    }
-  }
-
-  public static void writeDbToFile(FileDb d, String path) throws MoeProblem {
-    try {
-      File dbFile = new File(path);
-      Gson gson = new Gson();
-      String dbText = gson.toJson(d.db);
-      AppContext.RUN.fileSystem.write(dbText, dbFile);
     } catch (IOException e) {
       throw new MoeProblem(e.getMessage());
     }

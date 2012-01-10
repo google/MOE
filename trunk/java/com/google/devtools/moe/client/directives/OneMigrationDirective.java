@@ -1,28 +1,21 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.directives;
 
 import com.google.devtools.moe.client.AppContext;
-import com.google.devtools.moe.client.MoeProblem;
+import com.google.devtools.moe.client.MoeOptions;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
-import com.google.devtools.moe.client.codebase.CodebaseExpression;
-import com.google.devtools.moe.client.codebase.Evaluator;
-import com.google.devtools.moe.client.database.Db;
-import com.google.devtools.moe.client.database.FileDb;
 import com.google.devtools.moe.client.logic.OneMigrationLogic;
+import com.google.devtools.moe.client.parser.Parser;
+import com.google.devtools.moe.client.parser.Parser.ParseError;
+import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.Repository;
 import com.google.devtools.moe.client.repositories.Revision;
-import com.google.devtools.moe.client.repositories.RevisionEvaluator;
-import com.google.devtools.moe.client.repositories.RevisionExpression;
-import com.google.devtools.moe.client.repositories.RevisionExpression.RevisionExpressionError;
-import com.google.devtools.moe.client.testing.DummyDb;
 import com.google.devtools.moe.client.writer.DraftRevision;
 import com.google.devtools.moe.client.writer.Writer;
-import com.google.devtools.moe.client.writer.WriterEvaluator;
-import com.google.devtools.moe.client.writer.WriterExpression;
 import com.google.devtools.moe.client.writer.WritingError;
 
 import org.kohsuke.args4j.Option;
@@ -47,89 +40,52 @@ public class OneMigrationDirective implements Directive {
   @Override
   public int perform() {
     ProjectContext context;
+    String toProjectSpace;
+    RepositoryExpression toRepoEx, fromRepoEx;
+    Repository toRepo;
     try {
       context = AppContext.RUN.contextFactory.makeProjectContext(options.configFilename);
-    } catch (InvalidProject e) {
-      AppContext.RUN.ui.error(e.explanation);
-      return 1;
-    }
-
-    Db db;
-    if (options.dbLocation.equals("dummy")) {
-      db = new DummyDb(true);
-    } else {
-      // TODO(user): also allow for url dbLocation types
-      try {
-        db = new FileDb(FileDb.makeDbFromFile(options.dbLocation));
-      } catch (MoeProblem e) {
-        AppContext.RUN.ui.error(e.explanation);
+      toRepoEx = Parser.parseRepositoryExpression(options.toRepository);
+      fromRepoEx = Parser.parseRepositoryExpression(options.fromRepository);
+      toRepo = context.repositories.get(toRepoEx.getRepositoryName());
+      if (toRepo == null) {
+        AppContext.RUN.ui.error("No repository " + toRepoEx.getRepositoryName());
         return 1;
       }
-    }
-
-    RevisionExpression fromRe;
-    try {
-      fromRe = RevisionExpression.parse(options.fromRevision);
-    } catch (RevisionExpressionError e) {
-      AppContext.RUN.ui.error(e.getMessage());
+      toProjectSpace = context.config.getRepositoryConfigs().get(toRepoEx.getRepositoryName())
+          .getProjectSpace();
+    } catch (ParseError e) {
+      AppContext.RUN.ui.error(e, "Couldn't parse expression");
+      return 1;
+    } catch (InvalidProject e) {
+      AppContext.RUN.ui.error(e, "Couldn't create project");
       return 1;
     }
 
-    RevisionExpression toRe;
-    try {
-      toRe = RevisionExpression.parse(options.toRevision);
-    } catch (RevisionExpressionError e) {
-      AppContext.RUN.ui.error(e.getMessage());
-      return 1;
-    }
+    List<Revision> revs = Revision.fromRepositoryExpression(fromRepoEx, context);
 
-    Repository toRepo = context.repositories.get(toRe.repoId);
-    if (toRepo == null) {
-      AppContext.RUN.ui.error("No repository " + toRe.repoId);
-      return 1;
-    }
-    String toProjectSpace = toRepo.codebaseCreator.getProjectSpace();
     Codebase c;
     try {
-      CodebaseExpression ce = fromRe.toCodebaseExpression(toProjectSpace, context);
-      if (ce == null) {
-        return 1;
-      }
-      c = Evaluator.evaluate(ce, context);
+      c = new RepositoryExpression(fromRepoEx.getRepositoryName())
+          .atRevision(revs.get(0).revId)
+          .translateTo(toProjectSpace)
+          .createCodebase(context);
     } catch (CodebaseCreationError e) {
-      AppContext.RUN.ui.error(e.getMessage());
+      AppContext.RUN.ui.error(e, "Error creating codebase");
       return 1;
     }
 
     Writer destination;
     try {
-      WriterExpression we = toRe.toWriterExpression(context);
-      if (we == null) {
-        return 1;
-      }
-      destination = WriterEvaluator.evaluate(we, context);
+      destination = toRepoEx.createWriter(context);
     } catch (WritingError e) {
-      AppContext.RUN.ui.error(e.getMessage());
+      AppContext.RUN.ui.error(e, "Error writing to repo");
       return 1;
     }
 
-    AppContext.RUN.ui.info(
-        String.format("Creating a change in \"%s\" with revisions \"%s\"",
-                      toRe.repoId, options.revisionsToMigrate));
+    AppContext.RUN.ui.info(String.format("Migrating '%s' to '%s'", fromRepoEx, toRepoEx));
 
-    List<Revision> revs;
-    try {
-      revs = RevisionEvaluator.parseAndEvaluate(options.revisionsToMigrate, context);
-    } catch (RevisionExpressionError e) {
-      AppContext.RUN.ui.error(e.getMessage());
-      return 1;
-    }
-    if (revs.isEmpty()) {
-      AppContext.RUN.ui.error("No revision ids specified to migrate in Revision Expression: " +
-        options.revisionsToMigrate);
-      return 1;
-    }
-    DraftRevision r = OneMigrationLogic.migrate(db, c, destination, revs, context);
+    DraftRevision r = OneMigrationLogic.migrate(c, destination, revs, context, revs.get(0));
     if (r == null) {
       return 1;
     }
@@ -142,17 +98,11 @@ public class OneMigrationDirective implements Directive {
     @Option(name = "--config_file", required = true,
             usage = "Location of MOE config file")
     String configFilename = "";
-    @Option(name = "--db", required = true,
-            usage = "Location of MOE database")
-    String dbLocation = "";
-    @Option(name = "--from_revision", required = true,
-            usage = "Revision expression of source")
-    String fromRevision = "";
-    @Option(name = "--to_revision", required = true,
-            usage = "Revsion expression of destination")
-    String toRevision = "";
-    @Option(name = "--revisions_to_migrate", required = true,
-            usage = "Revision expression")
-    String revisionsToMigrate = "";
+    @Option(name = "--from_repository", required = true,
+            usage = "Repository expression to migrate from, e.g. 'internal(revision=3,4,5)'")
+    String fromRepository = "";
+    @Option(name = "--to_repository", required = true,
+            usage = "Repository expression to migrate to, e.g. 'public(revision=7)'")
+    String toRepository = "";
   }
 }

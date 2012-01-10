@@ -1,4 +1,4 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.directives;
 
@@ -25,7 +25,7 @@ public class FindEquivalenceDirectiveTest extends TestCase {
     FindEquivalenceDirective d = new FindEquivalenceDirective();
     d.getFlags().configFilename = "moe_config.txt";
     d.getFlags().dbLocation = "dummy";
-    d.getFlags().revision = "internal{1}";
+    d.getFlags().fromRepository = "internal(revision=1)";
     d.getFlags().inRepository = "public";
     assertEquals(0, d.perform());
     assertEquals(

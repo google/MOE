@@ -1,4 +1,4 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.directives;
 
@@ -16,7 +16,7 @@ public class DirectiveFactory {
     // TODO(user): If we decide not to want to always instantiate one of
     // each Directive this can be done in an abstract getDirective() method that
     // each enum value implements.
-    HELLO("Prints hello", new HelloDirective()),
+    HELLO("Prints hello"),
     CHECK_CONFIG("Checks that the project's configuration is valid", new CheckConfigDirective()),
     HIGHEST_REVISION("Finds the highest revision in a source control repository",
         new HighestRevisionDirective()),
@@ -25,22 +25,39 @@ public class DirectiveFactory {
     FIND_EQUIVALENCE(
         "Finds revisions in one repository that are equivalent to a given revision in another",
         new FindEquivalenceDirective()),
+    NOTE_EQUIVALENCE("Note a new equivalence in a db file.", new NoteEquivalenceDirective()),
     DIFF_CODEBASES("Prints the diff output between two codebase expressions",
         new DiffCodebasesDirective()),
     REVISIONS_SINCE_EQUIVALENCE("Prints revisions since the last equivalence",
         new RevisionsSinceEquivalenceDirective()),
+    LAST_EQUIVALENCE("Finds the last equivalence",
+        new LastEquivalenceDirective()),
     DETERMINE_METADATA("Conglomerates the metadata for a set of revisions",
         new DetermineMetadataDirective()),
+    DETERMINE_MIGRATIONS("Finds and builds the unmigrated Migrations for a MigrationConfig",
+          new DetermineMigrationsDirective()),
     ONE_MIGRATION("Performs a single migration",
         new OneMigrationDirective()),
     MERGE_CODEBASES("Merges three codebases into a new codebase",
         new MergeCodebasesDirective()),
-    MIGRATE("Determines and performs migration(s)", new MigrateDirective()),
-    MAGIC("Performs all migrations listed in config", new MigrateDirective())
+    BOOKKEEP("Gets the database up-to-date", new BookkeepingDirective()),
+    MAGIC("Updates DB and performs all migrations", new MagicDirective())
     ;
 
     private final String desc;
     private final Directive directive;
+
+    /**
+     * This is for Directives that have been migrated to Tasks but still need to be displayed
+     * in the usage message.
+     *
+     * TODO(dbentley): delete this by 1/31/12
+     */
+    private DirectiveType(String desc) {
+      this.desc = desc;
+      this.directive = null;
+    }
+
     private DirectiveType(String desc, Directive directive) {
       this.desc = desc;
       this.directive = directive;

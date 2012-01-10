@@ -1,8 +1,15 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.repositories;
 
 import com.google.common.base.Objects;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
+import com.google.devtools.moe.client.MoeProblem;
+import com.google.devtools.moe.client.parser.RepositoryExpression;
+import com.google.devtools.moe.client.project.ProjectContext;
+
+import java.util.List;
 
 /**
  * A Revision in a source control system.
@@ -44,5 +51,27 @@ public class Revision {
   @Override
   public String toString() {
     return this.repositoryName + "{" + revId + "}";
+  }
+  
+  /**
+   * Return the list of Revisions given by a RepositoryExpression like "internal(revision=3,4,5)".
+   */
+  public static List<Revision> fromRepositoryExpression(
+      RepositoryExpression repoEx, ProjectContext context) {
+    Repository repo = context.repositories.get(repoEx.getRepositoryName());
+    if (repo == null) {
+      throw new MoeProblem("No repository " + repoEx.getRepositoryName());
+    }
+    if (Strings.isNullOrEmpty(repoEx.getOption("revision"))) {
+      throw new MoeProblem(
+          "Repository expression must have a 'revision' option, e.g. internal(revision=3,4,5).");
+    }
+
+    RevisionHistory rh = repo.revisionHistory;
+    ImmutableList.Builder<Revision> revBuilder = ImmutableList.builder();
+    for (String revId : repoEx.getOption("revision").split(",")) {
+      revBuilder.add(rh.findHighestRevision(revId));
+    }
+    return revBuilder.build();
   }
 }

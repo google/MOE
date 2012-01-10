@@ -1,4 +1,4 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.codebase;
 
@@ -14,11 +14,6 @@ import java.util.Map;
 public interface CodebaseCreator {
 
   /**
-   * Returns the project space that this creates in.
-   */
-  public String getProjectSpace();
-
-  /**
    * Creates a Codebase.
    *
    * @param options  options to affect the codebase creation.
@@ -27,6 +22,5 @@ public interface CodebaseCreator {
    *
    * @throw CodebaseCreationError if we cannot create the Codebase.
    */
-  public Codebase create(Map<String, String> options) throws CodebaseCreationError;
-
+  Codebase create(Map<String, String> options) throws CodebaseCreationError;
 }

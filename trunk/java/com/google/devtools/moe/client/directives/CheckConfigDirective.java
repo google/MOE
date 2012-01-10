@@ -1,8 +1,9 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.directives;
 
 import com.google.devtools.moe.client.AppContext;
+import com.google.devtools.moe.client.MoeOptions;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.ProjectContext;
 
@@ -31,7 +32,7 @@ public class CheckConfigDirective implements Directive {
           options.configFilename);
       return 0;
     } catch (InvalidProject e) {
-      System.err.println("Invalid project: " + e.explanation);
+      AppContext.RUN.ui.error(e, "Invalid project");
       return 1;
     }
   }

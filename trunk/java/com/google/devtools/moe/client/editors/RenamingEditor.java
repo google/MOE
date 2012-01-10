@@ -1,11 +1,15 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.editors;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.CharMatcher;
+import com.google.common.collect.ImmutableMap;
 import com.google.devtools.moe.client.AppContext;
-import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.MoeProblem;
+import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.project.EditorConfig;
+import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
@@ -14,6 +18,8 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * The renaming editor reorganizes the project's hierarchy.
@@ -21,12 +27,21 @@ import java.util.Map;
  */
 public class RenamingEditor implements Editor {
 
-  private final String editorName;
-  private final Map<String, String> mappings;
+  /** CharMatcher for trimming leading and trailing file path separators. */
+  private static final CharMatcher SEP_CHAR_MATCHER = CharMatcher.is(File.separatorChar);
 
-  RenamingEditor(String editorName, Map<String, String> mappings) {
+  private final String editorName;
+  private final Map<Pattern, String> regexMappings;
+
+  RenamingEditor(String editorName, Map<String, String> mappings, boolean useRegex) {
     this.editorName = editorName;
-    this.mappings = mappings;
+
+    ImmutableMap.Builder<Pattern, String> regexMappingsBuilder = ImmutableMap.builder();
+    for (String mapping : mappings.keySet()) {
+      regexMappingsBuilder.put(Pattern.compile(useRegex ? mapping : Pattern.quote(mapping)),
+                               mappings.get(mapping));
+    }
+    this.regexMappings = regexMappingsBuilder.build();
   }
 
   /**
@@ -40,79 +55,70 @@ public class RenamingEditor implements Editor {
   /**
    * Recursively copies files from src to dest, changing the filenames as specified
    * in mappings.
+   *
+   * @param srcFile  the absolute path of a file to rename and copy or a dir to crawl
+   * @param srcFolder  the absolute root of the from folder being crawled
+   * @param destFolder  the absolute root of the to folder receiving renamed files
    */
-  public static void copyDirectoryAndRename(File src, File dest, Map<String, String> mappings)
-      throws IOException, CommandException {
-    if (src == null) {
-      return;
-    }
-    if (AppContext.RUN.fileSystem.isFile(src)) {
-      String renamedFilename = RenamingEditor.renameFile(src.getAbsolutePath(), mappings);
-      if (renamedFilename == null) {
-        throw new MoeProblem(String.format(
-            "Cannot find a rename mapping that covers file %s."
-            + " Every file needs an applicable renaming rule.", src.getAbsolutePath()));
-      }
-      File renamedFile = new File(renamedFilename);
-      AppContext.RUN.fileSystem.makeDirsForFile(renamedFile);
-      AppContext.RUN.fileSystem.copyFile(src, renamedFile);
-      return;
-    }
-    File[] files = AppContext.RUN.fileSystem.listFiles(src);
-    if (files != null) {
+  @VisibleForTesting
+  void copyDirectoryAndRename(File srcFile, File srcFolder, File destFolder)
+      throws IOException {
+    if (AppContext.RUN.fileSystem.isDirectory(srcFile)) {
+      File[] files = AppContext.RUN.fileSystem.listFiles(srcFile);
       for (File subFile : files) {
-        File newFile = new File(dest, AppContext.RUN.fileSystem.getName(subFile));
-        if (AppContext.RUN.fileSystem.isDirectory(subFile)) {
-          copyDirectoryAndRename(subFile, newFile, mappings);
-        } else {
-          String renamedFilename = RenamingEditor.renameFile(newFile.getAbsolutePath(), mappings);
-          if (renamedFilename == null) {
-            throw new MoeProblem(String.format(
-                "Cannot find a rename mapping that covers file %s. "
-                + "Every file needs an applicable renaming rule.", src.getAbsolutePath()));
-          }
-          File renamedFile = new File(renamedFilename);
-          AppContext.RUN.fileSystem.makeDirsForFile(renamedFile);
-          AppContext.RUN.fileSystem.copyFile(subFile, renamedFile);
-        }
+        copyDirectoryAndRename(subFile, srcFolder, destFolder);
       }
+    } else {
+      // "/srcFolder/path/to/file" -> "path/to/file"
+      String relativePath = srcFolder.toURI().relativize(srcFile.toURI()).getPath();
+      File renamedFile = new File(destFolder, renameFile(relativePath));
+      AppContext.RUN.fileSystem.makeDirsForFile(renamedFile);
+      AppContext.RUN.fileSystem.copyFile(srcFile, renamedFile);
     }
   }
 
   /**
    * Returns the filename according to the rules in mappings.
    *
-   * @param inputFilename  the filename to be renamed
-   * @param mappings  a map mapping the old filepath Strings to the new ones
+   * @param inputFilename  the filename to be renamed, relative to the root of the codebase
    *
-   * @return the new filename or null if no renaming took place
+   * @return the new relative filename
+   * @throws MoeProblem  if a mapping for inputFilename could not be found
    */
-  public static String renameFile(String inputFilename, Map<String, String> mappings) {
-    for (String prefix : mappings.keySet()) {
-      if (inputFilename.indexOf(prefix) != -1) {
-        return inputFilename.replaceFirst(prefix, mappings.get(prefix));
+  String renameFile(String inputFilename) {
+    for (Pattern searchExp : regexMappings.keySet()) {
+      Matcher matcher = searchExp.matcher(inputFilename);
+      if (matcher.find()) {
+        String renamed = matcher.replaceFirst(regexMappings.get(searchExp));
+        // Erase leading path separators, e.g. when the rule "dir" -> "" maps
+        // "dir/filename.txt" to "/filename.txt".
+        return SEP_CHAR_MATCHER.trimLeadingFrom(renamed);
       }
     }
-    return null;
+    throw new MoeProblem(String.format(
+        "Cannot find a rename mapping that covers file %s. "
+        + "Every file needs an applicable renaming rule.", inputFilename));
   }
 
   /**
-   * Edits a Directory and returns the result.
+   * Copies the input Codebase's contents, renaming the files according to this.mappings and
+   * returns a new Codebase with the results.
    *
-   * @param input  the directory to edit
-   * @param options  command-line parameters
+   * @param input the Codebase to edit
+   * @param context the ProjectContext for this project
+   * @param options a map containing any command line options such as a specific revision
    */
   @Override
-  public File edit(File input, Map<String, String> options) {
+  public Codebase edit(Codebase input, ProjectContext context, Map<String, String> options) {
     File tempDir = AppContext.RUN.fileSystem.getTemporaryDirectory("rename_run_");
     try {
-      RenamingEditor.copyDirectoryAndRename(input, tempDir, this.mappings);
+      copyDirectoryAndRename(input.getPath().getAbsoluteFile(),
+                             input.getPath().getAbsoluteFile(),
+                             tempDir.getAbsoluteFile());
     } catch (IOException e) {
       throw new MoeProblem(e.getMessage());
-    } catch (CommandException e) {
-      throw new MoeProblem(e.getMessage());
     }
-    return tempDir;
+    return new Codebase(tempDir, input.getProjectSpace(), input.getExpression());
   }
 
   public static RenamingEditor makeRenamingEditor(String editorName, EditorConfig config) {
@@ -120,7 +126,9 @@ public class RenamingEditor implements Editor {
       throw new MoeProblem(String.format("No mappings object found in the config for editor %s",
           editorName));
     }
-    return new RenamingEditor(editorName, RenamingEditor.parseJsonMap(config.getMappings()));
+    return new RenamingEditor(editorName,
+                              RenamingEditor.parseJsonMap(config.getMappings()),
+                              config.getUseRegex());
   }
 
   /**
@@ -128,7 +136,7 @@ public class RenamingEditor implements Editor {
    *
    * @param jsonMappings  the JsonObject representing the renaming rules
    */
-  public static Map<String, String> parseJsonMap(JsonObject jsonMappings) {
+  static Map<String, String> parseJsonMap(JsonObject jsonMappings) {
     Type type = new TypeToken<Map<String, String>>(){}.getType();
     return new Gson().fromJson(jsonMappings, type);
   }

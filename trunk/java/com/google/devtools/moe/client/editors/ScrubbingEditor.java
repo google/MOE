@@ -1,4 +1,4 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.editors;
 
@@ -7,8 +7,9 @@ import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Utils;
-import com.google.devtools.moe.client.codebase.CodebaseCreationError;
+import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.project.EditorConfig;
+import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.gson.JsonObject;
 
 import java.io.File;
@@ -35,6 +36,7 @@ public class ScrubbingEditor implements Editor {
   /**
    * Returns a description of what this editor will do.
    */
+  @Override
   public String getDescription() {
     return name;
   }
@@ -51,12 +53,11 @@ public class ScrubbingEditor implements Editor {
   }
 
   /**
-   * Edits a Directory.
-   *
-   * @param input  the directory to edit
-   * @param options  command-line parameters
+   * Runs the Moe scrubber on the copied contents of the input Codebase and returns a new Codebase
+   * with the results of the scrub.
    */
-  public File edit(File input, Map<String, String>options) throws CodebaseCreationError {
+  @Override
+  public Codebase edit(Codebase input, ProjectContext context, Map<String, String> options) {
     File scrubberBinary = null;
     try {
       scrubberBinary = getScrubberBinary();
@@ -67,9 +68,6 @@ public class ScrubbingEditor implements Editor {
     File tempDir = AppContext.RUN.fileSystem.getTemporaryDirectory("scrubber_run_");
     File outputTar = new File(tempDir, "scrubbed.tar");
 
-    // For now, we only use the default config
-    // TODO(user): allow scrubber command line configuration
-    Utils.checkOptionsEmpty(options);
     try {
       AppContext.RUN.cmd.runCommand(
           // The ./ preceding scrubber.par is sometimes needed.
@@ -80,8 +78,8 @@ public class ScrubbingEditor implements Editor {
               "--output_tar", outputTar.getAbsolutePath(),
               // TODO(dbentley): allow configuring the scrubber config
               "--config_data", (scrubberConfig == null) ? "{}" : scrubberConfig.toString(),
-              input.getAbsolutePath()),
-          "", scrubberBinary.getParentFile().getPath());
+              input.getPath().getAbsolutePath()),
+          scrubberBinary.getParentFile().getPath());
     } catch (CommandRunner.CommandException e) {
       throw new MoeProblem(e.getMessage());
     }
@@ -93,11 +91,10 @@ public class ScrubbingEditor implements Editor {
     } catch (CommandRunner.CommandException e) {
       throw new MoeProblem(e.getMessage());
     }
-    return expandedDir;
+    return new Codebase(expandedDir, input.getProjectSpace(), input.getExpression());
   }
 
   public static ScrubbingEditor makeScrubbingEditor(String editorName, EditorConfig config) {
     return new ScrubbingEditor(editorName, config.getScrubberConfig());
   }
-
 }

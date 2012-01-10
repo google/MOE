@@ -1,28 +1,39 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.migrations;
 
-import com.google.devtools.moe.client.repositories.MetadataScrubberConfig;
+import com.google.common.base.Joiner;
+import com.google.devtools.moe.client.database.Equivalence;
+import com.google.devtools.moe.client.repositories.Repository;
+import com.google.devtools.moe.client.repositories.Revision;
+
+import java.util.List;
 
 /**
- * A Migration represents the series of changes needed to make the from_repository equivalent to
- * the to_repository. This object holds the data necessary to make such a migration. As of now,
- * this is just a wrapper around the data in a MigrationConfig.
+ * A Migration represents a change to be ported from one {@link Repository} to another.
  *
  */
 public class Migration {
 
-  public final String name;
-  public final String fromRepository;
-  public final String toRepository;
-  public final boolean separateRevisions;
-  public final MetadataScrubberConfig metadataScrubberConfig;
+  /** The specification of all Migrations b/w these from and to repos */
+  public final MigrationConfig config;
+  /** The most recent Equivalence b/w the from and to repos of this Migration */
+  public final Equivalence sinceEquivalence;
+  /** The changes in fromRepository encapsulated by this Migration */
+  public final List<Revision> fromRevisions;
 
-  public Migration(MigrationConfig config) {
-    this.name = config.getName();
-    this.fromRepository = config.getFromRepository();
-    this.toRepository = config.getToRepository();
-    this.separateRevisions = config.getSeparateRevisions();
-    this.metadataScrubberConfig = config.getMetadataScrubberConfig();
+  public Migration(MigrationConfig config,
+                   List<Revision> fromRevisions,
+                   Equivalence sinceEquivalence) {
+    this.config = config;
+    this.sinceEquivalence = sinceEquivalence;
+    this.fromRevisions = fromRevisions;
+  }
+
+  @Override
+  public String toString() {
+    return String.format(
+        "Migration %s since equivalence (%s) of revisions {%s}",
+        config.getName(), sinceEquivalence, Joiner.on(", ").join(fromRevisions));
   }
 }

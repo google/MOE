@@ -1,4 +1,4 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client;
 
@@ -21,13 +21,13 @@ public class SystemCommandRunnerTest extends TestCase {
 
   public void testLongStdout() throws Exception {
     String data = c.runCommand(
-        "perl", ImmutableList.of("-e", "print (\"*\" x 17000)"), "", "");
+        "perl", ImmutableList.of("-e", "print (\"*\" x 17000)"), "");
     assertEquals(17000, data.length());
   }
 
   public void testLongStderr() throws Exception {
     String data = c.runCommand(
-        "perl", ImmutableList.of("-e", "print STDERR (\"*\" x 17000)"), "", "");
+        "perl", ImmutableList.of("-e", "print STDERR (\"*\" x 17000)"), "");
     assertEquals(0, data.length());
   }
 }

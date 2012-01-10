@@ -1,4 +1,4 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.project;
 
@@ -27,22 +27,111 @@ public class ProjectConfigTest extends TestCase {
         "Must specify repositories");
   }
 
+  public void testInvalidEditor() {
+    assertInvalidConfig(
+        "{" +
+        " 'name': 'foo'," +
+        " 'repositories': {" +
+        "   'x': {}" +
+        " }," +
+        " 'editors': {'e1': {}}" +
+        "}",
+        "Missing type in editor");
+  }
+
+  public void testInvalidTranslators1() {
+    assertInvalidConfig(
+        "{" +
+        " 'name': 'foo'," +
+        " 'repositories': {" +
+        "   'x': {}" +
+        " }," +
+        " 'translators': [{}]" +
+        "}",
+        "Translator requires from_project_space");
+  }
+
+  public void testInvalidTranslators2() {
+    assertInvalidConfig(
+        "{" +
+        " 'name': 'foo'," +
+        " 'repositories': {" +
+        "   'x': {}" +
+        " }," +
+        " 'translators': [{'from_project_space': 'x'}]" +
+        "}",
+        "Translator requires to_project_space");
+  }
+
+  public void testInvalidTranslators3() {
+    assertInvalidConfig(
+        "{" +
+        " 'name': 'foo'," +
+        " 'repositories': {" +
+        "   'x': {}" +
+        " }," +
+        " 'translators': [{'from_project_space': 'x'," +
+        "                  'to_project_space': 'y'}]" +
+        "}",
+        "Translator requires steps");
+  }
+
+  public void testInvalidStep1() {
+    assertInvalidConfig(
+        "{" +
+        " 'name': 'foo'," +
+        " 'repositories': {" +
+        "   'x': {}" +
+        " }," +
+        " 'translators': [{'from_project_space': 'x'," +
+        "                  'to_project_space': 'y'," +
+        "                  'steps': [{'name': ''}]}]" +
+        "}",
+        "Missing name in step");
+  }
+
+  public void testInvalidStep2() {
+    assertInvalidConfig(
+        "{" +
+        " 'name': 'foo'," +
+        " 'repositories': {" +
+        "   'x': {}" +
+        " }," +
+        " 'translators': [{'from_project_space': 'x'," +
+        "                  'to_project_space': 'y'," +
+        "                  'steps': [{'name': 'x'}]}]" +
+        "}",
+        "Missing editor in step");
+  }
+
+  public void testMigration1() {
+    assertInvalidConfig(
+        "{" +
+        " 'name': 'foo'," +
+        " 'repositories': {" +
+        "   'x': {}" +
+        " }," +
+        " 'migrations': [{}]" +
+        "}",
+        "Missing name in migration");
+  }
+
   private void assertInvalidConfig(String text, String error) {
     try {
       ProjectConfig.makeProjectConfigFromConfigText(text);
-      fail();
+      fail("Expected error");
     } catch (InvalidProject e) {
       assertEquals(error, e.explanation);
     }
   }
 
   public void testConfigWithMultipleRepositories() throws Exception {
-    ProjectConfig p = ProjectConfig.makeProjectConfigFromConfigText(
+    assertInvalidConfig(
         "{\"name\": \"foo\"," +
         "\"repositories\": {"+
         "\"internal\": {\"type\":\"svn\"}," +
-        "\"internal\": {\"type\":\"svn\"}}}");
-    assertEquals(1, p.getRepositoryConfigs().size());
+        "\"internal\": {\"type\":\"svn\"}}}",
+        "Could not parse MOE config: duplicate key: internal");
   }
 
   public void testConfigWithScrubberConfig() throws Exception {

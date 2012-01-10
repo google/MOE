@@ -1,4 +1,4 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.testing;
 
@@ -6,7 +6,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.codebase.CodebaseCreator;
-import com.google.devtools.moe.client.codebase.CodebaseExpression;
+import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.parser.Term;
 
 import java.io.File;
@@ -26,6 +26,7 @@ public class DummyCodebaseCreator implements CodebaseCreator {
     this.projectSpace = projectSpace;
   }
 
+  @Override
   public Codebase create(Map<String, String> options) throws CodebaseCreationError{
     String revId = options.get("revision");
     if (revId == null) {
@@ -34,11 +35,8 @@ public class DummyCodebaseCreator implements CodebaseCreator {
 
 
     return new Codebase(
-        new File("/dummy/path"), projectSpace,
-        new CodebaseExpression(new Term(name, ImmutableMap.<String, String>of())));
-  }
-
-  public String getProjectSpace() {
-    return projectSpace;
+        new File("/dummy/path"),
+        projectSpace,
+        new RepositoryExpression(new Term(name, ImmutableMap.<String, String>of())));
   }
 }

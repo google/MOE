@@ -1,6 +1,8 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.svn;
+
+import static org.easymock.EasyMock.expect;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -10,17 +12,19 @@ import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.codebase.Codebase;
-import com.google.devtools.moe.client.codebase.CodebaseExpression;
+import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.parser.Term;
+import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.testing.AppContextForTesting;
 import com.google.devtools.moe.client.writer.DraftRevision;
 
 import junit.framework.TestCase;
+
 import org.easymock.EasyMock;
-import static org.easymock.EasyMock.expect;
 import org.easymock.IMocksControl;
+
 import java.io.File;
 import java.util.List;
 
@@ -29,12 +33,32 @@ import java.util.List;
  */
 public class SvnWriterTest extends TestCase {
 
+  private IMocksControl control;
+  private RepositoryConfig mockConfig;
+  private FileSystem fileSystem;
+  private CommandRunner cmd;
+
+  @Override public void setUp() throws Exception {
+    AppContextForTesting.initForTest();
+    control = EasyMock.createControl();
+    mockConfig = control.createMock(RepositoryConfig.class);
+    expect(mockConfig.getUrl()).andReturn("http://foo/svn/trunk/").anyTimes();
+    expect(mockConfig.getProjectSpace()).andReturn("public").anyTimes();
+    expect(mockConfig.getIgnoreFileRes()).andReturn(ImmutableList.<String>of()).anyTimes();
+
+    fileSystem = control.createMock(FileSystem.class);
+    cmd = control.createMock(CommandRunner.class);
+
+    AppContext.RUN.cmd = cmd;
+    AppContext.RUN.fileSystem = fileSystem;
+  }
+
   private void expectSvnCommand(List<String> args, String workingDirectory, String result,
                                 CommandRunner cmd) {
     ImmutableList.Builder<String> withAuthArgs = new ImmutableList.Builder<String>();
     withAuthArgs.add("--no-auth-cache").addAll(args);
     try {
-      expect(cmd.runCommand("svn", withAuthArgs.build(), "", workingDirectory)).andReturn(result);
+      expect(cmd.runCommand("svn", withAuthArgs.build(), workingDirectory)).andReturn(result);
     } catch (Exception e) {}
   }
 
@@ -42,21 +66,13 @@ public class SvnWriterTest extends TestCase {
     return new File(filename);
   }
 
-  private CodebaseExpression e(String creatorIdentifier,
+  private RepositoryExpression e(String creatorIdentifier,
                                ImmutableMap<String, String> creatorOptions) {
-    return new CodebaseExpression(
+    return new RepositoryExpression(
         new Term(creatorIdentifier, creatorOptions));
   }
 
   public void testPutEmptyCodebase() throws Exception {
-    AppContextForTesting.initForTest();
-    IMocksControl control = EasyMock.createControl();
-    SvnRevisionHistory revisionHistory = control.createMock(SvnRevisionHistory.class);
-    FileSystem fileSystem = control.createMock(FileSystem.class);
-    CommandRunner cmd = control.createMock(CommandRunner.class);
-    AppContext.RUN.cmd = cmd;
-    AppContext.RUN.fileSystem = fileSystem;
-
     expect(fileSystem.findFiles(f("/codebase"))).andReturn(ImmutableSet.<File>of());
     expect(fileSystem.findFiles(f("/writer"))).andReturn(
         ImmutableSet.<File>of(f("/writer/.svn/")));
@@ -64,17 +80,16 @@ public class SvnWriterTest extends TestCase {
     control.replay();
     Codebase c = new Codebase(f("/codebase"), "public",
                               e("public", ImmutableMap.<String, String>of()));
-    SvnWriter e = new SvnWriter("", null, f("/writer"), "public");
+    SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"));
     DraftRevision r = e.putCodebase(c);
     control.verify();
     assertEquals("/writer", r.getLocation());
   }
 
   public void testWrongProjectSpace() throws Exception {
-    AppContextForTesting.initForTest();
     Codebase c = new Codebase(f("/codebase"), "internal",
                               e("internal", ImmutableMap.<String, String>of()));
-    SvnWriter e = new SvnWriter("", null, f("/writer"), "public");
+    SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"));
     try {
       DraftRevision r = e.putCodebase(c);
       fail();
@@ -82,14 +97,6 @@ public class SvnWriterTest extends TestCase {
   }
 
   public void testDeletedFile() throws Exception {
-    AppContextForTesting.initForTest();
-    IMocksControl control = EasyMock.createControl();
-    SvnRevisionHistory revisionHistory = control.createMock(SvnRevisionHistory.class);
-    FileSystem fileSystem = control.createMock(FileSystem.class);
-    CommandRunner cmd = control.createMock(CommandRunner.class);
-    AppContext.RUN.cmd = cmd;
-    AppContext.RUN.fileSystem = fileSystem;
-
     expect(fileSystem.exists(f("/codebase/foo"))).andReturn(false);
     expect(fileSystem.exists(f("/writer/foo"))).andReturn(true);
 
@@ -99,20 +106,12 @@ public class SvnWriterTest extends TestCase {
     control.replay();
     Codebase c = new Codebase(f("/codebase"), "public",
                               e("public", ImmutableMap.<String, String>of()));
-    SvnWriter e = new SvnWriter("", null, f("/writer"), "public");
+    SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"));
     e.putFile("foo", c);
     control.verify();
   }
 
   public void testMoveContents() throws Exception {
-    AppContextForTesting.initForTest();
-    IMocksControl control = EasyMock.createControl();
-    SvnRevisionHistory revisionHistory = control.createMock(SvnRevisionHistory.class);
-    FileSystem fileSystem = control.createMock(FileSystem.class);
-    CommandRunner cmd = control.createMock(CommandRunner.class);
-    AppContext.RUN.cmd = cmd;
-    AppContext.RUN.fileSystem = fileSystem;
-
     expect(fileSystem.exists(f("/codebase/foo"))).andReturn(true);
     expect(fileSystem.exists(f("/writer/foo"))).andReturn(true);
 
@@ -123,20 +122,12 @@ public class SvnWriterTest extends TestCase {
     control.replay();
     Codebase c = new Codebase(f("/codebase"), "public",
                               e("public", ImmutableMap.<String, String>of()));
-    SvnWriter e = new SvnWriter("", null, f("/writer"), "public");
+    SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"));
     e.putFile("foo", c);
     control.verify();
   }
 
-  public void testNewfile() throws Exception {
-    AppContextForTesting.initForTest();
-    IMocksControl control = EasyMock.createControl();
-    SvnRevisionHistory revisionHistory = control.createMock(SvnRevisionHistory.class);
-    FileSystem fileSystem = control.createMock(FileSystem.class);
-    CommandRunner cmd = control.createMock(CommandRunner.class);
-    AppContext.RUN.cmd = cmd;
-    AppContext.RUN.fileSystem = fileSystem;
-
+  public void testNewFile() throws Exception {
     expect(fileSystem.exists(f("/codebase/foo"))).andReturn(true);
     expect(fileSystem.exists(f("/writer/foo"))).andReturn(false);
 
@@ -148,20 +139,32 @@ public class SvnWriterTest extends TestCase {
     control.replay();
     Codebase c = new Codebase(f("/codebase"), "public",
                               e("public", ImmutableMap.<String, String>of()));
-    SvnWriter e = new SvnWriter("", null, f("/writer"), "public");
+    SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"));
     e.putFile("foo", c);
     control.verify();
   }
 
-  public void testSetExecutable() throws Exception {
-    AppContextForTesting.initForTest();
-    IMocksControl control = EasyMock.createControl();
-    SvnRevisionHistory revisionHistory = control.createMock(SvnRevisionHistory.class);
-    FileSystem fileSystem = control.createMock(FileSystem.class);
-    CommandRunner cmd = control.createMock(CommandRunner.class);
-    AppContext.RUN.cmd = cmd;
-    AppContext.RUN.fileSystem = fileSystem;
+  public void testNewHtmlFile() throws Exception {
+    expect(fileSystem.exists(f("/codebase/test.html"))).andReturn(true);
+    expect(fileSystem.exists(f("/writer/test.html"))).andReturn(false);
 
+    expect(fileSystem.isExecutable(f("/codebase/test.html"))).andReturn(false);
+    expect(fileSystem.isExecutable(f("/writer/test.html"))).andReturn(false);
+    fileSystem.makeDirsForFile(f("/writer/test.html"));
+    fileSystem.copyFile(f("/codebase/test.html"), f("/writer/test.html"));
+    expectSvnCommand(ImmutableList.of("add", "--parents", "test.html"), "/writer", "", cmd);
+    expectSvnCommand(ImmutableList.of("propset", "svn:mime-type", "text/html", "test.html"),
+        "/writer", "", cmd);
+    control.replay();
+
+    Codebase c = new Codebase(f("/codebase"), "public",
+                              e("public", ImmutableMap.<String, String>of()));
+    SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"));
+    e.putFile("test.html", c);
+    control.verify();
+  }
+
+  public void testSetExecutable() throws Exception {
     expect(fileSystem.exists(f("/codebase/foo"))).andReturn(true);
     expect(fileSystem.exists(f("/writer/foo"))).andReturn(true);
 
@@ -173,20 +176,12 @@ public class SvnWriterTest extends TestCase {
     control.replay();
     Codebase c = new Codebase(f("/codebase"), "public",
                               e("public", ImmutableMap.<String, String>of()));
-    SvnWriter e = new SvnWriter("", null, f("/writer"), "public");
+    SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"));
     e.putFile("foo", c);
     control.verify();
   }
 
   public void testDeleteExecutable() throws Exception {
-    AppContextForTesting.initForTest();
-    IMocksControl control = EasyMock.createControl();
-    SvnRevisionHistory revisionHistory = control.createMock(SvnRevisionHistory.class);
-    FileSystem fileSystem = control.createMock(FileSystem.class);
-    CommandRunner cmd = control.createMock(CommandRunner.class);
-    AppContext.RUN.cmd = cmd;
-    AppContext.RUN.fileSystem = fileSystem;
-
     expect(fileSystem.exists(f("/codebase/foo"))).andReturn(true);
     expect(fileSystem.exists(f("/writer/foo"))).andReturn(true);
 
@@ -199,28 +194,22 @@ public class SvnWriterTest extends TestCase {
     Codebase c = new Codebase(
         f("/codebase"), "public",
         e("public", ImmutableMap.<String, String>of()));
-    SvnWriter e = new SvnWriter("", null, f("/writer"), "public");
+    SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"));
     e.putFile("foo", c);
     control.verify();
   }
 
   public void testPutEmptyCodebaseWithMetadata() throws Exception {
-    AppContextForTesting.initForTest();
-    IMocksControl control = EasyMock.createControl();
-    SvnRevisionHistory revisionHistory = control.createMock(SvnRevisionHistory.class);
-    FileSystem fileSystem = control.createMock(FileSystem.class);
-    CommandRunner cmd = control.createMock(CommandRunner.class);
-    AppContext.RUN.cmd = cmd;
-    AppContext.RUN.fileSystem = fileSystem;
-
     expect(fileSystem.findFiles(f("/codebase"))).andReturn(ImmutableSet.<File>of());
     expect(fileSystem.findFiles(f("/writer"))).andReturn(
         ImmutableSet.<File>of(f("/writer/.svn/")));
 
     File script = new File("/writer/svn_commit.sh");
-    fileSystem.write("#!/bin/sh\nsvn commit -m \"desc\"\n" +
-                 "svn propset -r HEAD svn:author \"author\" --revprop",
-                 script);
+    fileSystem.write("#!/bin/sh -e\n" +
+                     "svn update\n" +
+                     "svn commit -m \"desc\"\n" +
+                     "svn propset -r HEAD svn:author \"author\" --revprop",
+                     script);
     fileSystem.setExecutable(script);
 
     control.replay();
@@ -228,7 +217,7 @@ public class SvnWriterTest extends TestCase {
                               e("public", ImmutableMap.<String, String>of()));
     RevisionMetadata rm = new RevisionMetadata("rev1", "author", "data", "desc",
                                                ImmutableList.<Revision>of());
-    SvnWriter e = new SvnWriter("", null, f("/writer"), "public");
+    SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"));
     DraftRevision r = e.putCodebase(c, rm);
     control.verify();
     assertEquals("/writer", r.getLocation());

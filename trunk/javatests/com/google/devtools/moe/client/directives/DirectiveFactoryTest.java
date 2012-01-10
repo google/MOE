@@ -1,4 +1,4 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.directives;
 
@@ -10,8 +10,8 @@ import junit.framework.TestCase;
 public class DirectiveFactoryTest extends TestCase {
 
   public void testMakeDirective() throws Exception {
-    Directive d = DirectiveFactory.makeDirective("hello");
-    assertTrue(d instanceof HelloDirective);
+    Directive d = DirectiveFactory.makeDirective("highest_revision");
+    assertTrue(d instanceof HighestRevisionDirective);
   }
 
   public void testBadInput() throws Exception {

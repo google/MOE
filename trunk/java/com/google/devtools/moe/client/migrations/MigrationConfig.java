@@ -1,7 +1,8 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.migrations;
 
+import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.repositories.MetadataScrubberConfig;
 import com.google.gson.annotations.SerializedName;
 
@@ -44,5 +45,14 @@ public class MigrationConfig {
 
   public MetadataScrubberConfig getMetadataScrubberConfig() {
     return metadataScrubberConfig;
+  }
+
+  public void validate() throws InvalidProject {
+    InvalidProject.assertNotEmpty(
+        name, "Missing name in migration");
+    InvalidProject.assertNotEmpty(
+        fromRepository, "Missing from_repository in migration");
+    InvalidProject.assertNotEmpty(
+        toRepository, "Missing to_repository in migration");
   }
 }

@@ -1,11 +1,14 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.testing;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.codebase.CodebaseCreator;
+import com.google.devtools.moe.client.database.Equivalence;
+import com.google.devtools.moe.client.database.EquivalenceMatcher;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.Repository;
 import com.google.devtools.moe.client.repositories.Revision;
@@ -29,25 +32,38 @@ public class DummyRepository {
       this.name = name;
     }
 
+    @Override
     public Revision findHighestRevision(String revId) {
-      if (revId.isEmpty()) {
+      if (Strings.isNullOrEmpty(revId)) {
         revId = "1";
       }
       return new Revision(revId, name);
     }
 
+    @Override
     public RevisionMetadata getMetadata(Revision revision) throws MoeProblem {
       if (!name.equals(revision.repositoryName)) {
         throw new MoeProblem (
             String.format("Could not get metadata: Revision %s is in repository %s instead of %s",
                           revision.revId, revision.repositoryName, name));
       }
-      return new RevisionMetadata(revision.revId, "author", "date", "description",
+      return new RevisionMetadata(revision.revId, "author", "date",
+                                  revision.revId.equals("migrate") ?
+                                  "MOE_MIGRATED_REVID=1" : "description",
                                   ImmutableList.of(new Revision("parent", name)));
     }
 
+    @Override
     public Set<Revision> findRevisions(Revision revision, RevisionMatcher matcher) {
-      return ImmutableSet.of(revision);
+      return ImmutableSet.of(revision == null ? new Revision("migrate", name) : revision);
+    }
+
+    @Override
+    public Equivalence findLastEquivalence(Revision revision, EquivalenceMatcher matcher) {
+      if (matcher.matches(revision)) {
+        return matcher.getEquivalence(revision);
+      }
+      return null;
     }
   }
 

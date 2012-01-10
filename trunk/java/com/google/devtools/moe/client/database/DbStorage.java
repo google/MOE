@@ -1,17 +1,46 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.database;
 
-import java.util.ArrayList;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+
+import java.util.List;
+
 /**
- * MOE's database, storing all Equivalences.
+ * MOE's database, storing all Equivalences and SubmittedMigrations in order from those between
+ * lower revisions to those between higher revisions.
  *
  * This class is used for serialization of a database file.
  *
  */
 public class DbStorage {
 
-  public ArrayList<Equivalence> equivalences;
+  private final List<Equivalence> equivalences;
+  private final List<SubmittedMigration> migrations;
 
-  public DbStorage() {} // Constructed by gson
+  public DbStorage() {
+    equivalences = Lists.newArrayList();
+    migrations = Lists.newArrayList();
+  } // Constructed by gson.
+
+  public List<Equivalence> getEquivalences() {
+    return ImmutableList.copyOf(equivalences);
+  }
+
+  public List<SubmittedMigration> getMigrations() {
+    return ImmutableList.copyOf(migrations);
+  }
+
+  public void addEquivalence(Equivalence e) {
+    if (!equivalences.contains(e)) {
+      equivalences.add(e);
+    }
+  }
+
+  public void addMigration(SubmittedMigration m) {
+    if (!migrations.contains(m)) {
+      migrations.add(m);
+    }
+  }
 }

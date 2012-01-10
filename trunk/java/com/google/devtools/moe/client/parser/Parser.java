@@ -1,7 +1,8 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.parser;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -47,19 +48,13 @@ import java.util.Map;
  * @author dbentley@google.com (Daniel Bentley)
  */
 public class Parser {
+  
+  private Parser() {}  // Do not instantiate.
 
-  /**
-   * An error occurred while parsing.
-   */
+  /** Exception for any parsing error. */
   public static class ParseError extends Exception {
-    public static String error;
-
     public ParseError(String error) {
-      this.error = error;
-    }
-
-    public String getMessage() {
-      return String.format("Cannot parse: %s", error);
+      super("Cannot parse: " + error);
     }
   }
 
@@ -73,6 +68,43 @@ public class Parser {
     }
   }
 
+  public static Expression parseExpression(String toParse) throws ParseError {
+    StreamTokenizer t = Parser.tokenize(toParse);
+    Term creator = Parser.parseTerm(t);
+    List<Operation> operations = Parser.parseOperationList(t);
+    Expression ex = new RepositoryExpression(creator);
+    for (Operation op : operations) {
+      switch (op.operator) {
+        case EDIT:
+          ex = ex.editWith(op);
+          break;
+        case TRANSLATE:
+          ex = ex.translateTo(op);
+          break;
+        default:
+          throw new ParseError("Unexpected operator: " + op.operator);
+      }
+    }
+    return ex;
+  }
+
+  /**
+   * Parse a String under the expectation that it is a RepositoryExpression, i.e. Repository name
+   * plus options, e.g. "internal(revision=1234)" or "file(path=/tmp, projectSpace=internal)".
+   */
+  public static RepositoryExpression parseRepositoryExpression(String toParse) throws ParseError {
+    StreamTokenizer t = Parser.tokenize(toParse);
+    Term creator = Parser.parseTerm(t);
+    List<Operation> operations = Parser.parseOperationList(t);
+    RepositoryExpression ex = new RepositoryExpression(creator);
+    if (!operations.isEmpty()) {
+      throw new ParseError(
+          "Expression must represent a simple repository, e.g. 'internal(revision=3)'.");
+    }
+    return ex;
+  }  
+  
+  @VisibleForTesting
   static ParseOptionResult parseOption(StreamTokenizer input) throws ParseError {
     try {
 
@@ -99,6 +131,7 @@ public class Parser {
     }
   }
 
+  @VisibleForTesting
   static Map<String, String> parseOptions(StreamTokenizer input) throws ParseError {
     try {
       int result = input.nextToken();
@@ -146,7 +179,7 @@ public class Parser {
    *
    * @return the parsed term
    */
-  static public Term parseTerm(StreamTokenizer input) throws ParseError {
+  public static Term parseTerm(StreamTokenizer input) throws ParseError {
     try {
       int result = input.nextToken();
       if (result != StreamTokenizer.TT_WORD && result != '"') {
@@ -162,28 +195,11 @@ public class Parser {
   }
 
   /**
-   * Checks that the input is exhauasted.
-   *
-   * @param input  the input tokenizer
-   *
-   * @throws ParseError if input remains
-   */
-  static public void checkInputExhausted(StreamTokenizer input) throws ParseError{
-    try {
-      if (input.nextToken() != StreamTokenizer.TT_EOF) {
-        throw new ParseError("unexpected text after expression: " + input);
-      }
-    } catch (IOException e) {
-      throw new ParseError(e.getMessage());
-    }
-  }
-
-  /**
    * Determines if the input is exhausted.
    *
-   * @param
+   * @param input  the input tokenizer
    */
-  static public boolean isInputExhausted(StreamTokenizer input) throws ParseError {
+  private static boolean isInputExhausted(StreamTokenizer input) throws ParseError {
     try {
       if (input.nextToken() == StreamTokenizer.TT_EOF) {
         return true;
@@ -203,14 +219,17 @@ public class Parser {
    * @return the parsed term
    * @throws ParseError if the string is not exactly a Term
    */
-  static public Term parseTermCompletely(String input) throws ParseError {
+  public static Term parseTermCompletely(String input) throws ParseError {
     StreamTokenizer t = tokenize(input);
     Term result = parseTerm(t);
-    checkInputExhausted(t);
+    if (!isInputExhausted(t)) {
+      throw new ParseError("unexpected text after expression: " + t);
+    }
     return result;
   }
 
-  static public Operator parseOperator(StreamTokenizer input) throws ParseError {
+  @VisibleForTesting
+  static Operator parseOperator(StreamTokenizer input) throws ParseError {
     try {
       int operator = input.nextToken();
       try {
@@ -225,7 +244,7 @@ public class Parser {
     }
   }
 
-  static public List<Operation> parseOperationList(StreamTokenizer input) throws ParseError {
+  public static List<Operation> parseOperationList(StreamTokenizer input) throws ParseError {
     ImmutableList.Builder<Operation> operations = new ImmutableList.Builder<Operation>();
     while(!Parser.isInputExhausted(input)) {
       Operator operator = parseOperator(input);
@@ -235,7 +254,7 @@ public class Parser {
     return operations.build();
   }
 
-  static public StreamTokenizer tokenize(String input) {
+  public static StreamTokenizer tokenize(String input) {
     StreamTokenizer result =  new StreamTokenizer(new StringReader(input));
     result.resetSyntax();
     result.wordChars('a', 'z');

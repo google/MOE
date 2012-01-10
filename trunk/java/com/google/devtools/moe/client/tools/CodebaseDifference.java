@@ -1,4 +1,4 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.tools;
 
@@ -36,7 +36,6 @@ public class CodebaseDifference {
 
   /**
    * Diff two Codebases.
-   *
    */
   public static CodebaseDifference diffCodebases(Codebase codebase1, Codebase codebase2) {
     return diffCodebases(codebase1, codebase2, FileDifference.CONCRETE_FILE_DIFFER);
@@ -44,7 +43,6 @@ public class CodebaseDifference {
 
   /**
    * Diff two Codebases with a custom FileDiffer.
-   *
    */
   public static CodebaseDifference diffCodebases(Codebase codebase1, Codebase codebase2,
                                                  FileDifference.FileDiffer differ) {
@@ -57,12 +55,11 @@ public class CodebaseDifference {
     for (String filename: filenames) {
       FileDifference fileDiff = differ.diffFiles(
           filename, codebase1.getFile(filename), codebase2.getFile(filename));
-      if (fileDiff != null) {
+      if (fileDiff.isDifferent()) {
         fileDiffs.add(fileDiff);
       }
     }
 
     return new CodebaseDifference(codebase1, codebase2, fileDiffs.build());
   }
-
 }

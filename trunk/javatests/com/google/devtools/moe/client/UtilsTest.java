@@ -1,4 +1,4 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client;
 
@@ -23,17 +23,26 @@ public class UtilsTest extends TestCase {
   public void testFilterByRegEx() throws Exception {
     assertEquals(
         ImmutableSet.of("foo", "br"),
-        Utils.filterByRegEx(ImmutableSet.of("foo", "br", "bar", "baar"), "ba+r"));
+        Utils.filterByRegEx(ImmutableSet.of("foo", "br", "bar", "baar"),
+                            ImmutableList.of("ba+r")));
   }
 
   public void testCheckKeys() throws Exception {
     Utils.checkKeys(
         ImmutableMap.of("foo", "bar"), ImmutableSet.of("foo", "baz"));
+
     try {
       Utils.checkKeys(
           ImmutableMap.of("foo", "bar"), ImmutableSet.of("baz"));
       fail();
-    } catch (MoeProblem p) {}
+    } catch (MoeProblem expected) {}
+
+    Utils.checkKeys(ImmutableMap.<String, String>of(), ImmutableSet.<String>of());
+
+    try {
+      Utils.checkKeys(ImmutableMap.<String, String>of("foo", "bar"), ImmutableSet.<String>of());
+      fail("Non-empty options map didn't fail on key emptiness check.");
+    } catch (MoeProblem expected) {}
   }
 
   public void testMakeFilenamesRelative() throws Exception {
@@ -74,7 +83,6 @@ public class UtilsTest extends TestCase {
     CommandRunner mockcmd = EasyMock.createMock(CommandRunner.class);
     expect(mockcmd.runCommand(EasyMock.<String>anyObject(),
                               EasyMock.<List<String>>anyObject(),
-                              EasyMock.<String>anyObject(),
                               EasyMock.<String>anyObject())).andReturn(null);
     EasyMock.replay(mockcmd);
     AppContext.RUN.cmd = mockcmd;
@@ -117,7 +125,7 @@ public class UtilsTest extends TestCase {
     expect(cmd.runCommand(
         "tar",
         ImmutableList.of("-xf", "/dummy/path/45.tar"),
-        "", "/dummy/path/45.expanded")).andReturn("");
+        "/dummy/path/45.expanded")).andReturn("");
     control.replay();
     File expanded = Utils.expandTar(new File("/dummy/path/45.tar"));
     assertEquals(new File("/dummy/path/45.expanded"), expanded);
@@ -154,15 +162,6 @@ public class UtilsTest extends TestCase {
     control.verify();
   }
 
-  public void testCheckOptionsEmpty() throws Exception {
-      Utils.checkOptionsEmpty(ImmutableMap.<String, String>of());
-    try {
-      Utils.checkOptionsEmpty(ImmutableMap.of("foo", "bar"));
-
-      fail();
-    } catch (MoeProblem p) {}
-  }
-
   public void testMakeShellScript() throws Exception {
     AppContextForTesting.initForTest();
     IMocksControl control = EasyMock.createControl();
@@ -172,7 +171,7 @@ public class UtilsTest extends TestCase {
     AppContext.RUN.fileSystem = fileSystem;
     File script = new File("/path/to/script");
 
-    fileSystem.write("#!/bin/sh\nmessage contents", script);
+    fileSystem.write("#!/bin/sh -e\nmessage contents", script);
     fileSystem.setExecutable(script);
 
     control.replay();

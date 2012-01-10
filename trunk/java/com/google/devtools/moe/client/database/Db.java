@@ -1,4 +1,4 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.database;
 
@@ -27,5 +27,16 @@ public interface Db {
    */
   public Set<Revision> findEquivalences(Revision revision, String otherRepository);
 
-  //TODO(user): allow for migrations and appropvals
+  /**
+   * Migrations are stored along with Equivalences to give full historical information for runs of
+   * MOE, as not all migrations result in an Equivalence.
+   *
+   * @param migration  the SubmittedMigration to add to the database
+   */
+  public void noteMigration(SubmittedMigration migration);
+
+  /**
+   * @param dbLocation  the location to write the contents of this Db to
+   */
+  public void writeToLocation(String dbLocation);
 }

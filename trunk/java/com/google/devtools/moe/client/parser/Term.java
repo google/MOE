@@ -1,11 +1,11 @@
-// Copyright 2011 Google Inc. All Rights Reserved.
+// Copyright 2011 The MOE Authors All Rights Reserved.
 
 package com.google.devtools.moe.client.parser;
 
 import com.google.common.base.CharMatcher;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.lang.StringBuilder;
 import java.util.Collections;
 import java.util.Map;
 
@@ -25,6 +25,17 @@ public class Term {
     this.identifier = identifier;
     this.options = Collections.unmodifiableMap(options);
   }
+  
+  /**
+   * Add an option name-value pair to the Term, e.g. "myRepo" -> "myRepo(revision=4)".
+   */
+  public Term withOption(String optionName, String optionValue) {
+    Map<String, String> newOptions = ImmutableMap.<String, String>builder()
+        .putAll(options)
+        .put(optionName, optionValue)
+        .build();
+    return new Term(identifier, newOptions);
+  }
 
   private static String quote(String s) {
     if (CharMatcher.JAVA_LETTER_OR_DIGIT.matchesAllOf(s)) {
@@ -33,6 +44,7 @@ public class Term {
     return "\"" + s + "\"";
   }
 
+  @Override
   public String toString() {
     StringBuilder result = new StringBuilder();
     result.append(quote(identifier));
@@ -52,6 +64,7 @@ public class Term {
     return result.toString();
   }
 
+  @Override
   public boolean equals(Object o) {
     if (!(o instanceof Term)) {
       return false;
@@ -59,4 +72,8 @@ public class Term {
     return toString().equals(o.toString());
   }
 
+  @Override
+  public int hashCode() {
+    return toString().hashCode();
+  }
 }
