@@ -8,7 +8,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.FileSystem;
-import com.google.devtools.moe.client.FileSystem.Lifetime;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.codebase.CodebaseCreator;
@@ -56,22 +55,14 @@ public class ExpressionTest extends TestCase {
     AppContext.RUN.fileSystem = mockFs;
     expect(mockFs.exists(new File("/foo"))).andReturn(true);
     expect(mockFs.isDirectory(new File("/foo"))).andReturn(true);
-    File copyLocation = new File("/tmp/copy");
-    expect(mockFs.getTemporaryDirectory("file_codebase_copy_")).andReturn(copyLocation);
-    // Short-circuit Utils.copyDirectory().
-    mockFs.makeDirsForFile(copyLocation);
-    expect(mockFs.isFile(new File("/foo"))).andReturn(true);
-    mockFs.copyFile(new File("/foo"), copyLocation);
-    mockFs.setLifetime(EasyMock.eq(copyLocation), EasyMock.<Lifetime>anyObject());
-    mockFs.cleanUpTempDirs();
-
+    
     RepositoryExpression repoEx = new RepositoryExpression("file").withOption("path", "/foo");
-
+    
     control.replay();
     Codebase c = repoEx.createCodebase(ProjectContext.builder().build());
     control.verify();
 
-    assertEquals(copyLocation, c.getPath());
+    assertEquals(new File("/foo"), c.getPath());
     assertEquals("public", c.getProjectSpace());
     assertEquals(repoEx, c.getExpression());
   }

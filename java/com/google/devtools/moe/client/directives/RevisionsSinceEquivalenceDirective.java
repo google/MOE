@@ -2,36 +2,36 @@
 
 package com.google.devtools.moe.client.directives;
 
-import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.MoeOptions;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.database.Db;
 import com.google.devtools.moe.client.database.FileDb;
-import com.google.devtools.moe.client.logic.BookkeepingLogic;
+import com.google.devtools.moe.client.logic.RevisionsSinceEquivalenceLogic;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.ProjectContext;
+import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.testing.DummyDb;
 
 import org.kohsuke.args4j.Option;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
- * Perform the necessary checks to update MOE's db.
+ * Get all Revisions since last Equivalence
  *
  */
-public class BookkeepingDirective implements Directive {
+public class RevisionsSinceEquivalenceDirective implements Directive {
 
-  private final BookkeepingOptions options = new BookkeepingOptions();
+  private final RevisionsSinceEquivalenceOptions options = new RevisionsSinceEquivalenceOptions();
 
-  public BookkeepingDirective() {}
-
-  public BookkeepingOptions getFlags() {
+  @Override
+  public RevisionsSinceEquivalenceOptions getFlags() {
     return options;
   }
+  public RevisionsSinceEquivalenceDirective() {}
 
+  @Override
   public int perform() {
     ProjectContext context;
     try {
@@ -43,36 +43,41 @@ public class BookkeepingDirective implements Directive {
 
     Db db;
     if (options.dbLocation.equals("dummy")) {
-      db = new DummyDb(true);
+      db = new DummyDb(false);
     } else {
       // TODO(user): also allow for url dbLocation types
       try {
         db = FileDb.makeDbFromFile(options.dbLocation);
       } catch (MoeProblem e) {
-        AppContext.RUN.ui.error(e, "Error creating DB");
+        AppContext.RUN.ui.error(e, "Couldn't create DB");
         return 1;
       }
     }
 
-    List<String> names = ImmutableList.copyOf(context.migrationConfigs.keySet());
-    int result = BookkeepingLogic.bookkeep(names, db, options.dbLocation, context);
+    List<Revision> revisionsSinceEquivalence =
+        RevisionsSinceEquivalenceLogic.getRevisionsSinceEquivalence(
+            options.fromRepository, options.toRepository, db, context);
 
-    try {
-      AppContext.RUN.fileSystem.cleanUpTempDirs();
-    } catch (IOException e) {
-      AppContext.RUN.ui.error(e, "Error cleaning up temp dirs.");
-      throw new MoeProblem("Error cleaning up temp dirs: " + e);
+    AppContext.RUN.ui.info(
+        "Found " + revisionsSinceEquivalence.size() + " revisions since equivalence.");
+    for (Revision rev : revisionsSinceEquivalence) {
+      AppContext.RUN.ui.info("  Revision: " + rev);
     }
-
-    return result;
+    return 0;
   }
 
-  static class BookkeepingOptions extends MoeOptions {
+  static class RevisionsSinceEquivalenceOptions extends MoeOptions {
     @Option(name = "--config_file", required = true,
             usage = "Location of MOE config file")
     String configFilename = "";
     @Option(name = "--db", required = true,
             usage = "Location of MOE database")
     String dbLocation = "";
+    @Option(name = "--from_repository", required = true,
+            usage = "Revision expression describing repository to find Revisions in")
+    String fromRepository = "";
+    @Option(name = "--to_repository", required = true,
+            usage = "Name of Repository to check for Equivalences in")
+    String toRepository = "";
   }
 }

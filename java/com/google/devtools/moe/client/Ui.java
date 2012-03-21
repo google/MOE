@@ -2,12 +2,6 @@
 
 package com.google.devtools.moe.client;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterables;
-import com.google.devtools.moe.client.FileSystem.Lifetime;
-
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
@@ -17,12 +11,6 @@ import java.util.Deque;
  * @author dbentley@google.com (Daniel Bentley)
  */
 public abstract class Ui {
-
-  /**
-   * The name of the Task pushed to the Ui for clean-up when MOE is about to exit. This name is
-   * used, for example, to set a temp dir's lifetime to "clean up when MOE is about to exit".
-   */
-  public static final String MOE_TERMINATION_TASK_NAME = "moe_termination";
 
   protected final Deque<Task> stack;
 
@@ -59,7 +47,6 @@ public abstract class Ui {
       this.description = description;
     }
 
-    @Override
     public String toString() {
       return taskName;
     }
@@ -83,11 +70,11 @@ public abstract class Ui {
   }
 
   /**
-   * Pops a task from the Task Stack. No files or directories are persisted beyond this Task. After
-   * the Task is popped, temp dirs are cleaned up via {@link FileSystem#cleanUpTempDirs()}.
+   * Pops a task from the Task Stack.
    *
    * @param task  the task to pop. This must be the task on the top of the stack.
    * @param result  the result of the task, if applicable, or "".
+   *
    * @throws MoeProblem  if task is not on the top of the stack
    */
   public void popTask(Task task, String result) {
@@ -102,76 +89,6 @@ public abstract class Ui {
       throw new MoeProblem(
           String.format("Tried to end task %s, but stack contains: %s", task.taskName,
                         stack.toString()));
-    }
-
-    if (AppContext.RUN.fileSystem != null) {
-      try {
-        AppContext.RUN.fileSystem.cleanUpTempDirs();
-      } catch (IOException ioEx) {
-        error(ioEx, "Error cleaning up temp dirs");
-        throw new MoeProblem("Error cleaning up temp dirs: " + ioEx);
-      }
-    }
-  }
-
-  /**
-   * Pops a task from the Task Stack, persisting the given File beyond this Task. In general, use
-   * this if you call {@link FileSystem#getTemporaryDirectory(String, Lifetime)} within a Task and
-   * need to keep the resulting temp dir past completion of this Task.
-   *
-   * If there is a parent Task on the stack after the one being popped here, then
-   * {@code persistentResult} will be cleaned up when the parent Task is popped (unless it's
-   * persisted within that Task too). If there is no parent Task, then {@code persistentResult}
-   * will be persisted beyond MOE execution. So any results persisted beyond a top-level Task
-   * constitute outputs of MOE execution.
-   */
-  public void popTaskAndPersist(Task task, File persistentResult) {
-    if (AppContext.RUN.fileSystem != null) {
-      Lifetime newLifetime;
-      if (stack.size() == 1) {
-        newLifetime = Lifetimes.persistent();
-      } else {
-        Task parentTask = Iterables.get(stack, 1);
-        newLifetime = new TaskLifetime(parentTask);
-      }
-      AppContext.RUN.fileSystem.setLifetime(persistentResult, newLifetime);
-    }
-
-    popTask(task, persistentResult.getAbsolutePath());
-  }
-
-  Lifetime currentTaskLifetime() {
-    Preconditions.checkState(!stack.isEmpty());
-    return new TaskLifetime(stack.peek());
-  }
-
-  Lifetime moeExecutionLifetime() {
-    return new MoeExecutionLifetime();
-  }
-
-  /**
-   * A {@code Lifetime} for a temp dir that should be cleaned up when the given Task is completed.
-   */
-  private class TaskLifetime implements Lifetime {
-
-    private final Task task;
-
-    TaskLifetime(Task task) {
-      this.task = task;
-    }
-
-    @Override public boolean shouldCleanUp() {
-      return !stack.contains(task);
-    }
-  }
-
-  /**
-   * A {@code Lifetime} for a temp dir that should be cleaned up when MOE completes execution.
-   */
-  private class MoeExecutionLifetime implements Lifetime {
-
-    @Override public boolean shouldCleanUp() {
-      return !stack.isEmpty() && stack.peek().taskName.equals(MOE_TERMINATION_TASK_NAME);
     }
   }
 

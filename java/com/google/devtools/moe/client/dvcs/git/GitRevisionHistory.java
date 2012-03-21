@@ -9,23 +9,18 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.MoeProblem;
-import com.google.devtools.moe.client.repositories.AbstractRevisionHistory;
+import com.google.devtools.moe.client.dvcs.AbstractDvcsRevisionHistory;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 
 import java.util.List;
 
 /**
- * A Git implementation of {@link AbstractRevisionHistory}.
+ * A Git implementation of {@link AbstractDvcsRevisionHistory}.
  */
-public class GitRevisionHistory extends AbstractRevisionHistory {
+public class GitRevisionHistory extends AbstractDvcsRevisionHistory {
 
   @VisibleForTesting static final String LOG_DELIMITER = "---@MOE@---";
-
-  /**
-   * The default Git branch in which to look for revisions.
-   */
-  @VisibleForTesting static final String DEFAULT_BRANCH = "master";
 
   private final Supplier<GitClonedRepository> headCloneSupplier;
 
@@ -43,7 +38,7 @@ public class GitRevisionHistory extends AbstractRevisionHistory {
   @Override
   public Revision findHighestRevision(String revId) {
     if (revId == null || revId.isEmpty()) {
-      revId = DEFAULT_BRANCH; 
+      revId = "HEAD"; 
     }
 
     String hashID;
@@ -87,6 +82,7 @@ public class GitRevisionHistory extends AbstractRevisionHistory {
           "log",
           // Ensure one revision only, to be safe.
           "--max-count=1",
+          // Format output as "hashID < author < date <  parents < description".
           "--format=" + format,
           revision.revId);
     } catch (CommandException e) {
@@ -94,7 +90,11 @@ public class GitRevisionHistory extends AbstractRevisionHistory {
           String.format("Failed git run: %d %s %s", e.returnStatus, e.stdout, e.stderr));
     }
 
-    return parseMetadata(log);
+    try {
+      return parseMetadata(log);
+    } catch (Exception e) {
+      throw new MoeProblem("No metadata read");
+    }
   }
 
   /**
@@ -109,8 +109,10 @@ public class GitRevisionHistory extends AbstractRevisionHistory {
 
     // The fourth item contains all of the parents, each separated by a space.
     ImmutableList.Builder<Revision> parentBuilder = ImmutableList.<Revision>builder();
-    for (String parent : Splitter.on(" ").omitEmptyStrings().split(split.get(3))) {
-      parentBuilder.add(new Revision(parent, headCloneSupplier.get().getRepositoryName()));
+    for (String parent : Splitter.on(" ").split(split.get(3))) {
+      if (!parent.isEmpty()) {
+        parentBuilder.add(new Revision(parent, headCloneSupplier.get().getRepositoryName()));
+      }
     }
 
     return new RevisionMetadata(
@@ -118,18 +120,24 @@ public class GitRevisionHistory extends AbstractRevisionHistory {
         split.get(1),  // author
         split.get(2),  // date
         split.get(4),  // description
-        parentBuilder.build());  // parents
+        parentBuilder.build()); // parents
   }
-  
+
   @Override
   protected List<Revision> findHeadRevisions() {
-    List<String> importBranches = headCloneSupplier.get().getConfig().getImportBranches();
-    if (importBranches == null) {
-      importBranches = ImmutableList.of("master");
+    String heads;
+    try {
+      heads = headCloneSupplier.get().runGitCommand("branch");
+    } catch (CommandException e) {
+      throw new MoeProblem(
+          String.format("Failed git branch run: %d %s %s", e.returnStatus, e.stdout, e.stderr));
     }
     
     ImmutableList.Builder<Revision> result = ImmutableList.<Revision>builder();
-    for (String branchName : importBranches) {
+    for (String branchName : Splitter.on("\n").split(heads)) {
+      // As far as I can tell there is no clean way to do the equivalent of 
+      // hg heads, so we have to loop over the output of git branch.
+      branchName = branchName.replaceAll("[\\*\\s]+", ""); // trim away star
       result.add(findHighestRevision(branchName));
     }
     return result.build();

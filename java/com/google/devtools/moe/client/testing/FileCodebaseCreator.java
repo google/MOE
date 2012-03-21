@@ -61,26 +61,24 @@ public class FileCodebaseCreator implements CodebaseCreator  {
             String.format("The specified codebase path \"%s\" does not exist.", sourceFile));
     }
 
-    try {
-      // Get the target path based upon whether we are dealing with a directory or a file.
-      if (AppContext.RUN.fileSystem.isDirectory(sourceFile)) {
-        // If it is a directory, make a copy and return the path of the copy.
-        File destFile = AppContext.RUN.fileSystem.getTemporaryDirectory("file_codebase_copy_");
-        Utils.copyDirectory(sourceFile, destFile);
-        return destFile;
-      } else if (AppContext.RUN.fileSystem.isFile(sourceFile)) {
-        // If it is a file, assume that it is an archive and try to extract it.
+    // Get the target path based upon whether we are dealing with a directory or a file.
+    if (AppContext.RUN.fileSystem.isDirectory(sourceFile)) {
+      // If it is a directory, just return it right away.
+      return sourceFile;
+    } else if (AppContext.RUN.fileSystem.isFile(sourceFile)) {
+      // If it is a file, assume that it is an archive and try to extract it.
+      try {
         File extractedArchive = Utils.expandToDirectory(sourceFile);
         if (extractedArchive != null) {
           return extractedArchive;
         }
+      } catch (CommandException exception) {
+        throw new CodebaseCreationError(
+          String.format("Could not extract archive: '%s' %s", sourceFile, exception.getMessage()));
+      } catch (IOException exception) {
+        throw new CodebaseCreationError(
+          String.format("Could not extract archive '%s': %s", sourceFile, exception.getMessage()));
       }
-    } catch (CommandException exception) {
-      throw new CodebaseCreationError(
-        String.format("Could not extract archive: '%s' %s", sourceFile, exception.getMessage()));
-    } catch (IOException exception) {
-      throw new CodebaseCreationError(
-        String.format("Could not extract archive '%s': %s", sourceFile, exception.getMessage()));
     }
 
     // If we did not return a codebase-path by now, we have no way of handling it.

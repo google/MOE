@@ -14,14 +14,9 @@ import java.util.Map;
  */
 public class DummyWriterCreator implements WriterCreator {
 
-  private final String repositoryName;
+  public DummyWriterCreator(String repositoryName) {}
 
-  public DummyWriterCreator(String repositoryName) {
-    this.repositoryName = repositoryName;
-  }
-
-  @Override
   public Writer create(Map<String, String> options) throws WritingError {
-    return new DummyWriter(repositoryName);
+    return new DummyWriter();
   }
 }

@@ -12,10 +12,10 @@ import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.database.Equivalence;
 import com.google.devtools.moe.client.database.EquivalenceMatcher;
-import com.google.devtools.moe.client.database.EquivalenceMatcher.EquivalenceMatchResult;
 import com.google.devtools.moe.client.database.FileDb;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.Revision;
+import com.google.devtools.moe.client.repositories.RevisionMatcher;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.testing.AppContextForTesting;
 import com.google.devtools.moe.client.testing.DummyDb;
@@ -26,7 +26,6 @@ import org.easymock.EasyMock;
 import org.easymock.IExpectationSetters;
 import org.easymock.IMocksControl;
 
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -38,26 +37,26 @@ public class GitRevisionHistoryTest extends TestCase {
   private static final Joiner METADATA_JOINER = Joiner.on(GitRevisionHistory.LOG_DELIMITER); 
   private static final String LOG_FORMAT_ALL_METADATA =
       METADATA_JOINER.join("%H", "%an", "%ad", "%P", "%B");
-
+  
   private IMocksControl control;
   private String repositoryName = "mockrepo";
+  private RepositoryConfig repositoryConfig;
   private String localCloneTempDir = "/tmp/git_tipclone_mockrepo_12345";
 
   @Override public void setUp() {
     AppContextForTesting.initForTest();
     control = EasyMock.createControl();
+    repositoryConfig = control.createMock(RepositoryConfig.class);
+    expect(repositoryConfig.getUrl()).andReturn(localCloneTempDir).anyTimes();
+  }
+
+  @Override public void tearDown() {
+    control = null;
   }
 
   private GitClonedRepository mockClonedRepo(String repoName) {
     GitClonedRepository mockRepo = control.createMock(GitClonedRepository.class);
-
-    RepositoryConfig repositoryConfig = control.createMock(RepositoryConfig.class);
-    expect(repositoryConfig.getUrl()).andReturn(localCloneTempDir).anyTimes();
-    expect(repositoryConfig.getImportBranches())
-        .andReturn(ImmutableList.of("branch1", "branch2")).anyTimes();
-
     expect(mockRepo.getRepositoryName()).andReturn(repoName).anyTimes();
-    expect(mockRepo.getConfig()).andReturn(repositoryConfig).anyTimes();
     return mockRepo;
   }
   
@@ -73,7 +72,7 @@ public class GitRevisionHistoryTest extends TestCase {
   public void testFindHighestRevision() throws Exception {
     GitClonedRepository mockRepo = mockClonedRepo(repositoryName);
 
-    expectLogCommand(mockRepo, LOG_FORMAT_COMMIT_ID, "master").andReturn("mockHashID");
+    expectLogCommand(mockRepo, LOG_FORMAT_COMMIT_ID, "HEAD").andReturn("mockHashID");
 
     control.replay();
 
@@ -131,13 +130,9 @@ public class GitRevisionHistoryTest extends TestCase {
 
   public void testParseMetadata_multiLine() {
     GitRevisionHistory rh = new GitRevisionHistory(Suppliers.ofInstance(
-        mockClonedRepo(repositoryName)));
-
-    control.replay();
+        new GitClonedRepository(repositoryName, repositoryConfig)));
     RevisionMetadata rm = rh.parseMetadata(METADATA_JOINER.join(
             "f00d", "foo@google.com", "date1", "d34d b33f", "desc with \n\nmultiple lines\n"));
-    control.verify();
-
     assertEquals("f00d", rm.id);
     assertEquals("foo@google.com", rm.author);
     assertEquals("date1", rm.date);
@@ -152,14 +147,16 @@ public class GitRevisionHistoryTest extends TestCase {
    *
    * @param mockRepo the mock repository to use
    */
-  private void mockFindHeadRevisions(GitClonedRepository mockRepo) throws CommandException {
-    expectLogCommand(mockRepo, LOG_FORMAT_COMMIT_ID, "branch1").andReturn("mockHashID1");
-    expectLogCommand(mockRepo, LOG_FORMAT_COMMIT_ID, "branch2").andReturn("mockHashID2");
+  private void mockBranchCommand(GitClonedRepository mockRepo) throws CommandException {
+    expect(mockRepo.runGitCommand("branch")).andReturn("* mockBranchID1\n  mockBranchID2");
+    // Now mock getting info on each of the branches.
+    expectLogCommand(mockRepo, LOG_FORMAT_COMMIT_ID, "mockBranchID1").andReturn("mockHashID1");
+    expectLogCommand(mockRepo, LOG_FORMAT_COMMIT_ID, "mockBranchID2").andReturn("mockHashID2");
   }
 
   public void testFindHeadRevisions() throws Exception {
     GitClonedRepository mockRepo = mockClonedRepo(repositoryName);
-    mockFindHeadRevisions(mockRepo);
+    mockBranchCommand(mockRepo);
 
     control.replay();
 
@@ -175,7 +172,7 @@ public class GitRevisionHistoryTest extends TestCase {
 
   public void testFindNewRevisions_all() throws Exception {
     GitClonedRepository mockRepo = mockClonedRepo(repositoryName);
-    mockFindHeadRevisions(mockRepo);
+    mockBranchCommand(mockRepo);
     DummyDb db = new DummyDb(false);
 
     // Breadth-first search order.
@@ -193,10 +190,9 @@ public class GitRevisionHistoryTest extends TestCase {
     control.replay();
 
     GitRevisionHistory rh = new GitRevisionHistory(Suppliers.ofInstance(mockRepo));
-    List<Revision> newRevisions = rh.findRevisions(null, new EquivalenceMatcher("mockRepo", db))
-        .getRevisionsSinceEquivalence()
-        .getBreadthFirstHistory();
-
+    RevisionMatcher matcher = new EquivalenceMatcher("mockRepo", db);
+    ImmutableList<Revision> newRevisions =
+        ImmutableList.copyOf(rh.findRevisions(null, matcher));
     assertEquals(3, newRevisions.size());
     assertEquals(repositoryName, newRevisions.get(0).repositoryName);
     assertEquals("mockHashID1", newRevisions.get(0).revId);
@@ -210,7 +206,7 @@ public class GitRevisionHistoryTest extends TestCase {
 
   public void testFindNewRevisions_pruned() throws Exception {
     GitClonedRepository mockRepo = mockClonedRepo(repositoryName);
-    mockFindHeadRevisions(mockRepo);
+    mockBranchCommand(mockRepo);
 
     // Create a fake db that has equivalences for parent1, so that
     // parent1 isn't included in the output.
@@ -237,9 +233,9 @@ public class GitRevisionHistoryTest extends TestCase {
     control.replay();
 
     GitRevisionHistory rh = new GitRevisionHistory(Suppliers.ofInstance(mockRepo));
-    List<Revision> newRevisions = rh.findRevisions(null, new EquivalenceMatcher("mockRepo", db))
-        .getRevisionsSinceEquivalence()
-        .getBreadthFirstHistory();
+    RevisionMatcher matcher = new EquivalenceMatcher("mockRepo", db);
+    ImmutableList<Revision> newRevisions =
+        ImmutableList.copyOf(rh.findRevisions(null, matcher));
 
     // parent1 should not be traversed.
     assertEquals(2, newRevisions.size());
@@ -298,17 +294,14 @@ public class GitRevisionHistoryTest extends TestCase {
     control.replay();
 
     FileDb database = FileDb.makeDbFromDbText(testDb1);
+    EquivalenceMatcher matcher = new EquivalenceMatcher("repo1", database);
 
     GitRevisionHistory history = new GitRevisionHistory(Suppliers.ofInstance(mockRepo));
 
-    EquivalenceMatchResult result = history.findRevisions(
-        new Revision("4", "repo2"), new EquivalenceMatcher("repo1", database));
-    
+    Equivalence actualEq = history.findLastEquivalence(new Revision("4", "repo2"), matcher);
     Equivalence expectedEq = new Equivalence(new Revision("1002", "repo1"),
                                              new Revision("2", "repo2"));
-
-    assertEquals(1, result.getEquivalences().size());
-    assertEquals(expectedEq, result.getEquivalences().get(0));
+    assertEquals(expectedEq, actualEq);
 
     control.verify();
   }
@@ -370,15 +363,15 @@ public class GitRevisionHistoryTest extends TestCase {
     expectLogCommand(mockRepo, LOG_FORMAT_ALL_METADATA, "2")
         .andReturn(METADATA_JOINER.join("2", "author", "date", "", "description"));
 
+    expectLogCommand(mockRepo, LOG_FORMAT_ALL_METADATA, "2")
+        .andReturn(METADATA_JOINER.join("2", "author", "date", "", "description"));
+
     control.replay();
 
     FileDb database = FileDb.makeDbFromDbText(testDb2);
+    EquivalenceMatcher matcher = new EquivalenceMatcher("repo1", database);
     GitRevisionHistory history = new GitRevisionHistory(Suppliers.ofInstance(mockRepo));
-    
-    EquivalenceMatchResult result = history.findRevisions(
-        new Revision("4", "repo2"), new EquivalenceMatcher("repo1", database));
-
-    assertEquals(0, result.getEquivalences().size());
+    assertNull(history.findLastEquivalence(new Revision("4", "repo2"), matcher));
 
     control.verify();
   }

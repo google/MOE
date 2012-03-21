@@ -2,16 +2,10 @@
 
 package com.google.devtools.moe.client.database;
 
-import com.google.common.collect.ImmutableList;
-import com.google.devtools.moe.client.database.EquivalenceMatcher.EquivalenceMatchResult;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.repositories.Revision;
-import com.google.devtools.moe.client.repositories.RevisionGraph;
-import com.google.devtools.moe.client.repositories.RevisionMetadata;
 
 import junit.framework.TestCase;
-
-import java.util.List;
 
 /**
  * Unit tests for EquivalenceMatcher.
@@ -49,18 +43,11 @@ public class EquivalenceMatcherTest extends TestCase {
     assertFalse(equivalenceMatcher.matches(new Revision("1003", "repo1")));
   }
 
-  public void testMakeResult() throws Exception {
-    Revision startingRev = new Revision("1003", "repo1");
-    List<Revision> matching = ImmutableList.of(new Revision("1002", "repo1"));
-    RevisionGraph nonMatching = RevisionGraph.builder(matching)
-        .addRevision(startingRev, new RevisionMetadata("id", "author", "date", "desc", matching))
-        .build();
-
-    EquivalenceMatchResult result = equivalenceMatcher.makeResult(nonMatching, matching);
-    assertEquals(nonMatching, result.getRevisionsSinceEquivalence());
-
+  public void testGetEquivalence() throws Exception {
     Equivalence expectedEquiv =
-        new Equivalence(new Revision("2", "repo2"), new Revision("1002", "repo1"));
-    assertEquals(expectedEquiv, result.getEquivalences().get(0));
+        new Equivalence(new Revision("1", "repo2"), new Revision("1001", "repo1"));
+    assertEquals(expectedEquiv, equivalenceMatcher.getEquivalence(new Revision("1001", "repo1")));
+    assertNull(equivalenceMatcher.getEquivalence(new Revision("1003", "repo1")));
+    assertNull(equivalenceMatcher.getEquivalence(new Revision("1", "repo2")));
   }
 }

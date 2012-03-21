@@ -2,7 +2,6 @@
 
 package com.google.devtools.moe.client.directives;
 
-import com.google.common.base.Joiner;
 import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.MoeOptions;
 import com.google.devtools.moe.client.MoeProblem;
@@ -21,8 +20,6 @@ import com.google.devtools.moe.client.repositories.RevisionHistory;
 import com.google.devtools.moe.client.testing.DummyDb;
 
 import org.kohsuke.args4j.Option;
-
-import java.util.List;
 
 /**
  * Get the last Equivalence between two repositories.
@@ -82,16 +79,15 @@ public class LastEquivalenceDirective implements Directive {
 
     Revision rev = rh.findHighestRevision(repoEx.getOption("revision"));
 
-    List<Equivalence> lastEquivs = LastEquivalenceLogic.lastEquivalence(
+    Equivalence lastEquiv = LastEquivalenceLogic.lastEquivalence(
         options.withRepository, rev, db, rh);
 
-    if (lastEquivs.isEmpty()) {
+    if (lastEquiv == null) {
       AppContext.RUN.ui.info(
           String.format("No equivalence was found between %s and %s starting from %s.",
               rev.repositoryName, options.withRepository, rev));
     } else {
-      AppContext.RUN.ui.info(String.format(
-          "Last equivalence: %s", Joiner.on(", ").join(lastEquivs)));
+      AppContext.RUN.ui.info(String.format("Last equivalence: %s", lastEquiv.toString()));
     }
 
     return 0;

@@ -3,7 +3,6 @@
 package com.google.devtools.moe.client;
 
 import com.google.devtools.moe.client.Ui;
-import com.google.devtools.moe.client.testing.AppContextForTesting;
 
 import junit.framework.TestCase;
 
@@ -20,7 +19,6 @@ public class UiTest extends TestCase {
   }
 
   public void testStackHelpers() throws Exception {
-    AppContextForTesting.initForTest();
     Ui ui = new NoOpUi();
     Ui.Task t = ui.pushTask("foo", "bar");
     ui.popTask(t, "");

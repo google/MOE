@@ -29,6 +29,7 @@ import com.google.devtools.moe.client.writer.WritingError;
 
 import org.kohsuke.args4j.Option;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -82,10 +83,6 @@ public class MagicDirective implements Directive {
     ImmutableList.Builder<String> migrationsMadeBuilder = ImmutableList.builder();
 
     for (String migrationName : migrationNames) {
-      Ui.Task migrationTask = AppContext.RUN.ui.pushTask(
-          "perform_migration",
-          String.format("Performing migration '%s'", migrationName));
-
       MigrationConfig migrationConfig = context.migrationConfigs.get(migrationName);
       if (migrationConfig == null) {
         AppContext.RUN.ui.error("No migration found with name " + migrationName);
@@ -111,6 +108,7 @@ public class MagicDirective implements Directive {
       Writer toWriter;
       try {
         toWriter = toRe.createWriter(context);
+        AppContext.RUN.fileSystem.markAsPersistent(toWriter.getRoot());
       } catch (WritingError e) {
         throw new MoeProblem("Couldn't create local repo " + toRe + ": " + e);
       }
@@ -127,19 +125,18 @@ public class MagicDirective implements Directive {
         Expression referenceToCodebase = new RepositoryExpression(migrationConfig.getToRepository())
               .withOption("localroot", toWriter.getRoot().getAbsolutePath());
 
-        Ui.Task oneMigrationTask = AppContext.RUN.ui.pushTask(
-            "perform_individual_migration",
-            String.format("Performing individual migration '%s'", m.toString()));
+        Ui.Task t = AppContext.RUN.ui.pushTask(
+            "perform_migration",
+            String.format("Performing migration '%s'", m.toString()));
         dr = OneMigrationLogic.migrate(m, context, toWriter, referenceToCodebase);
         lastMigratedRevision = m.fromRevisions.get(m.fromRevisions.size() - 1);
-        AppContext.RUN.ui.popTask(oneMigrationTask, "");
+        AppContext.RUN.ui.popTask(t, "");
       }
 
       // TODO(user): Add properly formatted one-DraftRevison-per-Migration message for svn.
       migrationsMadeBuilder.add(String.format(
           "%s in repository %s", dr.getLocation(), migrationConfig.getToRepository()));
       toWriter.printPushMessage();
-      AppContext.RUN.ui.popTaskAndPersist(migrationTask, toWriter.getRoot());
     }
 
     List<String> migrationsMade = migrationsMadeBuilder.build();
@@ -147,6 +144,13 @@ public class MagicDirective implements Directive {
       AppContext.RUN.ui.info("No migrations made.");
     } else {
       AppContext.RUN.ui.info("Created Draft Revisions:\n" + Joiner.on("\n").join(migrationsMade));
+    }
+
+    try {
+      AppContext.RUN.fileSystem.cleanUpTempDirs();
+    } catch (IOException e) {
+      AppContext.RUN.ui.error(e, "Error cleaning up temp dirs.");
+      throw new MoeProblem("Error cleaning up temp dirs: " + e);
     }
 
     return 0;

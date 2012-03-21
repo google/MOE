@@ -2,7 +2,6 @@
 
 package com.google.devtools.moe.client.logic;
 
-import com.google.common.base.Joiner;
 import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
@@ -11,7 +10,6 @@ import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.database.Db;
 import com.google.devtools.moe.client.database.Equivalence;
 import com.google.devtools.moe.client.database.EquivalenceMatcher;
-import com.google.devtools.moe.client.database.EquivalenceMatcher.EquivalenceMatchResult;
 import com.google.devtools.moe.client.database.SubmittedMigration;
 import com.google.devtools.moe.client.migrations.MigrationConfig;
 import com.google.devtools.moe.client.parser.Expression;
@@ -25,6 +23,7 @@ import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.tools.CodebaseDifference;
 
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -78,20 +77,15 @@ public class BookkeepingLogic {
   private static void updateCompletedMigrations(
       String fromRepository, String toRepository, Db db, ProjectContext context, boolean inverse) {
 
+    EquivalenceMatcher toRevsSinceEquivMatcher = new EquivalenceMatcher(fromRepository, db);
     RevisionHistory toHistory = context.repositories.get(toRepository).revisionHistory;
-    EquivalenceMatchResult equivMatch = toHistory.findRevisions(
-        null /*revision*/,
-        new EquivalenceMatcher(fromRepository, db));
+    Set<Revision> toRevisionsSinceEquivalence =
+        toHistory.findRevisions(null /*revision*/, toRevsSinceEquivMatcher);
 
-    List<Revision> linearToRevs = equivMatch.getRevisionsSinceEquivalence().getLinearHistory();
-    AppContext.RUN.ui.info(String.format(
-        "Found %d revisions in %s since equivalence (%s): %s",
-        linearToRevs.size(),
-        toRepository,
-        equivMatch.getEquivalences(),
-        Joiner.on(", ").join(linearToRevs)));
+    AppContext.RUN.ui.info("Found " + toRevisionsSinceEquivalence.size() + " revisions in " +
+        toRepository + " since equivalence.");
 
-    for (Revision toRev : linearToRevs) {
+    for (Revision toRev : toRevisionsSinceEquivalence) {
       String fromRevId = getMigratedRevId(toHistory.getMetadata(toRev));
       if (fromRevId != null) {
         processMigration(new Revision(fromRevId, fromRepository), toRev, db, context, inverse);
@@ -111,12 +105,7 @@ public class BookkeepingLogic {
    */
   private static void processMigration(Revision fromRev, Revision toRev,
                                        Db db, ProjectContext context, boolean inverse) {
-    SubmittedMigration migration = new SubmittedMigration(fromRev, toRev);
-    if (!db.noteMigration(migration)) {
-      AppContext.RUN.ui.info("Skipping bookkeeping of this SubmittedMigration "
-          + "because it was already in the Db: " + migration);
-      return;
-    }
+    db.noteMigration(new SubmittedMigration(fromRev, toRev));
 
     Codebase to, from;
     try {

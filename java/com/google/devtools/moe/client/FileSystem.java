@@ -14,38 +14,29 @@ import java.util.Set;
 public interface FileSystem {
 
   /**
-   * Finds a Temporary Directory starting with prefix that lasts as long as the current task. This
-   * is equivalent to calling {@link #getTemporaryDirectory(String, Lifetime)} with
-   * {@link Lifetimes#currentTask()}.
+   * Find a Temporary Directory starting with prefix.
    *
    * @param prefix  a prefix for the basename of the created directory
+   *
    * @return a path to an uncreated, available temporary directory
    */
-  // TODO(user): Delete all usages of this method in favor of the explicit form.
   public File getTemporaryDirectory(String prefix);
 
   /**
-   * Finds a Temporary Directory starting with prefix, with the given lifetime.
-   *
-   * @param prefix  a prefix for the basename of the created directory
-   * @param lifetime  a {@code Lifetime} specifying the clean-up behavior of this temp dir
-   * @return a path to an uncreated, available temporary directory
+   * Delete files/directories created by getTemporaryDirectory(). Calling markAsPersistent() will
+   * prevent such deletion.
    */
-  public File getTemporaryDirectory(String prefix, Lifetime lifetime);
-
-  /**
-   * Deletes files/directories created by {@link #getTemporaryDirectory(String, Lifetime)} whose
-   * {@code Lifetime}s specify deletion at this juncture.
-   *
-   * @see #setLifetime(File, Lifetime)
+  /* TODO(user): Rather than invoke this method manually "where appropriate", find a way to
+   * incorporate automatic resource management. This might require a notion of the "lifetime" of
+   * a temp dir so that it's cleaned up on completion of a Task, on completion of a Moe run, or
+   * never.
    */
   public void cleanUpTempDirs() throws IOException;
 
   /**
-   * Sets the {@link Lifetime} for a path. The path must have been provided by
-   * {@link #getTemporaryDirectory(String, Lifetime)}.
+   * Ensure a File isn't deleted on a call to cleanUpTempDirs().
    */
-  public void setLifetime(File path, Lifetime lifetime);
+  public void markAsPersistent(File path);
 
   /**
    * Find the relative names of files under  path.
@@ -138,20 +129,4 @@ public interface FileSystem {
    * Reads all characters from f into a String
    */
   public String fileToString(File f) throws IOException;
-
-
-  /**
-   * A specification of whether a temporary directory should be cleaned up on a call to
-   * {@link FileSystem#cleanUpTempDirs()}. On clean-up, each temporary directory's {@code Lifetime}
-   * is looked up, and {@link #shouldCleanUp()} is called.
-   */
-  public static interface Lifetime {
-
-    /**
-     * Returns whether a temporary directory with this {@code Lifetime} should be cleaned up now.
-     *
-     * @see FileSystem#cleanUpTempDirs()
-     */
-    boolean shouldCleanUp();
-  }
 }

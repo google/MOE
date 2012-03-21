@@ -2,7 +2,6 @@
 
 package com.google.devtools.moe.client.codebase;
 
-import com.google.devtools.moe.client.FileSystem.Lifetime;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 
 import java.io.File;
@@ -32,10 +31,9 @@ public interface LocalClone {
   File getLocalTempDir();
 
   /**
-   * Clones the repo from its remote location to disk at head revision. The clone's temporary
-   * directory has the given {code Lifetime}.
+   * Clones the repo from its remote location to disk at head revision.
    */
-  void cloneLocallyAtHead(Lifetime cloneLifetime);
+  void cloneLocallyAtHead();
 
   /**
    * Updates this clone to a given revision.

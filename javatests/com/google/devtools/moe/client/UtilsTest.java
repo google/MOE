@@ -2,8 +2,6 @@
 
 package com.google.devtools.moe.client;
 
-import static org.easymock.EasyMock.expect;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -12,6 +10,7 @@ import com.google.devtools.moe.client.testing.AppContextForTesting;
 import junit.framework.TestCase;
 
 import org.easymock.EasyMock;
+import static org.easymock.EasyMock.expect;
 import org.easymock.IMocksControl;
 
 import java.io.File;
@@ -74,7 +73,8 @@ public class UtilsTest extends TestCase {
     File file = new File(filePath);
 
     FileSystem mockfs = EasyMock.createMock(FileSystem.class);
-    expect(mockfs.getTemporaryDirectory(EasyMock.<String>anyObject())).andReturn(new File("/test"));
+    expect(mockfs.getTemporaryDirectory(EasyMock.<String>anyObject()))
+        .andReturn(new File("/test"));
     mockfs.makeDirs(EasyMock.<File>anyObject());
     EasyMock.expectLastCall().once();
     EasyMock.replay(mockfs);
@@ -120,8 +120,8 @@ public class UtilsTest extends TestCase {
     AppContext.RUN.cmd = cmd;
     AppContext.RUN.fileSystem = fileSystem;
     fileSystem.makeDirs(new File("/dummy/path/45.expanded"));
-    expect(fileSystem.getTemporaryDirectory("expanded_tar_"))
-        .andReturn(new File("/dummy/path/45.expanded"));
+    expect(fileSystem.getTemporaryDirectory("expanded_tar_")).
+        andReturn(new File("/dummy/path/45.expanded"));
     expect(cmd.runCommand(
         "tar",
         ImmutableList.of("-xf", "/dummy/path/45.tar"),

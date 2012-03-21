@@ -30,12 +30,12 @@ public class DummyCodebaseCreator implements CodebaseCreator {
   public Codebase create(Map<String, String> options) throws CodebaseCreationError{
     String revId = options.get("revision");
     if (revId == null) {
-      revId = "1";
+      revId = "HEAD";
     }
 
 
     return new Codebase(
-        new File("/dummy/codebase/" + name + "/" + revId),
+        new File("/dummy/path"),
         projectSpace,
         new RepositoryExpression(new Term(name, ImmutableMap.<String, String>of())));
   }

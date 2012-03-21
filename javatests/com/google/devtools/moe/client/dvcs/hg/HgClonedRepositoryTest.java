@@ -8,8 +8,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
-import com.google.devtools.moe.client.FileSystem.Lifetime;
-import com.google.devtools.moe.client.Lifetimes;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.testing.AppContextForTesting;
 
@@ -38,10 +36,7 @@ public class HgClonedRepositoryTest extends TestCase {
 
     // Mock AppContext.RUN.fileSystem.getTemporaryDirectory()
     FileSystem mockFS = control.createMock(FileSystem.class);
-    // The Lifetimes of clones in these tests are arbitrary since we're not really creating any
-    // temp dirs and we're not testing clean-up.
-    expect(mockFS.getTemporaryDirectory(
-        EasyMock.eq("hg_clone_" + repositoryName + "_"), EasyMock.<Lifetime>anyObject()))
+    expect(mockFS.getTemporaryDirectory("hg_clone_" + repositoryName + "_"))
         .andReturn(new File(localCloneTempDir));
     AppContext.RUN.fileSystem = mockFS;
 
@@ -52,7 +47,7 @@ public class HgClonedRepositoryTest extends TestCase {
             "hg",
             ImmutableList.<String>of(
                 "clone",
-                "--update=" + HgRevisionHistory.DEFAULT_BRANCH,
+                "--update=" + HgRevisionHistory.HG_TIP_REVID,
                 repositoryURL,
                 localCloneTempDir),
             "" /*workingDirectory*/))
@@ -63,14 +58,14 @@ public class HgClonedRepositoryTest extends TestCase {
     control.replay();
 
     HgClonedRepository repo = new HgClonedRepository(repositoryName, repositoryConfig);
-    repo.cloneLocallyAtHead(Lifetimes.persistent());
+    repo.cloneLocallyAtHead();
 
     assertEquals(repositoryName, repo.getRepositoryName());
     assertEquals(repositoryURL, repo.getConfig().getUrl());
     assertEquals(localCloneTempDir, repo.getLocalTempDir().getAbsolutePath());
 
     try {
-      repo.cloneLocallyAtHead(Lifetimes.persistent());
+      repo.cloneLocallyAtHead();
       fail("Re-cloning repo succeeded unexpectedly.");
     } catch (IllegalStateException expected) {}
 

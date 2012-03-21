@@ -8,8 +8,6 @@ import com.google.devtools.moe.client.database.EquivalenceMatcher;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
 
-import java.util.List;
-
 /**
  * Performs the logic of the LastEquivalenceDirective.
  *
@@ -25,9 +23,9 @@ public class LastEquivalenceLogic {
    * @param rh the RevisionHistory for rev's Repository
    * @return the most recent Equivalence or null if there wasn't one
    */
-  public static List<Equivalence> lastEquivalence(String toRepo, Revision rev,
+  public static Equivalence lastEquivalence(String toRepo, Revision rev,
                                             Db db, RevisionHistory rh) {
     EquivalenceMatcher matcher = new EquivalenceMatcher(toRepo, db);
-    return rh.findRevisions(rev, matcher).getEquivalences();
+    return rh.findLastEquivalence(rev, matcher);
   }
 }

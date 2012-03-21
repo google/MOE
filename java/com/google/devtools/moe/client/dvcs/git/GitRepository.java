@@ -7,7 +7,6 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner;
-import com.google.devtools.moe.client.Lifetimes;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.project.RepositoryType;
@@ -41,22 +40,13 @@ public class GitRepository {
     Supplier<GitClonedRepository> freshSupplier = new Supplier<GitClonedRepository>() {
       @Override public GitClonedRepository get() {
         GitClonedRepository headClone = new GitClonedRepository(name, config);
-        headClone.cloneLocallyAtHead(Lifetimes.currentTask());
+        headClone.cloneLocallyAtHead();
         return headClone;
       }
     };
-
-    // RevisionHistory and CodebaseCreator don't modify their clones, so they can use a shared,
-    // memoized supplier.
-    Supplier<GitClonedRepository> memoizedSupplier = Suppliers.memoize(
-        new Supplier<GitClonedRepository>() {
-          @Override public GitClonedRepository get() {
-            GitClonedRepository tipClone = new GitClonedRepository(name, config);
-            tipClone.cloneLocallyAtHead(Lifetimes.moeExecution());
-            return tipClone;
-          }
-        });
-
+    
+    Supplier<GitClonedRepository> memoizedSupplier = Suppliers.memoize(freshSupplier);
+    
     GitRevisionHistory rh = new GitRevisionHistory(memoizedSupplier);
 
     String projectSpace = config.getProjectSpace();

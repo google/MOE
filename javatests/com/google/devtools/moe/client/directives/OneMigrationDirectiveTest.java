@@ -34,7 +34,7 @@ public class OneMigrationDirectiveTest extends TestCase {
     d.getFlags().toRepository = "pub(revision=2)";
     assertEquals(0, d.perform());
     assertEquals(
-        String.format("Created Draft Revision: %s", "/dummy/revision/pub"),
+        String.format("Created Draft Revision: %s", "/dummy/revision"),
         ((RecordingUi) AppContext.RUN.ui).lastInfo);
   }
 

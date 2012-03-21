@@ -10,14 +10,9 @@ import com.google.devtools.moe.client.writer.DraftRevision;
  */
 public class DummyDraftRevision implements DraftRevision {
 
-  private final String repositoryName;
+  public DummyDraftRevision() {}
 
-  public DummyDraftRevision(String repositoryName) {
-    this.repositoryName = repositoryName;
-  }
-
-  @Override
   public String getLocation() {
-    return "/dummy/revision/" + repositoryName;
+    return "/dummy/revision";
   }
 }

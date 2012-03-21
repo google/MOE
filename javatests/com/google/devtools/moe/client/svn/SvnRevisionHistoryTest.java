@@ -10,9 +10,9 @@ import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.database.Equivalence;
 import com.google.devtools.moe.client.database.EquivalenceMatcher;
-import com.google.devtools.moe.client.database.EquivalenceMatcher.EquivalenceMatchResult;
 import com.google.devtools.moe.client.database.FileDb;
 import com.google.devtools.moe.client.repositories.Revision;
+import com.google.devtools.moe.client.repositories.RevisionMatcher;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.testing.AppContextForTesting;
 import com.google.devtools.moe.client.testing.DummyDb;
@@ -231,9 +231,9 @@ public class SvnRevisionHistoryTest extends TestCase {
     control.replay();
     SvnRevisionHistory history = new SvnRevisionHistory("internal_svn",
         "http://foo/svn/trunk/");
-    List<Revision> newRevisions = history.findRevisions(null, new EquivalenceMatcher("public", db))
-        .getRevisionsSinceEquivalence()
-        .getLinearHistory();
+    RevisionMatcher matcher = new EquivalenceMatcher("public", db);
+    ImmutableList<Revision> newRevisions = ImmutableList.copyOf(
+        history.findRevisions(null, matcher));
     assertEquals(2, newRevisions.size());
     assertEquals("internal_svn", newRevisions.get(0).repositoryName);
     assertEquals("3", newRevisions.get(0).revId);
@@ -308,18 +308,15 @@ public class SvnRevisionHistoryTest extends TestCase {
     control.replay();
 
     FileDb database = FileDb.makeDbFromDbText(testDb1);
+    EquivalenceMatcher matcher = new EquivalenceMatcher("repo1", database);
     SvnRevisionHistory history = new SvnRevisionHistory("repo2", "http://foo/svn/trunk/");
 
-    EquivalenceMatchResult result = history.findRevisions(
-        new Revision("4", "repo2"), new EquivalenceMatcher("repo1", database));
-
-    control.verify();
-
+    Equivalence actualEq = history.findLastEquivalence(new Revision("4", "repo2"), matcher);
     Equivalence expectedEq = new Equivalence(new Revision("1002", "repo1"),
                                              new Revision("2", "repo2"));
-    
-    assertEquals(1, result.getEquivalences().size());
-    assertEquals(expectedEq, result.getEquivalences().get(0));
+    assertEquals(expectedEq, actualEq);
+
+    control.verify();
   }
 
   /*
@@ -383,13 +380,11 @@ public class SvnRevisionHistoryTest extends TestCase {
     control.replay();
 
     FileDb database = FileDb.makeDbFromDbText(testDb2);
+    EquivalenceMatcher matcher = new EquivalenceMatcher("repo1", database);
     SvnRevisionHistory history = new SvnRevisionHistory("repo2", "http://foo/svn/trunk/");
 
-    EquivalenceMatchResult result = history.findRevisions(
-        new Revision("2", "repo2"), new EquivalenceMatcher("repo1", database));
+    assertNull(history.findLastEquivalence(new Revision("2", "repo2"), matcher));
 
     control.verify();
-    
-    assertEquals(0, result.getEquivalences().size());
   }
 }

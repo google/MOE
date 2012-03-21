@@ -10,27 +10,27 @@ import com.google.devtools.moe.client.testing.RecordingUi;
 import junit.framework.TestCase;
 
 /**
- * @author dbentley@google.com (Daniel Bentley)
  */
-public class ChangeDirectiveTest extends TestCase {
+public class RevisionsSinceEquivalenceDirectiveTest extends TestCase {
 
   @Override
   public void setUp() {
     AppContextForTesting.initForTest();
   }
 
-  public void testChange() throws Exception {
-    ((InMemoryProjectContextFactory)AppContext.RUN.contextFactory).projectConfigs.put(
+  public void testPickRevisions() throws Exception {
+    ((InMemoryProjectContextFactory) AppContext.RUN.contextFactory).projectConfigs.put(
         "moe_config.txt",
         "{\"name\": \"foo\", \"repositories\": {" +
         "\"internal\": {\"type\": \"dummy\"}}}");
-    ChangeDirective d = new ChangeDirective();
+    RevisionsSinceEquivalenceDirective d = new RevisionsSinceEquivalenceDirective();
     d.getFlags().configFilename = "moe_config.txt";
-    d.getFlags().codebase = "internal";
-    d.getFlags().destination = "internal";
+    d.getFlags().dbLocation = "dummy";
+    d.getFlags().fromRepository = "internal";
+    d.getFlags().toRepository = "public";
     assertEquals(0, d.perform());
-    assertEquals(
-        String.format("Created Draft Revision: %s", "/dummy/revision"),
-        ((RecordingUi)AppContext.RUN.ui).lastInfo);
+    // DummyRepository.findRevisions() always returns revId "migrate" with any RevisionMatcher.
+    assertEquals("  Revision: internal{migrate}",
+                 ((RecordingUi) AppContext.RUN.ui).lastInfo);
   }
 }

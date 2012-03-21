@@ -29,7 +29,7 @@ public class CreateCodebaseDirectiveTest extends TestCase {
     d.getFlags().codebase = "internal";
     assertEquals(0, d.perform());
     assertEquals(
-        String.format("Codebase \"%s\" created at %s", "internal", "/dummy/codebase/internal/1"),
+        String.format("Codebase \"%s\" created at %s", "internal", "/dummy/path"),
         ((RecordingUi)AppContext.RUN.ui).lastInfo);
   }
 
@@ -44,8 +44,7 @@ public class CreateCodebaseDirectiveTest extends TestCase {
     d.getFlags().codebase = "internal|identity";
     assertEquals(0, d.perform());
     assertEquals(
-        String.format(
-            "Codebase \"%s\" created at %s", "internal|identity", "/dummy/codebase/internal/1"),
+        String.format("Codebase \"%s\" created at %s", "internal|identity", "/dummy/path"),
         ((RecordingUi)AppContext.RUN.ui).lastInfo);
   }
 }

@@ -58,15 +58,6 @@ public class FileDbTest extends TestCase {
     assertEquals(db.getEquivalences(), ImmutableSet.of(e));
   }
 
-  public void testNoteMigration() throws Exception {
-    FileDb db = FileDb.makeDbFromDbText("{}");
-    SubmittedMigration migration = new SubmittedMigration(
-        new Revision("r1", "name1"), new Revision("r2", "name2"));
-    assertTrue(db.noteMigration(migration));
-    // The migration has already been added, so noting it again should return false.
-    assertFalse(db.noteMigration(migration));
-  }
-
   public void testFindEquivalences() throws Exception {
     String dbText = Joiner.on("\n").join(
         "{",

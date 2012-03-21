@@ -7,36 +7,36 @@ import com.google.devtools.moe.client.repositories.Revision;
 import java.util.Set;
 
 /**
- * An abstraction of MOE's database.
+ * An abstraction of MOE's database
  *
  */
 public interface Db {
 
   /**
-   * Adds an Equivalence to this Db.
+   * @param equivalence  the Equivalence to add to the database
    */
   public void noteEquivalence(Equivalence equivalence);
 
   /**
-   * Returns the Revisions in Repository {@code otherRepository} that are equivalent to the given
-   * Revision.
+   *  @param revision  the Revision to find equivalent revisions for. Two Revisions are equivalent
+   *                   when there is an Equivalence containing them in the database.
+   *  @param otherRepository  the Repository to find equivalent revisions in
    *
-   * @param revision  the Revision to find equivalent revisions for
-   * @param otherRepository  the Repository to find equivalent revisions in
+   *  @return all Revisions in otherRepository (have repositoryName of otherRepository) in some
+   *          Equivalence with revision, or an empty set if none.
    */
   public Set<Revision> findEquivalences(Revision revision, String otherRepository);
 
   /**
-   * Stores a SubmittedMigration in this Db. Migrations are stored along with Equivalences to give
-   * full historical information for runs of MOE, as not all migrations result in an Equivalence.
+   * Migrations are stored along with Equivalences to give full historical information for runs of
+   * MOE, as not all migrations result in an Equivalence.
    *
    * @param migration  the SubmittedMigration to add to the database
-   * @return true if the SubmittedMigration was newly added, false if it was already in this Db
    */
-  public boolean noteMigration(SubmittedMigration migration);
+  public void noteMigration(SubmittedMigration migration);
 
   /**
-   * Writes the Db contents as plain text to the given path.
+   * @param dbLocation  the location to write the contents of this Db to
    */
   public void writeToLocation(String dbLocation);
 }

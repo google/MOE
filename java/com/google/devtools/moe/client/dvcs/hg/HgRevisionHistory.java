@@ -2,14 +2,12 @@
 
 package com.google.devtools.moe.client.dvcs.hg;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
-import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.MoeProblem;
-import com.google.devtools.moe.client.repositories.AbstractRevisionHistory;
+import com.google.devtools.moe.client.dvcs.AbstractDvcsRevisionHistory;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 
@@ -17,18 +15,16 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.annotation.Nullable;
-
 /**
- * An Hg implementation of {@link AbstractRevisionHistory}.
+ * An Hg implementation of {@link AbstractDvcsRevisionHistory}.
  *
  */
-public class HgRevisionHistory extends AbstractRevisionHistory {
+public class HgRevisionHistory extends AbstractDvcsRevisionHistory {
 
   /**
-   * The default Hg branch in which to look for revisions.
+   * The Hg revision ID for a repo at tip.
    */
-  static final String DEFAULT_BRANCH = "default";
+  static final String HG_TIP_REVID = "tip";
 
   private final Supplier<HgClonedRepository> tipCloneSupplier;
 
@@ -44,18 +40,18 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
    * MOE deals only in full Hg changeset IDs (hex strings).
    */
   @Override
-  public Revision findHighestRevision(@Nullable String revId) {
-    ImmutableList.Builder<String> argsBuilder = ImmutableList.<String>builder()
-        .add("log")
-        .add("--branch=" + DEFAULT_BRANCH)
-        // Ensure one revision only, to be safe.
-        .add("--limit=1")
-        // Format output as "changesetID" alone.
-        .add("--template={node}");
-    if (!Strings.isNullOrEmpty(revId)) {
-      argsBuilder.add("--rev=" + revId);
+  public Revision findHighestRevision(String revId) {
+    if (revId == null || revId.isEmpty()) {
+      revId = HG_TIP_REVID;
     }
-    List<String> args = argsBuilder.build();
+
+    ImmutableList<String> args = ImmutableList.of(
+        "log",
+        "--rev=" + revId,
+        // Ensure one revision only, to be safe.
+        "--limit=1",
+        // Format output as "changesetID" alone.
+        "--template={node}");
 
     String changesetID;
     HgClonedRepository tipClone = tipCloneSupplier.get();
@@ -109,8 +105,13 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
                         e.stdout,
                         e.stderr));
     }
-
-    return parseMetadata(log);
+    RevisionMetadata metadata;
+    try {
+      metadata = parseMetadata(log).get(0);
+    } catch (Exception e) {
+      throw new MoeProblem("No metadata read");
+    }
+    return metadata;
   }
 
   private static final String BEGIN_LOG_PATTERN = "^(.*) < (.*) < (.*) < (.*) < (.*)$";
@@ -120,8 +121,8 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
    * Unescapes text that was escaped by hg log escaping.
    */
   private static String unescape(String text) {
-    // TODO(user): Replace with a proper escaping utility.
-    return text.replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&");
+    // TODO(user): Replace with URLEncoder or something from HtmlEscapers.
+    return text.replaceAll("&lt;", "<").replaceAll("&gt;", ">").replaceAll("&amp;", "&");
   }
 
   /**
@@ -130,45 +131,38 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
    * @param log  a single log entry to parse. This is expected to be in the format given by
    *             the output of a call to getMetadata().
    */
-  @VisibleForTesting RevisionMetadata parseMetadata(String log) {
+  public List<RevisionMetadata> parseMetadata(String log) {
+    ImmutableList.Builder<RevisionMetadata> result = ImmutableList.<RevisionMetadata>builder();
     Matcher m = BEGIN_LOG_RE.matcher(log);
-    if (!m.matches()) {
-      throw new IllegalArgumentException("Tried to parse unexpected Hg log entry: " + log);
-    }
-    ImmutableList.Builder<Revision> parentBuilder = ImmutableList.<Revision>builder();
-    // group 5 contains all of the parents, each separated by a space
-    for (String parent : Splitter.on(" ").split(unescape(m.group(5)))) {
-      if (!parent.isEmpty()) {
-        // A parent is of the form revisionId:changesetId. When null, a parent is denoted by
-        // revisionId of -1 and changesetId of 0000000000000000000000000000000000000000.
-        String[] parentParts = parent.split(":");
-        if (!parentParts[0].equals("-1")) {
-          parent = parentParts[1];
-          parentBuilder.add(new Revision(parent, tipCloneSupplier.get().getRepositoryName()));
+    if (m.matches()) {
+      ImmutableList.Builder<Revision> parentBuilder = ImmutableList.<Revision>builder();
+      // group 5 contains all of the parents, each separated by a space
+      for (String parent : Splitter.on(" ").split(unescape(m.group(5)))) {
+        if (!parent.isEmpty()) {
+          // A parent is of the form revisionId:changesetId. When null, a parent is denoted by
+          // revisionId of -1 and changesetId of 0000000000000000000000000000000000000000.
+          String[] parentParts = parent.split(":");
+          if (!parentParts[0].equals("-1")) {
+            parent = parentParts[1];
+            parentBuilder.add(new Revision(parent, tipCloneSupplier.get().getRepositoryName()));
+          }
         }
       }
+      result.add(new RevisionMetadata(unescape(m.group(1)), unescape(m.group(2)),
+                                      unescape(m.group(3)), unescape(m.group(4)),
+                                      parentBuilder.build()));
     }
-    return new RevisionMetadata(
-        unescape(m.group(1)),  // id
-        unescape(m.group(2)),  // author
-        unescape(m.group(3)),  // date
-        unescape(m.group(4)),  // description
-        parentBuilder.build());  // parents
+    return result.build();
   }
 
   @Override
   protected List<Revision> findHeadRevisions() {
-    HgClonedRepository tipClone = tipCloneSupplier.get();
-    List<String> importBranches = tipClone.getConfig().getImportBranches();
-    if (importBranches == null) {
-      importBranches = ImmutableList.of("default");
-    }
-
     ImmutableList<String> args = ImmutableList.of(
         "heads",
-        // Format output as "changesetID branch".
-        "--template={node} {branch}\n");
+        // Format output as "changesetID"s alone.
+        "--template={node}\n");
     String heads;
+    HgClonedRepository tipClone = tipCloneSupplier.get();
     try {
       heads = HgRepository.runHgCommand(args, tipClone.getLocalTempDir().getAbsolutePath());
     } catch (CommandException e) {
@@ -179,15 +173,9 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
                         e.stdout,
                         e.stderr));
     }
-
     ImmutableList.Builder<Revision> result = ImmutableList.<Revision>builder();
-    for (String changesetIDAndBranch : Splitter.on("\n").omitEmptyStrings().split(heads)) {
-      String[] changesetIDAndBranchParts = changesetIDAndBranch.split(" ");
-      String changesetID = changesetIDAndBranchParts[0];
-      String branch = changesetIDAndBranchParts[1];
-      if (importBranches.contains(branch)) {
-        result.add(new Revision(changesetID, tipClone.getRepositoryName()));
-      }
+    for (String changesetID : Splitter.on("\n").omitEmptyStrings().split(heads)) {
+      result.add(new Revision(changesetID, tipClone.getRepositoryName()));
     }
     return result.build();
   }

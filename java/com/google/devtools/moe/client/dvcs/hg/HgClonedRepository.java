@@ -7,8 +7,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
-import com.google.devtools.moe.client.FileSystem.Lifetime;
-import com.google.devtools.moe.client.Lifetimes;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.codebase.LocalClone;
 import com.google.devtools.moe.client.project.RepositoryConfig;
@@ -65,22 +63,20 @@ public class HgClonedRepository implements LocalClone {
   }
 
   @Override
-  public void cloneLocallyAtHead(Lifetime cloneLifetime) {
+  public void cloneLocallyAtHead() {
     Preconditions.checkState(!clonedLocally);
-
-    String tempDirName = String.format("hg_clone_%s_", repositoryName);
-    localCloneTempDir = AppContext.RUN.fileSystem.getTemporaryDirectory(tempDirName, cloneLifetime);
-
+    localCloneTempDir = AppContext.RUN.fileSystem.getTemporaryDirectory(
+        String.format("hg_clone_%s_", repositoryName));
     try {
       HgRepository.runHgCommand(
           ImmutableList.of(
               "clone",
-              "--update=" + HgRevisionHistory.DEFAULT_BRANCH,
+              "--update=" + HgRevisionHistory.HG_TIP_REVID,
               repositoryUrl,
               localCloneTempDir.getAbsolutePath()),
           "" /*workingDirectory*/);
       clonedLocally = true;
-      revId = HgRevisionHistory.DEFAULT_BRANCH;
+      revId = HgRevisionHistory.HG_TIP_REVID;
     } catch (CommandException e) {
       throw new MoeProblem(
           "Could not clone from hg repo at " + repositoryUrl + ": " + e.stderr);
@@ -90,7 +86,7 @@ public class HgClonedRepository implements LocalClone {
   @Override
   public void updateToRevision(String revId) {
     Preconditions.checkState(clonedLocally);
-    Preconditions.checkState(HgRevisionHistory.DEFAULT_BRANCH.equals(this.revId));
+    Preconditions.checkState(HgRevisionHistory.HG_TIP_REVID.equals(this.revId));
     try {
       runHgCommand("update", revId);
       this.revId = revId;
@@ -104,10 +100,10 @@ public class HgClonedRepository implements LocalClone {
   public File archiveAtRevision(String revId) {
     Preconditions.checkState(clonedLocally);
     if (Strings.isNullOrEmpty(revId)) {
-      revId = HgRevisionHistory.DEFAULT_BRANCH;
+      revId = HgRevisionHistory.HG_TIP_REVID;
     }
     File archiveLocation = AppContext.RUN.fileSystem.getTemporaryDirectory(
-        String.format("hg_archive_%s_%s_", repositoryName, revId), Lifetimes.currentTask());
+        String.format("hg_archive_%s_%s_", repositoryName, revId));
     try {
       HgRepository.runHgCommand(
           ImmutableList.of(

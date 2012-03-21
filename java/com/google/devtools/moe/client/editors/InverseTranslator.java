@@ -115,7 +115,7 @@ public class InverseTranslator implements Translator {
       inverseTranslated = inverseStep.getInverseEditor().inverseEdit(
           inverseTranslated, refFrom, refTo, context, options);
 
-      AppContext.RUN.ui.popTaskAndPersist(task, inverseTranslated.getPath());
+      AppContext.RUN.ui.popTask(task, inverseTranslated.getPath().getAbsolutePath());
       refFrom = forwardTranslationStack.pop();
       refTo = forwardTranslationStack.peek();
     }
@@ -133,7 +133,7 @@ public class InverseTranslator implements Translator {
           "refTo", "Pushing to forward-translation stack: " + options.get("referenceToCodebase"));
       refTo = Parser.parseExpression(options.get("referenceToCodebase")).createCodebase(context);
       forwardTransStack.push(refTo);
-      AppContext.RUN.ui.popTaskAndPersist(task, refTo.getPath());
+      AppContext.RUN.ui.popTask(task, refTo.getPath().getAbsolutePath());
     } catch (ParseError e) {
       throw new CodebaseCreationError("Couldn't parse in translation: " + e);
     }
@@ -146,7 +146,7 @@ public class InverseTranslator implements Translator {
           "edit", "Pushing to forward-translation stack: " + forwardEditExp);
       refTo = forwardStep.editor.edit(refTo, context, options).copyWithExpression(forwardEditExp);
       forwardTransStack.push(refTo);
-      AppContext.RUN.ui.popTaskAndPersist(task, refTo.getPath());
+      AppContext.RUN.ui.popTask(task, refTo.getPath().getAbsolutePath());
     }
 
     return forwardTransStack;
