@@ -58,6 +58,10 @@ public class Moe {
       System.exit(1);
     }
 
+    // This needs to get called first, so that DirectiveFactory can report
+    // errors appropriately.
+    AppContext.init();
+
     TaskType t = taskMap.get(args[0]);
     if (t == null) {
       // We did not find a task for this name. We should print help and quit.
@@ -130,6 +134,10 @@ public class Moe {
     }
 
     Directive d = DirectiveFactory.makeDirective(args[0]);
+    if (d == null) {
+      // DirectiveFactory.makeDirective has failed and reported the error.
+      System.exit(1);
+    }
 
     MoeOptions flags = d.getFlags();
     CmdLineParser parser = new CmdLineParser(flags);
@@ -149,7 +157,6 @@ public class Moe {
       System.exit(parseError ? 1 : 0);
     }
     try {
-      AppContext.init();
       System.exit(d.perform());
     } catch (MoeProblem m) {
       // TODO(dbentley): have an option for verbosity; if it is above a threshold, print
