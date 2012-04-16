@@ -23,14 +23,37 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * Tests for the FileCodebaseCreator-class.
+ * Tests for the FileCodebaseCreator class.
+ *
  */
 public class FileCodebaseCreatorTest extends TestCase {
+
+  private IMocksControl control;
+  private FileSystem mockfs;
+
+  @Override protected void setUp() throws Exception {
+    super.setUp();
+    AppContextForTesting.initForTest();
+    control = EasyMock.createControl();
+    mockfs = control.createMock(FileSystem.class);
+    AppContext.RUN.fileSystem = mockfs;
+  }
+
+  private void expectDirCopy(File src, File dest) throws Exception {
+    expect(mockfs.exists(EasyMock.eq(src))).andReturn(true);
+    expect(mockfs.isDirectory(EasyMock.eq(src))).andReturn(true);
+    expect(mockfs.getTemporaryDirectory("file_codebase_copy_")).andReturn(dest);
+    // Short-circuit Utils.copyDirectory().
+    mockfs.makeDirsForFile(dest);
+    expect(mockfs.isFile(src)).andReturn(true);
+    mockfs.copyFile(src, dest);
+  }
+
   /**
    * Confirms that the "create"-method does validate the option list.
    * @throws CodebaseCreationError
    */
-  public void testValidationCreate() throws CodebaseCreationError {
+  public void testValidationCreate() throws Exception {
     FileCodebaseCreator cc = new FileCodebaseCreator();
 
     // Validate parameters.
@@ -50,20 +73,12 @@ public class FileCodebaseCreatorTest extends TestCase {
    * Confirms that the "create"-method returns a codebase when no project space is defined.
    * @throws CodebaseCreationError
    */
-  public void testCreateWithoutProjectSpace() throws CodebaseCreationError {
-    // Set up mocks.
-    AppContextForTesting.initForTest();
-    IMocksControl control = EasyMock.createControl();
+  public void testCreateWithoutProjectSpace() throws Exception {
     String folder = "/foo/bar";
     File fileFolder = new File(folder);
+    expectDirCopy(fileFolder, new File("/tmp/copy"));
 
-    FileSystem mockfs = control.createMock(FileSystem.class);
-    expect(mockfs.exists(EasyMock.eq(fileFolder))).andReturn(true);
-    expect(mockfs.isDirectory(EasyMock.eq(fileFolder))).andReturn(true);
     control.replay();
-    AppContext.RUN.fileSystem = mockfs;
-
-    // Run the .create method.
     FileCodebaseCreator cc = new FileCodebaseCreator();
     Codebase codebase = cc.create(ImmutableMap.<String, String>of("path", folder));
     assertNotNull(codebase);
@@ -75,72 +90,59 @@ public class FileCodebaseCreatorTest extends TestCase {
    * Confirms that the "create"-method returns a codebase when a project space is defined.
    * @throws CodebaseCreationError
    */
-  public void testCreateWithProjectSpace() throws CodebaseCreationError {
-    // Set up mocks.
-    AppContextForTesting.initForTest();
+  public void testCreateWithProjectSpace() throws Exception {
     String folder = "/foo/bar";
     File fileFolder = new File(folder);
 
-    FileSystem mockfs = EasyMock.createMock(FileSystem.class);
-    expect(mockfs.exists(EasyMock.eq(fileFolder))).andReturn(true);
-    expect(mockfs.isDirectory(EasyMock.eq(fileFolder))).andReturn(true);
-    EasyMock.replay(mockfs);
-    AppContext.RUN.fileSystem = mockfs;
+    expectDirCopy(fileFolder, new File("/tmp/copy"));
 
-    // Run the .create method.
+    control.replay();
     FileCodebaseCreator cc = new FileCodebaseCreator();
     Codebase codebase = cc.create(ImmutableMap.<String, String>of("path", folder,
                                                                  "projectspace", "internal"));
+    control.verify();
+
     assertNotNull(codebase);
     assertEquals("internal", codebase.getProjectSpace());
-    EasyMock.verify(mockfs);
   }
 
   /**
    * Tests whether the getCodebasePath() method works with a directory.
    * @throws CodebaseCreationError
    */
-  public void testGetCodebasePathWithDirectory() throws CodebaseCreationError {
-    // Set up mocks.
-    AppContextForTesting.initForTest();
+  public void testGetCodebasePathWithDirectory() throws Exception {
     String folder = "/foo/bar";
     File fileFolder = new File(folder);
+    File copyLocation = new File("/tmp/copy");
 
-    FileSystem mockfs = EasyMock.createMock(FileSystem.class);
-    expect(mockfs.exists(EasyMock.eq(fileFolder))).andReturn(true);
-    expect(mockfs.isDirectory(EasyMock.eq(fileFolder))).andReturn(true);
-    EasyMock.replay(mockfs);
-    AppContext.RUN.fileSystem = mockfs;
+    expectDirCopy(fileFolder, copyLocation);
 
-    // Run the .getCodebasePath method.
+    control.replay();
     FileCodebaseCreator cc = new FileCodebaseCreator();
     File newPath = FileCodebaseCreator.getCodebasePath(fileFolder);
-    assertEquals(newPath, fileFolder); // Should be the same for directories.
-    EasyMock.verify(mockfs);
+    control.verify();
+
+    assertEquals(newPath, copyLocation);
   }
 
   /**
    * Tests whether the getCodebasePath() method works with an unknown file type.
    * @throws CodebaseCreationError
    */
-  public void testGetCodebasePathWithUnknownFile() throws CodebaseCreationError {
-    // Set up mocks.
-    AppContextForTesting.initForTest();
+  public void testGetCodebasePathWithUnknownFile() throws Exception {
     String filePath = "/foo/bar.sth";
     File fileFolder = new File(filePath);
 
-    FileSystem mockfs = EasyMock.createMock(FileSystem.class);
     expect(mockfs.exists(EasyMock.eq(fileFolder))).andReturn(true);
     expect(mockfs.isDirectory(EasyMock.eq(fileFolder))).andReturn(false);
     expect(mockfs.isFile(EasyMock.eq(fileFolder))).andReturn(true);
-    EasyMock.replay(mockfs);
-    AppContext.RUN.fileSystem = mockfs;
 
+    control.replay();
     try {
       FileCodebaseCreator.getCodebasePath(fileFolder);
       fail("getCodebasePath() did not throw an exception for an unsupported file type.");
     } catch (CodebaseCreationError expected) {}
-    EasyMock.verify(mockfs);
+    control.verify();
   }
 
   /**
@@ -148,20 +150,15 @@ public class FileCodebaseCreatorTest extends TestCase {
    */
   public void testGetCodebasePathWithKnownFile()
       throws CodebaseCreationError, IOException, CommandException {
-    // Set up mocks.
-    AppContextForTesting.initForTest();
     String filePath = "/foo/bar.tar";
     File fileFolder = new File(filePath);
 
-    FileSystem mockfs = EasyMock.createMock(FileSystem.class);
     expect(mockfs.exists(EasyMock.eq(fileFolder))).andReturn(true);
     expect(mockfs.isDirectory(EasyMock.eq(fileFolder))).andReturn(false);
     expect(mockfs.isFile(EasyMock.eq(fileFolder))).andReturn(true);
     expect(mockfs.getTemporaryDirectory(EasyMock.<String>anyObject())).andReturn(new File("sth"));
     mockfs.makeDirs(EasyMock.<File>anyObject());
     EasyMock.expectLastCall().atLeastOnce();
-    EasyMock.replay(mockfs);
-    AppContext.RUN.fileSystem = mockfs;
 
     CommandRunner mockcmd = EasyMock.createMock(CommandRunner.class);
     expect(mockcmd.runCommand(EasyMock.<String>anyObject(),
@@ -170,9 +167,10 @@ public class FileCodebaseCreatorTest extends TestCase {
     EasyMock.replay(mockcmd);
     AppContext.RUN.cmd = mockcmd;
 
+    control.replay();
     File codebasePath = FileCodebaseCreator.getCodebasePath(fileFolder);
+    control.verify();
+
     assertNotNull(codebasePath);
-    EasyMock.verify(mockfs);
-    EasyMock.verify(mockcmd);
   }
 }

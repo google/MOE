@@ -7,6 +7,8 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
+import com.google.devtools.moe.client.FileSystem.Lifetime;
+import com.google.devtools.moe.client.Lifetimes;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.codebase.LocalClone;
 import com.google.devtools.moe.client.project.RepositoryConfig;
@@ -61,10 +63,12 @@ public class GitClonedRepository implements LocalClone {
   }
 
   @Override
-  public void cloneLocallyAtHead() {
+  public void cloneLocallyAtHead(Lifetime cloneLifetime) {
     Preconditions.checkState(!clonedLocally);
-    localCloneTempDir = AppContext.RUN.fileSystem.getTemporaryDirectory(
-        String.format("git_clone_%s_", repositoryName));
+
+    String tempDirName = String.format("git_clone_%s_", repositoryName);
+    localCloneTempDir = AppContext.RUN.fileSystem.getTemporaryDirectory(tempDirName, cloneLifetime);
+
     try {
       GitRepository.runGitCommand(
           ImmutableList.<String>of(
@@ -107,10 +111,12 @@ public class GitClonedRepository implements LocalClone {
       revId = "HEAD";
     }
     File archiveLocation = AppContext.RUN.fileSystem.getTemporaryDirectory(
-        String.format("git_archive_%s_%s_", repositoryName, revId));
+        String.format("git_archive_%s_%s_", repositoryName, revId),
+        Lifetimes.currentTask());
     // Using this just to get a filename.
     String tarballPath = AppContext.RUN.fileSystem.getTemporaryDirectory(
-        String.format("git_tarball_%s_%s.tar.", repositoryName, revId)).getAbsolutePath();
+        String.format("git_tarball_%s_%s.tar.", repositoryName, revId),
+        Lifetimes.currentTask()).getAbsolutePath();
     try {
 
       // Git doesn't support archiving to a directory: it only supports

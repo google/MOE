@@ -32,7 +32,7 @@ public class ForwardTranslator implements Translator {
       Ui.Task editTask = AppContext.RUN.ui.pushTask("edit", "Translation editor: " + s.name);
       // Pass the translation options to each editor.
       translated = s.editor.edit(translated, context, options);
-      AppContext.RUN.ui.popTask(editTask, translated.getPath().getAbsolutePath());
+      AppContext.RUN.ui.popTaskAndPersist(editTask, translated.getPath());
     }
     return translated;
   }

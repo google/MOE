@@ -4,6 +4,7 @@ package com.google.devtools.moe.client;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
@@ -11,21 +12,27 @@ import com.google.common.io.Resources;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 /**
+ * A {@link FileSystem} using the real local filesystem via operations in {@link File}.
  *
  * @author dbentley@google.com (Daniel Bentley)
  */
 public class SystemFileSystem implements FileSystem {
 
-  /**
-   * Directories to delete on cleanUpTempDirs().
-   */
-  private final Set<File> tempDirs = Sets.newHashSet();
+  private final Map<File, Lifetime> tempDirLifetimes = Maps.newHashMap();
 
   @Override
   public File getTemporaryDirectory(String prefix) {
+    return getTemporaryDirectory(prefix, Lifetimes.currentTask());
+  }
+
+  @Override
+  public File getTemporaryDirectory(String prefix, Lifetime lifetime) {
     File tempDir;
     try {
       tempDir = File.createTempFile("moe_" + prefix, "");
@@ -33,30 +40,33 @@ public class SystemFileSystem implements FileSystem {
     } catch (IOException e) {
       throw new MoeProblem("could not create temp file: " + e.getMessage());
     }
-    tempDirs.add(tempDir);
+    tempDirLifetimes.put(tempDir, lifetime);
     return tempDir;
   }
 
   @Override
   public void cleanUpTempDirs() throws IOException {
-    for (File tempDir : tempDirs) {
-      deleteRecursively(tempDir);
-      if (AppContext.RUN != null) {
-        AppContext.RUN.ui.debug("Deleted temp dir: " + tempDir);
+    Iterator<Entry<File, Lifetime>> tempDirIterator = tempDirLifetimes.entrySet().iterator();
+    while (tempDirIterator.hasNext()) {
+      Entry<File, Lifetime> entry = tempDirIterator.next();
+      if (entry.getValue().shouldCleanUp()) {
+        deleteRecursively(entry.getKey());
+        tempDirIterator.remove();
+        AppContext.RUN.ui.debug("Deleted temp dir: " + entry.getKey());
       }
     }
-    tempDirs.clear();
   }
 
   @Override
-  public void markAsPersistent(File path) {
-    Preconditions.checkState(tempDirs.contains(path), "persisting unknown path");
-    tempDirs.remove(path);
+  public void setLifetime(File path, Lifetime lifetime) {
+    Preconditions.checkState(
+        tempDirLifetimes.containsKey(path),
+        "Trying to set the Lifetime for an unknown path: %s", path);
+    tempDirLifetimes.put(path, lifetime);
   }
 
   /**
    * Find files under a path.
-   *
    */
   @Override
   public Set<File> findFiles(File path) {
@@ -155,9 +165,9 @@ public class SystemFileSystem implements FileSystem {
     }
 
     File extractedFile = new File(
-        AppContext.RUN.fileSystem.getTemporaryDirectory("resource_extraction_"),
+        getTemporaryDirectory("resource_extraction_", Lifetimes.moeExecution()),
         name);
-    AppContext.RUN.fileSystem.makeDirsForFile(extractedFile);
+    makeDirsForFile(extractedFile);
     OutputStream os = Files.newOutputStreamSupplier(extractedFile).getOutput();
     Resources.copy(
         SystemFileSystem.class.getResource(resource), os);

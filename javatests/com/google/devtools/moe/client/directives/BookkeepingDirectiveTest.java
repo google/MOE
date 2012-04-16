@@ -2,11 +2,14 @@
 
 package com.google.devtools.moe.client.directives;
 
+import static org.easymock.EasyMock.expect;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
+import com.google.devtools.moe.client.FileSystem.Lifetime;
 import com.google.devtools.moe.client.database.DbStorage;
 import com.google.devtools.moe.client.database.Equivalence;
 import com.google.devtools.moe.client.database.FileDb;
@@ -16,8 +19,8 @@ import com.google.devtools.moe.client.testing.AppContextForTesting;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
 
 import junit.framework.TestCase;
+
 import org.easymock.EasyMock;
-import static org.easymock.EasyMock.expect;
 import org.easymock.IMocksControl;
 
 import java.io.File;
@@ -35,7 +38,6 @@ public class BookkeepingDirectiveTest extends TestCase {
     IMocksControl control = EasyMock.createControl();
     FileSystem fileSystem = control.createMock(FileSystem.class);
     AppContext.RUN.fileSystem = fileSystem;
-    fileSystem.cleanUpTempDirs();
     CommandRunner cmd = control.createMock(CommandRunner.class);
     AppContext.RUN.cmd = cmd;
     // This MOE config contains:
@@ -108,6 +110,11 @@ public class BookkeepingDirectiveTest extends TestCase {
     FileDb expectedDb = new FileDb(dbStorage);
     fileSystem.write(expectedDb.toJsonString(), dbFile);
 
+    fileSystem.setLifetime(EasyMock.<File>anyObject(), EasyMock.<Lifetime>anyObject());
+    EasyMock.expectLastCall().anyTimes();
+    fileSystem.cleanUpTempDirs();
+    EasyMock.expectLastCall().anyTimes();
+
     control.replay();
     assertEquals(0, d.perform());
     control.verify();
@@ -117,7 +124,6 @@ public class BookkeepingDirectiveTest extends TestCase {
     IMocksControl control = EasyMock.createControl();
     FileSystem fileSystem = control.createMock(FileSystem.class);
     AppContext.RUN.fileSystem = fileSystem;
-    fileSystem.cleanUpTempDirs();
     CommandRunner cmd = control.createMock(CommandRunner.class);
     AppContext.RUN.cmd = cmd;
     // This MOE config contains:
@@ -180,6 +186,11 @@ public class BookkeepingDirectiveTest extends TestCase {
     expect(cmd.runCommand("diff", ImmutableList.of("-N", "/dummy/path/file", "/dummy/path/file"),
                           "")).andReturn("different");
 
+    fileSystem.setLifetime(EasyMock.<File>anyObject(), EasyMock.<Lifetime>anyObject());
+    EasyMock.expectLastCall().anyTimes();
+    fileSystem.cleanUpTempDirs();
+    EasyMock.expectLastCall().anyTimes();
+
     // expected db at end of call to bookkeep
     DbStorage dbStorage = new DbStorage();
     dbStorage.addMigration(
@@ -196,7 +207,6 @@ public class BookkeepingDirectiveTest extends TestCase {
     IMocksControl control = EasyMock.createControl();
     FileSystem fileSystem = control.createMock(FileSystem.class);
     AppContext.RUN.fileSystem = fileSystem;
-    fileSystem.cleanUpTempDirs();
     CommandRunner cmd = control.createMock(CommandRunner.class);
     AppContext.RUN.cmd = cmd;
     // This MOE config contains:
@@ -266,6 +276,11 @@ public class BookkeepingDirectiveTest extends TestCase {
         new SubmittedMigration(new Revision("1", "int"), new Revision("migrate", "pub")));
     FileDb expectedDb = new FileDb(dbStorage);
     fileSystem.write(expectedDb.toJsonString(), dbFile);
+
+    fileSystem.setLifetime(EasyMock.<File>anyObject(), EasyMock.<Lifetime>anyObject());
+    EasyMock.expectLastCall().anyTimes();
+    fileSystem.cleanUpTempDirs();
+    EasyMock.expectLastCall().anyTimes();
 
     control.replay();
     assertEquals(0, d.perform());

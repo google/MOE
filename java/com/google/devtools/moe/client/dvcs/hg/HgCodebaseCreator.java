@@ -3,6 +3,7 @@
 package com.google.devtools.moe.client.dvcs.hg;
 
 import com.google.common.base.Supplier;
+import com.google.devtools.moe.client.Lifetimes;
 import com.google.devtools.moe.client.codebase.LocalClone;
 import com.google.devtools.moe.client.dvcs.AbstractDvcsCodebaseCreator;
 import com.google.devtools.moe.client.project.RepositoryConfig;
@@ -31,7 +32,7 @@ public class HgCodebaseCreator extends AbstractDvcsCodebaseCreator {
   @Override
   protected LocalClone cloneAtLocalRoot(String localroot) {
     HgClonedRepository clone = new HgClonedRepository(repositoryName, config, localroot);
-    clone.cloneLocallyAtHead();
+    clone.cloneLocallyAtHead(Lifetimes.currentTask());
     return clone;
   }
 }

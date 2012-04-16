@@ -8,6 +8,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
+import com.google.devtools.moe.client.FileSystem.Lifetime;
+import com.google.devtools.moe.client.Lifetimes;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.testing.AppContextForTesting;
 
@@ -36,7 +38,10 @@ public class HgClonedRepositoryTest extends TestCase {
 
     // Mock AppContext.RUN.fileSystem.getTemporaryDirectory()
     FileSystem mockFS = control.createMock(FileSystem.class);
-    expect(mockFS.getTemporaryDirectory("hg_clone_" + repositoryName + "_"))
+    // The Lifetimes of clones in these tests are arbitrary since we're not really creating any
+    // temp dirs and we're not testing clean-up.
+    expect(mockFS.getTemporaryDirectory(
+        EasyMock.eq("hg_clone_" + repositoryName + "_"), EasyMock.<Lifetime>anyObject()))
         .andReturn(new File(localCloneTempDir));
     AppContext.RUN.fileSystem = mockFS;
 
@@ -58,14 +63,14 @@ public class HgClonedRepositoryTest extends TestCase {
     control.replay();
 
     HgClonedRepository repo = new HgClonedRepository(repositoryName, repositoryConfig);
-    repo.cloneLocallyAtHead();
+    repo.cloneLocallyAtHead(Lifetimes.persistent());
 
     assertEquals(repositoryName, repo.getRepositoryName());
     assertEquals(repositoryURL, repo.getConfig().getUrl());
     assertEquals(localCloneTempDir, repo.getLocalTempDir().getAbsolutePath());
 
     try {
-      repo.cloneLocallyAtHead();
+      repo.cloneLocallyAtHead(Lifetimes.persistent());
       fail("Re-cloning repo succeeded unexpectedly.");
     } catch (IllegalStateException expected) {}
 

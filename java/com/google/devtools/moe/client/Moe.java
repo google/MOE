@@ -41,6 +41,12 @@ public class Moe {
   private static final Logger logger = Logger.getLogger(Moe.class.getName());
   static final Logger allMoeLogger = Logger.getLogger("com.google.devtools.moe");
 
+  /**
+   * The name of the Task pushed to the Ui for clean-up when MOE is about to exit. This name is
+   * used, for example, to set a temp dir's lifetime to "clean up when MOE is about to exit".
+   */
+  static final String MOE_TERMINATION_TASK_NAME = "moe_termination";
+
   private Moe() {}
 
   /**
@@ -156,8 +162,14 @@ public class Moe {
       parser.printUsage(System.err);
       System.exit(parseError ? 1 : 0);
     }
+
     try {
-      System.exit(d.perform());
+      int result = d.perform();
+      Ui.Task terminateTask = AppContext.RUN.ui.pushTask(
+          MOE_TERMINATION_TASK_NAME, "Final clean-up");
+      AppContext.RUN.fileSystem.cleanUpTempDirs();
+      AppContext.RUN.ui.popTask(terminateTask, "");
+      System.exit(result);
     } catch (MoeProblem m) {
       // TODO(dbentley): have an option for verbosity; if it is above a threshold, print
       // a stack trace.

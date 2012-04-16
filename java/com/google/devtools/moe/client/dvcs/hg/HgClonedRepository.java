@@ -7,6 +7,8 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
+import com.google.devtools.moe.client.FileSystem.Lifetime;
+import com.google.devtools.moe.client.Lifetimes;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.codebase.LocalClone;
 import com.google.devtools.moe.client.project.RepositoryConfig;
@@ -63,10 +65,12 @@ public class HgClonedRepository implements LocalClone {
   }
 
   @Override
-  public void cloneLocallyAtHead() {
+  public void cloneLocallyAtHead(Lifetime cloneLifetime) {
     Preconditions.checkState(!clonedLocally);
-    localCloneTempDir = AppContext.RUN.fileSystem.getTemporaryDirectory(
-        String.format("hg_clone_%s_", repositoryName));
+
+    String tempDirName = String.format("hg_clone_%s_", repositoryName);
+    localCloneTempDir = AppContext.RUN.fileSystem.getTemporaryDirectory(tempDirName, cloneLifetime);
+
     try {
       HgRepository.runHgCommand(
           ImmutableList.of(
@@ -103,7 +107,7 @@ public class HgClonedRepository implements LocalClone {
       revId = HgRevisionHistory.HG_TIP_REVID;
     }
     File archiveLocation = AppContext.RUN.fileSystem.getTemporaryDirectory(
-        String.format("hg_archive_%s_%s_", repositoryName, revId));
+        String.format("hg_archive_%s_%s_", repositoryName, revId), Lifetimes.currentTask());
     try {
       HgRepository.runHgCommand(
           ImmutableList.of(

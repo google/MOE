@@ -15,7 +15,6 @@ import com.google.devtools.moe.client.testing.DummyDb;
 
 import org.kohsuke.args4j.Option;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -28,10 +27,12 @@ public class BookkeepingDirective implements Directive {
 
   public BookkeepingDirective() {}
 
+  @Override
   public BookkeepingOptions getFlags() {
     return options;
   }
 
+  @Override
   public int perform() {
     ProjectContext context;
     try {
@@ -55,16 +56,7 @@ public class BookkeepingDirective implements Directive {
     }
 
     List<String> names = ImmutableList.copyOf(context.migrationConfigs.keySet());
-    int result = BookkeepingLogic.bookkeep(names, db, options.dbLocation, context);
-
-    try {
-      AppContext.RUN.fileSystem.cleanUpTempDirs();
-    } catch (IOException e) {
-      AppContext.RUN.ui.error(e, "Error cleaning up temp dirs.");
-      throw new MoeProblem("Error cleaning up temp dirs: " + e);
-    }
-
-    return result;
+    return BookkeepingLogic.bookkeep(names, db, options.dbLocation, context);
   }
 
   static class BookkeepingOptions extends MoeOptions {
