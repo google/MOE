@@ -52,7 +52,7 @@ public class HgClonedRepositoryTest extends TestCase {
             "hg",
             ImmutableList.<String>of(
                 "clone",
-                "--update=" + HgRevisionHistory.HG_TIP_REVID,
+                "--update=" + HgRevisionHistory.DEFAULT_BRANCH,
                 repositoryURL,
                 localCloneTempDir),
             "" /*workingDirectory*/))
