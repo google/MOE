@@ -44,15 +44,15 @@ public class DummyRepository {
                           revision.revId, revision.repositoryName, name));
       }
       return new RevisionMetadata(revision.revId, "author", "date",
-                                  revision.revId.equals("migrate") ?
-                                  "MOE_MIGRATED_REVID=1" : "description",
+                                  revision.revId.equals("migrated_to") ?
+                                  "MOE_MIGRATED_REVID=migrated_from" : "description",
                                   ImmutableList.of(new Revision("parent", name)));
     }
 
     @Override
     public <T> T findRevisions(Revision revision, RevisionMatcher<T> matcher) {
       if (revision == null) {
-        revision = new Revision("migrate", name);
+        revision = new Revision("migrated_to", name);
       }
       RevisionGraph revTree = RevisionGraph.builder(ImmutableList.of(revision))
           .addRevision(revision, getMetadata(revision))

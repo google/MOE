@@ -31,7 +31,6 @@ public class ChangeDirectiveTest extends TestCase {
     d.getFlags().codebase = "internal";
     d.getFlags().destination = "internal";
     assertEquals(0, d.perform());
-    // DummyWriter writes to "/foo".
-    assertEquals("/foo", ((RecordingUi)AppContext.RUN.ui).lastTaskResult);
+    assertEquals("/dummy/writer/internal", ((RecordingUi) AppContext.RUN.ui).lastTaskResult);
   }
 }
