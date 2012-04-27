@@ -111,7 +111,12 @@ public class BookkeepingLogic {
    */
   private static void processMigration(Revision fromRev, Revision toRev,
                                        Db db, ProjectContext context, boolean inverse) {
-    db.noteMigration(new SubmittedMigration(fromRev, toRev));
+    SubmittedMigration migration = new SubmittedMigration(fromRev, toRev);
+    if (!db.noteMigration(migration)) {
+      AppContext.RUN.ui.info("Skipping bookkeeping of this SubmittedMigration "
+          + "because it was already in the Db: " + migration);
+      return;
+    }
 
     Codebase to, from;
     try {

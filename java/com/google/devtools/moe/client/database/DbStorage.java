@@ -38,9 +38,12 @@ public class DbStorage {
     }
   }
 
-  public void addMigration(SubmittedMigration m) {
-    if (!migrations.contains(m)) {
-      migrations.add(m);
-    }
+  /**
+   * Adds a SubmittedMigration.
+   *
+   * @return true if the SubmittedMigration was newly added, false if it was already in this Db
+   */
+  public boolean addMigration(SubmittedMigration m) {
+    return !migrations.contains(m) && migrations.add(m);
   }
 }

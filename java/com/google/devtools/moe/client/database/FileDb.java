@@ -57,8 +57,8 @@ public class FileDb implements Db {
   }
 
   @Override
-  public void noteMigration(SubmittedMigration migration) {
-    dbStorage.addMigration(migration);
+  public boolean noteMigration(SubmittedMigration migration) {
+    return dbStorage.addMigration(migration);
   }
 
   @VisibleForTesting
