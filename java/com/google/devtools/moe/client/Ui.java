@@ -18,6 +18,12 @@ import java.util.Deque;
  */
 public abstract class Ui {
 
+  /**
+   * The name of the Task pushed to the Ui for clean-up when MOE is about to exit. This name is
+   * used, for example, to set a temp dir's lifetime to "clean up when MOE is about to exit".
+   */
+  public static final String MOE_TERMINATION_TASK_NAME = "moe_termination";
+
   protected final Deque<Task> stack;
 
   public Ui() {
@@ -165,7 +171,7 @@ public abstract class Ui {
   private class MoeExecutionLifetime implements Lifetime {
 
     @Override public boolean shouldCleanUp() {
-      return !stack.isEmpty() && stack.peek().taskName.equals(Moe.MOE_TERMINATION_TASK_NAME);
+      return !stack.isEmpty() && stack.peek().taskName.equals(MOE_TERMINATION_TASK_NAME);
     }
   }
 

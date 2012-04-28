@@ -205,7 +205,7 @@ public class SystemFileSystemTest extends TestCase {
     assertTrue("taskless", taskless.exists());
 
     Task moeTermination =
-        AppContext.RUN.ui.pushTask(Moe.MOE_TERMINATION_TASK_NAME, "Final clean-up");
+        AppContext.RUN.ui.pushTask(Ui.MOE_TERMINATION_TASK_NAME, "Final clean-up");
     fs.cleanUpTempDirs();
     AppContext.RUN.ui.popTask(moeTermination, "Finished clean-up");
     assertFalse("innerPersist", innerPersist.exists());
@@ -237,7 +237,7 @@ public class SystemFileSystemTest extends TestCase {
     assertFalse("outer2", outer2.exists());
 
     Task moeTermination =
-        AppContext.RUN.ui.pushTask(Moe.MOE_TERMINATION_TASK_NAME, "Final clean-up");
+        AppContext.RUN.ui.pushTask(Ui.MOE_TERMINATION_TASK_NAME, "Final clean-up");
     fs.cleanUpTempDirs();
     AppContext.RUN.ui.popTask(moeTermination, "Finished clean-up");
     // outer1 was persisted from a top-level task, so it shouldn't be cleaned up at all.
