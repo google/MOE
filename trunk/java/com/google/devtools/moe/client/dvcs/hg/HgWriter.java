@@ -43,7 +43,7 @@ public class HgWriter extends AbstractDvcsWriter<HgClonedRepository> {
   }
 
   @Override
-  protected void rmFile(String relativeFilename) throws CommandException {
+  protected void removeFile(String relativeFilename) throws CommandException {
     revClone.runHgCommand("rm", relativeFilename);
   }
 
@@ -54,13 +54,12 @@ public class HgWriter extends AbstractDvcsWriter<HgClonedRepository> {
 
   @Override
   protected boolean hasPendingChanges() {
-    String statusStdout = null;
     try {
-      statusStdout = revClone.runHgCommand("status");
+      String statusStdout = revClone.runHgCommand("status");
+      return !Strings.isNullOrEmpty(statusStdout);
     } catch (CommandException e) {
       throw new MoeProblem("Error in hg status: " + e);
     }
-    return !Strings.isNullOrEmpty(statusStdout);
   }
 
   @Override

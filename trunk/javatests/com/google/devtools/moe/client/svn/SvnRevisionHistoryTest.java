@@ -2,27 +2,31 @@
 
 package com.google.devtools.moe.client.svn;
 
+import static org.easymock.EasyMock.expect;
+
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.database.Equivalence;
 import com.google.devtools.moe.client.database.EquivalenceMatcher;
+import com.google.devtools.moe.client.database.EquivalenceMatcher.EquivalenceMatchResult;
 import com.google.devtools.moe.client.database.FileDb;
 import com.google.devtools.moe.client.repositories.Revision;
-import com.google.devtools.moe.client.repositories.RevisionMatcher;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.testing.AppContextForTesting;
 import com.google.devtools.moe.client.testing.DummyDb;
 
 import junit.framework.TestCase;
+
 import org.easymock.EasyMock;
-import static org.easymock.EasyMock.expect;
 import org.easymock.IMocksControl;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 import java.util.List;
 
-import javax.imageio.metadata.IIOMetadataNode;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 /**
  * @author dbentley@google.com
@@ -124,35 +128,50 @@ public class SvnRevisionHistoryTest extends TestCase {
     control.verify();
   }
 
-  public void testParseMetadataNodeList() {
-    SvnRevisionHistory history = new SvnRevisionHistory("internal_svn",
-    "http://foo/svn/trunk/");
+  /**
+   * Tests parsing of this SVN log entry:
+   *
+   * {@code
+   * <logentry>
+   *   <author>user</author>
+   *   <text/>
+   *   <date>yyyy-mm-dd</date>
+   *   <msg>description</msg>
+   * </logentry>
+   * }
+   */
+  public void testParseMetadataNodeList() throws Exception {
+    Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 
-    IIOMetadataNode nodelist = new IIOMetadataNode();
+    Element logEntry = doc.createElement("logentry");
+    doc.appendChild(logEntry);
 
-    IIOMetadataNode child = new IIOMetadataNode("author");
-    child.setTextContent("user");
-    nodelist.appendChild(child);
+    Element author = doc.createElement("author");
+    author.appendChild(doc.createTextNode("user"));
+    logEntry.appendChild(author);
 
     // The XML parser often throws in random child nodes like this.
-    child = new IIOMetadataNode("#text");
-    nodelist.appendChild(child);
+    logEntry.appendChild(doc.createElement("text"));
 
-    child = new IIOMetadataNode("date");
-    child.setTextContent("yyyy-mm-dd");
-    nodelist.appendChild(child);
+    Element date = doc.createElement("date");
+    date.appendChild(doc.createTextNode("yyyy-mm-dd"));
+    logEntry.appendChild(date);
 
-    child = new IIOMetadataNode("msg");
-    child.setTextContent("description");
-    nodelist.appendChild(child);
+    Element msg = doc.createElement("msg");
+    msg.appendChild(doc.createTextNode("description"));
+    logEntry.appendChild(msg);
 
-    RevisionMetadata result = history.parseMetadataNodeList("7", nodelist,
+    SvnRevisionHistory history = new SvnRevisionHistory("internal_svn", "http://foo/svn/trunk/");
+
+    RevisionMetadata result = history.parseMetadataNodeList(
+        "7",
+        doc.getElementsByTagName("logentry").item(0).getChildNodes(),
         ImmutableList.of(new Revision("6", "internal")));
 
     RevisionMetadata expected = new RevisionMetadata("7", "user", "yyyy-mm-dd", "description",
         ImmutableList.of(new Revision("6", "internal")));
 
-    assertEquals(result, expected);
+    assertEquals(expected, result);
   }
 
   public void testFindNewRevisions() {
@@ -212,9 +231,9 @@ public class SvnRevisionHistoryTest extends TestCase {
     control.replay();
     SvnRevisionHistory history = new SvnRevisionHistory("internal_svn",
         "http://foo/svn/trunk/");
-    RevisionMatcher matcher = new EquivalenceMatcher("public", db);
-    ImmutableList<Revision> newRevisions = ImmutableList.copyOf(
-        history.findRevisions(null, matcher));
+    List<Revision> newRevisions = history.findRevisions(null, new EquivalenceMatcher("public", db))
+        .getRevisionsSinceEquivalence()
+        .getLinearHistory();
     assertEquals(2, newRevisions.size());
     assertEquals("internal_svn", newRevisions.get(0).repositoryName);
     assertEquals("3", newRevisions.get(0).revId);
@@ -289,15 +308,18 @@ public class SvnRevisionHistoryTest extends TestCase {
     control.replay();
 
     FileDb database = FileDb.makeDbFromDbText(testDb1);
-    EquivalenceMatcher matcher = new EquivalenceMatcher("repo1", database);
     SvnRevisionHistory history = new SvnRevisionHistory("repo2", "http://foo/svn/trunk/");
 
-    Equivalence actualEq = history.findLastEquivalence(new Revision("4", "repo2"), matcher);
-    Equivalence expectedEq = new Equivalence(new Revision("1002", "repo1"),
-                                             new Revision("2", "repo2"));
-    assertEquals(expectedEq, actualEq);
+    EquivalenceMatchResult result = history.findRevisions(
+        new Revision("4", "repo2"), new EquivalenceMatcher("repo1", database));
 
     control.verify();
+
+    Equivalence expectedEq = new Equivalence(new Revision("1002", "repo1"),
+                                             new Revision("2", "repo2"));
+    
+    assertEquals(1, result.getEquivalences().size());
+    assertEquals(expectedEq, result.getEquivalences().get(0));
   }
 
   /*
@@ -361,11 +383,13 @@ public class SvnRevisionHistoryTest extends TestCase {
     control.replay();
 
     FileDb database = FileDb.makeDbFromDbText(testDb2);
-    EquivalenceMatcher matcher = new EquivalenceMatcher("repo1", database);
     SvnRevisionHistory history = new SvnRevisionHistory("repo2", "http://foo/svn/trunk/");
 
-    assertNull(history.findLastEquivalence(new Revision("2", "repo2"), matcher));
+    EquivalenceMatchResult result = history.findRevisions(
+        new Revision("2", "repo2"), new EquivalenceMatcher("repo1", database));
 
     control.verify();
+    
+    assertEquals(0, result.getEquivalences().size());
   }
 }

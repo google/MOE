@@ -2,6 +2,7 @@
 
 package com.google.devtools.moe.client.codebase;
 
+import com.google.devtools.moe.client.FileSystem.Lifetime;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 
 import java.io.File;
@@ -16,37 +17,38 @@ import javax.annotation.Nullable;
 public interface LocalClone {
 
   /**
-   * @return the name of the Repository corresponding to this clone
+   * Returns the name of the cloned {@link com.google.devtools.moe.client.repositories.Repository}.
    */
   String getRepositoryName();
 
   /**
-   * @return the RepositoryConfig for the Repository corresponding to this clone
+   * Returns the RepositoryConfig for the Repository corresponding to this clone.
    */
   RepositoryConfig getConfig();
 
   /**
-   * @return the root on disk of the local clone
+   * Returns the root on disk of the local clone.
    */
   File getLocalTempDir();
 
   /**
-   * Clone the repo at repositoryUrl to disk. This method must update fields clonedLocally, revId,
-   * and localCloneTempDir.
+   * Clones the repo from its remote location to disk at head revision. The clone's temporary
+   * directory has the given {code Lifetime}.
    */
-  void cloneLocallyAtHead();
+  void cloneLocallyAtHead(Lifetime cloneLifetime);
 
   /**
-   * Update this clone to a given revision.
+   * Updates this clone to a given revision.
    */
-  void updateToRevId(String revId);
+  void updateToRevision(String revId);
 
   /**
-   * Archive this clone (i.e. export a regular, versionless copy of its files) at a given revision.
+   * Archives this clone. An archive is an unversioned copy (an expanded directory) of the cloned
+   * codebase. The clone is archived at the given revision if {@code revId} is non-null, or at
+   * head otherwise.
    *
-   * @param revId  the revision identifier (e.g. commit id) to archive at, null for head/tip
-   *
+   * @param revId  the revision identifier (e.g. commit id) to archive at, null for head
    * @return the root of the archive
    */
-  File archiveAtRevId(@Nullable String revId);
+  File archiveAtRevision(@Nullable String revId);
 }

@@ -16,25 +16,28 @@ import java.util.Map;
  * change public(y+1) by inverse-scrubbing to produce internal(x+1). We do this by merging two
  * sets of changes onto public(y):
  *
- * <p>1. internal(x), which change represents the addition of all scrubbed content.
- * <p>2. public(y+1), which is the new public change to apply to the internal codebase.
+ * <ol>
+ * <li>internal(x), which change represents the addition of all scrubbed content
+ * <li>public(y+1), which is the new public change to apply to the internal codebase
+ * </ol>
  *
- * <p> The result of 'merge internal(x) public(y) public(y+1)' is the combined addition of scrubbed
+ * <p>The result of 'merge internal(x) public(y) public(y+1)' is the combined addition of scrubbed
  * content and the new public change. This merge produces internal(x+1).
  *
  */
 public class InverseScrubbingEditor implements InverseEditor {
 
-  InverseScrubbingEditor() {}
+  public static InverseScrubbingEditor makeInverseScrubbingEditor() {
+    return new InverseScrubbingEditor();
+  }
+
+
+  private InverseScrubbingEditor() {}
 
   @Override
   public Codebase inverseEdit(Codebase input, Codebase referenceFrom, Codebase referenceTo,
       ProjectContext context, Map<String, String> options) {
     CodebaseMerger merger = new CodebaseMerger(referenceFrom, input, referenceTo);
     return merger.merge();
-  }
-
-  public static InverseScrubbingEditor makeInverseScrubbingEditor() {
-    return new InverseScrubbingEditor();
   }
 }

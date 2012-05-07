@@ -2,6 +2,8 @@
 
 package com.google.devtools.moe.client.editors;
 
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner;
@@ -23,14 +25,34 @@ import java.util.Map;
  */
 public class ScrubbingEditor implements Editor {
 
+  /**
+   * A {@code Supplier} that extracts the scrubber binary. We use a Supplier because we don't want
+   * to extract the scrubber until it's needed. (A run of MOE may initialize a project context and
+   * instantiate editors without actually editing.) It is memoized because we only need one copy of
+   * the scrubber binary across MOE execution.
+   */
+  private static final Supplier<File> SCRUBBER_BINARY_SUPPLIER = Suppliers.memoize(
+      new Supplier<File>() {
+        @Override public File get() {
+          try {
+            // TODO(dbentley): what will this resource be under ant?
+            File scrubberBinary =
+                AppContext.RUN.fileSystem.getResourceAsFile("/devtools/moe/scrubber/scrubber.par");
+            AppContext.RUN.fileSystem.setExecutable(scrubberBinary);
+            return scrubberBinary;
+          } catch (IOException ioEx) {
+            AppContext.RUN.ui.error(ioEx, "Error extracting scrubber");
+            throw new MoeProblem("Error extracting scrubber: " + ioEx.getMessage());
+          }
+        }
+      });
+
   private String name;
   private JsonObject scrubberConfig;
-  private File scrubberBinary;
 
   ScrubbingEditor(String editorName, JsonObject scrubberConfig) {
     name = editorName;
     this.scrubberConfig = scrubberConfig;
-    scrubberBinary = null;
   }
 
   /**
@@ -41,30 +63,12 @@ public class ScrubbingEditor implements Editor {
     return name;
   }
 
-  File getScrubberBinary() throws IOException {
-    if (scrubberBinary != null) {
-      return scrubberBinary;
-    }
-    // TODO(dbentley): what will this resource be under ant?
-    scrubberBinary = AppContext.RUN.fileSystem.getResourceAsFile(
-        "/devtools/moe/scrubber/scrubber.par");
-    AppContext.RUN.fileSystem.setExecutable(scrubberBinary);
-    return scrubberBinary;
-  }
-
   /**
    * Runs the Moe scrubber on the copied contents of the input Codebase and returns a new Codebase
    * with the results of the scrub.
    */
   @Override
   public Codebase edit(Codebase input, ProjectContext context, Map<String, String> options) {
-    File scrubberBinary = null;
-    try {
-      scrubberBinary = getScrubberBinary();
-    } catch (IOException e) {
-      throw new MoeProblem(e.getMessage());
-    }
-
     File tempDir = AppContext.RUN.fileSystem.getTemporaryDirectory("scrubber_run_");
     File outputTar = new File(tempDir, "scrubbed.tar");
 
@@ -79,7 +83,7 @@ public class ScrubbingEditor implements Editor {
               // TODO(dbentley): allow configuring the scrubber config
               "--config_data", (scrubberConfig == null) ? "{}" : scrubberConfig.toString(),
               input.getPath().getAbsolutePath()),
-          scrubberBinary.getParentFile().getPath());
+          SCRUBBER_BINARY_SUPPLIER.get().getParentFile().getPath());
     } catch (CommandRunner.CommandException e) {
       throw new MoeProblem(e.getMessage());
     }

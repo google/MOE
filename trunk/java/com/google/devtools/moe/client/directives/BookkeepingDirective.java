@@ -27,10 +27,12 @@ public class BookkeepingDirective implements Directive {
 
   public BookkeepingDirective() {}
 
+  @Override
   public BookkeepingOptions getFlags() {
     return options;
   }
 
+  @Override
   public int perform() {
     ProjectContext context;
     try {

@@ -25,10 +25,14 @@ import java.util.Set;
  * commit.
  *
  * @param <T> the type of LocalClone, so that subclasses can use its native methods
+ *
  */
 // TODO(user): Make this usable for SVN as well.
 public abstract class AbstractDvcsWriter<T extends LocalClone> implements Writer {
 
+  /**
+   * The LocalClone in which this writer should make and commit changes.
+   */
   protected final T revClone;
 
   protected AbstractDvcsWriter(T revClone) {
@@ -40,24 +44,32 @@ public abstract class AbstractDvcsWriter<T extends LocalClone> implements Writer
     return revClone.getLocalTempDir();
   }
 
+  /**
+   * Returns the regexes, a la
+   * {@link com.google.devtools.moe.client.project.RepositoryConfig#getIgnoreFileRes()},
+   * of filepaths to ignore in this Writer. For example, an Hg implementation of this method would
+   * return the getIgnoreFileRes() in its RepositoryConfig along with any Hg-specific paths in its
+   * LocalClone, such as "^.hg/.*". Otherwise, this Writer would attempt to modify hg-metadata
+   * files.
+   */
   protected abstract List<String> getIgnoreFilePatterns();
 
   @Override
-  public DraftRevision putCodebase(Codebase c) throws WritingError {
-    c.checkProjectSpace(revClone.getConfig().getProjectSpace());
+  public DraftRevision putCodebase(Codebase incomingChangeCodebase) throws WritingError {
+    incomingChangeCodebase.checkProjectSpace(revClone.getConfig().getProjectSpace());
 
-    Set<String> codebaseFiles = c.getRelativeFilenames();
+    Set<String> codebaseFiles = incomingChangeCodebase.getRelativeFilenames();
     Set<String> writerRepoFiles = Utils.filterByRegEx(
         Utils.makeFilenamesRelative(
             AppContext.RUN.fileSystem.findFiles(getRoot()),
             getRoot()),
         getIgnoreFilePatterns());
 
-    Set<String> union = Sets.union(codebaseFiles, writerRepoFiles);
+    Set<String> filesToUpdate = Sets.union(codebaseFiles, writerRepoFiles);
 
-    for (String filename : union) {
+    for (String filename : filesToUpdate) {
       try {
-        putFile(filename, c);
+        putFile(filename, incomingChangeCodebase);
       } catch (CommandException e) {
         throw new MoeProblem("problem occurred while running '" + e.cmd + "': " + e.stderr);
       }
@@ -74,16 +86,17 @@ public abstract class AbstractDvcsWriter<T extends LocalClone> implements Writer
   /**
    * Runs the DVCS command for removing a file, e.g. 'git rm'.
    */
-  protected abstract void rmFile(String relativeFilename) throws CommandException;
+  protected abstract void removeFile(String relativeFilename) throws CommandException;
 
   /**
    * Runs the DVCS command for registering a modified file, if any.
    */
   protected abstract void modifyFile(String relativeFilename) throws CommandException;
 
-  private void putFile(String relativeFilename, Codebase c) throws CommandException {
+  private void putFile(String relativeFilename, Codebase incomingChangeCodebase)
+      throws CommandException {
     FileSystem fs = AppContext.RUN.fileSystem;
-    File src = c.getFile(relativeFilename);
+    File src = incomingChangeCodebase.getFile(relativeFilename);
     File dest = new File(getRoot().getAbsolutePath(), relativeFilename);
     boolean srcExists = fs.exists(src);
     boolean destExists = fs.exists(dest);
@@ -95,7 +108,7 @@ public abstract class AbstractDvcsWriter<T extends LocalClone> implements Writer
     }
 
     if (!srcExists) {
-      rmFile(relativeFilename);
+      removeFile(relativeFilename);
       return;
     }
 
@@ -106,31 +119,42 @@ public abstract class AbstractDvcsWriter<T extends LocalClone> implements Writer
       throw new MoeProblem(e.getMessage());
     }
 
-    if (!destExists) {
-      addFile(relativeFilename);
-    } else {
+    if (destExists) {
       modifyFile(relativeFilename);
+    } else {
+      addFile(relativeFilename);
     }
   }
 
+  /**
+   * Returns whether there are changes in the working copy ({@link #revClone}) to commit. An
+   * implementation would use a command like 'git status'.
+   */
   protected abstract boolean hasPendingChanges();
 
-  protected abstract void commitChanges(RevisionMetadata rm) throws CommandException;
+  /**
+   * Commits changes in the working copy ({@link #revClone}) with the given commit metadata.
+   *
+   * @param revMetaData  the RevisionMetadata to use in making a commit, for example the changelog
+   *                     message
+   */
+  protected abstract void commitChanges(RevisionMetadata revMetaData) throws CommandException;
 
   @Override
-  public DraftRevision putCodebase(Codebase c, RevisionMetadata rm) throws WritingError {
-    DraftRevision dr = putCodebase(c);
+  public DraftRevision putCodebase(Codebase incomingChangeCodebase, RevisionMetadata revMetaData)
+      throws WritingError {
+    DraftRevision draftRevision = putCodebase(incomingChangeCodebase);
 
     if (hasPendingChanges()) {
       try {
-        commitChanges(rm);
-        AppContext.RUN.ui.info("Converted draft revision to writer at " +
-            getRoot().getAbsolutePath());
+        commitChanges(revMetaData);
+        AppContext.RUN.ui.info(
+            "Converted draft revision to writer at " + getRoot().getAbsolutePath());
       } catch (CommandException e) {
         throw new WritingError("Error committing: " + e);
       }
     }
 
-    return dr;
+    return draftRevision;
   }
 }

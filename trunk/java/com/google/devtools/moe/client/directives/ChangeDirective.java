@@ -4,6 +4,7 @@ package com.google.devtools.moe.client.directives;
 
 import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.MoeOptions;
+import com.google.devtools.moe.client.Ui.Task;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.logic.ChangeLogic;
@@ -43,7 +44,8 @@ public class ChangeDirective implements Directive {
       return 1;
     }
 
-    AppContext.RUN.ui.info(
+    Task changeTask = AppContext.RUN.ui.pushTask(
+        "create_change",
         String.format("Creating a change in \"%s\" with contents \"%s\"",
                       options.destination, options.codebase));
 
@@ -74,7 +76,7 @@ public class ChangeDirective implements Directive {
       return 1;
     }
 
-    AppContext.RUN.ui.info("Created Draft Revision: " + r.getLocation());
+    AppContext.RUN.ui.popTaskAndPersist(changeTask, destination.getRoot());
     return 0;
   }
 

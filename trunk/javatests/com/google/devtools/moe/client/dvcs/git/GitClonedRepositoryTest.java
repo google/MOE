@@ -8,6 +8,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
+import com.google.devtools.moe.client.FileSystem.Lifetime;
+import com.google.devtools.moe.client.Lifetimes;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.testing.AppContextForTesting;
 
@@ -33,7 +35,9 @@ public class GitClonedRepositoryTest extends TestCase {
   final String localCloneTempDir = "/tmp/git_clone_mockrepo_12345";
   
   @Override
-  public void setUp() {
+  protected void setUp() throws Exception {
+    super.setUp();
+
     AppContextForTesting.initForTest();
     control = EasyMock.createControl();
     repositoryConfig = control.createMock(RepositoryConfig.class);
@@ -43,9 +47,12 @@ public class GitClonedRepositoryTest extends TestCase {
     AppContext.RUN.fileSystem = mockFS;
     AppContext.RUN.cmd = cmd;
   }
-  
+
   private void expectCloneLocally() throws Exception {
-    expect(mockFS.getTemporaryDirectory("git_clone_" + repositoryName + "_"))
+    // The Lifetimes of clones in these tests are arbitrary since we're not really creating any
+    // temp dirs and we're not testing clean-up.
+    expect(mockFS.getTemporaryDirectory(
+        EasyMock.eq("git_clone_" + repositoryName + "_"), EasyMock.<Lifetime>anyObject()))
         .andReturn(new File(localCloneTempDir));
 
     expect(cmd.runCommand(
@@ -60,13 +67,13 @@ public class GitClonedRepositoryTest extends TestCase {
 
     control.replay();
     GitClonedRepository repo = new GitClonedRepository(repositoryName, repositoryConfig);
-    repo.cloneLocallyAtHead();
+    repo.cloneLocallyAtHead(Lifetimes.persistent());
     assertEquals(repositoryName, repo.getRepositoryName());
     assertEquals(repositoryURL, repo.getConfig().getUrl());
     assertEquals(localCloneTempDir, repo.getLocalTempDir().getAbsolutePath());
-    
+
     try {
-      repo.cloneLocallyAtHead();
+      repo.cloneLocallyAtHead(Lifetimes.persistent());
       fail("Re-cloning repo succeeded unexpectedly.");
     } catch (IllegalStateException expected) {}
 
@@ -92,8 +99,8 @@ public class GitClonedRepositoryTest extends TestCase {
 
     control.replay();
     GitClonedRepository repo = new GitClonedRepository(repositoryName, repositoryConfig);
-    repo.cloneLocallyAtHead();
-    repo.updateToRevId(updateRevId);
+    repo.cloneLocallyAtHead(Lifetimes.persistent());
+    repo.updateToRevision(updateRevId);
     control.verify();
   }
   
@@ -112,8 +119,8 @@ public class GitClonedRepositoryTest extends TestCase {
 
     control.replay();
     GitClonedRepository repo = new GitClonedRepository(repositoryName, repositoryConfig);
-    repo.cloneLocallyAtHead();
-    repo.updateToRevId(updateRevId);
+    repo.cloneLocallyAtHead(Lifetimes.persistent());
+    repo.updateToRevision(updateRevId);
     control.verify();
   }
 }

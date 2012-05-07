@@ -74,7 +74,7 @@ public class RepositoryExpression extends AbstractExpression {
     Ui.Task createTask = AppContext.RUN.ui.pushTask(
         "create_codebase", "Creating from '" + toString() + "'");
     Codebase c = cc.create(term.options);
-    AppContext.RUN.ui.popTask(createTask, c.getPath().getAbsolutePath());
+    AppContext.RUN.ui.popTaskAndPersist(createTask, c.getPath());
     return c;
   }
 
@@ -95,16 +95,13 @@ public class RepositoryExpression extends AbstractExpression {
     Ui.Task t = AppContext.RUN.ui.pushTask(
         "create_writer",
         String.format("Creating Writer \"%s\"", term));
-    String resultMessage = "";
     try {
       Writer writer = wc.create(term.options);
-      resultMessage = writer.getRoot().getAbsolutePath();
+      AppContext.RUN.ui.popTaskAndPersist(t, writer.getRoot());
       return writer;
     } catch (WritingError e) {
-      resultMessage = e.getMessage();
+      AppContext.RUN.ui.error(e, "Error creating writer");
       throw e;
-    } finally {
-      AppContext.RUN.ui.popTask(t, resultMessage);
     }
   }
 

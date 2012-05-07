@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * <p>A Translator that translates a Codebase from one project space to another by merging the
+ * A Translator that translates a Codebase from one project space to another by merging the
  * Codebase with each step of forward-translation in reverse, via inverse editors.
  *
  * <p>For example, say there is a forward translator from project space "internal" to "public" with
@@ -85,7 +85,7 @@ public class InverseTranslator implements Translator {
         options.get("referenceToCodebase"),
         "Inverse translation requires key 'referenceToCodebase'.");
 
-    Deque<Codebase> forwardTransStack = makeForwardTranslationStack(options, context);
+    Deque<Codebase> forwardTranslationStack = makeForwardTranslationStack(options, context);
 
     Codebase refFrom;
     // For the first reference from-codebase, use the 'referenceFromCodebase' option if given,
@@ -95,29 +95,29 @@ public class InverseTranslator implements Translator {
         refFrom =
             Parser.parseExpression(options.get("referenceFromCodebase")).createCodebase(context);
       } catch (ParseError e) {
-        throw new CodebaseCreationError("Couldn't parse referenceFromCodebase '" +
-            options.get("referenceFromCodebase") + "': " + e);
+        throw new CodebaseCreationError("Couldn't parse referenceFromCodebase '"
+            + options.get("referenceFromCodebase") + "': " + e);
       }
       // Discard the "default" reference from-codebase, i.e. the top of the forward-trans stack.
-      forwardTransStack.pop();
+      forwardTranslationStack.pop();
     } else {
-      refFrom = forwardTransStack.pop();
+      refFrom = forwardTranslationStack.pop();
     }
 
-    Codebase refTo = forwardTransStack.peek();
+    Codebase refTo = forwardTranslationStack.peek();
     Codebase inverseTranslated = toTranslate;
 
     for (InverseTranslatorStep inverseStep : inverseSteps) {
-      Task t = AppContext.RUN.ui.pushTask("inverseEdit", String.format(
+      Task task = AppContext.RUN.ui.pushTask("inverseEdit", String.format(
           "Inverse-translating step %s by merging codebase %s onto %s",
           inverseStep.getName(), refTo, refFrom));
 
       inverseTranslated = inverseStep.getInverseEditor().inverseEdit(
           inverseTranslated, refFrom, refTo, context, options);
 
-      AppContext.RUN.ui.popTask(t, inverseTranslated.getPath().getAbsolutePath());
-      refFrom = forwardTransStack.pop();
-      refTo = forwardTransStack.peek();
+      AppContext.RUN.ui.popTaskAndPersist(task, inverseTranslated.getPath());
+      refFrom = forwardTranslationStack.pop();
+      refTo = forwardTranslationStack.peek();
     }
 
     return inverseTranslated;
@@ -129,11 +129,11 @@ public class InverseTranslator implements Translator {
 
     Codebase refTo;
     try {
-      Task t = AppContext.RUN.ui.pushTask(
+      Task task = AppContext.RUN.ui.pushTask(
           "refTo", "Pushing to forward-translation stack: " + options.get("referenceToCodebase"));
       refTo = Parser.parseExpression(options.get("referenceToCodebase")).createCodebase(context);
       forwardTransStack.push(refTo);
-      AppContext.RUN.ui.popTask(t, refTo.getPath().getAbsolutePath());
+      AppContext.RUN.ui.popTaskAndPersist(task, refTo.getPath());
     } catch (ParseError e) {
       throw new CodebaseCreationError("Couldn't parse in translation: " + e);
     }
@@ -142,11 +142,11 @@ public class InverseTranslator implements Translator {
     Expression forwardEditExp = refTo.getExpression();
     for (TranslatorStep forwardStep : forwardSteps) {
       forwardEditExp = forwardEditExp.editWith(forwardStep.name, ImmutableMap.<String, String>of());
-      Task t = AppContext.RUN.ui.pushTask(
-          "edit", "Pushing to forward-translation stack: " + forwardEditExp.toString());
+      Task task = AppContext.RUN.ui.pushTask(
+          "edit", "Pushing to forward-translation stack: " + forwardEditExp);
       refTo = forwardStep.editor.edit(refTo, context, options).copyWithExpression(forwardEditExp);
       forwardTransStack.push(refTo);
-      AppContext.RUN.ui.popTask(t, refTo.getPath().getAbsolutePath());
+      AppContext.RUN.ui.popTaskAndPersist(task, refTo.getPath());
     }
 
     return forwardTransStack;

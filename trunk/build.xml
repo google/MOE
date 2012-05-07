@@ -41,7 +41,7 @@
 				<attribute name="Main-Class" value="com.google.devtools.moe.client.Moe" />
 			</manifest>
 			<zipfileset src="lib/args4j-2.0.9.jar"/>
-			<zipfileset src="lib/gson-1.7.1.jar"/>
+			<zipfileset src="lib/gson-2.2.jar"/>
 			<zipfileset src="lib/guava-r09.jar"/>
 		</jar>
 	</target>
@@ -54,7 +54,7 @@
 
 	<!-- Compiles and runs the java tests-->
 	<target name="test" depends="compile-test">
-		<junit>
+		<junit haltonerror="on">
 			<classpath refid="test.classpath" />
 			<formatter type="brief" usefile="false" />
 			<batchtest>

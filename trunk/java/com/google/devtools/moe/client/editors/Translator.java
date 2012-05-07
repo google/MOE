@@ -17,9 +17,8 @@ import java.util.Map;
 public interface Translator {
 
   /**
-   * Translate the given Codebase, and return the result.
+   * Translates the given Codebase, and returns the result.
    */
   Codebase translate(Codebase toTranslate, Map<String, String> options, ProjectContext context)
       throws CodebaseCreationError;
-
 }

@@ -10,6 +10,8 @@ import com.google.devtools.moe.client.testing.RecordingUi;
 import junit.framework.TestCase;
 
 /**
+ * Tests for {@link ChangeDirective}.
+ *
  * @author dbentley@google.com (Daniel Bentley)
  */
 public class ChangeDirectiveTest extends TestCase {
@@ -29,8 +31,6 @@ public class ChangeDirectiveTest extends TestCase {
     d.getFlags().codebase = "internal";
     d.getFlags().destination = "internal";
     assertEquals(0, d.perform());
-    assertEquals(
-        String.format("Created Draft Revision: %s", "/dummy/revision"),
-        ((RecordingUi)AppContext.RUN.ui).lastInfo);
+    assertEquals("/dummy/writer/internal", ((RecordingUi) AppContext.RUN.ui).lastTaskResult);
   }
 }

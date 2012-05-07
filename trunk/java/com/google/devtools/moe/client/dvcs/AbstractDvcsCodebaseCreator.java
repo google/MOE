@@ -29,38 +29,51 @@ public abstract class AbstractDvcsCodebaseCreator implements CodebaseCreator {
   private final String projectSpace;
 
   /**
-   * Construct a DvcsCodebaseCreator with a Supplier of some AbstractDvcsClonedRepository. This
-   * Supplier should be memoized (i.e. we need only clone to disk once across all get()s) since
-   * CodebaseCreator doesn't modify a clone -- it merely exports it at some revision.
+   * @param headCloneSupplier  a Supplier of the LocalClone that's archived to create a codebase
+   *                           (the Supplier should be memoized since its LocalClone is only read
+   *                           and archived)
+   * @param revisionHistory    a RevisionHistory for parsing revision IDs at creation
+   * @param projectSpace       the project space of created Codebases
    */
   // TODO(user): Find a better semantics for when a Supplier provides a new clone every time,
   // or just one clone via memoization, so that the meaning of headCloneSupplier.get() is clearer.
-  public AbstractDvcsCodebaseCreator(Supplier<? extends LocalClone> headCloneSupplier,
-                                     RevisionHistory revisionHistory,
-                                     String projectSpace) {
+  public AbstractDvcsCodebaseCreator(
+      Supplier<? extends LocalClone> headCloneSupplier,
+      RevisionHistory revisionHistory,
+      String projectSpace) {
     this.headCloneSupplier = headCloneSupplier;
     this.revisionHistory = revisionHistory;
     this.projectSpace = projectSpace;
   }
 
+  /**
+   * Clones from a local location, rather than the remote location used in the
+   * {@code headCloneSupplier}. This is used, for example, in inverse translation when we want
+   * to create a reference to-codebase from a working copy of a repo that includes some local-only
+   * changes.
+   *
+   * @param localroot  the absolute path of the local clone to re-clone
+   * @return a LocalClone of the re-clone
+   */
   protected abstract LocalClone cloneAtLocalRoot(String localroot);
 
   @Override
   public Codebase create(Map<String, String> options) throws CodebaseCreationError {
-    File archiveLocation;
     LocalClone headClone;
-    if (Strings.isNullOrEmpty(options.get("localroot"))) {
+    File archiveLocation;
+    String localRoot = options.get("localroot");
+    if (Strings.isNullOrEmpty(localRoot)) {
       Revision rev = revisionHistory.findHighestRevision(options.get("revision"));
       headClone = headCloneSupplier.get();
-      archiveLocation = headClone.archiveAtRevId(rev.revId);
+      archiveLocation = headClone.archiveAtRevision(rev.revId);
     } else {
       // TODO(user): Archive only (don't clone) if localroot is set.
-      headClone = cloneAtLocalRoot(options.get("localroot"));
-      archiveLocation = headClone.archiveAtRevId(null);
+      headClone = cloneAtLocalRoot(localRoot);
+      archiveLocation = headClone.archiveAtRevision(null);
     }
 
-    // Filter codebase by ignore_file_res.
-    final Predicate<CharSequence> nonIgnoredFilePred =
+    // Filter files in the codebase by RepositoryConfig#ignoreFileRes.
+    Predicate<CharSequence> nonIgnoredFilePred =
         Utils.nonMatchingPredicateFromRes(headClone.getConfig().getIgnoreFileRes());
     Utils.filterFiles(archiveLocation, nonIgnoredFilePred);
 
