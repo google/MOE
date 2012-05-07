@@ -45,7 +45,7 @@ public class GitWriter extends AbstractDvcsWriter<GitClonedRepository> {
   }
   
   @Override
-  protected void rmFile(String relativeFilename) throws CommandException {
+  protected void removeFile(String relativeFilename) throws CommandException {
     revClone.runGitCommand("rm", relativeFilename);
   }
   

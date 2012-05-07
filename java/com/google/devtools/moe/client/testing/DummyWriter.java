@@ -16,19 +16,25 @@ import java.io.File;
  */
 public class DummyWriter implements Writer {
 
+  private final String repositoryName;
+
+  DummyWriter(String repositoryName) {
+    this.repositoryName = repositoryName;
+  }
+
   @Override
   public DraftRevision putCodebase(Codebase c) throws WritingError {
-    return new DummyDraftRevision();
+    return new DummyDraftRevision(repositoryName);
   }
 
   @Override
   public DraftRevision putCodebase(Codebase c, RevisionMetadata rm) throws WritingError {
-    return new DummyDraftRevision();
+    return new DummyDraftRevision(repositoryName);
   }
 
   @Override
   public File getRoot() {
-    return new File("/foo");
+    return new File("/dummy/writer/" + repositoryName);
   }
 
   @Override

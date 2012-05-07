@@ -4,20 +4,16 @@ package com.google.devtools.moe.client.testing;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.codebase.CodebaseCreator;
-import com.google.devtools.moe.client.database.Equivalence;
-import com.google.devtools.moe.client.database.EquivalenceMatcher;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.Repository;
 import com.google.devtools.moe.client.repositories.Revision;
+import com.google.devtools.moe.client.repositories.RevisionGraph;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
 import com.google.devtools.moe.client.repositories.RevisionMatcher;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.writer.WriterCreator;
-
-import java.util.Set;
 
 /**
  *
@@ -48,22 +44,20 @@ public class DummyRepository {
                           revision.revId, revision.repositoryName, name));
       }
       return new RevisionMetadata(revision.revId, "author", "date",
-                                  revision.revId.equals("migrate") ?
-                                  "MOE_MIGRATED_REVID=1" : "description",
+                                  revision.revId.equals("migrated_to") ?
+                                  "MOE_MIGRATED_REVID=migrated_from" : "description",
                                   ImmutableList.of(new Revision("parent", name)));
     }
 
     @Override
-    public Set<Revision> findRevisions(Revision revision, RevisionMatcher matcher) {
-      return ImmutableSet.of(revision == null ? new Revision("migrate", name) : revision);
-    }
-
-    @Override
-    public Equivalence findLastEquivalence(Revision revision, EquivalenceMatcher matcher) {
-      if (matcher.matches(revision)) {
-        return matcher.getEquivalence(revision);
+    public <T> T findRevisions(Revision revision, RevisionMatcher<T> matcher) {
+      if (revision == null) {
+        revision = new Revision("migrated_to", name);
       }
-      return null;
+      RevisionGraph revTree = RevisionGraph.builder(ImmutableList.of(revision))
+          .addRevision(revision, getMetadata(revision))
+          .build();
+      return matcher.makeResult(revTree, ImmutableList.of(new Revision("1", name)));
     }
   }
 

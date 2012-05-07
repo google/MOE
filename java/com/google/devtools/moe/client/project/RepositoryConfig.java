@@ -8,6 +8,8 @@ import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 /**
  * Configuration for a MOE Repository.
  *
@@ -46,6 +48,12 @@ public class RepositoryConfig {
   @SerializedName("ignore_incoming_changes_res")
   private List<String> ignoreIncomingChangesRes = ImmutableList.of();
 
+  /**
+   * List of branches in this repository from which to import changes.
+   */
+  @SerializedName("import_branches")
+  private List<String> importBranches = null;
+
   private RepositoryConfig() {} // Constructed by gson
 
   public String getUrl() {
@@ -78,6 +86,13 @@ public class RepositoryConfig {
 
   public List<String> getIgnoreIncomingChangesRes() {
     return ignoreIncomingChangesRes;
+  }
+
+  /**
+   * Returns the branches in this repository from which to import changes, null if none specified.
+   */
+  @Nullable public List<String> getImportBranches() {
+    return importBranches;
   }
 
   void validate() throws InvalidProject {

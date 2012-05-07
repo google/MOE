@@ -43,7 +43,7 @@ public class EditExpression extends AbstractExpression {
 
     Codebase editedCodebase = editor.edit(codebaseToEdit, context, editOp.term.options);
 
-    AppContext.RUN.ui.popTask(editTask, editedCodebase.getPath().getAbsolutePath());
+    AppContext.RUN.ui.popTaskAndPersist(editTask, editedCodebase.getPath());
     return editedCodebase.copyWithExpression(this);
   }
 

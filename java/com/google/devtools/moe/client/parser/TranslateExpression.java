@@ -51,7 +51,12 @@ public class TranslateExpression extends AbstractExpression {
     Codebase translatedCodebase =
         translator.translate(codebaseToTranslate, translateOp.term.options, context);
 
-    AppContext.RUN.ui.popTask(translateTask, translatedCodebase.getPath().getAbsolutePath());
+    // Don't mark the translated codebase for persistence if it wasn't allocated by the Translator.
+    if (translatedCodebase.equals(codebaseToTranslate)) {
+      AppContext.RUN.ui.popTask(translateTask, translatedCodebase.getPath() + " (unmodified)");
+    } else {
+      AppContext.RUN.ui.popTaskAndPersist(translateTask, translatedCodebase.getPath());
+    }
     return translatedCodebase.copyWithExpression(this).copyWithProjectSpace(toProjectSpace);
   }
 

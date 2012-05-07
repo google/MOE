@@ -2,10 +2,12 @@
 
 package com.google.devtools.moe.client.editors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.MoeProblem;
@@ -16,24 +18,24 @@ import com.google.devtools.moe.client.project.ProjectContext;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 /**
- * <p>An Editor that undoes renaming. It takes a RenamingEditor and a "referenceToCodebase" edit()
- * option and undoes the action of the RenamingEditor on the reference codebase.
+ * An {@link InverseEditor} that undoes renaming. It takes a {@link RenamingEditor} and inverts its
+ * renaming of the reference to-codebase given in {@link InverseEditor#inverseEdit}.
  *
  * <p>Given a renamed file in the input codebase, how is an inverse-renamed path determined? First,
- * a map of renamed paths -> reference paths is built. Do this by, for each file in the reference
- * codebase, renaming and putting a mapping for each parent dir of the renamed path. For example, if
- * {@code internal/mylib/java/MyClass.java} in the reference codebase is renamed to
- * {@code public/src/MyClass.java} in the input codebase, a mapping
- * is put for each of:
+ * a map of renamed paths to reference paths is built. Do this by, for each file in the reference
+ * to-codebase, (1) renaming and (2) putting a mapping for each parent dir of the renamed path.
+ * For example, if {@code internal/mylib/java/MyClass.java} in the reference to-codebase is renamed
+ * to {@code public/src/MyClass.java} in the input codebase, a mapping is put for each of:
  * <ul>
- * <li> {@code public/src/MyClass.java} -> {@code internal/mylib/java/MyClass.java}
- * <li> {@code public/src} -> {@code internal/mylib/java}
- * <li> {@code public} -> {@code internal/mylib}
+ * <li>{@code public/src/MyClass.java} to {@code internal/mylib/java/MyClass.java}
+ * <li>{@code public/src} to {@code internal/mylib/java}
+ * <li>{@code public} to {@code internal/mylib}
  * </ul>
  *
  * <p>With this map built, a file is inverse-renamed by looking for any of its path prefixes (in
@@ -46,11 +48,19 @@ import java.util.Set;
  */
 public class InverseRenamingEditor implements InverseEditor {
 
-  private static final Joiner SEP_JOIN = Joiner.on(File.separator);
-  private static final Splitter SEP_SPLIT = Splitter.on(File.separator);
+  private static final Joiner FILE_SEP_JOINER = Joiner.on(File.separator);
+  private static final Splitter FILE_SEP_SPLITTER = Splitter.on(File.separator);
+
+  public static InverseRenamingEditor makeInverseRenamingEditor(
+      String editorName, EditorConfig config) {
+    return new InverseRenamingEditor(RenamingEditor.makeRenamingEditor(editorName, config));
+  }
+
 
   private final RenamingEditor renamer;
 
+  @VisibleForTesting
+  // TODO(user): Make tests use the config factory method above, and make this ctor private.
   InverseRenamingEditor(RenamingEditor renamer) {
     this.renamer = renamer;
   }
@@ -75,13 +85,13 @@ public class InverseRenamingEditor implements InverseEditor {
   }
 
   /**
-   * Walk backwards through the dir prefixes of renamedFilename looking for a match in
+   * Walks backwards through the dir prefixes of renamedFilename looking for a match in
    * renamedToReferenceMap.
    */
   private String inverseRename(String renamedFilename, Map<String, String> renamedToReferenceMap) {
-    List<String> renamedAllParts = ImmutableList.copyOf(SEP_SPLIT.split(renamedFilename));
+    List<String> renamedAllParts = ImmutableList.copyOf(FILE_SEP_SPLITTER.split(renamedFilename));
     for (int i = renamedAllParts.size(); i > 0; i--) {
-      String renamedParts = SEP_JOIN.join(renamedAllParts.subList(0, i));
+      String renamedParts = FILE_SEP_JOINER.join(renamedAllParts.subList(0, i));
       String partsToSubstitute = renamedToReferenceMap.get(renamedParts);
       if (partsToSubstitute != null) {
         return renamedFilename.replace(renamedParts, partsToSubstitute);
@@ -91,45 +101,44 @@ public class InverseRenamingEditor implements InverseEditor {
     return renamedFilename;
   }
 
-  private void copyFile(String inputFilename, String destFilename, File input, File destination) {
+  private void copyFile(String inputFilename, String destFilename, File inputRoot, File destRoot) {
+    File inputFile = new File(inputRoot, inputFilename);
+    File destFile = new File(destRoot, destFilename);
     try {
-      File destFile = new File(destination, destFilename);
       AppContext.RUN.fileSystem.makeDirsForFile(destFile);
-      AppContext.RUN.fileSystem.copyFile(new File(input, inputFilename), destFile);
+      AppContext.RUN.fileSystem.copyFile(inputFile, destFile);
     } catch (IOException e) {
+      AppContext.RUN.ui.error(e, e.getMessage());
       throw new MoeProblem(e.getMessage());
     }
   }
 
   /**
-   * Returns mappings (renamed path -> original/reference path) for all paths in the renamed/input
+   * Returns mappings (renamed path, original/reference path) for all paths in the renamed/input
    * Codebase.
    */
   private Map<String, String> makeRenamedToReferenceMap(Set<String> referenceFilenames) {
     // Use a HashMap instead of ImmutableMap.Builder because we may put the same key (e.g. a
     // high-level dir) multiple times. We may want to complain if trying to put a new value for a
     // dir (i.e. if two different reference paths are renamed to the same path), but we don't now.
-    HashMap<String, String> mapBuilder = Maps.newHashMap();
-    for (String referenceFilename : referenceFilenames) {
-      String renamed = renamer.renameFile(referenceFilename);
-      List<String> renamedAllParts = ImmutableList.copyOf(SEP_SPLIT.split(renamed));
-      List<String> referenceAllParts = ImmutableList.copyOf(SEP_SPLIT.split(referenceFilename));
+    HashMap<String, String> tmpPathMap = Maps.newHashMap();
+    for (String refFilename : referenceFilenames) {
+
+      String renamed = renamer.renameFile(refFilename);
+      LinkedList<String> renamedPathParts = Lists.newLinkedList(FILE_SEP_SPLITTER.split(renamed));
+      LinkedList<String> refPathParts = Lists.newLinkedList(FILE_SEP_SPLITTER.split(refFilename));
+
       // Put a mapping for each directory prefix of the renaming, stopping at the root of either
       // path. For example, a renaming a/b/c/file -> x/y/file creates mappings for each dir prefix:
       // - x/y/file -> a/b/c/file
       // - x/y -> a/b/c
       // - x -> a/b
-      for (int i = 0; i < Math.min(renamedAllParts.size(), referenceAllParts.size()); i++) {
-        List<String> renamedParts = renamedAllParts.subList(0, renamedAllParts.size() - i);
-        List<String> refParts = referenceAllParts.subList(0, referenceAllParts.size() - i);
-        mapBuilder.put(SEP_JOIN.join(renamedParts), SEP_JOIN.join(refParts));
+      while (!renamedPathParts.isEmpty() && !refPathParts.isEmpty()) {
+        tmpPathMap.put(FILE_SEP_JOINER.join(renamedPathParts), FILE_SEP_JOINER.join(refPathParts));
+        renamedPathParts.removeLast();
+        refPathParts.removeLast();
       }
     }
-    return ImmutableMap.copyOf(mapBuilder);
-  }
-
-  public static InverseRenamingEditor makeInverseRenamingEditor(
-      String editorName, EditorConfig config) {
-    return new InverseRenamingEditor(RenamingEditor.makeRenamingEditor(editorName, config));
+    return ImmutableMap.copyOf(tmpPathMap);
   }
 }

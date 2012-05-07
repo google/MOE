@@ -45,8 +45,8 @@ public class DummyDb implements Db {
   }
 
   @Override
-  public void noteMigration(SubmittedMigration migration) {
-    migrations.add(migration);
+  public boolean noteMigration(SubmittedMigration migration) {
+    return !migrations.contains(migration) && migrations.add(migration);
   }
 
   @Override

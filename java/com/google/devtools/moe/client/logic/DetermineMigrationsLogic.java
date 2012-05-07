@@ -8,9 +8,12 @@ import com.google.common.collect.Lists;
 import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.database.Db;
 import com.google.devtools.moe.client.database.Equivalence;
+import com.google.devtools.moe.client.database.EquivalenceMatcher;
+import com.google.devtools.moe.client.database.EquivalenceMatcher.EquivalenceMatchResult;
 import com.google.devtools.moe.client.migrations.Migration;
 import com.google.devtools.moe.client.migrations.MigrationConfig;
 import com.google.devtools.moe.client.project.ProjectContext;
+import com.google.devtools.moe.client.repositories.Repository;
 import com.google.devtools.moe.client.repositories.Revision;
 
 import java.util.List;
@@ -31,12 +34,16 @@ public class DetermineMigrationsLogic {
   public static List<Migration> determineMigrations(
       ProjectContext context, MigrationConfig migrationConfig, Db db) {
 
+    Repository fromRepo = context.repositories.get(migrationConfig.getFromRepository());
+    EquivalenceMatchResult equivMatch = fromRepo.revisionHistory.findRevisions(
+        null,  // Start at head.
+        new EquivalenceMatcher(migrationConfig.getToRepository(), db));
+
+    // TODO(user): Decide whether to migrate linear or graph history here. Once DVCS Writers
+    // support writing a graph of Revisions, we'll need to opt for linear or graph history based
+    // on the MigrationConfig (e.g. whether or not the destination repo is linear-only).
     List<Revision> revisionsSinceEquivalence =
-        RevisionsSinceEquivalenceLogic.getRevisionsSinceEquivalence(
-            migrationConfig.getFromRepository(),
-            migrationConfig.getToRepository(),
-            db,
-            context);
+        Lists.reverse(equivMatch.getRevisionsSinceEquivalence().getLinearHistory());
 
     if (revisionsSinceEquivalence.isEmpty()) {
       AppContext.RUN.ui.info("No revisions found since last equivalence for migration '"
@@ -44,17 +51,12 @@ public class DetermineMigrationsLogic {
       return ImmutableList.of();
     }
 
-    // History search goes backward from head, so reverse to get revisions in order.
-    revisionsSinceEquivalence = Lists.reverse(revisionsSinceEquivalence);
-
-    Equivalence lastEq = LastEquivalenceLogic.lastEquivalence(
-        migrationConfig.getToRepository(),
-        revisionsSinceEquivalence.get(revisionsSinceEquivalence.size() - 1),
-        db,
-        context.repositories.get(migrationConfig.getFromRepository()).revisionHistory);
-
-    AppContext.RUN.ui.info(String.format("Found %d Revisions since equivalence: %s",
+    // TODO(user): Figure out how to report all equivalences.
+    Equivalence lastEq = equivMatch.getEquivalences().get(0);
+    AppContext.RUN.ui.info(String.format("Found %d revisions in %s since equivalence (%s): %s",
         revisionsSinceEquivalence.size(),
+        migrationConfig.getFromRepository(),
+        lastEq,
         Joiner.on(", ").join(revisionsSinceEquivalence)));
 
     if (migrationConfig.getSeparateRevisions()) {

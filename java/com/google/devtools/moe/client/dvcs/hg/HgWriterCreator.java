@@ -31,7 +31,7 @@ public class HgWriterCreator implements WriterCreator {
     // Sanity check: make sure the given revision exists.
     Revision rev = revHistory.findHighestRevision(options.get("revision"));
     HgClonedRepository freshClone = freshCloneSupplier.get();
-    freshClone.updateToRevId(rev.revId);
+    freshClone.updateToRevision(rev.revId);
     return new HgWriter(freshClone);
   }
 }

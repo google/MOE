@@ -31,14 +31,17 @@ import java.util.Collections;
  */
 public class AbstractDvcsCodebaseCreatorTest extends TestCase {
 
-  IMocksControl control;
-  LocalClone mockRepo;
-  RevisionHistory mockRevHistory;
-  RepositoryConfig mockRepoConfig;
-  String repositoryName = "mockrepo";
-  AbstractDvcsCodebaseCreator cc;
+  private static final String MOCK_REPO_NAME = "mockrepo";
 
-  @Override public void setUp() {
+  private IMocksControl control;
+  private LocalClone mockRepo;
+  private RevisionHistory mockRevHistory;
+  private RepositoryConfig mockRepoConfig;
+  private AbstractDvcsCodebaseCreator codebaseCreator;
+
+  @Override protected void setUp() throws Exception {
+    super.setUp();
+
     AppContextForTesting.initForTest();
     control = EasyMock.createControl();
     AppContext.RUN.fileSystem = control.createMock(FileSystem.class);
@@ -48,9 +51,12 @@ public class AbstractDvcsCodebaseCreatorTest extends TestCase {
 
     expect(mockRepo.getConfig()).andReturn(mockRepoConfig).anyTimes();
     expect(mockRepoConfig.getIgnoreFileRes()).andReturn(ImmutableList.<String>of());
-    expect(mockRepo.getRepositoryName()).andReturn(repositoryName);
+    expect(mockRepo.getRepositoryName()).andReturn(MOCK_REPO_NAME);
 
-    cc = new AbstractDvcsCodebaseCreator(Suppliers.ofInstance(mockRepo), mockRevHistory, "public") {
+    codebaseCreator = new AbstractDvcsCodebaseCreator(
+        Suppliers.ofInstance(mockRepo),
+        mockRevHistory,
+        "public") {
           @Override protected LocalClone cloneAtLocalRoot(String localroot) {
             throw new UnsupportedOperationException();
           }
@@ -64,12 +70,13 @@ public class AbstractDvcsCodebaseCreatorTest extends TestCase {
         .andReturn(ImmutableSet.<File>of());
 
     expect(mockRevHistory.findHighestRevision(null))
-        .andReturn(new Revision("mock head changeset ID", repositoryName));
-    expect(mockRepo.archiveAtRevId("mock head changeset ID")).andReturn(new File(archiveTempDir));
+        .andReturn(new Revision("mock head changeset ID", MOCK_REPO_NAME));
+    expect(mockRepo.archiveAtRevision("mock head changeset ID"))
+        .andReturn(new File(archiveTempDir));
 
     control.replay();
 
-    Codebase codebase = cc.create(Collections.<String, String>emptyMap());
+    Codebase codebase = codebaseCreator.create(Collections.<String, String>emptyMap());
 
     assertEquals(new File(archiveTempDir), codebase.getPath());
     assertEquals("public", codebase.getProjectSpace());
@@ -86,12 +93,12 @@ public class AbstractDvcsCodebaseCreatorTest extends TestCase {
         .andReturn(ImmutableSet.<File>of());
 
     expect(mockRevHistory.findHighestRevision(givenRev))
-        .andReturn(new Revision(givenRev, repositoryName));
-    expect(mockRepo.archiveAtRevId(givenRev)).andReturn(new File(archiveTempDir));
+        .andReturn(new Revision(givenRev, MOCK_REPO_NAME));
+    expect(mockRepo.archiveAtRevision(givenRev)).andReturn(new File(archiveTempDir));
 
     control.replay();
 
-    Codebase codebase = cc.create(ImmutableMap.of("revision", givenRev));
+    Codebase codebase = codebaseCreator.create(ImmutableMap.of("revision", givenRev));
 
     assertEquals(new File(archiveTempDir), codebase.getPath());
     assertEquals("public", codebase.getProjectSpace());

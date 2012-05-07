@@ -8,6 +8,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.MoeOptions;
+import com.google.devtools.moe.client.Ui.Task;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.parser.Parser;
@@ -43,6 +44,8 @@ public class CreateCodebaseDirective implements Directive {
       return 1;
     }
 
+    Task createCodebaseTask =
+        AppContext.RUN.ui.pushTask("create_codebase", "Creating codebase " + options.codebase);
     Codebase c;
     try {
       c = Parser.parseExpression(options.codebase).createCodebase(context);
@@ -62,7 +65,8 @@ public class CreateCodebaseDirective implements Directive {
       AppContext.RUN.ui.error(e, "Error creating codebase tarfile");
       return 1;
     }
-    
+
+    AppContext.RUN.ui.popTaskAndPersist(createCodebaseTask, c.getPath());
     return 0;
   }
 

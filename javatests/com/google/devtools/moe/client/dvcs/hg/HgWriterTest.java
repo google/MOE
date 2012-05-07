@@ -31,20 +31,21 @@ import java.io.File;
  * Test HgWriter by expect()ing file system calls and hg commands to add/remove files.
  *
  */
+// TODO(user): Create a FakeFileSystem to replace explicit mocked calls.
 public class HgWriterTest extends TestCase {
 
-  IMocksControl control;
-  FileSystem mockFs;
-  CommandRunner mockCmd;
-  Codebase codebase;
-  HgClonedRepository mockRevClone;
-  RepositoryConfig mockRepoConfig;
+  private static final File CODEBASE_ROOT = new File("/codebase");
+  private static final File WRITER_ROOT = new File("/writer");
+  private static final String PROJECT_SPACE = "public";
+  private static final RepositoryExpression CODEBASE_EXPR = new RepositoryExpression(
+      new Term(PROJECT_SPACE, ImmutableMap.<String, String>of()));
 
-  final File codebaseRoot = new File("/codebase");
-  final File writerRoot = new File("/writer");
-  final String projectSpace = "public";
-  final RepositoryExpression cExp = new RepositoryExpression(
-      new Term(projectSpace, ImmutableMap.<String, String>of()));
+  private IMocksControl control;
+  private FileSystem mockFs;
+  private CommandRunner mockCmd;
+  private Codebase codebase;
+  private HgClonedRepository mockRevClone;
+  private RepositoryConfig mockRepoConfig;
 
   /* Helper methods */
 
@@ -54,127 +55,136 @@ public class HgWriterTest extends TestCase {
 
   /* End helper methods */
 
-  @Override public void setUp() {
+  @Override protected void setUp() throws Exception {
+    super.setUp();
     AppContextForTesting.initForTest();
     control = EasyMock.createControl();
     mockFs = control.createMock(FileSystem.class);
     mockCmd = control.createMock(CommandRunner.class);
     AppContext.RUN.cmd = mockCmd;
     AppContext.RUN.fileSystem = mockFs;
-    codebase = new Codebase(codebaseRoot, projectSpace, cExp);
+    codebase = new Codebase(CODEBASE_ROOT, PROJECT_SPACE, CODEBASE_EXPR);
     mockRevClone = control.createMock(HgClonedRepository.class);
     mockRepoConfig = control.createMock(RepositoryConfig.class);
 
-    expect(mockRevClone.getLocalTempDir()).andReturn(writerRoot).anyTimes();
+    expect(mockRevClone.getLocalTempDir()).andReturn(WRITER_ROOT).anyTimes();
     expect(mockRevClone.getConfig()).andReturn(mockRepoConfig).anyTimes();
     expect(mockRepoConfig.getIgnoreFileRes()).andReturn(ImmutableList.<String>of()).anyTimes();
-    expect(mockRepoConfig.getProjectSpace()).andReturn(projectSpace).anyTimes();
+    expect(mockRepoConfig.getProjectSpace()).andReturn(PROJECT_SPACE).anyTimes();
   }
 
   public void testPutCodebase_emptyCodebase() throws Exception {
 
     // Define the files in the codebase and in the writer (hg repo).
-    expect(mockFs.findFiles(codebaseRoot)).andReturn(ImmutableSet.<File>of());
-    expect(mockFs.findFiles(writerRoot)).andReturn(ImmutableSet.<File>of(
-        new File(writerRoot, ".hg"),
-        new File(writerRoot, ".hgignore"),
-        new File(writerRoot, ".hg/branch"),
-        new File(writerRoot, ".hg/cache/tags")));
+    expect(mockFs.findFiles(CODEBASE_ROOT)).andReturn(ImmutableSet.<File>of());
+    expect(mockFs.findFiles(WRITER_ROOT)).andReturn(ImmutableSet.<File>of(
+        new File(WRITER_ROOT, ".hg"),
+        new File(WRITER_ROOT, ".hgignore"),
+        new File(WRITER_ROOT, ".hg/branch"),
+        new File(WRITER_ROOT, ".hg/cache/tags")));
 
     // Expect no other mockFs calls from HgWriter.putFile().
 
     control.replay();
 
-    HgWriter w = new HgWriter(mockRevClone);
-    DraftRevision dr = w.putCodebase(codebase);
+    HgWriter writer = new HgWriter(mockRevClone);
+    DraftRevision draftRevision = writer.putCodebase(codebase);
 
     control.verify();
 
-    assertEquals(writerRoot.getAbsolutePath(), dr.getLocation());
+    assertEquals(WRITER_ROOT.getAbsolutePath(), draftRevision.getLocation());
   }
 
   public void testPutCodebase_addFile() throws Exception {
 
-    expect(mockFs.findFiles(codebaseRoot)).andReturn(
-        ImmutableSet.<File>of(new File(codebaseRoot, "file1")));
-    expect(mockFs.findFiles(writerRoot)).andReturn(ImmutableSet.<File>of());
+    expect(mockFs.findFiles(CODEBASE_ROOT)).andReturn(
+        ImmutableSet.<File>of(new File(CODEBASE_ROOT, "file1")));
+    expect(mockFs.findFiles(WRITER_ROOT)).andReturn(ImmutableSet.<File>of());
 
-    expect(mockFs.exists(new File(codebaseRoot, "file1"))).andReturn(true);
-    expect(mockFs.exists(new File(writerRoot, "file1"))).andReturn(false);
+    expect(mockFs.exists(new File(CODEBASE_ROOT, "file1"))).andReturn(true);
+    expect(mockFs.exists(new File(WRITER_ROOT, "file1"))).andReturn(false);
 
-    mockFs.makeDirsForFile(new File(writerRoot, "file1"));
-    mockFs.copyFile(new File(codebaseRoot, "file1"), new File(writerRoot, "file1"));
+    mockFs.makeDirsForFile(new File(WRITER_ROOT, "file1"));
+    mockFs.copyFile(new File(CODEBASE_ROOT, "file1"), new File(WRITER_ROOT, "file1"));
     expectHgCmd("add", "file1");
 
     control.replay();
 
-    HgWriter w = new HgWriter(mockRevClone);
-    DraftRevision dr = w.putCodebase(codebase);
+    HgWriter writer = new HgWriter(mockRevClone);
+    DraftRevision draftRevision = writer.putCodebase(codebase);
 
     control.verify();
+
+    assertEquals(WRITER_ROOT.getAbsolutePath(), draftRevision.getLocation());
   }
 
   public void testPutCodebase_editFile() throws Exception {
 
-    expect(mockFs.findFiles(codebaseRoot)).andReturn(
-        ImmutableSet.<File>of(new File(codebaseRoot, "file1")));
-    expect(mockFs.findFiles(writerRoot))
-        .andReturn(ImmutableSet.<File>of(new File(writerRoot, "file1")));
+    expect(mockFs.findFiles(CODEBASE_ROOT)).andReturn(
+        ImmutableSet.<File>of(new File(CODEBASE_ROOT, "file1")));
+    expect(mockFs.findFiles(WRITER_ROOT))
+        .andReturn(ImmutableSet.<File>of(new File(WRITER_ROOT, "file1")));
 
-    expect(mockFs.exists(new File(codebaseRoot, "file1"))).andReturn(true);
-    expect(mockFs.exists(new File(writerRoot, "file1"))).andReturn(true);
+    expect(mockFs.exists(new File(CODEBASE_ROOT, "file1"))).andReturn(true);
+    expect(mockFs.exists(new File(WRITER_ROOT, "file1"))).andReturn(true);
 
-    mockFs.makeDirsForFile(new File(writerRoot, "file1"));
-    mockFs.copyFile(new File(codebaseRoot, "file1"), new File(writerRoot, "file1"));
+    mockFs.makeDirsForFile(new File(WRITER_ROOT, "file1"));
+    mockFs.copyFile(new File(CODEBASE_ROOT, "file1"), new File(WRITER_ROOT, "file1"));
 
     control.replay();
 
-    HgWriter w = new HgWriter(mockRevClone);
-    DraftRevision dr = w.putCodebase(codebase);
+    HgWriter writer = new HgWriter(mockRevClone);
+    DraftRevision draftRevision = writer.putCodebase(codebase);
 
     control.verify();
+
+    assertEquals(WRITER_ROOT.getAbsolutePath(), draftRevision.getLocation());
   }
 
   public void testPutCodebase_removeFile() throws Exception {
 
-    expect(mockFs.findFiles(codebaseRoot)).andReturn(ImmutableSet.<File>of());
-    expect(mockFs.findFiles(writerRoot))
-        .andReturn(ImmutableSet.<File>of(new File(writerRoot, "file1")));
+    expect(mockFs.findFiles(CODEBASE_ROOT)).andReturn(ImmutableSet.<File>of());
+    expect(mockFs.findFiles(WRITER_ROOT))
+        .andReturn(ImmutableSet.<File>of(new File(WRITER_ROOT, "file1")));
 
-    expect(mockFs.exists(new File(codebaseRoot, "file1"))).andReturn(false);
-    expect(mockFs.exists(new File(writerRoot, "file1"))).andReturn(true);
+    expect(mockFs.exists(new File(CODEBASE_ROOT, "file1"))).andReturn(false);
+    expect(mockFs.exists(new File(WRITER_ROOT, "file1"))).andReturn(true);
 
     expectHgCmd("rm", "file1");
 
     control.replay();
 
-    HgWriter w = new HgWriter(mockRevClone);
-    DraftRevision dr = w.putCodebase(codebase);
+    HgWriter writer = new HgWriter(mockRevClone);
+    DraftRevision draftRevision = writer.putCodebase(codebase);
 
     control.verify();
+
+    assertEquals(WRITER_ROOT.getAbsolutePath(), draftRevision.getLocation());
   }
 
   public void testPutCodebase_editFileWithMetadata() throws Exception {
-    expect(mockFs.findFiles(codebaseRoot)).andReturn(
-        ImmutableSet.<File>of(new File(codebaseRoot, "file1")));
-    expect(mockFs.findFiles(writerRoot))
-        .andReturn(ImmutableSet.<File>of(new File(writerRoot, "file1")));
+    expect(mockFs.findFiles(CODEBASE_ROOT)).andReturn(
+        ImmutableSet.<File>of(new File(CODEBASE_ROOT, "file1")));
+    expect(mockFs.findFiles(WRITER_ROOT))
+        .andReturn(ImmutableSet.<File>of(new File(WRITER_ROOT, "file1")));
 
-    expect(mockFs.exists(new File(codebaseRoot, "file1"))).andReturn(true);
-    expect(mockFs.exists(new File(writerRoot, "file1"))).andReturn(true);
+    expect(mockFs.exists(new File(CODEBASE_ROOT, "file1"))).andReturn(true);
+    expect(mockFs.exists(new File(WRITER_ROOT, "file1"))).andReturn(true);
 
-    mockFs.makeDirsForFile(new File(writerRoot, "file1"));
-    mockFs.copyFile(new File(codebaseRoot, "file1"), new File(writerRoot, "file1"));
+    mockFs.makeDirsForFile(new File(WRITER_ROOT, "file1"));
+    mockFs.copyFile(new File(CODEBASE_ROOT, "file1"), new File(WRITER_ROOT, "file1"));
 
     expectHgCmd("status");
 
     control.replay();
 
-    HgWriter w = new HgWriter(mockRevClone);
-    RevisionMetadata rm = new RevisionMetadata("rev1", "author", "data", "desc",
-                                               ImmutableList.<Revision>of());
-    DraftRevision dr = w.putCodebase(codebase, rm);
+    HgWriter writer = new HgWriter(mockRevClone);
+    RevisionMetadata revisionMetadata =
+        new RevisionMetadata("rev1", "author", "data", "desc", ImmutableList.<Revision>of());
+    DraftRevision draftRevision = writer.putCodebase(codebase, revisionMetadata);
 
     control.verify();
+
+    assertEquals(WRITER_ROOT.getAbsolutePath(), draftRevision.getLocation());
   }
 }
