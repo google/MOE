@@ -13,6 +13,10 @@ import com.google.devtools.moe.client.repositories.AbstractRevisionHistory;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
+
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -24,6 +28,8 @@ import javax.annotation.Nullable;
  *
  */
 public class HgRevisionHistory extends AbstractRevisionHistory {
+  private static final DateTimeFormatter HG_DATE_FMT =
+      DateTimeFormat.forPattern("yyyy-MM-dd HH:mm Z");
 
   /**
    * The default Hg branch in which to look for revisions.
@@ -94,7 +100,7 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
         "--limit=1",
         // Format output as "changesetID < author < date < description < parents".
         // Since parents is a list, need to use stringify before applying another filter.
-        "--template={node|escape} < {author|escape} < {date|date|escape} < " +
+        "--template={node|escape} < {author|escape} < {date|isodate|escape} < " +
                     "{desc|escape} < {parents|stringify|escape}",
         // Use the debug option to get all parents
         "--debug");
@@ -148,10 +154,12 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
         }
       }
     }
+
+    DateTime date = HG_DATE_FMT.parseDateTime(unescape(m.group(3)));
     return new RevisionMetadata(
         unescape(m.group(1)),  // id
         unescape(m.group(2)),  // author
-        unescape(m.group(3)),  // date
+        date,
         unescape(m.group(4)),  // description
         parentBuilder.build());  // parents
   }

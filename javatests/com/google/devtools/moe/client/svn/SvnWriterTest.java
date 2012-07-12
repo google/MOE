@@ -24,6 +24,7 @@ import junit.framework.TestCase;
 
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
+import org.joda.time.DateTime;
 
 import java.io.File;
 import java.util.List;
@@ -215,8 +216,9 @@ public class SvnWriterTest extends TestCase {
     control.replay();
     Codebase c = new Codebase(f("/codebase"), "public",
                               e("public", ImmutableMap.<String, String>of()));
-    RevisionMetadata rm = new RevisionMetadata("rev1", "author", "data", "desc",
-                                               ImmutableList.<Revision>of());
+    RevisionMetadata rm = new RevisionMetadata(
+        "rev1", "author", new DateTime(1L), "desc",
+        ImmutableList.<Revision>of());
     SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"));
     DraftRevision r = e.putCodebase(c, rm);
     control.verify();

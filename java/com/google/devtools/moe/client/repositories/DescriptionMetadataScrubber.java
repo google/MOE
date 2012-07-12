@@ -5,6 +5,9 @@ package com.google.devtools.moe.client.repositories;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
+
 /**
  * Scrubs a {@code RevisionMetadata} by formatting its {@link RevisionMetadata#description} per
  * {@link MetadataScrubberConfig#getLogFormat()}.
@@ -21,7 +24,8 @@ import com.google.common.collect.ImmutableList;
  *
  */
 public class DescriptionMetadataScrubber extends MetadataScrubber {
-
+  private static final DateTimeFormatter DATE_FMT =
+      DateTimeFormat.forPattern("yyyy/MM/dd");
   private final String logFormat;
 
   public DescriptionMetadataScrubber(String logFormat) {
@@ -38,7 +42,7 @@ public class DescriptionMetadataScrubber extends MetadataScrubber {
     String scrubbedDescription = logFormat
         .replace("{id}", rm.id)
         .replace("{author}", rm.author)
-        .replace("{date}", rm.date)
+        .replace("{date}", DATE_FMT.print(rm.date))
         .replace("{description}", rm.description)
         .replace("{parents}", parentsString);
 

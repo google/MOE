@@ -7,6 +7,8 @@ import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
+import org.joda.time.DateTime;
+
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -18,15 +20,15 @@ import javax.annotation.Nullable;
 public class RevisionMetadata {
   public final String id;
   public final String author;
-  public final String date;
+  public final DateTime date;
   public final String description;
   public final List<Revision> parents;
 
-  public RevisionMetadata(String id, String author, String date,
+  public RevisionMetadata(String id, String author, DateTime date,
                           String description, List<Revision> parents) {
     this.id = id;
     this.author = author;
-    this.date = date;
+    this.date = Preconditions.checkNotNull(date);
     this.description = description;
     this.parents = parents;
   }
@@ -42,7 +44,7 @@ public class RevisionMetadata {
       RevisionMetadata revisionMetadataObj = (RevisionMetadata) obj;
       return (Objects.equal(id, revisionMetadataObj.id) &&
               Objects.equal(author, revisionMetadataObj.author) &&
-              Objects.equal(date, revisionMetadataObj.date) &&
+              date.isEqual(revisionMetadataObj.date) &&
               Objects.equal(description, revisionMetadataObj.description) &&
               Objects.equal(parents, revisionMetadataObj.parents));
     }
@@ -64,14 +66,16 @@ public class RevisionMetadata {
 
     ImmutableList.Builder<String> idBuilder = ImmutableList.builder();
     ImmutableList.Builder<String> authorBuilder = ImmutableList.builder();
-    ImmutableList.Builder<String> dateBuilder = ImmutableList.builder();
+    DateTime newDate = new DateTime(0L);
     ImmutableList.Builder<String> descBuilder = ImmutableList.builder();
     ImmutableList.Builder<Revision> parentBuilder = ImmutableList.builder();
 
     for (RevisionMetadata rm : rms) {
       idBuilder.add(rm.id);
       authorBuilder.add(rm.author);
-      dateBuilder.add(rm.date);
+      if (newDate.isBefore(rm.date)) {
+        newDate = rm.date;
+      }
       descBuilder.add(rm.description);
       parentBuilder.addAll(rm.parents);
     }
@@ -83,7 +87,6 @@ public class RevisionMetadata {
 
     String newId = Joiner.on(", ").join(idBuilder.build());
     String newAuthor = Joiner.on(", ").join(authorBuilder.build());
-    String newDate = Joiner.on(", ").join(dateBuilder.build());
     String newDesc = Joiner.on("\n-------------\n").join(descBuilder.build());
     ImmutableList<Revision> newParents = parentBuilder.build();
 

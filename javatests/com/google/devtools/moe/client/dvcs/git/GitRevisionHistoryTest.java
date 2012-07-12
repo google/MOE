@@ -19,12 +19,15 @@ import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.testing.AppContextForTesting;
 import com.google.devtools.moe.client.testing.DummyDb;
+import com.google.devtools.moe.client.testing.MoeAsserts;
 
 import junit.framework.TestCase;
 
 import org.easymock.EasyMock;
 import org.easymock.IExpectationSetters;
 import org.easymock.IMocksControl;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 import java.util.List;
 import java.util.Set;
@@ -33,11 +36,15 @@ import java.util.Set;
  * Unit tests for GitRevisionHistory.
  */
 public class GitRevisionHistoryTest extends TestCase {
+  private static final String GIT_COMMIT_DATE = "2012-07-09 06:00:00 -0700";
+  private static final DateTime DATE =
+      // 2012/7/9, 6am
+      new DateTime(2012, 7, 9, 6, 0, DateTimeZone.forOffsetHours(-7));
 
   private static final String LOG_FORMAT_COMMIT_ID = "%H";
-  private static final Joiner METADATA_JOINER = Joiner.on(GitRevisionHistory.LOG_DELIMITER); 
+  private static final Joiner METADATA_JOINER = Joiner.on(GitRevisionHistory.LOG_DELIMITER);
   private static final String LOG_FORMAT_ALL_METADATA =
-      METADATA_JOINER.join("%H", "%an", "%ad", "%P", "%B");
+      METADATA_JOINER.join("%H", "%an", "%ai", "%P", "%B");
 
   private IMocksControl control;
   private String repositoryName = "mockrepo";
@@ -60,7 +67,7 @@ public class GitRevisionHistoryTest extends TestCase {
     expect(mockRepo.getConfig()).andReturn(repositoryConfig).anyTimes();
     return mockRepo;
   }
-  
+
   private IExpectationSetters<String> expectLogCommand(
       GitClonedRepository mockRepo, String logFormat, String revName) throws CommandException {
     return expect(mockRepo.runGitCommand(
@@ -69,7 +76,7 @@ public class GitRevisionHistoryTest extends TestCase {
         "--format=" + logFormat,
         revName));
   }
-  
+
   public void testFindHighestRevision() throws Exception {
     GitClonedRepository mockRepo = mockClonedRepo(repositoryName);
 
@@ -112,7 +119,7 @@ public class GitRevisionHistoryTest extends TestCase {
     GitClonedRepository mockRepo = mockClonedRepo(repositoryName);
 
     expectLogCommand(mockRepo, LOG_FORMAT_ALL_METADATA, "f00d").andReturn(METADATA_JOINER.join(
-        "f00d", "foo@google.com", "date", "d34d b33f", "description\n"));
+        "f00d", "foo@google.com", GIT_COMMIT_DATE, "d34d b33f", "description\n"));
 
     control.replay();
 
@@ -120,7 +127,7 @@ public class GitRevisionHistoryTest extends TestCase {
     RevisionMetadata result = rh.getMetadata(new Revision("f00d", "mockrepo"));
     assertEquals("f00d", result.id);
     assertEquals("foo@google.com", result.author);
-    assertEquals("date", result.date);
+    MoeAsserts.assertSameDate(DATE, result.date);
     assertEquals("description\n", result.description);
     assertEquals(ImmutableList.of(new Revision("d34d", repositoryName),
                                   new Revision("b33f", repositoryName)),
@@ -135,12 +142,14 @@ public class GitRevisionHistoryTest extends TestCase {
 
     control.replay();
     RevisionMetadata rm = rh.parseMetadata(METADATA_JOINER.join(
-            "f00d", "foo@google.com", "date1", "d34d b33f", "desc with \n\nmultiple lines\n"));
+            "f00d", "foo@google.com",
+            GIT_COMMIT_DATE,
+            "d34d b33f", "desc with \n\nmultiple lines\n"));
     control.verify();
 
     assertEquals("f00d", rm.id);
     assertEquals("foo@google.com", rm.author);
-    assertEquals("date1", rm.date);
+    MoeAsserts.assertSameDate(DATE, rm.date);
     assertEquals("desc with \n\nmultiple lines\n", rm.description);
     assertEquals(ImmutableList.of(new Revision("d34d", repositoryName),
                                   new Revision("b33f", repositoryName)),
@@ -181,14 +190,15 @@ public class GitRevisionHistoryTest extends TestCase {
     // Breadth-first search order.
     expectLogCommand(mockRepo, LOG_FORMAT_ALL_METADATA, "mockHashID1")
         .andReturn(METADATA_JOINER.join(
-            "mockHashID1", "uid@google.com", "date", "parent", "description"));
+            "mockHashID1", "uid@google.com", GIT_COMMIT_DATE, "parent", "description"));
 
     expectLogCommand(mockRepo, LOG_FORMAT_ALL_METADATA, "mockHashID2")
         .andReturn(METADATA_JOINER.join(
-            "mockHashID2", "uid@google.com", "date", "", "description"));
+            "mockHashID2", "uid@google.com", GIT_COMMIT_DATE, "", "description"));
 
     expectLogCommand(mockRepo, LOG_FORMAT_ALL_METADATA, "parent")
-        .andReturn(METADATA_JOINER.join("parent", "uid@google.com", "date", "", "description"));
+        .andReturn(METADATA_JOINER.join(
+            "parent", "uid@google.com", GIT_COMMIT_DATE, "", "description"));
 
     control.replay();
 
@@ -228,11 +238,11 @@ public class GitRevisionHistoryTest extends TestCase {
     // Breadth-first search order.
     expectLogCommand(mockRepo, LOG_FORMAT_ALL_METADATA, "mockHashID1")
         .andReturn(METADATA_JOINER.join(
-            "mockHashID1", "uid@google.com", "date", "parent1", "description"));
+            "mockHashID1", "uid@google.com", GIT_COMMIT_DATE, "parent1", "description"));
 
     expectLogCommand(mockRepo, LOG_FORMAT_ALL_METADATA, "mockHashID2")
         .andReturn(METADATA_JOINER.join(
-            "mockHashID2", "uid@google.com", "date", "", "description"));
+            "mockHashID2", "uid@google.com", GIT_COMMIT_DATE, "", "description"));
 
     control.replay();
 
@@ -287,13 +297,13 @@ public class GitRevisionHistoryTest extends TestCase {
     GitClonedRepository mockRepo = mockClonedRepo("repo2");
 
     expectLogCommand(mockRepo, LOG_FORMAT_ALL_METADATA, "4")
-        .andReturn(METADATA_JOINER.join("4", "author", "date", "3a 3b", "description"));
+        .andReturn(METADATA_JOINER.join("4", "author", GIT_COMMIT_DATE, "3a 3b", "description"));
 
     expectLogCommand(mockRepo, LOG_FORMAT_ALL_METADATA, "3a")
-        .andReturn(METADATA_JOINER.join("3a", "author", "date", "2", "description"));
+        .andReturn(METADATA_JOINER.join("3a", "author", GIT_COMMIT_DATE, "2", "description"));
 
     expectLogCommand(mockRepo, LOG_FORMAT_ALL_METADATA, "3b")
-        .andReturn(METADATA_JOINER.join("3b", "author", "date", "2", "description"));
+        .andReturn(METADATA_JOINER.join("3b", "author", GIT_COMMIT_DATE, "2", "description"));
 
     control.replay();
 
@@ -303,7 +313,7 @@ public class GitRevisionHistoryTest extends TestCase {
 
     EquivalenceMatchResult result = history.findRevisions(
         new Revision("4", "repo2"), new EquivalenceMatcher("repo1", database));
-    
+
     Equivalence expectedEq = new Equivalence(new Revision("1002", "repo1"),
                                              new Revision("2", "repo2"));
 
@@ -359,22 +369,22 @@ public class GitRevisionHistoryTest extends TestCase {
     GitClonedRepository mockRepo = mockClonedRepo("repo2");
 
     expectLogCommand(mockRepo, LOG_FORMAT_ALL_METADATA, "4")
-        .andReturn(METADATA_JOINER.join("4", "author", "date", "3a 3b", "description"));
+        .andReturn(METADATA_JOINER.join("4", "author", GIT_COMMIT_DATE, "3a 3b", "description"));
 
     expectLogCommand(mockRepo, LOG_FORMAT_ALL_METADATA, "3a")
-        .andReturn(METADATA_JOINER.join("3a", "author", "date", "2", "description"));
+        .andReturn(METADATA_JOINER.join("3a", "author", GIT_COMMIT_DATE, "2", "description"));
 
     expectLogCommand(mockRepo, LOG_FORMAT_ALL_METADATA, "3b")
-        .andReturn(METADATA_JOINER.join("3b", "author", "date", "2", "description"));
+        .andReturn(METADATA_JOINER.join("3b", "author", GIT_COMMIT_DATE, "2", "description"));
 
     expectLogCommand(mockRepo, LOG_FORMAT_ALL_METADATA, "2")
-        .andReturn(METADATA_JOINER.join("2", "author", "date", "", "description"));
+        .andReturn(METADATA_JOINER.join("2", "author", GIT_COMMIT_DATE, "", "description"));
 
     control.replay();
 
     FileDb database = FileDb.makeDbFromDbText(testDb2);
     GitRevisionHistory history = new GitRevisionHistory(Suppliers.ofInstance(mockRepo));
-    
+
     EquivalenceMatchResult result = history.findRevisions(
         new Revision("4", "repo2"), new EquivalenceMatcher("repo1", database));
 

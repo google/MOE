@@ -24,6 +24,7 @@ import junit.framework.TestCase;
 
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
+import org.joda.time.DateTime;
 
 import java.io.File;
 
@@ -180,7 +181,8 @@ public class HgWriterTest extends TestCase {
 
     HgWriter writer = new HgWriter(mockRevClone);
     RevisionMetadata revisionMetadata =
-        new RevisionMetadata("rev1", "author", "data", "desc", ImmutableList.<Revision>of());
+        new RevisionMetadata("rev1", "author", new DateTime(1L),
+            "desc", ImmutableList.<Revision>of());
     DraftRevision draftRevision = writer.putCodebase(codebase, revisionMetadata);
 
     control.verify();

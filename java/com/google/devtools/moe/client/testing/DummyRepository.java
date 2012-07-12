@@ -15,6 +15,8 @@ import com.google.devtools.moe.client.repositories.RevisionMatcher;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.writer.WriterCreator;
 
+import org.joda.time.DateTime;
+
 /**
  *
  * @author dbentley@google.com (Daniel Bentley)
@@ -43,7 +45,7 @@ public class DummyRepository {
             String.format("Could not get metadata: Revision %s is in repository %s instead of %s",
                           revision.revId, revision.repositoryName, name));
       }
-      return new RevisionMetadata(revision.revId, "author", "date",
+      return new RevisionMetadata(revision.revId, "author", new DateTime(1L),
                                   revision.revId.equals("migrated_to") ?
                                   "MOE_MIGRATED_REVID=migrated_from" : "description",
                                   ImmutableList.of(new Revision("parent", name)));

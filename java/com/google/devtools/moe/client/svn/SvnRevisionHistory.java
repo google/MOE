@@ -9,6 +9,8 @@ import com.google.devtools.moe.client.repositories.AbstractRevisionHistory;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 
+import org.joda.time.DateTime;
+import org.joda.time.format.ISODateTimeFormat;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -139,7 +141,7 @@ public class SvnRevisionHistory extends AbstractRevisionHistory {
   public RevisionMetadata parseMetadataNodeList(String revId, NodeList nlEntries,
                                                  ImmutableList<Revision> parents) {
     String author = "None";
-    String date = "None"; 
+    DateTime date = new DateTime(0L); // Unix epoch
     String description = "None";
     for (int i = 0; i < nlEntries.getLength(); i++) {
       Node currNode = nlEntries.item(i);
@@ -147,7 +149,7 @@ public class SvnRevisionHistory extends AbstractRevisionHistory {
         author = currNode.getTextContent();
       }
       if (currNode.getNodeName().equals("date")) {
-        date = currNode.getTextContent();
+        date = ISODateTimeFormat.dateTime().parseDateTime(currNode.getTextContent());
       }
       if (currNode.getNodeName().equals("msg")) {
         description = currNode.getTextContent();

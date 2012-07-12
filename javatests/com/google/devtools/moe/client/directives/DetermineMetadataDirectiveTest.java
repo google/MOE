@@ -12,6 +12,8 @@ import com.google.devtools.moe.client.testing.RecordingUi;
 
 import junit.framework.TestCase;
 
+import org.joda.time.DateTime;
+
 /**
  * Test to ensure the DetermineMetadataDirective produces the expected output.
  *
@@ -35,7 +37,8 @@ public class DetermineMetadataDirectiveTest extends TestCase {
     d.getFlags().configFilename = "moe_config.txt";
     d.getFlags().repositoryExpression = "internal(revision=\"1,2\")";
     assertEquals(0, d.perform());
-    RevisionMetadata rm = new RevisionMetadata("1, 2", "author, author", "date, date",
+    RevisionMetadata rm = new RevisionMetadata("1, 2", "author, author",
+        new DateTime(1L),
         "description\n-------------\ndescription",
         ImmutableList.of(new Revision("parent", "internal"),
         new Revision("parent", "internal")));
@@ -55,7 +58,8 @@ public class DetermineMetadataDirectiveTest extends TestCase {
     d.getFlags().configFilename = "moe_config.txt";
     d.getFlags().repositoryExpression = "internal(revision=7)";
     assertEquals(0, d.perform());
-    RevisionMetadata rm = new RevisionMetadata("7", "author", "date", "description",
+    RevisionMetadata rm = new RevisionMetadata("7", "author",
+        new DateTime(1L), "description",
         ImmutableList.of(new Revision("parent", "internal")));
     assertEquals(rm.toString(), ((RecordingUi) AppContext.RUN.ui).lastInfo);
   }
