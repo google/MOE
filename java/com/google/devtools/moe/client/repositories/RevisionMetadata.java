@@ -19,7 +19,14 @@ import javax.annotation.Nullable;
  */
 public class RevisionMetadata {
   public final String id;
+
+  /**
+   * RevisionHistories should make a best-effort to format their author
+   * information in the git canonical form, i.e.,
+   * Nick Name <username@gmail.com>
+   */
   public final String author;
+
   public final DateTime date;
   public final String description;
   public final List<Revision> parents;
