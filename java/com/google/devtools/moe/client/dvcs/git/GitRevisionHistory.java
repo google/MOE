@@ -117,7 +117,7 @@ public class GitRevisionHistory extends AbstractRevisionHistory {
 
     // The fourth item contains all of the parents, each separated by a space.
     ImmutableList.Builder<Revision> parentBuilder = ImmutableList.<Revision>builder();
-    for (String parent : Splitter.on(" ").omitEmptyStrings().split(split.get(3))) {
+    for (String parent : Splitter.on(' ').omitEmptyStrings().split(split.get(3))) {
       parentBuilder.add(new Revision(parent, headCloneSupplier.get().getRepositoryName()));
     }
 

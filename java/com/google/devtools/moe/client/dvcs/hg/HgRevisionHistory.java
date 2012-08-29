@@ -143,7 +143,7 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
     }
     ImmutableList.Builder<Revision> parentBuilder = ImmutableList.<Revision>builder();
     // group 5 contains all of the parents, each separated by a space
-    for (String parent : Splitter.on(" ").split(unescape(m.group(5)))) {
+    for (String parent : Splitter.on(' ').split(unescape(m.group(5)))) {
       if (!parent.isEmpty()) {
         // A parent is of the form revisionId:changesetId. When null, a parent is denoted by
         // revisionId of -1 and changesetId of 0000000000000000000000000000000000000000.
@@ -189,7 +189,7 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
     }
 
     ImmutableList.Builder<Revision> result = ImmutableList.<Revision>builder();
-    for (String changesetIDAndBranch : Splitter.on("\n").omitEmptyStrings().split(heads)) {
+    for (String changesetIDAndBranch : Splitter.on('\n').omitEmptyStrings().split(heads)) {
       String[] changesetIDAndBranchParts = changesetIDAndBranch.split(" ");
       String changesetID = changesetIDAndBranchParts[0];
       String branch = changesetIDAndBranchParts[1];
