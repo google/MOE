@@ -69,14 +69,8 @@ public class NoteEquivalenceDirective implements Directive {
     }
 
     // Sanity check: make sure the given repos and revisions exist.
-    Repository repo1 = context.repositories.get(repoEx1.getRepositoryName());
-    Repository repo2 = context.repositories.get(repoEx2.getRepositoryName());
-    if (repo1 == null || repo2 == null) {
-      AppContext.RUN.ui.error(
-          "Unknown repository: " +
-          (repo1 == null ? repoEx1.getRepositoryName() : repoEx2.getRepositoryName()));
-      return 1;
-    }
+    Repository repo1 = context.getRepository(repoEx1.getRepositoryName());
+    Repository repo2 = context.getRepository(repoEx2.getRepositoryName());
 
     Revision realRev1 = repo1.revisionHistory.findHighestRevision(repoEx1.getOption("revision"));
     Revision realRev2 = repo2.revisionHistory.findHighestRevision(repoEx2.getOption("revision"));

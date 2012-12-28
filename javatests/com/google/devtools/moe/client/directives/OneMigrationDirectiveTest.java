@@ -55,7 +55,9 @@ public class OneMigrationDirectiveTest extends TestCase {
       d.perform();
       fail("OneMigrationDirective didn't fail on invalid repository 'x'.");
     } catch (MoeProblem expected) {
-      assertEquals("No repository x", expected.getMessage());
+      assertEquals(
+          "No such repository 'x' in the config. Found: [int, pub]",
+          expected.getMessage());
     }
   }
 
@@ -72,9 +74,13 @@ public class OneMigrationDirectiveTest extends TestCase {
     d.getFlags().configFilename = "moe_config.txt";
     d.getFlags().fromRepository = "int(revision=1000)";
     d.getFlags().toRepository = "x(revision=2)";
-    assertEquals(1, d.perform());
-    assertEquals(
-        String.format("No repository x"),
-        ((RecordingUi) AppContext.RUN.ui).lastError);
+    try {
+      int result = d.perform();
+      fail("OneMigrationDirective didn't fail on invalid repository 'x'.");
+    } catch (MoeProblem expected) {
+      assertEquals(
+          "No such repository 'x' in the config. Found: [int, pub]",
+          expected.getMessage());
+    }
   }
 }

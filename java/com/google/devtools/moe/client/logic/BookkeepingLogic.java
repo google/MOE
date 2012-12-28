@@ -16,7 +16,6 @@ import com.google.devtools.moe.client.database.SubmittedMigration;
 import com.google.devtools.moe.client.migrations.MigrationConfig;
 import com.google.devtools.moe.client.parser.Expression;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
-import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.project.TranslatorConfig;
 import com.google.devtools.moe.client.repositories.Revision;
@@ -60,8 +59,8 @@ public class BookkeepingLogic {
         "diff_codebases",
         String.format("Diff codebases '%s' and '%s'", from.toString(), to.toString()));
     if (!CodebaseDifference.diffCodebases(from, to).areDifferent()) {
-      RevisionHistory fromHistory = context.repositories.get(fromRepository).revisionHistory;
-      RevisionHistory toHistory = context.repositories.get(toRepository).revisionHistory;
+      RevisionHistory fromHistory = context.getRepository(fromRepository).revisionHistory;
+      RevisionHistory toHistory = context.getRepository(toRepository).revisionHistory;
 
       // TODO(user): Pull highest revision from the created codebases, not over again (in case
       // head has moved forward meanwhile).
@@ -78,7 +77,7 @@ public class BookkeepingLogic {
   private static void updateCompletedMigrations(
       String fromRepository, String toRepository, Db db, ProjectContext context, boolean inverse) {
 
-    RevisionHistory toHistory = context.repositories.get(toRepository).revisionHistory;
+    RevisionHistory toHistory = context.getRepository(toRepository).revisionHistory;
     EquivalenceMatchResult equivMatch = toHistory.findRevisions(
         null /*revision*/,
         new EquivalenceMatcher(fromRepository, db));
@@ -128,11 +127,11 @@ public class BookkeepingLogic {
       // Use the forward-translator to check an inverse-translated migration.
       if (inverse) {
         String fromProjectSpace =
-            context.config.getRepositoryConfigs().get(fromRev.repositoryName).getProjectSpace();
+            context.config.getRepositoryConfig(fromRev.repositoryName).getProjectSpace();
         toEx = toEx.translateTo(fromProjectSpace);
       } else {
         String toProjectSpace =
-            context.config.getRepositoryConfigs().get(toRev.repositoryName).getProjectSpace();
+            context.config.getRepositoryConfig(toRev.repositoryName).getProjectSpace();
         fromEx = fromEx.translateTo(toProjectSpace);
       }
 
@@ -141,9 +140,6 @@ public class BookkeepingLogic {
 
     } catch (CodebaseCreationError e) {
       AppContext.RUN.ui.error(e, "Could not generate codebase");
-      return;
-    } catch (InvalidProject e) {
-      AppContext.RUN.ui.error("Project configuration error: " + e);
       return;
     }
 
@@ -163,21 +159,17 @@ public class BookkeepingLogic {
    */
   private static TranslatorConfig getTranslatorConfig(
       String fromRepo, String toRepo, ProjectContext context) {
-    try {
-      String fromProjectSpace =
-          context.config.getRepositoryConfigs().get(fromRepo).getProjectSpace();
-      String toProjectSpace = context.config.getRepositoryConfigs().get(toRepo).getProjectSpace();
-      List<TranslatorConfig> transConfigs = context.config.getTranslators();
-      for (TranslatorConfig transConfig : transConfigs) {
-        if (transConfig.getFromProjectSpace().equals(fromProjectSpace)
-            && transConfig.getToProjectSpace().equals(toProjectSpace)) {
-          return transConfig;
-        }
+    String fromProjectSpace =
+        context.config.getRepositoryConfig(fromRepo).getProjectSpace();
+    String toProjectSpace = context.config.getRepositoryConfig(toRepo).getProjectSpace();
+    List<TranslatorConfig> transConfigs = context.config.getTranslators();
+    for (TranslatorConfig transConfig : transConfigs) {
+      if (transConfig.getFromProjectSpace().equals(fromProjectSpace)
+          && transConfig.getToProjectSpace().equals(toProjectSpace)) {
+        return transConfig;
       }
-      throw new InvalidProject("Couldn't find translator!");
-    } catch (InvalidProject e) {
-      throw new MoeProblem("Error getting translations for migration: " + e);
     }
+    throw new MoeProblem("Couldn't find a translator for " + fromRepo + " -> " + toRepo);
   }
 
   /**

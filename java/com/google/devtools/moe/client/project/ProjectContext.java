@@ -5,7 +5,9 @@ package com.google.devtools.moe.client.project;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
+import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.dvcs.git.GitRepository;
 import com.google.devtools.moe.client.dvcs.hg.HgRepository;
 import com.google.devtools.moe.client.editors.Editor;
@@ -38,7 +40,7 @@ import java.util.Map;
 public class ProjectContext {
 
   public final ProjectConfig config;
-  public final ImmutableMap<String, Repository> repositories;
+  private final ImmutableMap<String, Repository> repositories;
   public final ImmutableMap<String, Editor> editors;
   public final ImmutableMap<TranslatorPath, Translator> translators;
   public final ImmutableMap<String, MigrationConfig> migrationConfigs;
@@ -54,6 +56,19 @@ public class ProjectContext {
     this.editors = editors;
     this.translators = translators;
     this.migrationConfigs = migrationConfigs;
+  }
+
+  /**
+   * Returns the {@link Repository} in this context with the given name.
+   *
+   * @throws MoeProblem if no such repository with the given name exists
+   */
+  public Repository getRepository(String repositoryName) {
+    if (!repositories.containsKey(repositoryName)) {
+      throw new MoeProblem("No such repository '" + repositoryName + "' in the config. Found: "
+          + ImmutableSortedSet.copyOf(repositories.keySet()));
+    }
+    return repositories.get(repositoryName);
   }
 
   public static ProjectContext makeProjectContextFromConfigText(String configText)

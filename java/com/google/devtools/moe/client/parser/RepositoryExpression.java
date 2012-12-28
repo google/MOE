@@ -64,10 +64,7 @@ public class RepositoryExpression extends AbstractExpression {
     if (repositoryName.equals("file")) {
       cc = new FileCodebaseCreator();
     } else {
-      Repository repo = context.repositories.get(repositoryName);
-      if (repo == null) {
-        throw new CodebaseCreationError("no repository " + repositoryName);
-      }
+      Repository repo = context.getRepository(repositoryName);
       cc = repo.codebaseCreator;
     }
 
@@ -86,10 +83,7 @@ public class RepositoryExpression extends AbstractExpression {
    * @throws WritingError
    */
   public Writer createWriter(ProjectContext context) throws WritingError {
-    Repository r = context.repositories.get(term.identifier);
-    if (r == null) {
-      throw new WritingError(String.format("no repository %s", term.identifier));
-    }
+    Repository r = context.getRepository(term.identifier);
     WriterCreator wc = r.writerCreator;
 
     Ui.Task t = AppContext.RUN.ui.pushTask(

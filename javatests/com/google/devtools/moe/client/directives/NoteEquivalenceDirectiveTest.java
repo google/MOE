@@ -7,9 +7,9 @@ import static org.easymock.EasyMock.expect;
 import com.google.common.base.Joiner;
 import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.FileSystem;
+import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.testing.AppContextForTesting;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
-import com.google.devtools.moe.client.testing.RecordingUi;
 
 import junit.framework.TestCase;
 
@@ -53,11 +53,15 @@ public class NoteEquivalenceDirectiveTest extends TestCase {
     expect(mockFs.exists(new File("/foo/db.txt"))).andReturn(false);
 
     control.replay();
-    int result = d.perform();
+    try {
+      int result = d.perform();
+      fail("NoteEquivalenceDirective didn't fail on invalid repository 'nonexistent'.");
+    } catch (MoeProblem expected) {
+      assertEquals(
+          "No such repository 'nonexistent' in the config. Found: [internal, public]",
+          expected.getMessage());
+    }
     control.verify();
-
-    assertEquals(1, result);
-    assertEquals("Unknown repository: nonexistent", ((RecordingUi) AppContext.RUN.ui).lastError);
   }
 
   public void testPerform_newDbFile() throws Exception {

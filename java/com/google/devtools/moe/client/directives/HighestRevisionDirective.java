@@ -49,11 +49,7 @@ public class HighestRevisionDirective implements Directive {
       return 1;
     }
 
-    Repository r = context.repositories.get(repoEx.getRepositoryName());
-    if (r == null) {
-      AppContext.RUN.ui.error("No repository " + repoEx.getRepositoryName());
-      return 1;
-    }
+    Repository r = context.getRepository(repoEx.getRepositoryName());
 
     RevisionHistory rh = r.revisionHistory;
     if (rh == null) {

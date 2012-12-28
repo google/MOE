@@ -8,7 +8,6 @@ import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.migrations.Migration;
 import com.google.devtools.moe.client.parser.Expression;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
-import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.MetadataScrubberConfig;
 import com.google.devtools.moe.client.repositories.Revision;
@@ -67,8 +66,8 @@ public class OneMigrationLogic {
 
     Codebase fromCodebase;
     try {
-      String toProjectSpace = context.config.getRepositoryConfigs()
-          .get(migration.config.getToRepository()).getProjectSpace();
+      String toProjectSpace =
+          context.config.getRepositoryConfig(migration.config.getToRepository()).getProjectSpace();
 
       fromCodebase = new RepositoryExpression(migration.config.getFromRepository())
           .atRevision(mostRecentFromRev.revId)
@@ -76,8 +75,6 @@ public class OneMigrationLogic {
           .withReferenceToCodebase(referenceToCodebase)
           .createCodebase(context);
 
-    } catch (InvalidProject e) {
-      throw new MoeProblem(e.getMessage());
     } catch (CodebaseCreationError e) {
       throw new MoeProblem(e.getMessage());
     }

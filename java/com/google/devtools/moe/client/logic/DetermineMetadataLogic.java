@@ -48,7 +48,7 @@ public class DetermineMetadataLogic {
 
     for (Revision rev : revs) {
       RevisionMetadata rm =
-          context.repositories.get(rev.repositoryName).revisionHistory.getMetadata(rev);
+          context.getRepository(rev.repositoryName).revisionHistory.getMetadata(rev);
       for (MetadataScrubber scrubber : scrubbers) {
         rm = scrubber.scrub(rm);
       }

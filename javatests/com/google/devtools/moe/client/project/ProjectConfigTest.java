@@ -142,6 +142,7 @@ public class ProjectConfigTest extends TestCase {
         " \"repositories\": {\"internal\": {\"type\":\"svn\"}}" +
         "}");
     assertEquals(1, p.getRepositoryConfigs().size());
+    assertNotNull(p.getRepositoryConfig("internal"));
   }
 
 }

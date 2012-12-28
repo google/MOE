@@ -47,12 +47,8 @@ public class OneMigrationDirective implements Directive {
       context = AppContext.RUN.contextFactory.makeProjectContext(options.configFilename);
       toRepoEx = Parser.parseRepositoryExpression(options.toRepository);
       fromRepoEx = Parser.parseRepositoryExpression(options.fromRepository);
-      toRepo = context.repositories.get(toRepoEx.getRepositoryName());
-      if (toRepo == null) {
-        AppContext.RUN.ui.error("No repository " + toRepoEx.getRepositoryName());
-        return 1;
-      }
-      toProjectSpace = context.config.getRepositoryConfigs().get(toRepoEx.getRepositoryName())
+      toRepo = context.getRepository(toRepoEx.getRepositoryName());
+      toProjectSpace = context.config.getRepositoryConfig(toRepoEx.getRepositoryName())
           .getProjectSpace();
     } catch (ParseError e) {
       AppContext.RUN.ui.error(e, "Couldn't parse expression");

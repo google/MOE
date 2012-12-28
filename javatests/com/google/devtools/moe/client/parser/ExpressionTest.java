@@ -9,6 +9,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.FileSystem.Lifetime;
+import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.codebase.CodebaseCreator;
@@ -45,8 +46,8 @@ public class ExpressionTest extends TestCase {
     try {
       new RepositoryExpression("foo").createCodebase(ProjectContext.builder().build());
       fail();
-    } catch (CodebaseCreationError expected) {
-      assertEquals("no repository foo", expected.getMessage());
+    } catch (MoeProblem expected) {
+      assertEquals("No such repository 'foo' in the config. Found: []", expected.getMessage());
     }
   }
 

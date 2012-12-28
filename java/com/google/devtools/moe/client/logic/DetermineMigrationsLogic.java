@@ -34,7 +34,7 @@ public class DetermineMigrationsLogic {
   public static List<Migration> determineMigrations(
       ProjectContext context, MigrationConfig migrationConfig, Db db) {
 
-    Repository fromRepo = context.repositories.get(migrationConfig.getFromRepository());
+    Repository fromRepo = context.getRepository(migrationConfig.getFromRepository());
     EquivalenceMatchResult equivMatch = fromRepo.revisionHistory.findRevisions(
         null,  // Start at head.
         new EquivalenceMatcher(migrationConfig.getToRepository(), db));
