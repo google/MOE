@@ -30,6 +30,22 @@ public interface CommandRunner {
       this.returnStatus = returnStatus;
     }
   }
+  
+  /**
+   * The complete result, including stdout and stderr, of running a command.
+   */
+  public static class CommandOutput {
+    private final String stdout;
+    private final String stderr;
+    
+    public CommandOutput(String stdout, String stderr) {
+      this.stdout = stdout;
+      this.stderr = stderr;
+    }
+    
+    public String getStdout() { return stdout; }
+    public String getStderr() { return stderr; }
+  }
 
   /**
    * Runs a command.
@@ -46,4 +62,16 @@ public interface CommandRunner {
   String runCommand(String cmd, List<String> args, String workingDirectory)
       throws CommandException;
 
+  /**
+   * Runs a command.
+   *
+   * @param cmd  the binary to invoke. If not a path, it will be resolved.
+   * @param args  the arguments to pass to the binary
+   * @param workingDirectory  the directory to run in
+   *
+   * @returns a {@link CommandOutput} with the full results of the command
+   * @throws CommandException
+   */
+  CommandOutput runCommandWithFullOutput(String cmd, List<String> args, String workingDirectory)
+      throws CommandException;
 }

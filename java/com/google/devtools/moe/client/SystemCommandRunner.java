@@ -9,9 +9,6 @@ import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.Process;
-import java.lang.ProcessBuilder;
-import java.lang.Thread;
 import java.util.List;
 
 /**
@@ -20,8 +17,9 @@ import java.util.List;
  */
 public class SystemCommandRunner implements CommandRunner {
 
-  public String runCommand(String cmd, List<String> args, String workingDirectory)
-      throws CommandException {
+  @Override
+  public CommandOutput runCommandWithFullOutput(
+      String cmd, List<String> args, String workingDirectory) throws CommandException {
     ImmutableList<String> cmdArgs = (new ImmutableList.Builder<String>()).add(cmd).
         addAll(args).build();
 
@@ -95,11 +93,16 @@ public class SystemCommandRunner implements CommandRunner {
       throw new MoeProblem(String.format("Interrupted while running process: %s", cmdArgs));
     }
     if (returnStatus == 0) {
-      return stdoutData;
+      return new CommandOutput(stdoutData, stderrData);
     }
     throw new CommandException(cmd, args, stdoutData, stderrData, returnStatus);
   }
 
+  @Override
+  public String runCommand(String cmd, List<String> args, String workingDirectory)
+      throws CommandException {
+    return runCommandWithFullOutput(cmd, args, workingDirectory).getStdout();
+  }
 
   private static class Sink {
     private final List<Byte> bytes = Lists.newArrayList();
