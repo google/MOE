@@ -38,8 +38,11 @@ public class TranslateExpression extends AbstractExpression {
     Translator translator = context.translators.get(path);
     if (translator == null) {
       throw new CodebaseCreationError(
-          String.format("Could not find translator from project space \"%s\" to \"%s\"",
-                        codebaseToTranslate.getProjectSpace(), toProjectSpace));
+          String.format(
+              "Could not find translator from project space \"%s\" to \"%s\".\n" +
+              "Translators only available for %s",
+              codebaseToTranslate.getProjectSpace(), toProjectSpace,
+              context.translators.keySet()));
     }
 
     Ui.Task translateTask = AppContext.RUN.ui.pushTask(

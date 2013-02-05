@@ -34,7 +34,7 @@ import java.util.Map;
  * @author dbentley@google.com (Daniel Bentley)
  */
 public class ExpressionTest extends TestCase {
-  
+
   private static final Map<String, String> EMPTY_MAP = ImmutableMap.of();
 
   @Override
@@ -82,15 +82,15 @@ public class ExpressionTest extends TestCase {
       ProjectContext context = ProjectContext.builder()
           .withEditors(ImmutableMap.<String, Editor>of())
           .build();
-      
+
       IMocksControl control = EasyMock.createControl();
       RepositoryExpression mockRepoEx = control.createMock(RepositoryExpression.class);
       expect(mockRepoEx.createCodebase(context)).andReturn(null);  // Codebase unneeded
-      
+
       Expression ex = new EditExpression(
           mockRepoEx,
           new Operation(Operator.EDIT, new Term("noSuchEditor", EMPTY_MAP)));
-      
+
       control.replay();
       ex.createCodebase(context);
       fail();
@@ -101,16 +101,20 @@ public class ExpressionTest extends TestCase {
 
   public void testNoSuchTranslator() throws Exception {
     try {
+      TranslatorPath tPath = new TranslatorPath("foo", "bar");
+      Translator t = new ForwardTranslator(ImmutableList.<TranslatorStep>of(
+          new TranslatorStep("quux", null)));
       ProjectContext context = ProjectContext.builder()
           .withEditors(ImmutableMap.<String, Editor>of())
+          .withTranslators(ImmutableMap.of(tPath, t))
           .build();
-      
+
       IMocksControl control = EasyMock.createControl();
       RepositoryExpression mockRepoEx = control.createMock(RepositoryExpression.class);
       Codebase mockRepoCodebase = control.createMock(Codebase.class);
       expect(mockRepoCodebase.getProjectSpace()).andReturn("internal").times(2);
       expect(mockRepoEx.createCodebase(context)).andReturn(mockRepoCodebase);
-      
+
       Expression ex = new TranslateExpression(
           mockRepoEx,
           new Operation(Operator.TRANSLATE, new Term("public", EMPTY_MAP)));
@@ -119,8 +123,10 @@ public class ExpressionTest extends TestCase {
       ex.createCodebase(context);
       fail();
     } catch (CodebaseCreationError expected) {
-      assertEquals("Could not find translator from project space \"internal\" to \"public\"",
-                   expected.getMessage());
+      assertEquals(
+          "Could not find translator from project space \"internal\" to \"public\".\n" +
+          "Translators only available for [foo>bar]",
+          expected.getMessage());
     }
   }
 
@@ -137,7 +143,7 @@ public class ExpressionTest extends TestCase {
     TranslatorPath tPath = new TranslatorPath("foo", "public");
     Translator t = new ForwardTranslator(ImmutableList.<TranslatorStep>of(
         new TranslatorStep("quux", translatorEditor)));
-    
+
     ProjectContext context = ProjectContext.builder()
         .withRepositories(ImmutableMap.of("foo", new Repository("foo", null, cc, null)))
         .withTranslators(ImmutableMap.of(tPath, t))
@@ -145,10 +151,10 @@ public class ExpressionTest extends TestCase {
 
     Codebase firstCb = new Codebase(new File("/first"), "foo",
         new RepositoryExpression(new Term("foo", EMPTY_MAP)));
-    
+
     Codebase secondCb = new Codebase(new File("/second"), "public",
         new RepositoryExpression(new Term("foo2", EMPTY_MAP)));
-    
+
     Codebase finalCb = new Codebase(new File("/final"), "public",
         new RepositoryExpression(new Term("foo3", EMPTY_MAP)));
 
