@@ -15,6 +15,7 @@ import com.google.devtools.moe.client.migrations.MigrationConfig;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.Repository;
 import com.google.devtools.moe.client.repositories.Revision;
+import com.google.devtools.moe.client.repositories.RevisionHistory.SearchType;
 
 import java.util.List;
 
@@ -35,15 +36,16 @@ public class DetermineMigrationsLogic {
       ProjectContext context, MigrationConfig migrationConfig, Db db) {
 
     Repository fromRepo = context.getRepository(migrationConfig.getFromRepository());
-    EquivalenceMatchResult equivMatch = fromRepo.revisionHistory.findRevisions(
-        null,  // Start at head.
-        new EquivalenceMatcher(migrationConfig.getToRepository(), db));
-
     // TODO(user): Decide whether to migrate linear or graph history here. Once DVCS Writers
     // support writing a graph of Revisions, we'll need to opt for linear or graph history based
     // on the MigrationConfig (e.g. whether or not the destination repo is linear-only).
+    EquivalenceMatchResult equivMatch = fromRepo.revisionHistory.findRevisions(
+        null,  // Start at head.
+        new EquivalenceMatcher(migrationConfig.getToRepository(), db),
+        SearchType.LINEAR);
+
     List<Revision> revisionsSinceEquivalence =
-        Lists.reverse(equivMatch.getRevisionsSinceEquivalence().getLinearHistory());
+        Lists.reverse(equivMatch.getRevisionsSinceEquivalence().getBreadthFirstHistory());
 
     if (revisionsSinceEquivalence.isEmpty()) {
       AppContext.RUN.ui.info("No revisions found since last equivalence for migration '"

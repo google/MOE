@@ -22,18 +22,15 @@ public interface RevisionMatcher<T> {
 
   /**
    * Returns a result of crawling a repository's revision history, depending on, first, the
-   * non-matching Revisions found (i.e. those where {@link #matches(Revision)} returned
-   * {@code false}), and second, the matching Revisions in the order they were encountered. Per
-   * {@link RevisionHistory#findRevisions(Revision, RevisionMatcher)}, the RevisionGraph of
-   * non-matching Revisions is the transitive closure of revision history starting at the given
-   * starting Revisions, walking backwards through their parents, and bounded by matching
-   * Revisions.
+   * non-matching Revisions (i.e. those where {@link #matches(Revision)} returned {@code false}),
+   * and second, the matching Revisions in the order they were encountered.
    *
-   * For example, {@link com.google.devtools.moe.client.database.EquivalenceMatcher} returns a
+   * <p>For example, {@link com.google.devtools.moe.client.database.EquivalenceMatcher} returns a
    * result encapsulating the non-matching Revisions (those since equivalence) and the Equivalences
-   * corresponding to the matching Revisions found in the search.
+   * corresponding to matching Revisions.
    *
-   * @see RevisionHistory#findRevisions(Revision, RevisionMatcher)
+   * @see RevisionHistory#findRevisions(Revision, RevisionMatcher,
+   * com.google.devtools.moe.client.repositories.RevisionHistory.SearchType)
    */
   T makeResult(RevisionGraph nonMatching, List<Revision> matching);
 }

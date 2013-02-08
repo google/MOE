@@ -14,9 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Stores the Revisions found by crawling a repository history with a {@link RevisionMatcher}, and
- * provides methods to access the result linearly (following only the first parent) or breadth-first
- * from the starting Revision(s).
+ * Stores the Revisions found by crawling a repository history with a {@link RevisionMatcher}.
  *
  */
 public class RevisionGraph {
@@ -31,31 +29,13 @@ public class RevisionGraph {
   }
 
   /**
-   * Returns a linearized revision history result, from the (by assumption, single) starting
-   * revision backwards following only the first parent of each revision. In DVCSes, this means that
-   * only the first parent of a merge commit -- the commit on the same branch, not the branch merged
-   * in -- will be included.
-   */
-  public List<Revision> getLinearHistory() {
-    Preconditions.checkState(
-        startingRevisions.size() == 1,
-        "Can't get linear history from multiple heads!");
-
-    return getHistory(true);
-  }
-
-  /**
    * Returns a breadth-first revision history result, from the starting revisions backwards through
    * all parents not filtered out by the {@code RevisionMatcher}.
    */
   // TODO(user): Switch from List to something else? Iterable?
-  public List<Revision> getBreadthFirstHistory() {
-    return getHistory(false);
-  }
-
   // TODO(user): When we start to use getBreadthFirstHistory() legitimately, make sure this
   // doesn't visit the same parent N times via its N children (unless it suits our implementation).
-  private List<Revision> getHistory(boolean linear) {
+  public List<Revision> getBreadthFirstHistory() {
     ImmutableList.Builder<Revision> historyBuilder = ImmutableList.builder();
     Deque<Revision> workList = Lists.newLinkedList();
     workList.addAll(startingRevisions);
@@ -64,11 +44,7 @@ public class RevisionGraph {
       if (matchingRevsAndMetadata.containsKey(current)) {
         historyBuilder.add(current);
         RevisionMetadata metadata = matchingRevsAndMetadata.get(current);
-        if (linear && !metadata.parents.isEmpty()) {
-          workList.add(metadata.parents.get(0));
-        } else {
-          workList.addAll(metadata.parents);
-        }
+        workList.addAll(metadata.parents);
       }
     }
     return historyBuilder.build();

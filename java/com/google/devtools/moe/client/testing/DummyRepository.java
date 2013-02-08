@@ -52,7 +52,8 @@ public class DummyRepository {
     }
 
     @Override
-    public <T> T findRevisions(Revision revision, RevisionMatcher<T> matcher) {
+    public <T> T findRevisions(
+        Revision revision, RevisionMatcher<T> matcher, SearchType searchType) {
       if (revision == null) {
         revision = new Revision("migrated_to", name);
       }

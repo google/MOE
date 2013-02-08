@@ -20,6 +20,7 @@ import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.project.TranslatorConfig;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
+import com.google.devtools.moe.client.repositories.RevisionHistory.SearchType;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.tools.CodebaseDifference;
 
@@ -80,9 +81,11 @@ public class BookkeepingLogic {
     RevisionHistory toHistory = context.getRepository(toRepository).revisionHistory;
     EquivalenceMatchResult equivMatch = toHistory.findRevisions(
         null /*revision*/,
-        new EquivalenceMatcher(fromRepository, db));
+        new EquivalenceMatcher(fromRepository, db),
+        SearchType.LINEAR);
 
-    List<Revision> linearToRevs = equivMatch.getRevisionsSinceEquivalence().getLinearHistory();
+    List<Revision> linearToRevs =
+        equivMatch.getRevisionsSinceEquivalence().getBreadthFirstHistory();
     AppContext.RUN.ui.info(String.format(
         "Found %d revisions in %s since equivalence (%s): %s",
         linearToRevs.size(),

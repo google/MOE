@@ -41,7 +41,7 @@ public class EquivalenceMatcher
         equivsBuilder.add(new Equivalence(matchRev, equivRevs.iterator().next()));
       }
     }
-    return new EquivalenceMatchResult(nonMatching,  equivsBuilder.build());
+    return new EquivalenceMatchResult(nonMatching, equivsBuilder.build());
   }
 
   @Override

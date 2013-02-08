@@ -19,20 +19,19 @@ public abstract class AbstractRevisionHistory implements RevisionHistory {
 
   private static final int MAX_REVISIONS_TO_SEARCH = 400;
 
-  /**
-   * Starting at the given revision, search backwards through the revision history until a matching
-   * revision is found. Returns the result of
-   * {@link RevisionMatcher#makeResult(RevisionGraph, List)} given the non-matching Revisions as a
-   * RevisionGraph, and the matching Revisions in the order encountered.
-   *
-   * @param revision  the revision to start at. If null, then start at head revision.
-   * @param matcher  the {@link RevisionMatcher} to apply
-   */
   @Override
-  public <T> T findRevisions(Revision revision, RevisionMatcher<T> matcher) {
+  public <T> T findRevisions(Revision revision, RevisionMatcher<T> matcher, SearchType searchType) {
+
     List<Revision> startingRevisions =
         (revision == null) ? findHeadRevisions() : ImmutableList.of(revision);
-    RevisionGraph.Builder resultBuilder = RevisionGraph.builder(startingRevisions);
+
+    if (startingRevisions.size() > 1 && searchType == SearchType.LINEAR) {
+      throw new MoeProblem(String.format(
+          "MOE found a repository (%s) with multiple heads while trying to search linear history.",
+          startingRevisions.get(0).repositoryName));
+    }
+
+    RevisionGraph.Builder nonMatchingBuilder = RevisionGraph.builder(startingRevisions);
     ImmutableList.Builder<Revision> matchingBuilder = ImmutableList.builder();
 
     Deque<Revision> workList = Lists.newLinkedList();
@@ -46,9 +45,13 @@ public abstract class AbstractRevisionHistory implements RevisionHistory {
       Revision current = workList.removeFirst();
       if (!matcher.matches(current)) {
         RevisionMetadata metadata = getMetadata(current);
-        resultBuilder.addRevision(current, metadata);
+        nonMatchingBuilder.addRevision(current, metadata);
 
-        for (Revision parent : metadata.parents) {
+        List<Revision> parentsToSearch = metadata.parents;
+        if (parentsToSearch.size() > 0 && searchType == SearchType.LINEAR) {
+          parentsToSearch = parentsToSearch.subList(0, 1);
+        }
+        for (Revision parent : parentsToSearch) {
           // Don't add a visited parent to the search queue.
           if (visited.add(parent)) {
             workList.addLast(parent);
@@ -57,17 +60,18 @@ public abstract class AbstractRevisionHistory implements RevisionHistory {
 
         if (visited.size() > MAX_REVISIONS_TO_SEARCH) {
           throw new MoeProblem(String.format(
-              "Couldn't find a matching revision for matcher (%s) in repo %s within %d revisions.",
+              "Couldn't find a matching revision for matcher (%s) from %s within %d revisions.",
               matcher,
-              revision.repositoryName,
+              (revision == null) ? "head" : revision,
               MAX_REVISIONS_TO_SEARCH));
         }
       } else {
+        // Don't search past matching revisions.
         matchingBuilder.add(current);
       }
     }
 
-    return matcher.makeResult(resultBuilder.build(), matchingBuilder.build());
+    return matcher.makeResult(nonMatchingBuilder.build(), matchingBuilder.build());
   }
 
   /**

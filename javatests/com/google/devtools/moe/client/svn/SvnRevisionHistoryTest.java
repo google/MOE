@@ -13,6 +13,7 @@ import com.google.devtools.moe.client.database.EquivalenceMatcher;
 import com.google.devtools.moe.client.database.EquivalenceMatcher.EquivalenceMatchResult;
 import com.google.devtools.moe.client.database.FileDb;
 import com.google.devtools.moe.client.repositories.Revision;
+import com.google.devtools.moe.client.repositories.RevisionHistory.SearchType;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.testing.AppContextForTesting;
 import com.google.devtools.moe.client.testing.DummyDb;
@@ -240,9 +241,9 @@ public class SvnRevisionHistoryTest extends TestCase {
     control.replay();
     SvnRevisionHistory history = new SvnRevisionHistory("internal_svn",
         "http://foo/svn/trunk/");
-    List<Revision> newRevisions = history.findRevisions(null, new EquivalenceMatcher("public", db))
-        .getRevisionsSinceEquivalence()
-        .getLinearHistory();
+    List<Revision> newRevisions =
+        history.findRevisions(null, new EquivalenceMatcher("public", db), SearchType.LINEAR)
+        .getRevisionsSinceEquivalence().getBreadthFirstHistory();
     assertEquals(2, newRevisions.size());
     assertEquals("internal_svn", newRevisions.get(0).repositoryName);
     assertEquals("3", newRevisions.get(0).revId);
@@ -320,7 +321,7 @@ public class SvnRevisionHistoryTest extends TestCase {
     SvnRevisionHistory history = new SvnRevisionHistory("repo2", "http://foo/svn/trunk/");
 
     EquivalenceMatchResult result = history.findRevisions(
-        new Revision("4", "repo2"), new EquivalenceMatcher("repo1", database));
+        new Revision("4", "repo2"), new EquivalenceMatcher("repo1", database), SearchType.LINEAR);
 
     control.verify();
 
@@ -395,7 +396,7 @@ public class SvnRevisionHistoryTest extends TestCase {
     SvnRevisionHistory history = new SvnRevisionHistory("repo2", "http://foo/svn/trunk/");
 
     EquivalenceMatchResult result = history.findRevisions(
-        new Revision("2", "repo2"), new EquivalenceMatcher("repo1", database));
+        new Revision("2", "repo2"), new EquivalenceMatcher("repo1", database), SearchType.LINEAR);
 
     control.verify();
 

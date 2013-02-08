@@ -16,6 +16,7 @@ import com.google.devtools.moe.client.database.EquivalenceMatcher.EquivalenceMat
 import com.google.devtools.moe.client.database.FileDb;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.Revision;
+import com.google.devtools.moe.client.repositories.RevisionHistory.SearchType;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.testing.AppContextForTesting;
 import com.google.devtools.moe.client.testing.DummyDb;
@@ -276,9 +277,9 @@ public class HgRevisionHistoryTest extends TestCase {
     control.replay();
 
     HgRevisionHistory rh = new HgRevisionHistory(Suppliers.ofInstance(mockRepo));
-    List<Revision> newRevisions = rh.findRevisions(null, new EquivalenceMatcher("public", db))
-        .getRevisionsSinceEquivalence()
-        .getLinearHistory();
+    List<Revision> newRevisions =
+        rh.findRevisions(null, new EquivalenceMatcher("public", db), SearchType.LINEAR)
+        .getRevisionsSinceEquivalence().getBreadthFirstHistory();
     assertEquals(2, newRevisions.size());
     assertEquals(MOCK_REPO_NAME, newRevisions.get(0).repositoryName);
     assertEquals("mockChangesetID", newRevisions.get(0).revId);
@@ -361,7 +362,7 @@ public class HgRevisionHistoryTest extends TestCase {
     HgRevisionHistory history = new HgRevisionHistory(Suppliers.ofInstance(mockRepo));
 
     EquivalenceMatchResult result =
-        history.findRevisions(null, new EquivalenceMatcher("repo1", database));
+        history.findRevisions(null, new EquivalenceMatcher("repo1", database), SearchType.BRANCHED);
 
     Equivalence expectedEq = new Equivalence(new Revision("1002", "repo1"),
                                              new Revision("2", "repo2"));
@@ -446,7 +447,7 @@ public class HgRevisionHistoryTest extends TestCase {
 
     HgRevisionHistory history = new HgRevisionHistory(Suppliers.ofInstance(mockRepo));
     EquivalenceMatchResult result = history.findRevisions(
-        new Revision("4", "repo2"), new EquivalenceMatcher("repo1", database));
+        new Revision("4", "repo2"), new EquivalenceMatcher("repo1", database), SearchType.BRANCHED);
 
     assertEquals(0, result.getEquivalences().size());
 

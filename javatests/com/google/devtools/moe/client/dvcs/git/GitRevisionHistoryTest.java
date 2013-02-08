@@ -16,6 +16,7 @@ import com.google.devtools.moe.client.database.EquivalenceMatcher.EquivalenceMat
 import com.google.devtools.moe.client.database.FileDb;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.Revision;
+import com.google.devtools.moe.client.repositories.RevisionHistory.SearchType;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.testing.AppContextForTesting;
 import com.google.devtools.moe.client.testing.DummyDb;
@@ -203,9 +204,9 @@ public class GitRevisionHistoryTest extends TestCase {
     control.replay();
 
     GitRevisionHistory rh = new GitRevisionHistory(Suppliers.ofInstance(mockRepo));
-    List<Revision> newRevisions = rh.findRevisions(null, new EquivalenceMatcher("mockRepo", db))
-        .getRevisionsSinceEquivalence()
-        .getBreadthFirstHistory();
+    List<Revision> newRevisions =
+        rh.findRevisions(null, new EquivalenceMatcher("mockRepo", db), SearchType.BRANCHED)
+        .getRevisionsSinceEquivalence().getBreadthFirstHistory();
 
     assertEquals(3, newRevisions.size());
     assertEquals(repositoryName, newRevisions.get(0).repositoryName);
@@ -247,9 +248,9 @@ public class GitRevisionHistoryTest extends TestCase {
     control.replay();
 
     GitRevisionHistory rh = new GitRevisionHistory(Suppliers.ofInstance(mockRepo));
-    List<Revision> newRevisions = rh.findRevisions(null, new EquivalenceMatcher("mockRepo", db))
-        .getRevisionsSinceEquivalence()
-        .getBreadthFirstHistory();
+    List<Revision> newRevisions =
+        rh.findRevisions(null, new EquivalenceMatcher("mockRepo", db), SearchType.BRANCHED)
+        .getRevisionsSinceEquivalence().getBreadthFirstHistory();
 
     // parent1 should not be traversed.
     assertEquals(2, newRevisions.size());
@@ -312,7 +313,7 @@ public class GitRevisionHistoryTest extends TestCase {
     GitRevisionHistory history = new GitRevisionHistory(Suppliers.ofInstance(mockRepo));
 
     EquivalenceMatchResult result = history.findRevisions(
-        new Revision("4", "repo2"), new EquivalenceMatcher("repo1", database));
+        new Revision("4", "repo2"), new EquivalenceMatcher("repo1", database), SearchType.BRANCHED);
 
     Equivalence expectedEq = new Equivalence(new Revision("1002", "repo1"),
                                              new Revision("2", "repo2"));
@@ -386,9 +387,68 @@ public class GitRevisionHistoryTest extends TestCase {
     GitRevisionHistory history = new GitRevisionHistory(Suppliers.ofInstance(mockRepo));
 
     EquivalenceMatchResult result = history.findRevisions(
-        new Revision("4", "repo2"), new EquivalenceMatcher("repo1", database));
+        new Revision("4", "repo2"), new EquivalenceMatcher("repo1", database), SearchType.BRANCHED);
 
     assertEquals(0, result.getEquivalences().size());
+
+    control.verify();
+  }
+
+  /**
+   * A test for finding the last equivalence for the following history starting
+   * with repo2{4} and <em>only searching linear history</em> instead of following multi-parent
+   * commits:
+   * 
+   *                                         _____
+   *                                        |     |
+   *                                        |  4  |
+   *                                        |_____|
+   *                                           |  \
+   *                                           |   \
+   *                                           |    \
+   *                                         __|__   \_____
+   *                                        |     |  |     |
+   *                                        |  3a |  | 3b  |
+   *                                        |_____|  |_____|
+   *                                           |     /
+   *                                           |    /
+   *                                           |   /
+   *              ____                       __|__/
+   *             |    |                     |     |
+   *             |1002|=====================|  2  |
+   *             |____|                     |_____|
+   *
+   *              repo1                      repo2
+   *
+   * @throws Exception
+   */
+  public void testFindLastEquivalence_linearSearch() throws Exception {
+    GitClonedRepository mockRepo = mockClonedRepo("repo2");
+
+    expectLogCommand(mockRepo, LOG_FORMAT_ALL_METADATA, "4")
+        .andReturn(METADATA_JOINER.join("4", "author", GIT_COMMIT_DATE, "3a 3b", "description"));
+
+    expectLogCommand(mockRepo, LOG_FORMAT_ALL_METADATA, "3a")
+        .andReturn(METADATA_JOINER.join("3a", "author", GIT_COMMIT_DATE, "2", "description"));
+
+    // Note revision 3b is <em>not</em> expected here for a linear history search.
+
+    control.replay();
+
+    FileDb database = FileDb.makeDbFromDbText(testDb1);
+
+    GitRevisionHistory history = new GitRevisionHistory(Suppliers.ofInstance(mockRepo));
+
+    EquivalenceMatchResult result = history.findRevisions(
+        new Revision("4", "repo2"), new EquivalenceMatcher("repo1", database), SearchType.LINEAR);
+
+    Equivalence expectedEq = new Equivalence(new Revision("1002", "repo1"),
+                                             new Revision("2", "repo2"));
+
+    assertEquals(
+        ImmutableList.of(new Revision("4", "repo2"), new Revision("3a", "repo2")),
+        result.getRevisionsSinceEquivalence().getBreadthFirstHistory());
+    assertEquals(ImmutableList.of(expectedEq), result.getEquivalences());
 
     control.verify();
   }
