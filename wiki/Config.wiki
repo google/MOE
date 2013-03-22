@@ -23,7 +23,12 @@ A config file consists of three main sections. An example MOE configuration foll
     "internal”: {
       "type": "hg",
       "project_space": "internal",
-      "url": "/path/to/repo/"
+      "url": "/path/to/repo/",
+      "ignore_file_res": [
+        "#": "Regexes for files in the internal repo that shouldn't be migrated to the public one",
+        "^docs/secret_doc\\.txt",
+        "^secret_folder/.*"
+      ]
     },
     "svn": {
       "type": "svn",
