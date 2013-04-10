@@ -123,12 +123,12 @@ public class SystemFileSystem implements FileSystem {
 
   @Override
   public void setExecutable(File f) {
-    f.setExecutable(true);
+    f.setExecutable(true, false);
   }
 
   @Override
   public void setNonExecutable(File f) {
-    f.setExecutable(false);
+    f.setExecutable(false, false);
   }
 
   @Override
@@ -144,7 +144,7 @@ public class SystemFileSystem implements FileSystem {
   @Override
   public void copyFile(File src, File dest) throws IOException {
     Files.copy(src, dest);
-    dest.setExecutable(src.canExecute());
+    dest.setExecutable(src.canExecute(), false);
   }
 
   @Override

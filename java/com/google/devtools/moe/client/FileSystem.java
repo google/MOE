@@ -91,12 +91,12 @@ public interface FileSystem {
   public boolean isReadable(File f);
 
   /**
-   * Makes a file executable.
+   * Makes a file executable for all users.
    */
   public void setExecutable(File f);
 
   /**
-   * Makes a file non-executable.
+   * Makes a file non-executable for all users.
    */
   public void setNonExecutable(File f);
 

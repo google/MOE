@@ -40,6 +40,9 @@ public class RepositoryConfig {
   @SerializedName("ignore_file_res")
   private List<String> ignoreFileRes = ImmutableList.of();
 
+  @SerializedName("executable_file_res")
+  private List<String> executableFileRes = ImmutableList.of();
+
   /**
    * List of regexes for filepaths to ignore changes to. In other words, in the repo's Writer,
    * changes to filepaths matching any of these regexes will be ignored -- no additions, deletions,
@@ -93,6 +96,16 @@ public class RepositoryConfig {
    */
   @Nullable public List<String> getImportBranches() {
     return importBranches;
+  }
+
+  /**
+   * Returns a list of regexes for file paths that should be marked executable. For version control
+   * or build systems that don't support the executable bit, use these regexes to indicate which
+   * files should be marked executable. Any files that don't match one of these regexes will be
+   * marked non-executable.
+   */
+  public List<String> getExecutableFileRes() {
+    return executableFileRes;
   }
 
   void validate() throws InvalidProject {
