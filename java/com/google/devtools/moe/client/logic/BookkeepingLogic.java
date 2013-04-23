@@ -46,9 +46,15 @@ public class BookkeepingLogic {
   private static void updateHeadEquivalence(String fromRepository, String toRepository,
                                             Db db, ProjectContext context) {
     Codebase to, from;
+    RevisionHistory fromHistory = context.getRepository(fromRepository).revisionHistory;
+    RevisionHistory toHistory = context.getRepository(toRepository).revisionHistory;
+    Revision toHead = toHistory.findHighestRevision(null);
+    Revision fromHead = fromHistory.findHighestRevision(null);
+
     try {
-      to = new RepositoryExpression(toRepository).createCodebase(context);
+      to = new RepositoryExpression(toRepository).atRevision(toHead.revId).createCodebase(context);
       from = new RepositoryExpression(fromRepository)
+          .atRevision(fromHead.revId)
           .translateTo(to.getProjectSpace())
           .createCodebase(context);
     } catch (CodebaseCreationError e) {
@@ -60,13 +66,7 @@ public class BookkeepingLogic {
         "diff_codebases",
         String.format("Diff codebases '%s' and '%s'", from.toString(), to.toString()));
     if (!CodebaseDifference.diffCodebases(from, to).areDifferent()) {
-      RevisionHistory fromHistory = context.getRepository(fromRepository).revisionHistory;
-      RevisionHistory toHistory = context.getRepository(toRepository).revisionHistory;
-
-      // TODO(user): Pull highest revision from the created codebases, not over again (in case
-      // head has moved forward meanwhile).
-      db.noteEquivalence(new Equivalence(fromHistory.findHighestRevision(null),
-                                         toHistory.findHighestRevision(null)));
+      db.noteEquivalence(new Equivalence(fromHead, toHead));
     }
     AppContext.RUN.ui.popTask(t, "");
   }
