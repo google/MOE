@@ -8,7 +8,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
-import com.google.common.unix.Directories;
 
 import java.io.File;
 import java.io.IOException;
@@ -155,7 +154,7 @@ public class SystemFileSystem implements FileSystem {
 
   @Override
   public void deleteRecursively(File file) throws IOException {
-    Directories.deleteRecursively(file);
+    Files.deleteRecursively(file);
   }
 
   @Override
