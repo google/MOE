@@ -2,6 +2,7 @@
 
 package com.google.devtools.moe.client.dvcs.hg;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -32,9 +33,8 @@ public class HgClonedRepository implements LocalClone {
   private final String repositoryUrl;
   private File localCloneTempDir;
   private boolean clonedLocally;
-
-  /** The revision of this clone, an Hg changeset ID */
-  private String revId;
+  private boolean updatedToRev = false;
+  private String branch = null;
 
   public HgClonedRepository(String repositoryName, RepositoryConfig repositoryConfig) {
     this(repositoryName, repositoryConfig, repositoryConfig.getUrl());
@@ -64,6 +64,12 @@ public class HgClonedRepository implements LocalClone {
     return localCloneTempDir;
   }
 
+  String getBranch() {
+    Preconditions.checkState(clonedLocally);
+    Preconditions.checkNotNull(branch);
+    return branch;
+  }
+
   @Override
   public void cloneLocallyAtHead(Lifetime cloneLifetime) {
     Preconditions.checkState(!clonedLocally);
@@ -72,15 +78,17 @@ public class HgClonedRepository implements LocalClone {
     localCloneTempDir = AppContext.RUN.fileSystem.getTemporaryDirectory(tempDirName, cloneLifetime);
 
     try {
-      HgRepository.runHgCommand(
-          ImmutableList.of(
-              "clone",
-              "--update=" + HgRevisionHistory.DEFAULT_BRANCH,
-              repositoryUrl,
-              localCloneTempDir.getAbsolutePath()),
-          "" /*workingDirectory*/);
+      Optional<String> branchName = repositoryConfig.getBranch();
+      ImmutableList.Builder<String> cloneArgs = ImmutableList.<String>builder();
+      cloneArgs.add("clone", repositoryUrl, localCloneTempDir.getAbsolutePath());
+      if (branchName.isPresent()) {
+        cloneArgs.add("--rev=" + branchName.get());
+      }
+
+      HgRepository.runHgCommand(cloneArgs.build(), "" /*workingDirectory*/);
       clonedLocally = true;
-      revId = HgRevisionHistory.DEFAULT_BRANCH;
+      branch = HgRepository.runHgCommand(
+          ImmutableList.of("branch"), localCloneTempDir.getAbsolutePath()).trim();
     } catch (CommandException e) {
       throw new MoeProblem(
           "Could not clone from hg repo at " + repositoryUrl + ": " + e.stderr);
@@ -90,10 +98,10 @@ public class HgClonedRepository implements LocalClone {
   @Override
   public void updateToRevision(String revId) {
     Preconditions.checkState(clonedLocally);
-    Preconditions.checkState(HgRevisionHistory.DEFAULT_BRANCH.equals(this.revId));
+    Preconditions.checkState(!updatedToRev);
     try {
       runHgCommand("update", revId);
-      this.revId = revId;
+      updatedToRev = true;
     } catch (CommandException e) {
       throw new MoeProblem(
           "Could not clone from hg repo at " + localCloneTempDir + ": " + e.stderr);
@@ -103,20 +111,15 @@ public class HgClonedRepository implements LocalClone {
   @Override
   public File archiveAtRevision(String revId) {
     Preconditions.checkState(clonedLocally);
-    if (Strings.isNullOrEmpty(revId)) {
-      revId = HgRevisionHistory.DEFAULT_BRANCH;
-    }
     File archiveLocation = AppContext.RUN.fileSystem.getTemporaryDirectory(
         String.format("hg_archive_%s_%s_", repositoryName, revId), Lifetimes.currentTask());
     try {
-      HgRepository.runHgCommand(
-          ImmutableList.of(
-              "archive",
-              "--rev=" + revId,
-              archiveLocation.getAbsolutePath()),
-          localCloneTempDir.getAbsolutePath() /*workingDirectory*/);
-      clonedLocally = true;
-
+      ImmutableList.Builder<String> archiveArgs = ImmutableList.<String>builder();
+      archiveArgs.add("archive", archiveLocation.getAbsolutePath());
+      if (!Strings.isNullOrEmpty(revId)) {
+        archiveArgs.add("--rev=" + revId);
+      }
+      HgRepository.runHgCommand(archiveArgs.build(), localCloneTempDir.getAbsolutePath());
       AppContext.RUN.fileSystem.deleteRecursively(new File(archiveLocation, ".hg_archival.txt"));
     } catch (CommandException e) {
       throw new MoeProblem(

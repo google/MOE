@@ -4,6 +4,7 @@ package com.google.devtools.moe.client.dvcs.git;
 
 import static org.easymock.EasyMock.expect;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner;
@@ -42,6 +43,7 @@ public class GitClonedRepositoryTest extends TestCase {
     control = EasyMock.createControl();
     repositoryConfig = control.createMock(RepositoryConfig.class);
     expect(repositoryConfig.getUrl()).andReturn(repositoryURL).anyTimes();
+    expect(repositoryConfig.getBranch()).andReturn(Optional.<String>absent()).anyTimes();
     mockFS = control.createMock(FileSystem.class);
     cmd = control.createMock(CommandRunner.class);
     AppContext.RUN.fileSystem = mockFS;
@@ -80,6 +82,36 @@ public class GitClonedRepositoryTest extends TestCase {
     control.verify();
   }
 
+  public void testCloneLocally_branch() throws Exception {
+    EasyMock.reset(repositoryConfig);
+    expect(repositoryConfig.getUrl()).andReturn(repositoryURL).anyTimes();
+    expect(repositoryConfig.getBranch()).andReturn(Optional.of("mybranch")).anyTimes();
+
+    expect(mockFS.getTemporaryDirectory(
+        EasyMock.eq("git_clone_" + repositoryName + "_"), EasyMock.<Lifetime>anyObject()))
+        .andReturn(new File(localCloneTempDir));
+
+    expect(cmd.runCommand(
+        "git",
+        ImmutableList.of("clone", repositoryURL, localCloneTempDir, "--branch", "mybranch"),
+        "" /*workingDirectory*/))
+        .andReturn("git clone ok (mock output)");
+
+    control.replay();
+    GitClonedRepository repo = new GitClonedRepository(repositoryName, repositoryConfig);
+    repo.cloneLocallyAtHead(Lifetimes.persistent());
+    assertEquals(repositoryName, repo.getRepositoryName());
+    assertEquals(repositoryURL, repo.getConfig().getUrl());
+    assertEquals(localCloneTempDir, repo.getLocalTempDir().getAbsolutePath());
+
+    try {
+      repo.cloneLocallyAtHead(Lifetimes.persistent());
+      fail("Re-cloning repo succeeded unexpectedly.");
+    } catch (IllegalStateException expected) {}
+
+    control.verify();
+  }
+
   public void testUpdateToRevId_nonHeadRevId() throws Exception {
     String updateRevId = "notHead";
     String headRevId = "head";
@@ -88,13 +120,17 @@ public class GitClonedRepositoryTest extends TestCase {
     
     expect(cmd.runCommand(
         "git",
-        ImmutableList.of("show-ref", "--heads", "--hash", GitWriter.DEFAULT_BRANCH_NAME),
+        ImmutableList.of("rev-parse", "HEAD"),
         localCloneTempDir)).andReturn(headRevId);
 
     // Updating to revision other than head, so create a branch.
     expect(cmd.runCommand(
         "git",
-        ImmutableList.of("checkout", updateRevId, "-b", "moe_writing_branch_from_" + updateRevId),
+        ImmutableList.of(
+            "checkout",
+            updateRevId,
+            "-b",
+            GitClonedRepository.MOE_MIGRATIONS_BRANCH_PREFIX + updateRevId),
         "/tmp/git_clone_mockrepo_12345")).andReturn(headRevId);
 
     control.replay();
@@ -112,7 +148,7 @@ public class GitClonedRepositoryTest extends TestCase {
     
     expect(cmd.runCommand(
         "git",
-        ImmutableList.of("show-ref", "--heads", "--hash", GitWriter.DEFAULT_BRANCH_NAME),
+        ImmutableList.of("rev-parse", "HEAD"),
         localCloneTempDir)).andReturn(headRevId);
 
     // No branch creation expected.

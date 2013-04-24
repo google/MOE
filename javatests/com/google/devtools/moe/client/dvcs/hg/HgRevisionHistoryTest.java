@@ -61,6 +61,7 @@ public class HgRevisionHistoryTest extends TestCase {
     HgClonedRepository mockRepo = control.createMock(HgClonedRepository.class);
     expect(mockRepo.getRepositoryName()).andReturn(repoName).anyTimes();
     expect(mockRepo.getLocalTempDir()).andReturn(new File(CLONE_TEMP_DIR)).anyTimes();
+    expect(mockRepo.getBranch()).andReturn("mybranch").anyTimes();
 
     config = control.createMock(RepositoryConfig.class);
     expect(mockRepo.getConfig()).andReturn(config).anyTimes();
@@ -75,7 +76,7 @@ public class HgRevisionHistoryTest extends TestCase {
             "hg",
             ImmutableList.<String>of(
                 "log",
-                "--branch=" + HgRevisionHistory.DEFAULT_BRANCH,
+                "--branch=mybranch",
                 "--limit=1",
                 "--template={node}"),
             CLONE_TEMP_DIR /*workingDirectory*/))
@@ -99,7 +100,7 @@ public class HgRevisionHistoryTest extends TestCase {
             "hg",
             ImmutableList.<String>of(
                 "log",
-                "--branch=default",
+                "--branch=mybranch",
                 "--limit=1",
                 "--template={node}",
                 "--rev=bogusChangeset"),
@@ -208,13 +209,13 @@ public class HgRevisionHistoryTest extends TestCase {
 
   public void testFindHeadRevisions() throws Exception {
     HgClonedRepository mockRepo = mockClonedRepo(MOCK_REPO_NAME);
-    expect(config.getImportBranches()).andReturn(ImmutableList.of("branch1", "branch2", "unused"));
 
     expect(
         cmd.runCommand(
             "hg",
             ImmutableList.<String>of(
                 "heads",
+                "mybranch",
                 "--template={node} {branch}\n"),
             CLONE_TEMP_DIR /*workingDirectory*/))
         .andReturn("mockChangesetID1 branch1\nmockChangesetID2 branch2\nmockChangesetID3 unused");
@@ -233,7 +234,6 @@ public class HgRevisionHistoryTest extends TestCase {
 
   public void testFindNewRevisions() throws Exception {
     HgClonedRepository mockRepo = mockClonedRepo(MOCK_REPO_NAME);
-    expect(config.getImportBranches()).andReturn(null);
     DummyDb db = new DummyDb(false);
 
     expect(
@@ -241,6 +241,7 @@ public class HgRevisionHistoryTest extends TestCase {
             "hg",
             ImmutableList.<String>of(
                 "heads",
+                "mybranch",
                 "--template={node} {branch}\n"),
             CLONE_TEMP_DIR /*workingDirectory*/))
         .andReturn("mockChangesetID default\n");
@@ -326,13 +327,13 @@ public class HgRevisionHistoryTest extends TestCase {
   public void testFindLastEquivalence() throws Exception {
     // Mock cloned repo
     HgClonedRepository mockRepo = mockClonedRepo("repo2");
-    expect(config.getImportBranches()).andReturn(null);
 
     expect(
         cmd.runCommand(
             "hg",
             ImmutableList.<String>of(
                 "heads",
+                "mybranch",
                 "--template={node} {branch}\n"),
             CLONE_TEMP_DIR /*workingDirectory*/))
         .andReturn("4 default\n");

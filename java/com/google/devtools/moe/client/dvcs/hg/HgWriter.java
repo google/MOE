@@ -69,10 +69,10 @@ public class HgWriter extends AbstractDvcsWriter<HgClonedRepository> {
     ui.info("MOE changes have been committed to a clone at " + getRoot());
     ui.info("Changes may have created a new head. Merge heads if needed, then push to remote.");
     ui.info("For example:");
-    ui.info("hg heads");
-    ui.info("hg merge  # if more than one head");
-    ui.info("hg commit -m 'MOE merge'");
-    ui.info("hg push");
+    ui.info("$ hg heads");
+    ui.info("$ hg merge  # if more than one head");
+    ui.info("$ hg commit -m 'MOE merge'");
+    ui.info("$ hg push");
     ui.info("=====");
   }
 }

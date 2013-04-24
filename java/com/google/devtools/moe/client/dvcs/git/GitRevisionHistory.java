@@ -5,6 +5,7 @@ package com.google.devtools.moe.client.dvcs.git;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
@@ -30,11 +31,6 @@ public class GitRevisionHistory extends AbstractRevisionHistory {
 
   @VisibleForTesting static final String LOG_DELIMITER = "---@MOE@---";
 
-  /**
-   * The default Git branch in which to look for revisions.
-   */
-  @VisibleForTesting static final String DEFAULT_BRANCH = "master";
-
   private final Supplier<GitClonedRepository> headCloneSupplier;
 
   GitRevisionHistory(Supplier<GitClonedRepository> headCloneSupplier) {
@@ -50,8 +46,8 @@ public class GitRevisionHistory extends AbstractRevisionHistory {
    */
   @Override
   public Revision findHighestRevision(String revId) {
-    if (revId == null || revId.isEmpty()) {
-      revId = DEFAULT_BRANCH;
+    if (Strings.isNullOrEmpty(revId)) {
+      revId = "HEAD";
     }
 
     String hashID;
@@ -132,15 +128,8 @@ public class GitRevisionHistory extends AbstractRevisionHistory {
 
   @Override
   protected List<Revision> findHeadRevisions() {
-    List<String> importBranches = headCloneSupplier.get().getConfig().getImportBranches();
-    if (importBranches == null) {
-      importBranches = ImmutableList.of("master");
-    }
-
-    ImmutableList.Builder<Revision> result = ImmutableList.<Revision>builder();
-    for (String branchName : importBranches) {
-      result.add(findHighestRevision(branchName));
-    }
-    return result.build();
+    // As distinct from Mercurial, the head (current branch) in Git can only ever point to a
+    // single commit.
+    return ImmutableList.of(findHighestRevision("HEAD"));
   }
 }

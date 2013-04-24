@@ -31,11 +31,6 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
   private static final DateTimeFormatter HG_DATE_FMT =
       DateTimeFormat.forPattern("yyyy-MM-dd HH:mm Z");
 
-  /**
-   * The default Hg branch in which to look for revisions.
-   */
-  static final String DEFAULT_BRANCH = "default";
-
   private final Supplier<HgClonedRepository> tipCloneSupplier;
 
   HgRevisionHistory(Supplier<HgClonedRepository> tipCloneSupplier) {
@@ -53,7 +48,7 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
   public Revision findHighestRevision(@Nullable String revId) {
     ImmutableList.Builder<String> argsBuilder = ImmutableList.<String>builder()
         .add("log")
-        .add("--branch=" + DEFAULT_BRANCH)
+        .add("--branch=" + tipCloneSupplier.get().getBranch())
         // Ensure one revision only, to be safe.
         .add("--limit=1")
         // Format output as "changesetID" alone.
@@ -167,22 +162,17 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
   @Override
   protected List<Revision> findHeadRevisions() {
     HgClonedRepository tipClone = tipCloneSupplier.get();
-    List<String> importBranches = tipClone.getConfig().getImportBranches();
-    if (importBranches == null) {
-      importBranches = ImmutableList.of("default");
-    }
 
-    ImmutableList<String> args = ImmutableList.of(
-        "heads",
-        // Format output as "changesetID branch".
-        "--template={node} {branch}\n");
     String heads;
     try {
-      heads = HgRepository.runHgCommand(args, tipClone.getLocalTempDir().getAbsolutePath());
+      heads = HgRepository.runHgCommand(
+          // Format output as "changesetID branch".
+          ImmutableList.of("heads", tipClone.getBranch(), "--template={node} {branch}\n"),
+          tipClone.getLocalTempDir().getAbsolutePath());
     } catch (CommandException e) {
       throw new MoeProblem(
           String.format("Failed hg run: %s %d %s %s",
-                        args.toString(),
+                        e.args.toString(),
                         e.returnStatus,
                         e.stdout,
                         e.stderr));
@@ -193,9 +183,7 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
       String[] changesetIDAndBranchParts = changesetIDAndBranch.split(" ");
       String changesetID = changesetIDAndBranchParts[0];
       String branch = changesetIDAndBranchParts[1];
-      if (importBranches.contains(branch)) {
-        result.add(new Revision(changesetID, tipClone.getRepositoryName()));
-      }
+      result.add(new Revision(changesetID, tipClone.getRepositoryName()));
     }
     return result.build();
   }

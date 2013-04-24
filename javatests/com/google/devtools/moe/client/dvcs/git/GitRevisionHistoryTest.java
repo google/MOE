@@ -61,8 +61,6 @@ public class GitRevisionHistoryTest extends TestCase {
 
     RepositoryConfig repositoryConfig = control.createMock(RepositoryConfig.class);
     expect(repositoryConfig.getUrl()).andReturn(localCloneTempDir).anyTimes();
-    expect(repositoryConfig.getImportBranches())
-        .andReturn(ImmutableList.of("branch1", "branch2")).anyTimes();
 
     expect(mockRepo.getRepositoryName()).andReturn(repoName).anyTimes();
     expect(mockRepo.getConfig()).andReturn(repositoryConfig).anyTimes();
@@ -81,7 +79,7 @@ public class GitRevisionHistoryTest extends TestCase {
   public void testFindHighestRevision() throws Exception {
     GitClonedRepository mockRepo = mockClonedRepo(repositoryName);
 
-    expectLogCommand(mockRepo, LOG_FORMAT_COMMIT_ID, "master").andReturn("mockHashID");
+    expectLogCommand(mockRepo, LOG_FORMAT_COMMIT_ID, "HEAD").andReturn("mockHashID");
 
     control.replay();
 
@@ -163,24 +161,7 @@ public class GitRevisionHistoryTest extends TestCase {
    * @param mockRepo the mock repository to use
    */
   private void mockFindHeadRevisions(GitClonedRepository mockRepo) throws CommandException {
-    expectLogCommand(mockRepo, LOG_FORMAT_COMMIT_ID, "branch1").andReturn("mockHashID1");
-    expectLogCommand(mockRepo, LOG_FORMAT_COMMIT_ID, "branch2").andReturn("mockHashID2");
-  }
-
-  public void testFindHeadRevisions() throws Exception {
-    GitClonedRepository mockRepo = mockClonedRepo(repositoryName);
-    mockFindHeadRevisions(mockRepo);
-
-    control.replay();
-
-    GitRevisionHistory rh = new GitRevisionHistory(Suppliers.ofInstance(mockRepo));
-    ImmutableList<Revision> revs = ImmutableList.copyOf(rh.findHeadRevisions());
-    assertEquals(repositoryName, revs.get(0).repositoryName);
-    assertEquals("mockHashID1", revs.get(0).revId);
-    assertEquals(repositoryName, revs.get(1).repositoryName);
-    assertEquals("mockHashID2", revs.get(1).revId);
-
-    control.verify();
+    expectLogCommand(mockRepo, LOG_FORMAT_COMMIT_ID, "HEAD").andReturn("head");
   }
 
   public void testFindNewRevisions_all() throws Exception {
@@ -189,17 +170,17 @@ public class GitRevisionHistoryTest extends TestCase {
     DummyDb db = new DummyDb(false);
 
     // Breadth-first search order.
-    expectLogCommand(mockRepo, LOG_FORMAT_ALL_METADATA, "mockHashID1")
+    expectLogCommand(mockRepo, LOG_FORMAT_ALL_METADATA, "head")
         .andReturn(METADATA_JOINER.join(
-            "mockHashID1", "uid@google.com", GIT_COMMIT_DATE, "parent", "description"));
+            "head", "uid@google.com", GIT_COMMIT_DATE, "parent1 parent2", "description"));
 
-    expectLogCommand(mockRepo, LOG_FORMAT_ALL_METADATA, "mockHashID2")
+    expectLogCommand(mockRepo, LOG_FORMAT_ALL_METADATA, "parent1")
         .andReturn(METADATA_JOINER.join(
-            "mockHashID2", "uid@google.com", GIT_COMMIT_DATE, "", "description"));
+            "parent1", "uid@google.com", GIT_COMMIT_DATE, "", "description"));
 
-    expectLogCommand(mockRepo, LOG_FORMAT_ALL_METADATA, "parent")
+    expectLogCommand(mockRepo, LOG_FORMAT_ALL_METADATA, "parent2")
         .andReturn(METADATA_JOINER.join(
-            "parent", "uid@google.com", GIT_COMMIT_DATE, "", "description"));
+            "parent2", "uid@google.com", GIT_COMMIT_DATE, "", "description"));
 
     control.replay();
 
@@ -210,11 +191,11 @@ public class GitRevisionHistoryTest extends TestCase {
 
     assertEquals(3, newRevisions.size());
     assertEquals(repositoryName, newRevisions.get(0).repositoryName);
-    assertEquals("mockHashID1", newRevisions.get(0).revId);
+    assertEquals("head", newRevisions.get(0).revId);
     assertEquals(repositoryName, newRevisions.get(1).repositoryName);
-    assertEquals("mockHashID2", newRevisions.get(1).revId);
+    assertEquals("parent1", newRevisions.get(1).revId);
     assertEquals(repositoryName, newRevisions.get(2).repositoryName);
-    assertEquals("parent", newRevisions.get(2).revId);
+    assertEquals("parent2", newRevisions.get(2).revId);
 
     control.verify();
   }
@@ -237,13 +218,13 @@ public class GitRevisionHistoryTest extends TestCase {
     };
 
     // Breadth-first search order.
-    expectLogCommand(mockRepo, LOG_FORMAT_ALL_METADATA, "mockHashID1")
+    expectLogCommand(mockRepo, LOG_FORMAT_ALL_METADATA, "head")
         .andReturn(METADATA_JOINER.join(
-            "mockHashID1", "uid@google.com", GIT_COMMIT_DATE, "parent1", "description"));
+            "head", "uid@google.com", GIT_COMMIT_DATE, "parent1 parent2", "description"));
 
-    expectLogCommand(mockRepo, LOG_FORMAT_ALL_METADATA, "mockHashID2")
+    expectLogCommand(mockRepo, LOG_FORMAT_ALL_METADATA, "parent2")
         .andReturn(METADATA_JOINER.join(
-            "mockHashID2", "uid@google.com", GIT_COMMIT_DATE, "", "description"));
+            "parent2", "uid@google.com", GIT_COMMIT_DATE, "", "description"));
 
     control.replay();
 
@@ -254,8 +235,8 @@ public class GitRevisionHistoryTest extends TestCase {
 
     // parent1 should not be traversed.
     assertEquals(2, newRevisions.size());
-    assertEquals("mockHashID1", newRevisions.get(0).revId);
-    assertEquals("mockHashID2", newRevisions.get(1).revId);
+    assertEquals("head", newRevisions.get(0).revId);
+    assertEquals("parent2", newRevisions.get(1).revId);
 
     control.verify();
   }

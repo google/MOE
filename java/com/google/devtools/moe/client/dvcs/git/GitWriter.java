@@ -14,13 +14,12 @@ import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import java.util.List;
 
 /**
- * Git implementation of {@link AbstractDvcsWriter}. For migrations, local commits are made on a
- * branch from master at last equivalence revision.
+ * Git implementation of {@link AbstractDvcsWriter}. Writes migrated commits to a
+ * {@link GitClonedRepository} on its configured branch or on a branch from last equivalence
+ * revision (if the configured branch has moved past equivalence).
  */
 public class GitWriter extends AbstractDvcsWriter<GitClonedRepository> {
 
-  static final String DEFAULT_BRANCH_NAME = "master";
-  
   GitWriter(GitClonedRepository revClone) {
     super(revClone);
   }
@@ -67,6 +66,7 @@ public class GitWriter extends AbstractDvcsWriter<GitClonedRepository> {
 
   @Override
   public void printPushMessage() {
+    String originalBranchName = revClone.getConfig().getBranch().or("master");
     String moeBranchName;
     try {
       moeBranchName = revClone.runGitCommand("rev-parse", "--abbrev-ref", "HEAD").trim();
@@ -77,15 +77,15 @@ public class GitWriter extends AbstractDvcsWriter<GitClonedRepository> {
     Ui ui = AppContext.RUN.ui;
     ui.info("=====");
     ui.info("MOE changes have been committed to a clone at " + getRoot());
-    if (moeBranchName.equals(DEFAULT_BRANCH_NAME)) {
-      ui.info("Changes are on " + DEFAULT_BRANCH_NAME + " branch and are ready to push.");
-    } else {
+    if (moeBranchName.startsWith(GitClonedRepository.MOE_MIGRATIONS_BRANCH_PREFIX)) {
       ui.info("Changes are on a new branch. Rebase or merge these changes back onto ");
-      ui.info(DEFAULT_BRANCH_NAME + " to push, e.g.:");
-      ui.info("git rebase " + DEFAULT_BRANCH_NAME);
-      ui.info("git checkout " + DEFAULT_BRANCH_NAME);
-      ui.info("git merge " + moeBranchName);
-      ui.info("git push");
+      ui.info("the desired branch before pushing. For example:");
+      ui.info("$ git rebase " + originalBranchName);
+      ui.info("$ git checkout " + originalBranchName);
+      ui.info("$ git merge " + moeBranchName);
+      ui.info("$ git push");
+    } else {
+      ui.info("Changes are on branch '" + moeBranchName + "' and are ready to push.");
     }
     ui.info("=====");
   }

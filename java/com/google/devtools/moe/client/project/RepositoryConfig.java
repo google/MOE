@@ -2,13 +2,12 @@
 
 package com.google.devtools.moe.client.project;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
-
-import javax.annotation.Nullable;
 
 /**
  * Configuration for a MOE Repository.
@@ -51,11 +50,8 @@ public class RepositoryConfig {
   @SerializedName("ignore_incoming_changes_res")
   private List<String> ignoreIncomingChangesRes = ImmutableList.of();
 
-  /**
-   * List of branches in this repository from which to import changes.
-   */
-  @SerializedName("import_branches")
-  private List<String> importBranches = null;
+  @SerializedName("branch")
+  private String branch = null;
 
   private RepositoryConfig() {} // Constructed by gson
 
@@ -92,10 +88,11 @@ public class RepositoryConfig {
   }
 
   /**
-   * Returns the branches in this repository from which to import changes, null if none specified.
+   * Returns the branch of this repository to use. New changes to migrate will be searched for only
+   * on this branch, and incoming changes will be written onto this branch.
    */
-  @Nullable public List<String> getImportBranches() {
-    return importBranches;
+  public Optional<String> getBranch() {
+    return Optional.fromNullable(branch);
   }
 
   /**

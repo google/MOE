@@ -4,6 +4,7 @@ package com.google.devtools.moe.client.dvcs.hg;
 
 import static org.easymock.EasyMock.expect;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner;
@@ -34,6 +35,7 @@ public class HgClonedRepositoryTest extends TestCase {
     String repositoryURL = "http://foo/hg";
     RepositoryConfig repositoryConfig = control.createMock(RepositoryConfig.class);
     expect(repositoryConfig.getUrl()).andReturn(repositoryURL).anyTimes();
+    expect(repositoryConfig.getBranch()).andReturn(Optional.of("mybranch")).anyTimes();
     String localCloneTempDir = "/tmp/hg_clone_mockrepo_12345";
 
     // Mock AppContext.RUN.fileSystem.getTemporaryDirectory()
@@ -52,11 +54,13 @@ public class HgClonedRepositoryTest extends TestCase {
             "hg",
             ImmutableList.<String>of(
                 "clone",
-                "--update=" + HgRevisionHistory.DEFAULT_BRANCH,
                 repositoryURL,
-                localCloneTempDir),
+                localCloneTempDir,
+                "--rev=" + "mybranch"),
             "" /*workingDirectory*/))
         .andReturn("hg clone ok (mock output)");
+    expect(cmd.runCommand("hg", ImmutableList.of("branch"), localCloneTempDir))
+        .andReturn("mybranch");
     AppContext.RUN.cmd = cmd;
 
     // Run test
