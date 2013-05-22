@@ -168,7 +168,7 @@ public class SystemFileSystem implements FileSystem {
         getTemporaryDirectory("resource_extraction_", Lifetimes.moeExecution()),
         name);
     makeDirsForFile(extractedFile);
-    OutputStream os = Files.newOutputStreamSupplier(extractedFile).getOutput();
+    OutputStream os = Files.asByteSink(extractedFile).openStream();
     Resources.copy(
         SystemFileSystem.class.getResource(resource), os);
     os.close();
