@@ -82,7 +82,7 @@ public class GitWriter extends AbstractDvcsWriter<GitClonedRepository> {
       ui.info("the desired branch before pushing. For example:");
       ui.info("$ git rebase " + originalBranchName);
       ui.info("$ git checkout " + originalBranchName);
-      ui.info("$ git merge " + moeBranchName);
+      ui.info("$ git merge --ff-only " + moeBranchName);
       ui.info("$ git push");
     } else {
       ui.info("Changes are on branch '" + moeBranchName + "' and are ready to push.");
