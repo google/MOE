@@ -84,7 +84,8 @@ public class CreateCodebaseDirective implements Directive {
 
     AppContext.RUN.cmd.runCommand(
         "tar",
-        ImmutableList.of("-c", "-f", tarfilePath, "."),
+        ImmutableList.of(
+            "--mtime=1970-01-01", "--owner=0", "--group=0", "-c", "-f", tarfilePath, "."),
         codebase.getPath().getAbsolutePath());
     AppContext.RUN.ui.info(
         String.format("tar of codebase \"%s\" created at %s", codebase.toString(), tarfilePath));
