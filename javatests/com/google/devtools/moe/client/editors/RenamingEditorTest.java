@@ -5,13 +5,14 @@ package com.google.devtools.moe.client.editors;
 import static org.easymock.EasyMock.expect;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.codebase.Codebase;
-import com.google.devtools.moe.client.testing.AppContextForTesting;
+import com.google.devtools.moe.client.testing.ExtendedTestModule;
 import com.google.gson.JsonObject;
+
+import dagger.ObjectGraph;
 
 import junit.framework.TestCase;
 
@@ -24,6 +25,15 @@ import java.util.Map;
 /**
  */
 public class RenamingEditorTest extends TestCase {
+  private final IMocksControl control = EasyMock.createControl();
+  private final FileSystem fileSystem = control.createMock(FileSystem.class);
+  private final CommandRunner cmd = control.createMock(CommandRunner.class);
+
+  @Override protected void setUp() throws Exception {
+    super.setUp();
+    ObjectGraph graph = ObjectGraph.create(new ExtendedTestModule(fileSystem, cmd));
+    graph.injectStatics();
+  }
 
   public void testRenameFile_NoRegex() throws Exception {
     RenamingEditor renamer = new RenamingEditor(
@@ -61,13 +71,6 @@ public class RenamingEditorTest extends TestCase {
   }
 
   public void testCopyDirectoryAndRename() throws Exception {
-    AppContextForTesting.initForTest();
-    IMocksControl control = EasyMock.createControl();
-    FileSystem fileSystem = control.createMock(FileSystem.class);
-    CommandRunner cmd = control.createMock(CommandRunner.class);
-    AppContext.RUN.cmd = cmd;
-    AppContext.RUN.fileSystem = fileSystem;
-
     File srcContents = new File("/src/olddummy/file1");
     File srcContents2 = new File("/src/olddummy/file2");
     File src = new File("/src");
@@ -106,13 +109,6 @@ public class RenamingEditorTest extends TestCase {
     File oldSubFile = new File("/codebase/moe.txt");
     File renameRun = new File("/rename_run_foo");
     File newSubFile = new File(renameRun, "joe.txt");
-
-    AppContextForTesting.initForTest();
-    IMocksControl control = EasyMock.createControl();
-    FileSystem fileSystem = control.createMock(FileSystem.class);
-    CommandRunner cmd = control.createMock(CommandRunner.class);
-    AppContext.RUN.cmd = cmd;
-    AppContext.RUN.fileSystem = fileSystem;
 
     expect(fileSystem.getTemporaryDirectory("rename_run_")).andReturn(renameRun);
 

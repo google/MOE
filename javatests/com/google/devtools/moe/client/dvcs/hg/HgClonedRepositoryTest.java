@@ -6,13 +6,14 @@ import static org.easymock.EasyMock.expect;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.FileSystem.Lifetime;
 import com.google.devtools.moe.client.Lifetimes;
 import com.google.devtools.moe.client.project.RepositoryConfig;
-import com.google.devtools.moe.client.testing.AppContextForTesting;
+import com.google.devtools.moe.client.testing.ExtendedTestModule;
+
+import dagger.ObjectGraph;
 
 import junit.framework.TestCase;
 
@@ -26,29 +27,28 @@ import java.io.File;
  *
  */
 public class HgClonedRepositoryTest extends TestCase {
+  private final IMocksControl control = EasyMock.createControl();
+  private final FileSystem mockFS = control.createMock(FileSystem.class);
+  private final CommandRunner cmd = control.createMock(CommandRunner.class);
+  private final RepositoryConfig repositoryConfig = control.createMock(RepositoryConfig.class);
+
+  private final String repositoryName = "mockrepo";
+  private final String repositoryURL = "http://foo/hg";
 
   public void testCloneLocally() throws Exception {
-    AppContextForTesting.initForTest();
-    IMocksControl control = EasyMock.createControl();
+    ObjectGraph graph = ObjectGraph.create(new ExtendedTestModule(mockFS, cmd));
+    graph.injectStatics();
 
-    String repositoryName = "mockrepo";
-    String repositoryURL = "http://foo/hg";
-    RepositoryConfig repositoryConfig = control.createMock(RepositoryConfig.class);
     expect(repositoryConfig.getUrl()).andReturn(repositoryURL).anyTimes();
     expect(repositoryConfig.getBranch()).andReturn(Optional.of("mybranch")).anyTimes();
     String localCloneTempDir = "/tmp/hg_clone_mockrepo_12345";
 
-    // Mock AppContext.RUN.fileSystem.getTemporaryDirectory()
-    FileSystem mockFS = control.createMock(FileSystem.class);
     // The Lifetimes of clones in these tests are arbitrary since we're not really creating any
     // temp dirs and we're not testing clean-up.
     expect(mockFS.getTemporaryDirectory(
         EasyMock.eq("hg_clone_" + repositoryName + "_"), EasyMock.<Lifetime>anyObject()))
         .andReturn(new File(localCloneTempDir));
-    AppContext.RUN.fileSystem = mockFS;
 
-    // Mock HgRepository.runHgCommand()
-    CommandRunner cmd = control.createMock(CommandRunner.class);
     expect(
         cmd.runCommand(
             "hg",
@@ -61,7 +61,6 @@ public class HgClonedRepositoryTest extends TestCase {
         .andReturn("hg clone ok (mock output)");
     expect(cmd.runCommand("hg", ImmutableList.of("branch"), localCloneTempDir))
         .andReturn("mybranch");
-    AppContext.RUN.cmd = cmd;
 
     // Run test
     control.replay();

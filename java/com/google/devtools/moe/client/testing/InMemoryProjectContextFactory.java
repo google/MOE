@@ -9,6 +9,8 @@ import com.google.devtools.moe.client.project.ProjectContextFactory;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.inject.Inject;
+
 /**
  *
  * @author dbentley@google.com (Daniel Bentley)
@@ -17,6 +19,7 @@ public class InMemoryProjectContextFactory implements ProjectContextFactory {
 
   public Map<String, String> projectConfigs;
 
+  @Inject
   public InMemoryProjectContextFactory() {
     projectConfigs = new HashMap<String, String>();
   }

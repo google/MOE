@@ -6,12 +6,13 @@ import static org.easymock.EasyMock.expect;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.project.ProjectContext;
-import com.google.devtools.moe.client.testing.AppContextForTesting;
+import com.google.devtools.moe.client.testing.ExtendedTestModule;
+
+import dagger.ObjectGraph;
 
 import junit.framework.TestCase;
 
@@ -27,11 +28,16 @@ import java.io.IOException;
  */
 public class InverseRenamingEditorTest extends TestCase {
 
+  private final IMocksControl control = EasyMock.createControl();
+  private final FileSystem mockFs = control.createMock(FileSystem.class);
+
+  @Override protected void setUp() throws Exception {
+    super.setUp();
+    ObjectGraph graph = ObjectGraph.create(new ExtendedTestModule(mockFs, null));
+    graph.injectStatics();
+  }
+
   public void testEdit() throws Exception {
-    AppContextForTesting.initForTest();
-    IMocksControl control = EasyMock.createControl();
-    FileSystem mockFs = control.createMock(FileSystem.class);
-    AppContext.RUN.fileSystem = mockFs;
     ProjectContext context = ProjectContext.builder().build();
 
     InverseRenamingEditor inverseRenamey = new InverseRenamingEditor(

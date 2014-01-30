@@ -9,19 +9,21 @@ import com.google.common.base.Strings;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.inject.Inject;
+
 /**
  * Ui that outputs to System.out and System.err
  *
  * @author dbentley@google.com (Daniel Bentley)
  */
 public class SystemUi extends Ui {
-  private final Logger logger =
-      Logger.getLogger(SystemUi.class.getName());
+  private final Logger logger = Logger.getLogger(SystemUi.class.getName());
 
   // We store the task that is the current output, if any, so that we can special case a Task that
   // is popped right after it is pushed. In this case, we can output: "Doing...Done" on one line.
   Ui.Task currentOutput;
 
+  @Inject
   public SystemUi() {
     super();
     currentOutput = null;

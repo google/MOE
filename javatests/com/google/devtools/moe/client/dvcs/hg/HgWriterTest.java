@@ -7,7 +7,6 @@ import static org.easymock.EasyMock.expect;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.FileSystem;
@@ -17,8 +16,10 @@ import com.google.devtools.moe.client.parser.Term;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
-import com.google.devtools.moe.client.testing.AppContextForTesting;
+import com.google.devtools.moe.client.testing.ExtendedTestModule;
 import com.google.devtools.moe.client.writer.DraftRevision;
+
+import dagger.ObjectGraph;
 
 import junit.framework.TestCase;
 
@@ -34,19 +35,18 @@ import java.io.File;
  */
 // TODO(user): Create a FakeFileSystem to replace explicit mocked calls.
 public class HgWriterTest extends TestCase {
-
   private static final File CODEBASE_ROOT = new File("/codebase");
   private static final File WRITER_ROOT = new File("/writer");
   private static final String PROJECT_SPACE = "public";
   private static final RepositoryExpression CODEBASE_EXPR = new RepositoryExpression(
       new Term(PROJECT_SPACE, ImmutableMap.<String, String>of()));
 
-  private IMocksControl control;
-  private FileSystem mockFs;
-  private CommandRunner mockCmd;
-  private Codebase codebase;
-  private HgClonedRepository mockRevClone;
-  private RepositoryConfig mockRepoConfig;
+  private final IMocksControl control = EasyMock.createControl();
+  private final FileSystem mockFs = control.createMock(FileSystem.class);
+  private final CommandRunner mockCmd = control.createMock(CommandRunner.class);
+  private final RepositoryConfig mockRepoConfig = control.createMock(RepositoryConfig.class);
+  private final Codebase codebase = new Codebase(CODEBASE_ROOT, PROJECT_SPACE, CODEBASE_EXPR);
+  private final HgClonedRepository mockRevClone = control.createMock(HgClonedRepository.class);
 
   /* Helper methods */
 
@@ -58,15 +58,8 @@ public class HgWriterTest extends TestCase {
 
   @Override protected void setUp() throws Exception {
     super.setUp();
-    AppContextForTesting.initForTest();
-    control = EasyMock.createControl();
-    mockFs = control.createMock(FileSystem.class);
-    mockCmd = control.createMock(CommandRunner.class);
-    AppContext.RUN.cmd = mockCmd;
-    AppContext.RUN.fileSystem = mockFs;
-    codebase = new Codebase(CODEBASE_ROOT, PROJECT_SPACE, CODEBASE_EXPR);
-    mockRevClone = control.createMock(HgClonedRepository.class);
-    mockRepoConfig = control.createMock(RepositoryConfig.class);
+    ObjectGraph graph = ObjectGraph.create(new ExtendedTestModule(mockFs, mockCmd));
+    graph.injectStatics();
 
     expect(mockRevClone.getLocalTempDir()).andReturn(WRITER_ROOT).anyTimes();
     expect(mockRevClone.getConfig()).andReturn(mockRepoConfig).anyTimes();

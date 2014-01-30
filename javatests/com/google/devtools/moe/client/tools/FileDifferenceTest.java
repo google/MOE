@@ -6,10 +6,13 @@ import static org.easymock.EasyMock.expect;
 import static com.google.devtools.moe.client.tools.FileDifference.Comparison;
 
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.testing.AppContextForTesting;
+
+import dagger.Module;
+import dagger.ObjectGraph;
+import dagger.Provides;
 
 import junit.framework.TestCase;
 
@@ -22,13 +25,24 @@ import java.io.File;
  * @author dbentley@google.com (Daniel Bentley)
  */
 public class FileDifferenceTest extends TestCase {
+
+  private final IMocksControl control = EasyMock.createControl();
+  private final FileSystem fileSystem = control.createMock(FileSystem.class);
+  private final CommandRunner cmd = control.createMock(CommandRunner.class);
+
+  @Module(overrides = true, includes = AppContextForTesting.class)
+  class LocalTestModule {
+    @Provides public CommandRunner commandRunner() {
+      return cmd;
+    }
+    @Provides public FileSystem fileSystem() {
+      return fileSystem;
+    }
+  }
+
   public void testExistence() throws Exception {
-    AppContextForTesting.initForTest();
-    IMocksControl control = EasyMock.createControl();
-    FileSystem fileSystem = control.createMock(FileSystem.class);
-    CommandRunner cmd = control.createMock(CommandRunner.class);
-    AppContext.RUN.cmd = cmd;
-    AppContext.RUN.fileSystem = fileSystem;
+    ObjectGraph graph = ObjectGraph.create(new LocalTestModule());
+    graph.injectStatics();
 
     File file1 = new File("/1/foo");
     File file2 = new File("/2/foo");
@@ -50,12 +64,8 @@ public class FileDifferenceTest extends TestCase {
   }
 
   public void testExistence2() throws Exception {
-    AppContextForTesting.initForTest();
-    IMocksControl control = EasyMock.createControl();
-    FileSystem fileSystem = control.createMock(FileSystem.class);
-    CommandRunner cmd = control.createMock(CommandRunner.class);
-    AppContext.RUN.cmd = cmd;
-    AppContext.RUN.fileSystem = fileSystem;
+    ObjectGraph graph = ObjectGraph.create(new LocalTestModule());
+    graph.injectStatics();
 
     File file1 = new File("/1/foo");
     File file2 = new File("/2/foo");
@@ -77,12 +87,8 @@ public class FileDifferenceTest extends TestCase {
   }
 
   public void testExecutability() throws Exception {
-    AppContextForTesting.initForTest();
-    IMocksControl control = EasyMock.createControl();
-    FileSystem fileSystem = control.createMock(FileSystem.class);
-    CommandRunner cmd = control.createMock(CommandRunner.class);
-    AppContext.RUN.cmd = cmd;
-    AppContext.RUN.fileSystem = fileSystem;
+    ObjectGraph graph = ObjectGraph.create(new LocalTestModule());
+    graph.injectStatics();
 
     File file1 = new File("/1/foo");
     File file2 = new File("/2/foo");
@@ -103,12 +109,8 @@ public class FileDifferenceTest extends TestCase {
   }
 
   public void testExecutability2() throws Exception {
-    AppContextForTesting.initForTest();
-    IMocksControl control = EasyMock.createControl();
-    FileSystem fileSystem = control.createMock(FileSystem.class);
-    CommandRunner cmd = control.createMock(CommandRunner.class);
-    AppContext.RUN.cmd = cmd;
-    AppContext.RUN.fileSystem = fileSystem;
+    ObjectGraph graph = ObjectGraph.create(new LocalTestModule());
+    graph.injectStatics();
 
     File file1 = new File("/1/foo");
     File file2 = new File("/2/foo");
@@ -129,12 +131,8 @@ public class FileDifferenceTest extends TestCase {
   }
 
   public void testContents() throws Exception {
-    AppContextForTesting.initForTest();
-    IMocksControl control = EasyMock.createControl();
-    FileSystem fileSystem = control.createMock(FileSystem.class);
-    CommandRunner cmd = control.createMock(CommandRunner.class);
-    AppContext.RUN.cmd = cmd;
-    AppContext.RUN.fileSystem = fileSystem;
+    ObjectGraph graph = ObjectGraph.create(new LocalTestModule());
+    graph.injectStatics();
 
     File file1 = new File("/1/foo");
     File file2 = new File("/2/foo");
@@ -156,12 +154,8 @@ public class FileDifferenceTest extends TestCase {
   }
 
   public void testExecutabilityAndContents() throws Exception {
-    AppContextForTesting.initForTest();
-    IMocksControl control = EasyMock.createControl();
-    FileSystem fileSystem = control.createMock(FileSystem.class);
-    CommandRunner cmd = control.createMock(CommandRunner.class);
-    AppContext.RUN.cmd = cmd;
-    AppContext.RUN.fileSystem = fileSystem;
+    ObjectGraph graph = ObjectGraph.create(new LocalTestModule());
+    graph.injectStatics();
 
     File file1 = new File("/1/foo");
     File file2 = new File("/2/foo");
@@ -183,12 +177,8 @@ public class FileDifferenceTest extends TestCase {
   }
 
   public void testIdentical() throws Exception {
-    AppContextForTesting.initForTest();
-    IMocksControl control = EasyMock.createControl();
-    FileSystem fileSystem = control.createMock(FileSystem.class);
-    CommandRunner cmd = control.createMock(CommandRunner.class);
-    AppContext.RUN.cmd = cmd;
-    AppContext.RUN.fileSystem = fileSystem;
+    ObjectGraph graph = ObjectGraph.create(new LocalTestModule());
+    graph.injectStatics();
 
     File file1 = new File("/1/foo");
     File file2 = new File("/2/foo");

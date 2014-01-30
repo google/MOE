@@ -12,6 +12,10 @@ import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.testing.AppContextForTesting;
 
+import dagger.Module;
+import dagger.ObjectGraph;
+import dagger.Provides;
+
 import junit.framework.TestCase;
 
 import org.easymock.EasyMock;
@@ -45,19 +49,26 @@ import java.util.List;
  */
 public class CodebaseMergerTest extends TestCase {
 
-  private IMocksControl control;
-  private FileSystem fileSystem;
-  private CommandRunner cmd;
+  private final IMocksControl control = EasyMock.createControl();
+  private final FileSystem fileSystem = control.createMock(FileSystem.class);
+  private final CommandRunner cmd = control.createMock(CommandRunner.class);
   private Codebase orig, dest, mod;
 
+  @Module(overrides = true, includes = AppContextForTesting.class)
+  class LocalTestModule {
+    @Provides public CommandRunner commandRunner() {
+      return cmd;
+    }
+    @Provides public FileSystem fileSystem() {
+      return fileSystem;
+    }
+  }
+
   @Override
-  public void setUp() {
-    AppContextForTesting.initForTest();
-    control = EasyMock.createControl();
-    fileSystem = control.createMock(FileSystem.class);
-    cmd = control.createMock(CommandRunner.class);
-    AppContext.RUN.cmd = cmd;
-    AppContext.RUN.fileSystem = fileSystem;
+  public void setUp() throws Exception {
+    super.setUp();
+    ObjectGraph graph = ObjectGraph.create(new LocalTestModule());
+    graph.injectStatics();
 
     orig = control.createMock(Codebase.class);
     dest = control.createMock(Codebase.class);

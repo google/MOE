@@ -11,22 +11,23 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
+import javax.inject.Inject;
+
 /**
  *
  * @author dbentley@google.com (Daniel Bentley)
  */
 public class SystemCommandRunner implements CommandRunner {
 
+  @Inject Ui ui;
+
   @Override
   public CommandOutput runCommandWithFullOutput(
       String cmd, List<String> args, String workingDirectory) throws CommandException {
-    ImmutableList<String> cmdArgs = (new ImmutableList.Builder<String>()).add(cmd).
-        addAll(args).build();
+    ImmutableList<String> cmdArgs = (new ImmutableList.Builder<String>()).add(cmd).addAll(args)
+        .build();
 
-    if (AppContext.RUN != null) {
-      AppContext.RUN.ui.debug(
-          workingDirectory + "$ " + Joiner.on(" ").join(cmdArgs));
-    }
+    ui.debug(workingDirectory + "$ " + Joiner.on(" ").join(cmdArgs));
 
     ProcessBuilder pb = new ProcessBuilder(cmdArgs);
     if (workingDirectory != null && !workingDirectory.isEmpty()) {

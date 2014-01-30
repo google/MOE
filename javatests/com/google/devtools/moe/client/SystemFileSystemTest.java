@@ -8,6 +8,8 @@ import com.google.common.io.Files;
 import com.google.devtools.moe.client.Ui.Task;
 import com.google.devtools.moe.client.testing.AppContextForTesting;
 
+import dagger.ObjectGraph;
+
 import junit.framework.TestCase;
 
 import java.io.File;
@@ -19,7 +21,7 @@ import java.io.IOException;
 public class SystemFileSystemTest extends TestCase {
 
   public void testFindFiles() throws Exception {
-    FileSystem fs = new SystemFileSystem();
+    FileSystem fs = new SystemFileSystem(null);
     File tempDir = Files.createTempDir();
     File foo = new File(tempDir, "foo");
     Files.touch(foo);
@@ -32,7 +34,7 @@ public class SystemFileSystemTest extends TestCase {
   }
 
   public void testListFiles() throws Exception {
-    FileSystem fs = new SystemFileSystem();
+    FileSystem fs = new SystemFileSystem(null);
     File tempDir = Files.createTempDir();
     File foo = new File(tempDir, "foo");
     File bar = new File(tempDir, "bar");
@@ -44,7 +46,7 @@ public class SystemFileSystemTest extends TestCase {
   }
 
   public void testExists() throws Exception {
-    FileSystem fs = new SystemFileSystem();
+    FileSystem fs = new SystemFileSystem(null);
     File tempDir = Files.createTempDir();
     File foo = new File(tempDir, "foo");
     Files.touch(foo);
@@ -52,7 +54,7 @@ public class SystemFileSystemTest extends TestCase {
   }
 
   public void testGetName() throws Exception {
-    FileSystem fs = new SystemFileSystem();
+    FileSystem fs = new SystemFileSystem(null);
     File tempDir = Files.createTempDir();
     File foo = new File(tempDir, "foo");
     Files.touch(foo);
@@ -60,7 +62,7 @@ public class SystemFileSystemTest extends TestCase {
   }
 
   public void testIsFile() throws Exception {
-    FileSystem fs = new SystemFileSystem();
+    FileSystem fs = new SystemFileSystem(null);
     File tempDir = Files.createTempDir();
     File foo = new File(tempDir, "foo");
     Files.touch(foo);
@@ -69,7 +71,7 @@ public class SystemFileSystemTest extends TestCase {
   }
 
   public void testIsDirectory() throws Exception {
-    FileSystem fs = new SystemFileSystem();
+    FileSystem fs = new SystemFileSystem(null);
     File tempDir = Files.createTempDir();
     File foo = new File(tempDir, "foo");
     Files.touch(foo);
@@ -78,7 +80,7 @@ public class SystemFileSystemTest extends TestCase {
   }
 
   public void testExecutable() throws Exception {
-    FileSystem fs = new SystemFileSystem();
+    FileSystem fs = new SystemFileSystem(null);
     File tempDir = Files.createTempDir();
     File foo = new File(tempDir, "foo");
     Files.touch(foo);
@@ -87,7 +89,7 @@ public class SystemFileSystemTest extends TestCase {
   }
 
   public void testReadable() throws Exception {
-    FileSystem fs = new SystemFileSystem();
+    FileSystem fs = new SystemFileSystem(null);
     File tempDir = Files.createTempDir();
     File foo = new File(tempDir, "foo");
     Files.touch(foo);
@@ -96,7 +98,7 @@ public class SystemFileSystemTest extends TestCase {
   }
 
   public void testSetExecutable() throws Exception {
-    FileSystem fs = new SystemFileSystem();
+    FileSystem fs = new SystemFileSystem(null);
     File tempDir = Files.createTempDir();
     File foo = new File(tempDir, "foo");
     Files.touch(foo);
@@ -105,7 +107,7 @@ public class SystemFileSystemTest extends TestCase {
   }
 
   public void testMakeDirsForFile() throws Exception {
-    FileSystem fs = new SystemFileSystem();
+    FileSystem fs = new SystemFileSystem(null);
     File tempDir = Files.createTempDir();
     File baz = new File(tempDir, "foo/bar/baz");
     File bar = new File(tempDir, "foo/bar");
@@ -116,7 +118,7 @@ public class SystemFileSystemTest extends TestCase {
   }
 
   public void testMakeDirs() throws Exception {
-    FileSystem fs = new SystemFileSystem();
+    FileSystem fs = new SystemFileSystem(null);
     File tempDir = Files.createTempDir();
     File baz = new File(tempDir, "foo/bar/baz");
     File bar = new File(tempDir, "foo/bar");
@@ -128,7 +130,7 @@ public class SystemFileSystemTest extends TestCase {
   }
 
   public void testCopy() throws Exception {
-    FileSystem fs = new SystemFileSystem();
+    FileSystem fs = new SystemFileSystem(null);
     File tempDir = Files.createTempDir();
     File foo = new File(tempDir, "foo");
     File bar = new File(tempDir, "bar");
@@ -138,7 +140,7 @@ public class SystemFileSystemTest extends TestCase {
   }
 
   public void testWrite() throws Exception {
-    FileSystem fs = new SystemFileSystem();
+    FileSystem fs = new SystemFileSystem(null);
     File tempDir = Files.createTempDir();
     File foo = new File(tempDir, "foo");
     fs.write("Contents!", foo);
@@ -146,7 +148,7 @@ public class SystemFileSystemTest extends TestCase {
   }
 
   public void testDeleteRecursively() throws Exception {
-    FileSystem fs = new SystemFileSystem();
+    FileSystem fs = new SystemFileSystem(null);
     File tempDir = Files.createTempDir();
     File foo = new File(tempDir, "foo");
     File bar = new File(tempDir, "bar");
@@ -159,7 +161,7 @@ public class SystemFileSystemTest extends TestCase {
   }
 
   public void testFileToString() throws Exception {
-    FileSystem fs = new SystemFileSystem();
+    FileSystem fs = new SystemFileSystem(null);
     File tempDir = Files.createTempDir();
     File foo = new File(tempDir, "foo");
     Files.write("Contents!", foo, Charsets.UTF_8);
@@ -173,9 +175,8 @@ public class SystemFileSystemTest extends TestCase {
   }
 
   public void testCleanUpTempDirsWithTasks() throws Exception {
-    AppContextForTesting.initForTest();
-    FileSystem fs = new SystemFileSystem();
-    AppContext.RUN.fileSystem = fs;
+    ObjectGraph.create(AppContextForTesting.class).injectStatics();
+    FileSystem fs = AppContext.RUN.fileSystem;
 
     File taskless = fs.getTemporaryDirectory("taskless", Lifetimes.moeExecution());
     Files.touch(taskless);
@@ -213,10 +214,9 @@ public class SystemFileSystemTest extends TestCase {
   }
 
   public void testMarkAsPersistentWithTasks() throws Exception {
-    AppContextForTesting.initForTest();
-    FileSystem fs = new SystemFileSystem();
-    AppContext.RUN.fileSystem = fs;
-
+    ObjectGraph.create(AppContextForTesting.class).injectStatics();
+    FileSystem fs = AppContext.RUN.fileSystem;
+    
     Task outer = AppContext.RUN.ui.pushTask("outer", "outer");
     File outer1 = touchTempDir("outer1", fs);
     File outer2 = touchTempDir("outer2", fs);

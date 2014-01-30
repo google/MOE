@@ -6,7 +6,6 @@ import static org.easymock.EasyMock.expect;
 
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.MoeProblem;
@@ -18,9 +17,11 @@ import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory.SearchType;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
-import com.google.devtools.moe.client.testing.AppContextForTesting;
 import com.google.devtools.moe.client.testing.DummyDb;
+import com.google.devtools.moe.client.testing.ExtendedTestModule;
 import com.google.devtools.moe.client.testing.MoeAsserts;
+
+import dagger.ObjectGraph;
 
 import junit.framework.TestCase;
 
@@ -45,16 +46,14 @@ public class HgRevisionHistoryTest extends TestCase {
   private static final String MOCK_REPO_NAME = "mockrepo";
   private static final String CLONE_TEMP_DIR = "/tmp/hg_tipclone_mockrepo_12345";
 
-  private IMocksControl control;
-  private CommandRunner cmd;
-  private RepositoryConfig config;
+  private final IMocksControl control = EasyMock.createControl();
+  private final CommandRunner cmd = control.createMock(CommandRunner.class);
+  private final RepositoryConfig config = control.createMock(RepositoryConfig.class);
 
   @Override protected void setUp() throws Exception {
     super.setUp();
-    AppContextForTesting.initForTest();
-    control = EasyMock.createControl();
-    cmd = control.createMock(CommandRunner.class);
-    AppContext.RUN.cmd = cmd;
+    ObjectGraph graph = ObjectGraph.create(new ExtendedTestModule(null, cmd));
+    graph.injectStatics();
   }
 
   private HgClonedRepository mockClonedRepo(String repoName) {
@@ -62,8 +61,6 @@ public class HgRevisionHistoryTest extends TestCase {
     expect(mockRepo.getRepositoryName()).andReturn(repoName).anyTimes();
     expect(mockRepo.getLocalTempDir()).andReturn(new File(CLONE_TEMP_DIR)).anyTimes();
     expect(mockRepo.getBranch()).andReturn("mybranch").anyTimes();
-
-    config = control.createMock(RepositoryConfig.class);
     expect(mockRepo.getConfig()).andReturn(config).anyTimes();
     return mockRepo;
   }

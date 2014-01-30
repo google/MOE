@@ -5,7 +5,6 @@ package com.google.devtools.moe.client.svn;
 import static org.easymock.EasyMock.expect;
 
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.database.Equivalence;
@@ -15,9 +14,11 @@ import com.google.devtools.moe.client.database.FileDb;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory.SearchType;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
-import com.google.devtools.moe.client.testing.AppContextForTesting;
 import com.google.devtools.moe.client.testing.DummyDb;
+import com.google.devtools.moe.client.testing.ExtendedTestModule;
 import com.google.devtools.moe.client.testing.MoeAsserts;
+
+import dagger.ObjectGraph;
 
 import junit.framework.TestCase;
 
@@ -43,6 +44,15 @@ public class SvnRevisionHistoryTest extends TestCase {
       // 2012/7/9, 6am
       new DateTime(2012, 7, 9, 6, 0, DateTimeZone.forOffsetHours(-7));
 
+  private final IMocksControl control = EasyMock.createControl();
+  private final CommandRunner cmd = control.createMock(CommandRunner.class);
+  
+  @Override protected void setUp() throws Exception {
+    super.setUp();
+    ObjectGraph graph = ObjectGraph.create(new ExtendedTestModule(null, cmd));
+    graph.injectStatics();
+  }
+
   public void testParseRevisions() {
     List<Revision> rs = SvnRevisionHistory.parseRevisions(
         "<log><logentry revision=\"1\"/></log>",
@@ -52,11 +62,6 @@ public class SvnRevisionHistoryTest extends TestCase {
   }
 
   public void testGetHighestRevision() {
-    AppContextForTesting.initForTest();
-    IMocksControl control = EasyMock.createControl();
-    CommandRunner cmd = control.createMock(CommandRunner.class);
-    AppContext.RUN.cmd = cmd;
-
     try {
       expect(cmd.runCommand(
           "svn",
@@ -104,11 +109,6 @@ public class SvnRevisionHistoryTest extends TestCase {
   }
 
   public void testGetMetadata() {
-    AppContextForTesting.initForTest();
-    IMocksControl control = EasyMock.createControl();
-    CommandRunner cmd = control.createMock(CommandRunner.class);
-    AppContext.RUN.cmd = cmd;
-
     try {
       expect(cmd.runCommand(
           "svn",
@@ -185,10 +185,6 @@ public class SvnRevisionHistoryTest extends TestCase {
   }
 
   public void testFindNewRevisions() {
-    AppContextForTesting.initForTest();
-    IMocksControl control = EasyMock.createControl();
-    CommandRunner cmd = control.createMock(CommandRunner.class);
-    AppContext.RUN.cmd = cmd;
     DummyDb db = new DummyDb(false);
 
     // Mock call for findHighestRevision
@@ -288,11 +284,6 @@ public class SvnRevisionHistoryTest extends TestCase {
    * @throws Exception
    */
   public void testFindLastEquivalence() throws Exception {
-    AppContextForTesting.initForTest();
-    IMocksControl control = EasyMock.createControl();
-    CommandRunner cmd = control.createMock(CommandRunner.class);
-    AppContext.RUN.cmd = cmd;
-
     expect(cmd.runCommand("svn", ImmutableList.of("--no-auth-cache", "log", "--xml", "-l", "2",
         "-r", "4:1", "http://foo/svn/trunk/"), ""))
         .andReturn("<log><logentry revision=\"4\">" +
@@ -367,11 +358,6 @@ public class SvnRevisionHistoryTest extends TestCase {
    * @throws Exception
    */
   public void testFindLastEquivalenceNull() throws Exception {
-    AppContextForTesting.initForTest();
-    IMocksControl control = EasyMock.createControl();
-    CommandRunner cmd = control.createMock(CommandRunner.class);
-    AppContext.RUN.cmd = cmd;
-
     expect(cmd.runCommand("svn", ImmutableList.of("--no-auth-cache", "log", "--xml", "-l", "2",
         "-r", "2:1", "http://foo/svn/trunk/"), ""))
         .andReturn("<log><logentry revision=\"2\">" +

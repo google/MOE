@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
+import javax.inject.Inject;
+
 /**
  * User Interface interface for MOE.
  *
@@ -18,17 +20,15 @@ import java.util.Deque;
  */
 public abstract class Ui {
 
+  @Inject protected FileSystem fileSystem;
+
   /**
    * The name of the Task pushed to the Ui for clean-up when MOE is about to exit. This name is
    * used, for example, to set a temp dir's lifetime to "clean up when MOE is about to exit".
    */
   public static final String MOE_TERMINATION_TASK_NAME = "moe_termination";
 
-  protected final Deque<Task> stack;
-
-  public Ui() {
-    stack = new ArrayDeque<Task>();
-  }
+  protected final Deque<Task> stack = new ArrayDeque<Task>();
 
   /**
    * Sends an informational message to the user.
@@ -104,9 +104,9 @@ public abstract class Ui {
                         stack.toString()));
     }
 
-    if (AppContext.RUN.fileSystem != null) {
+    if (fileSystem != null) {
       try {
-        AppContext.RUN.fileSystem.cleanUpTempDirs();
+        fileSystem.cleanUpTempDirs();
       } catch (IOException ioEx) {
         error(ioEx, "Error cleaning up temp dirs");
         throw new MoeProblem("Error cleaning up temp dirs: " + ioEx);
@@ -126,7 +126,7 @@ public abstract class Ui {
    * constitute outputs of MOE execution.
    */
   public void popTaskAndPersist(Task task, File persistentResult) {
-    if (AppContext.RUN.fileSystem != null) {
+    if (fileSystem != null) {
       Lifetime newLifetime;
       if (stack.size() == 1) {
         newLifetime = Lifetimes.persistent();
@@ -134,7 +134,7 @@ public abstract class Ui {
         Task parentTask = Iterables.get(stack, 1);
         newLifetime = new TaskLifetime(parentTask);
       }
-      AppContext.RUN.fileSystem.setLifetime(persistentResult, newLifetime);
+      fileSystem.setLifetime(persistentResult, newLifetime);
     }
 
     popTask(task, persistentResult.getAbsolutePath());

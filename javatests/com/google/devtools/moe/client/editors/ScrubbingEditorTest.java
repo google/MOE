@@ -2,21 +2,24 @@
 
 package com.google.devtools.moe.client.editors;
 
+import static org.easymock.EasyMock.expect;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.codebase.Codebase;
-import com.google.devtools.moe.client.testing.AppContextForTesting;
 import com.google.devtools.moe.client.project.ProjectConfig;
+import com.google.devtools.moe.client.testing.ExtendedTestModule;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
-import org.easymock.EasyMock;
-import static org.easymock.EasyMock.expect;
-import org.easymock.IMocksControl;
+import dagger.ObjectGraph;
+
 import junit.framework.TestCase;
+
+import org.easymock.EasyMock;
+import org.easymock.IMocksControl;
 
 import java.io.File;
 
@@ -24,14 +27,14 @@ import java.io.File;
  * @author dbentley@google.com (Daniel Bentley)
  */
 public class ScrubbingEditorTest extends TestCase {
+
   public void testScrubbing() throws Exception {
-    AppContextForTesting.initForTest();
     IMocksControl control = EasyMock.createControl();
     FileSystem fileSystem = control.createMock(FileSystem.class);
     CommandRunner cmd = control.createMock(CommandRunner.class);
-    AppContext.RUN.cmd = cmd;
-    AppContext.RUN.fileSystem = fileSystem;
-
+    ObjectGraph graph = ObjectGraph.create(new ExtendedTestModule(fileSystem, cmd));
+    graph.injectStatics();
+    
     File scrubberTemp = new File("/scrubber_extraction_foo");
     File scrubberBin = new File(scrubberTemp, "scrubber.par");
     File scrubberRun = new File("/scrubber_run_foo");

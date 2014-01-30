@@ -2,16 +2,20 @@
 
 package com.google.devtools.moe.client.database;
 
+import static org.easymock.EasyMock.expect;
+
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.repositories.Revision;
-import com.google.devtools.moe.client.testing.AppContextForTesting;
+import com.google.devtools.moe.client.testing.ExtendedTestModule;
+
+import dagger.ObjectGraph;
 
 import junit.framework.TestCase;
+
 import org.easymock.EasyMock;
-import static org.easymock.EasyMock.expect;
 import org.easymock.IMocksControl;
 
 import java.io.File;
@@ -21,8 +25,10 @@ import java.io.File;
 public class FileDbTest extends TestCase {
 
   @Override
-  public void setUp() {
-    AppContextForTesting.initForTest();
+  public void setUp() throws Exception {
+    super.setUp();
+    ObjectGraph graph = ObjectGraph.create(new ExtendedTestModule(null, null));
+    graph.injectStatics();
   }
 
   public void testValidDb() throws Exception {

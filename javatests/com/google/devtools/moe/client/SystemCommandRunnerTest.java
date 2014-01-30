@@ -18,6 +18,9 @@ public class SystemCommandRunnerTest extends TestCase {
   protected void setUp() throws Exception {
     super.setUp();
     c = new SystemCommandRunner();
+    c.ui = new SystemUi() {
+      @Override public void debug(String msg) {}
+    };
   }
 
   public void testLongStdout() throws Exception {

@@ -2,13 +2,14 @@
 
 package com.google.devtools.moe.client.project;
 
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
+import com.google.devtools.moe.client.Ui;
+
 import java.io.File;
 import java.io.IOException;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
-import com.google.devtools.moe.client.AppContext;
-import com.google.devtools.moe.client.Ui;
+import javax.inject.Inject;
 
 /**
  *
@@ -16,9 +17,11 @@ import com.google.devtools.moe.client.Ui;
  */
 public class FileReadingProjectContextFactory implements ProjectContextFactory {
 
+  @Inject Ui ui;
+
   public ProjectContext makeProjectContext(String configFilename) throws InvalidProject{
     String configText;
-    Ui.Task task = AppContext.RUN.ui.pushTask(
+    Ui.Task task = ui.pushTask(
         "read_config",
         String.format("Reading config file from %s", configFilename));
     try {
@@ -31,7 +34,7 @@ public class FileReadingProjectContextFactory implements ProjectContextFactory {
 
       return ProjectContext.makeProjectContextFromConfigText(configText);
     } finally {
-      AppContext.RUN.ui.popTask(task, "");
+      ui.popTask(task, "");
     }
   }
 

@@ -5,6 +5,8 @@ package com.google.devtools.moe.client.testing;
 import com.google.devtools.moe.client.SystemUi;
 import com.google.devtools.moe.client.Ui;
 
+import javax.inject.Inject;
+
 /**
  * Ui that records what was Info'ed
  *
@@ -16,6 +18,7 @@ public class RecordingUi extends SystemUi {
   public String lastError;
   public String lastTaskResult;
 
+  @Inject
   public RecordingUi() {
     lastInfo = null;
     lastError = null;

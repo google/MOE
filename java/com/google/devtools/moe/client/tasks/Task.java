@@ -3,7 +3,6 @@
 package com.google.devtools.moe.client.tasks;
 
 import com.google.devtools.moe.client.MoeOptions;
-import com.google.inject.Provides;
 
 /**
  * A Task is a unit of MOE work. That is, a Task can be run directly by a user.
@@ -64,7 +63,6 @@ public abstract class Task<Result> {
   abstract protected Explanation explain(Result result);
 
   public static interface TaskCreator<T> {
-    @Provides
     public Task<T> createTaskFromCommandLine(MoeOptions args);
   }
 }

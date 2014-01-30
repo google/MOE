@@ -15,7 +15,9 @@ import com.google.devtools.moe.client.codebase.LocalClone;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
-import com.google.devtools.moe.client.testing.AppContextForTesting;
+import com.google.devtools.moe.client.testing.ExtendedTestModule;
+
+import dagger.ObjectGraph;
 
 import junit.framework.TestCase;
 
@@ -30,37 +32,29 @@ import java.util.Collections;
  *
  */
 public class AbstractDvcsCodebaseCreatorTest extends TestCase {
-
   private static final String MOCK_REPO_NAME = "mockrepo";
 
-  private IMocksControl control;
-  private LocalClone mockRepo;
-  private RevisionHistory mockRevHistory;
-  private RepositoryConfig mockRepoConfig;
-  private AbstractDvcsCodebaseCreator codebaseCreator;
+  private final IMocksControl control = EasyMock.createControl();
+  private final FileSystem mockFS = control.createMock(FileSystem.class);
+  private final RepositoryConfig mockRepoConfig = control.createMock(RepositoryConfig.class);
+
+  private final LocalClone mockRepo = control.createMock(LocalClone.class);
+  private final RevisionHistory mockRevHistory = control.createMock(RevisionHistory.class);
+  private final AbstractDvcsCodebaseCreator codebaseCreator =
+      new AbstractDvcsCodebaseCreator(Suppliers.ofInstance(mockRepo), mockRevHistory, "public") {
+        @Override protected LocalClone cloneAtLocalRoot(String localroot) {
+          throw new UnsupportedOperationException();
+        }
+      };
 
   @Override protected void setUp() throws Exception {
     super.setUp();
-
-    AppContextForTesting.initForTest();
-    control = EasyMock.createControl();
-    AppContext.RUN.fileSystem = control.createMock(FileSystem.class);
-    mockRepo = control.createMock(LocalClone.class);
-    mockRevHistory = control.createMock(RevisionHistory.class);
-    mockRepoConfig = control.createMock(RepositoryConfig.class);
+    ObjectGraph graph = ObjectGraph.create(new ExtendedTestModule(mockFS, null));
+    graph.injectStatics();
 
     expect(mockRepo.getConfig()).andReturn(mockRepoConfig).anyTimes();
     expect(mockRepoConfig.getIgnoreFileRes()).andReturn(ImmutableList.<String>of());
     expect(mockRepo.getRepositoryName()).andReturn(MOCK_REPO_NAME);
-
-    codebaseCreator = new AbstractDvcsCodebaseCreator(
-        Suppliers.ofInstance(mockRepo),
-        mockRevHistory,
-        "public") {
-          @Override protected LocalClone cloneAtLocalRoot(String localroot) {
-            throw new UnsupportedOperationException();
-          }
-    };
   }
 
   public void testCreate_noGivenRev() throws Exception {

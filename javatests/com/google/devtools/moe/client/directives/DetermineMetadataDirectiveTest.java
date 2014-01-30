@@ -6,9 +6,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
-import com.google.devtools.moe.client.testing.AppContextForTesting;
+import com.google.devtools.moe.client.testing.ExtendedTestModule;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
 import com.google.devtools.moe.client.testing.RecordingUi;
+
+import dagger.ObjectGraph;
 
 import junit.framework.TestCase;
 
@@ -22,7 +24,8 @@ public class DetermineMetadataDirectiveTest extends TestCase {
 
   @Override
   public void setUp() {
-    AppContextForTesting.initForTest();
+    ObjectGraph graph = ObjectGraph.create(new ExtendedTestModule(null, null));
+    graph.injectStatics();
   }
 
   /**

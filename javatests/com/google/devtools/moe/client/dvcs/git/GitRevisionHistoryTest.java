@@ -18,9 +18,11 @@ import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory.SearchType;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
-import com.google.devtools.moe.client.testing.AppContextForTesting;
 import com.google.devtools.moe.client.testing.DummyDb;
+import com.google.devtools.moe.client.testing.ExtendedTestModule;
 import com.google.devtools.moe.client.testing.MoeAsserts;
+
+import dagger.ObjectGraph;
 
 import junit.framework.TestCase;
 
@@ -47,13 +49,13 @@ public class GitRevisionHistoryTest extends TestCase {
   private static final String LOG_FORMAT_ALL_METADATA =
       METADATA_JOINER.join("%H", "%an", "%ai", "%P", "%B");
 
-  private IMocksControl control;
+  private IMocksControl control = EasyMock.createControl();
   private String repositoryName = "mockrepo";
   private String localCloneTempDir = "/tmp/git_tipclone_mockrepo_12345";
 
   @Override public void setUp() {
-    AppContextForTesting.initForTest();
-    control = EasyMock.createControl();
+    ObjectGraph graph = ObjectGraph.create(new ExtendedTestModule(null, null));
+    graph.injectStatics();
   }
 
   private GitClonedRepository mockClonedRepo(String repoName) {
@@ -107,7 +109,7 @@ public class GitRevisionHistoryTest extends TestCase {
 
     try {
       GitRevisionHistory rh = new GitRevisionHistory(Suppliers.ofInstance(mockRepo));
-      Revision rev = rh.findHighestRevision("bogusHash");
+      rh.findHighestRevision("bogusHash");
       fail("'git log' didn't fail on bogus hash ID");
     } catch (MoeProblem expected) {}
 

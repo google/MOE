@@ -9,8 +9,8 @@ import com.google.devtools.moe.client.directives.Directive;
 import com.google.devtools.moe.client.directives.DirectiveFactory;
 import com.google.devtools.moe.client.tasks.Task;
 import com.google.devtools.moe.client.tasks.TaskType;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
+
+import dagger.ObjectGraph;
 
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -56,7 +56,8 @@ public class Moe {
 
     // This needs to get called first, so that DirectiveFactory can report
     // errors appropriately.
-    AppContext.init();
+    ObjectGraph appGraph = ObjectGraph.create(MoeModule.class);
+    appGraph.injectStatics();
 
     TaskType t = TaskType.TASK_MAP.get(args[0]);
     if (t == null) {
@@ -76,10 +77,10 @@ public class Moe {
     }
 
     // Strip off the task name
-    // This mutates t.getOptions, and so has to be called before we create the injector.
+    // This mutates t.getOptions, and so has to be called before we create the graph.
     Flags.parseOptions(t.getOptions(), ImmutableList.copyOf(args).subList(1, args.length));
-    Injector injector = Guice.createInjector(t, new MoeModule());
-    Task task = injector.getInstance(Task.class);
+    ObjectGraph injector = ObjectGraph.create(t, new MoeModule());
+    Task task = injector.get(Task.class);
 
     Task.Explanation result = task.executeAtTopLevel();
     if (!Strings.isNullOrEmpty(result.message)) {

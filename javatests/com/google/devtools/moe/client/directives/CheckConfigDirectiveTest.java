@@ -3,8 +3,10 @@
 package com.google.devtools.moe.client.directives;
 
 import com.google.devtools.moe.client.AppContext;
-import com.google.devtools.moe.client.testing.AppContextForTesting;
+import com.google.devtools.moe.client.testing.ExtendedTestModule;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
+
+import dagger.ObjectGraph;
 
 import junit.framework.TestCase;
 
@@ -13,8 +15,13 @@ import junit.framework.TestCase;
  */
 public class CheckConfigDirectiveTest extends TestCase {
 
+  @Override
+  public void setUp() {
+    ObjectGraph graph = ObjectGraph.create(new ExtendedTestModule(null, null));
+    graph.injectStatics();
+  }
+
   public void testEmptyConfigFilenameReturnsOne() throws Exception {
-    AppContextForTesting.initForTest();
     ((InMemoryProjectContextFactory)AppContext.RUN.contextFactory).projectConfigs.put(
         "moe_config.txt",
         "");
@@ -23,7 +30,6 @@ public class CheckConfigDirectiveTest extends TestCase {
   }
 
   public void testEmptyConfigFileReturnsOne() throws Exception {
-    AppContextForTesting.initForTest();
     ((InMemoryProjectContextFactory)AppContext.RUN.contextFactory).projectConfigs.put(
         "moe_config.txt",
         "");
@@ -33,7 +39,6 @@ public class CheckConfigDirectiveTest extends TestCase {
   }
 
   public void testSimpleConfigFileWorks() throws Exception {
-    AppContextForTesting.initForTest();
     ((InMemoryProjectContextFactory)AppContext.RUN.contextFactory).projectConfigs.put(
         "moe_config.txt",
         "{\"name\": \"foo\", \"repositories\": " +

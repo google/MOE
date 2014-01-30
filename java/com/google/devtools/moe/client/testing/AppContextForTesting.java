@@ -2,18 +2,29 @@
 
 package com.google.devtools.moe.client.testing;
 
-import com.google.devtools.moe.client.AppContext;
+import com.google.devtools.moe.client.MoeModule;
+import com.google.devtools.moe.client.Ui;
+import com.google.devtools.moe.client.project.ProjectContextFactory;
+
+import dagger.Module;
+import dagger.Provides;
+
+import javax.inject.Singleton;
 
 /**
  *
  * @author dbentley@google.com (Daniel Bentley)
  */
+@Module(overrides = true, includes = MoeModule.class)
 public class AppContextForTesting {
-
-  public static void initForTest() {
-    AppContext.RUN = new AppContext(
-        new InMemoryProjectContextFactory(),
-        new RecordingUi(),
-        null, null);
+  
+  AppContextForTesting() {}
+  
+  @Provides @Singleton public Ui ui(RecordingUi recordingUi) {
+    return recordingUi;
   }
+
+  @Provides @Singleton public ProjectContextFactory factory(InMemoryProjectContextFactory factory) {
+    return factory;
+  }  
 }

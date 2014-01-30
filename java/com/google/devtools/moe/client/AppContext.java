@@ -2,42 +2,33 @@
 
 package com.google.devtools.moe.client;
 
-import com.google.common.base.Preconditions;
-import com.google.devtools.moe.client.project.FileReadingProjectContextFactory;
 import com.google.devtools.moe.client.project.ProjectContextFactory;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
 /**
  * Context of stuff any MOE app should expect.
  *
  * @author dbentley@google.com (Daniel Bentley)
  */
+@Singleton
 public class AppContext {
 
+  // TODO(cgruber): Eliminate this public static mutable.
+  @Inject
   public static AppContext RUN;
 
-  public ProjectContextFactory contextFactory;
+  @Inject
+  public ProjectContextFactory contextFactory = null;
 
-  public Ui ui;
+  @Inject
+  public Ui ui = null;
 
-  public CommandRunner cmd;
+  @Inject
+  public CommandRunner cmd = null;
 
-  public FileSystem fileSystem;
-
-  public AppContext(
-      ProjectContextFactory contextFactory, Ui ui, CommandRunner cmd, FileSystem fileSystem) {
-    this.contextFactory = contextFactory;
-    this.ui = ui;
-    this.cmd = cmd;
-    this.fileSystem = fileSystem;
-  }
-
-  public static void init() {
-    Preconditions.checkState(RUN == null, "RUN already set.");
-    RUN = new AppContext(
-        new FileReadingProjectContextFactory(),
-        new SystemUi(),
-        new SystemCommandRunner(),
-        new SystemFileSystem());
-  }
+  @Inject
+  public FileSystem fileSystem = null;
 
 }

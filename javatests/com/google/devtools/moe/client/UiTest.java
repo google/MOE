@@ -2,8 +2,7 @@
 
 package com.google.devtools.moe.client;
 
-import com.google.devtools.moe.client.Ui;
-import com.google.devtools.moe.client.testing.AppContextForTesting;
+import dagger.Lazy;
 
 import junit.framework.TestCase;
 
@@ -13,6 +12,13 @@ import junit.framework.TestCase;
 public class UiTest extends TestCase {
 
   class NoOpUi extends Ui {
+    NoOpUi() {
+      this.fileSystem = new SystemFileSystem(new Lazy<Ui>() {
+        @Override public Ui get() {
+          return NoOpUi.this;
+        }
+      });
+    }
     public void info(String msg) {}
     public void error(String msg) {}
     public void error(Throwable e, String msg) {}
@@ -20,7 +26,6 @@ public class UiTest extends TestCase {
   }
 
   public void testStackHelpers() throws Exception {
-    AppContextForTesting.initForTest();
     Ui ui = new NoOpUi();
     Ui.Task t = ui.pushTask("foo", "bar");
     ui.popTask(t, "");

@@ -3,9 +3,11 @@
 package com.google.devtools.moe.client.directives;
 
 import com.google.devtools.moe.client.AppContext;
-import com.google.devtools.moe.client.testing.AppContextForTesting;
+import com.google.devtools.moe.client.testing.ExtendedTestModule;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
 import com.google.devtools.moe.client.testing.RecordingUi;
+
+import dagger.ObjectGraph;
 
 import junit.framework.TestCase;
 
@@ -16,7 +18,8 @@ public class HighestRevisionDirectiveTest extends TestCase {
 
   @Override
   public void setUp() {
-    AppContextForTesting.initForTest();
+    ObjectGraph graph = ObjectGraph.create(new ExtendedTestModule(null, null));
+    graph.injectStatics();
   }
 
   public void testWithoutRevision() throws Exception {

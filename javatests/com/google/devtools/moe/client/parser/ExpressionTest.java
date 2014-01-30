@@ -6,7 +6,6 @@ import static org.easymock.EasyMock.expect;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.FileSystem.Lifetime;
 import com.google.devtools.moe.client.MoeProblem;
@@ -20,7 +19,9 @@ import com.google.devtools.moe.client.editors.TranslatorPath;
 import com.google.devtools.moe.client.editors.TranslatorStep;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.Repository;
-import com.google.devtools.moe.client.testing.AppContextForTesting;
+import com.google.devtools.moe.client.testing.ExtendedTestModule;
+
+import dagger.ObjectGraph;
 
 import junit.framework.TestCase;
 
@@ -34,14 +35,14 @@ import java.util.Map;
  * @author dbentley@google.com (Daniel Bentley)
  */
 public class ExpressionTest extends TestCase {
-
   private static final Map<String, String> EMPTY_MAP = ImmutableMap.of();
 
   @Override
   public void setUp() {
-    AppContextForTesting.initForTest();
+    ObjectGraph graph = ObjectGraph.create(new ExtendedTestModule(null, null));
+    graph.injectStatics();
   }
-
+  
   public void testNoSuchCreator() throws Exception {
     try {
       new RepositoryExpression("foo").createCodebase(ProjectContext.builder().build());
@@ -54,7 +55,8 @@ public class ExpressionTest extends TestCase {
   public void testFileCodebaseCreator() throws Exception {
     IMocksControl control = EasyMock.createControl();
     FileSystem mockFs = control.createMock(FileSystem.class);
-    AppContext.RUN.fileSystem = mockFs;
+    ObjectGraph graph = ObjectGraph.create(new ExtendedTestModule(mockFs, null));
+    graph.injectStatics();
     expect(mockFs.exists(new File("/foo"))).andReturn(true);
     expect(mockFs.isDirectory(new File("/foo"))).andReturn(true);
     File copyLocation = new File("/tmp/copy");

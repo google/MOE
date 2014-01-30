@@ -8,14 +8,22 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner;
+import com.google.devtools.moe.client.FileSystem;
+import com.google.devtools.moe.client.MoeModule;
+import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.database.DbStorage;
 import com.google.devtools.moe.client.database.Equivalence;
 import com.google.devtools.moe.client.database.FileDb;
 import com.google.devtools.moe.client.database.SubmittedMigration;
+import com.google.devtools.moe.client.project.ProjectContextFactory;
 import com.google.devtools.moe.client.repositories.Revision;
-import com.google.devtools.moe.client.testing.AppContextForTesting;
 import com.google.devtools.moe.client.testing.InMemoryFileSystem;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
+import com.google.devtools.moe.client.testing.RecordingUi;
+
+import dagger.Module;
+import dagger.ObjectGraph;
+import dagger.Provides;
 
 import junit.framework.TestCase;
 
@@ -38,22 +46,34 @@ public class BookkeepingDirectiveTest extends TestCase {
 
   private static final File DB_FILE = new File("/path/to/db");
 
-  private IMocksControl control;
-  private CommandRunner cmd;
+  private final IMocksControl control = EasyMock.createControl();
+  private final CommandRunner cmd = control.createMock(CommandRunner.class);
+  private final InMemoryProjectContextFactory contextFactory = new InMemoryProjectContextFactory();
+
+  @Module(overrides = true, includes = MoeModule.class)
+  class LocalTestModule {
+    private final FileSystem fileSystem;
+    LocalTestModule(ImmutableMap<String, String> fileSystem) {
+      this.fileSystem = new InMemoryFileSystem(fileSystem);
+    }
+    @Provides public Ui ui() {
+      return new RecordingUi();
+    }
+    @Provides public ProjectContextFactory projectContextFactory() {
+      return contextFactory;
+    }
+    @Provides public FileSystem fileSystem() {
+      return fileSystem;
+    }
+    @Provides public CommandRunner commandRunner() {
+      return cmd;
+    }
+  }
 
   @Override
   public void setUp() throws Exception {
     super.setUp();
-    AppContextForTesting.initForTest();
-    control = EasyMock.createControl();
-    cmd = control.createMock(CommandRunner.class);
-    AppContext.RUN.cmd = cmd;
-
-    // This MOE config contains:
-    //  - dummy internal and public repositories (int and pub, respectively)
-    //  - a translator from internal to public consisting of a single identity step
-    //  - a migration named 'test' from int to pub with no additional config info
-    ((InMemoryProjectContextFactory) AppContext.RUN.contextFactory).projectConfigs.put(
+    contextFactory.projectConfigs.put(
         "moe_config.txt",
         "{\"name\":\"foo\",\"repositories\":{" +
         "\"int\":{\"type\":\"dummy\",\"project_space\":\"internal\"}," +
@@ -85,14 +105,14 @@ public class BookkeepingDirectiveTest extends TestCase {
    * Bookkeeping for codebases the same at head, different at migrated revs.
    */
   public void testHeadsEquivalent() throws Exception {
-    InMemoryFileSystem fileSystem = new InMemoryFileSystem(ImmutableMap.of(
+    ObjectGraph graph = ObjectGraph.create(new LocalTestModule(ImmutableMap.of(
         "/path/to/db", "{\"equivalences\":[], \"migrations\":[]}",
         "/dummy/codebase/int/1/file", "1",
         "/dummy/codebase/pub/1/file", "1 (equivalent)",
         "/dummy/codebase/int/migrated_from/file", "migrated_from",
         "/dummy/codebase/pub/migrated_to/", "dir (different)"
-        ));
-    AppContext.RUN.fileSystem = fileSystem;
+        )));
+    graph.injectStatics();
 
     BookkeepingDirective d = new BookkeepingDirective();
     d.getFlags().configFilename = "moe_config.txt";
@@ -111,21 +131,21 @@ public class BookkeepingDirectiveTest extends TestCase {
         new Revision("migrated_from", "int"), new Revision("migrated_to", "pub")));
     FileDb expectedDb = new FileDb(dbStorage);
 
-    assertEquals(expectedDb.toJsonString(), fileSystem.fileToString(DB_FILE));
+    assertEquals(expectedDb.toJsonString(), graph.get(AppContext.class).fileSystem
+        .fileToString(DB_FILE));
   }
 
   /**
    * Bookkeeping for codebases different at head and migrated revs.
    */
   public void testOneSubmittedMigration_nonEquivalent() throws Exception {
-    InMemoryFileSystem fileSystem = new InMemoryFileSystem(ImmutableMap.of(
+    ObjectGraph graph = ObjectGraph.create(new LocalTestModule(ImmutableMap.of(
         "/path/to/db", "{\"equivalences\":[], \"migrations\":[]}",
         "/dummy/codebase/int/1/file", "1",
         "/dummy/codebase/pub/1/", "empty dir (different)",
         "/dummy/codebase/int/migrated_from/file", "migrated_from",
-        "/dummy/codebase/pub/migrated_to/", "empty dir (different)"
-        ));
-    AppContext.RUN.fileSystem = fileSystem;
+        "/dummy/codebase/pub/migrated_to/", "empty dir (different)")));
+    graph.injectStatics();
 
     BookkeepingDirective d = new BookkeepingDirective();
     d.getFlags().configFilename = "moe_config.txt";
@@ -143,21 +163,21 @@ public class BookkeepingDirectiveTest extends TestCase {
         new Revision("migrated_from", "int"), new Revision("migrated_to", "pub")));
     FileDb expectedDb = new FileDb(dbStorage);
 
-    assertEquals(expectedDb.toJsonString(), fileSystem.fileToString(DB_FILE));
+    assertEquals(expectedDb.toJsonString(), graph.get(AppContext.class).fileSystem
+        .fileToString(DB_FILE));
   }
 
   /**
    * Bookkeeping for codebases different at head and equivalent at migrated revs.
    */
   public void testOneSubmittedMigration_equivalent() throws Exception {
-    InMemoryFileSystem fileSystem = new InMemoryFileSystem(ImmutableMap.of(
+    ObjectGraph graph = ObjectGraph.create(new LocalTestModule(ImmutableMap.of(
         "/path/to/db", "{\"equivalences\":[], \"migrations\":[]}",
         "/dummy/codebase/int/1/file", "1",
         "/dummy/codebase/pub/1/", "empty dir (different)",
         "/dummy/codebase/int/migrated_from/file", "migrated_from",
-        "/dummy/codebase/pub/migrated_to/file", "migrated_to (equivalent)"
-        ));
-    AppContext.RUN.fileSystem = fileSystem;
+        "/dummy/codebase/pub/migrated_to/file", "migrated_to (equivalent)")));
+    graph.injectStatics();
 
     BookkeepingDirective d = new BookkeepingDirective();
     d.getFlags().configFilename = "moe_config.txt";
@@ -177,6 +197,7 @@ public class BookkeepingDirectiveTest extends TestCase {
         new Revision("migrated_from", "int"), new Revision("migrated_to", "pub")));
     FileDb expectedDb = new FileDb(dbStorage);
 
-    assertEquals(expectedDb.toJsonString(), fileSystem.fileToString(DB_FILE));
+    assertEquals(expectedDb.toJsonString(), graph.get(AppContext.class).fileSystem
+        .fileToString(DB_FILE));
   }
 }

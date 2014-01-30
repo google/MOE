@@ -4,9 +4,10 @@ package com.google.devtools.moe.client.testing;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.FileSystem.Lifetime;
 import com.google.devtools.moe.client.Lifetimes;
+
+import dagger.ObjectGraph;
 
 import junit.framework.TestCase;
 
@@ -18,21 +19,22 @@ import java.io.File;
  */
 public class InMemoryFileSystemTest extends TestCase {
 
+  @Override protected void setUp() throws Exception {
+    super.setUp();
+    ObjectGraph graph = ObjectGraph.create(new ExtendedTestModule(null, null));
+    graph.injectStatics();
+  }
+
   private static final Lifetime TRANSIENT = new Lifetime() {
     @Override public boolean shouldCleanUp() {
       return true;
     }
   };
 
-
-  @Override protected void setUp() throws Exception {
-    super.setUp();
-    AppContextForTesting.initForTest();
-  }
+  // Class under test
+  private final InMemoryFileSystem fs = new InMemoryFileSystem();
 
   public void testGetTemporaryDirectory() throws Exception {
-    InMemoryFileSystem fs = new InMemoryFileSystem();
-
     File tempDirPineapple = fs.getTemporaryDirectory("pineapple", Lifetimes.persistent());
     File tempDirBanana = fs.getTemporaryDirectory("banana", Lifetimes.persistent());
 
@@ -43,7 +45,6 @@ public class InMemoryFileSystemTest extends TestCase {
   }
 
   public void testCleanUpTempDirs() throws Exception {
-    InMemoryFileSystem fs = new InMemoryFileSystem();
     File persistentDir = fs.getTemporaryDirectory("persistent", Lifetimes.persistent());
     File transientDir = fs.getTemporaryDirectory("transient", TRANSIENT);
 
@@ -56,7 +57,6 @@ public class InMemoryFileSystemTest extends TestCase {
   }
 
   public void testSetLifetime() throws Exception {
-    InMemoryFileSystem fs = new InMemoryFileSystem();
     File persistentDir = fs.getTemporaryDirectory("persistent", Lifetimes.persistent());
     File transientDir = fs.getTemporaryDirectory("transient", TRANSIENT);
 
@@ -139,7 +139,6 @@ public class InMemoryFileSystemTest extends TestCase {
   }
 
   public void testMakeDirsForFile() throws Exception {
-    InMemoryFileSystem fs = new InMemoryFileSystem();
     fs.makeDirsForFile(new File("/a/b/c/d"));
 
     assertTrue(fs.isDirectory(new File("/a")));
@@ -149,7 +148,6 @@ public class InMemoryFileSystemTest extends TestCase {
   }
 
   public void testMakeDirs() throws Exception {
-    InMemoryFileSystem fs = new InMemoryFileSystem();
     fs.makeDirs(new File("/a/b/c/d"));
 
     assertTrue(fs.isDirectory(new File("/a")));
@@ -165,19 +163,13 @@ public class InMemoryFileSystemTest extends TestCase {
   }
 
   public void testWrite() throws Exception {
-    InMemoryFileSystem fs = new InMemoryFileSystem();
     fs.write("contents", new File("/src"));
     assertEquals("contents", fs.fileToString(new File("/src")));
   }
 
   public void testGetResourceAsFile() throws Exception {
-    // The lifetime of a resource is MOE execution, so we need an execution context.
-    AppContextForTesting.initForTest();
-    InMemoryFileSystem fs = new InMemoryFileSystem();
     File resourceLocation = fs.getResourceAsFile("test_resource");
     assertTrue(fs.isFile(resourceLocation));
-    // Reset static state.
-    AppContext.RUN = null;
   }
 
   public void testFileToString() throws Exception {

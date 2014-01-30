@@ -7,7 +7,6 @@ import static org.easymock.EasyMock.expect;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.MoeProblem;
@@ -17,8 +16,10 @@ import com.google.devtools.moe.client.parser.Term;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
-import com.google.devtools.moe.client.testing.AppContextForTesting;
+import com.google.devtools.moe.client.testing.ExtendedTestModule;
 import com.google.devtools.moe.client.writer.DraftRevision;
+
+import dagger.ObjectGraph;
 
 import junit.framework.TestCase;
 
@@ -34,24 +35,19 @@ import java.util.List;
  */
 public class SvnWriterTest extends TestCase {
 
-  private IMocksControl control;
-  private RepositoryConfig mockConfig;
-  private FileSystem fileSystem;
-  private CommandRunner cmd;
+  private final IMocksControl control = EasyMock.createControl();
+  private final FileSystem fileSystem = control.createMock(FileSystem.class);
+  private final CommandRunner cmd = control.createMock(CommandRunner.class);
+  private final RepositoryConfig mockConfig = control.createMock(RepositoryConfig.class);
+  
+  @Override protected void setUp() throws Exception {
+    super.setUp();
+    ObjectGraph graph = ObjectGraph.create(new ExtendedTestModule(fileSystem, cmd));
+    graph.injectStatics();
 
-  @Override public void setUp() throws Exception {
-    AppContextForTesting.initForTest();
-    control = EasyMock.createControl();
-    mockConfig = control.createMock(RepositoryConfig.class);
     expect(mockConfig.getUrl()).andReturn("http://foo/svn/trunk/").anyTimes();
     expect(mockConfig.getProjectSpace()).andReturn("public").anyTimes();
     expect(mockConfig.getIgnoreFileRes()).andReturn(ImmutableList.<String>of()).anyTimes();
-
-    fileSystem = control.createMock(FileSystem.class);
-    cmd = control.createMock(CommandRunner.class);
-
-    AppContext.RUN.cmd = cmd;
-    AppContext.RUN.fileSystem = fileSystem;
   }
 
   private void expectSvnCommand(List<String> args, String workingDirectory, String result,

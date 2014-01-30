@@ -9,6 +9,8 @@ import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
 
+import dagger.Lazy;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -16,6 +18,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+
+import javax.inject.Inject;
 
 /**
  * A {@link FileSystem} using the real local filesystem via operations in {@link File}.
@@ -25,6 +29,13 @@ import java.util.Set;
 public class SystemFileSystem implements FileSystem {
 
   private final Map<File, Lifetime> tempDirLifetimes = Maps.newHashMap();
+
+  private final Lazy<Ui> lazyUi; // Lazy<Ui> to avert dependency cycle.
+
+  @Inject
+  SystemFileSystem(Lazy<Ui> lazyUi) {
+    this.lazyUi = lazyUi;
+  }
 
   @Override
   public File getTemporaryDirectory(String prefix) {
@@ -52,7 +63,7 @@ public class SystemFileSystem implements FileSystem {
       if (entry.getValue().shouldCleanUp()) {
         deleteRecursively(entry.getKey());
         tempDirIterator.remove();
-        AppContext.RUN.ui.debug("Deleted temp dir: " + entry.getKey());
+        lazyUi.get().debug("Deleted temp dir: " + entry.getKey());
       }
     }
   }

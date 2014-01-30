@@ -7,15 +7,16 @@ import static org.easymock.EasyMock.expect;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.parser.Term;
 import com.google.devtools.moe.client.project.RepositoryConfig;
-import com.google.devtools.moe.client.testing.AppContextForTesting;
+import com.google.devtools.moe.client.testing.ExtendedTestModule;
 import com.google.devtools.moe.client.writer.DraftRevision;
+
+import dagger.ObjectGraph;
 
 import junit.framework.TestCase;
 
@@ -29,17 +30,16 @@ import java.io.File;
  */
 public class GitWriterTest extends TestCase {
 
-  IMocksControl control;
-  FileSystem mockFs;
-  Codebase codebase;
-  GitClonedRepository mockRevClone;
-  RepositoryConfig mockRepoConfig;
-
-  final File codebaseRoot = new File("/codebase");
-  final File writerRoot = new File("/writer");
-  final String projectSpace = "public";
-  final RepositoryExpression cExp = new RepositoryExpression(
+  private final IMocksControl control = EasyMock.createControl();
+  private final FileSystem mockFs = control.createMock(FileSystem.class);
+  private final File codebaseRoot = new File("/codebase");
+  private final File writerRoot = new File("/writer");
+  private final String projectSpace = "public";
+  private final RepositoryExpression cExp = new RepositoryExpression(
       new Term(projectSpace, ImmutableMap.<String, String>of()));
+  private final Codebase codebase = new Codebase(codebaseRoot, projectSpace, cExp);
+  private final GitClonedRepository mockRevClone = control.createMock(GitClonedRepository.class);
+  private final RepositoryConfig mockRepoConfig = control.createMock(RepositoryConfig.class);
 
   /* Helper methods */
 
@@ -49,14 +49,11 @@ public class GitWriterTest extends TestCase {
 
   /* End helper methods */
 
-  @Override public void setUp() {
-    AppContextForTesting.initForTest();
-    control = EasyMock.createControl();
-    mockFs = control.createMock(FileSystem.class);
-    AppContext.RUN.fileSystem = mockFs;
-    codebase = new Codebase(codebaseRoot, projectSpace, cExp);
-    mockRevClone = control.createMock(GitClonedRepository.class);
-    mockRepoConfig = control.createMock(RepositoryConfig.class);
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    ObjectGraph graph = ObjectGraph.create(new ExtendedTestModule(mockFs, null));
+    graph.injectStatics();
 
     expect(mockRevClone.getLocalTempDir()).andReturn(writerRoot).anyTimes();
     expect(mockRevClone.getConfig()).andReturn(mockRepoConfig).anyTimes();

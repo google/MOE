@@ -13,6 +13,10 @@ import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.testing.AppContextForTesting;
 import com.google.devtools.moe.client.testing.FileCodebaseCreator;
 
+import dagger.Module;
+import dagger.ObjectGraph;
+import dagger.Provides;
+
 import junit.framework.TestCase;
 
 import org.easymock.EasyMock;
@@ -28,16 +32,23 @@ import java.util.List;
  */
 public class FileCodebaseCreatorTest extends TestCase {
 
-  private IMocksControl control;
-  private FileSystem mockfs;
+  private final IMocksControl control = EasyMock.createControl();
+  private final FileSystem mockfs = control.createMock(FileSystem.class);
 
-  @Override protected void setUp() throws Exception {
-    super.setUp();
-    AppContextForTesting.initForTest();
-    control = EasyMock.createControl();
-    mockfs = control.createMock(FileSystem.class);
-    AppContext.RUN.fileSystem = mockfs;
+  @Module(overrides = true, includes = AppContextForTesting.class)
+  class LocalTestModule {
+    @Provides public FileSystem fileSystem() {
+      return mockfs;
+    }
   }
+
+  @Override
+  public void setUp() throws Exception {
+    super.setUp();
+    ObjectGraph graph = ObjectGraph.create(new LocalTestModule());
+    graph.injectStatics();
+  }
+
 
   private void expectDirCopy(File src, File dest) throws Exception {
     expect(mockfs.exists(EasyMock.eq(src))).andReturn(true);

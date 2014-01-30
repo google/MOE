@@ -3,24 +3,30 @@
 package com.google.devtools.moe.client.directives;
 
 import com.google.devtools.moe.client.AppContext;
+import com.google.devtools.moe.client.MoeModule;
 import com.google.devtools.moe.client.MoeProblem;
-import com.google.devtools.moe.client.testing.AppContextForTesting;
+import com.google.devtools.moe.client.Ui;
+import com.google.devtools.moe.client.project.ProjectContextFactory;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
 import com.google.devtools.moe.client.testing.RecordingUi;
+
+import dagger.Module;
+import dagger.ObjectGraph;
+import dagger.Provides;
 
 import junit.framework.TestCase;
 
 /**
  */
 public class OneMigrationDirectiveTest extends TestCase {
-
-  @Override
-  public void setUp() {
-    AppContextForTesting.initForTest();
-  }
-
-  public void testOneMigration() throws Exception {
-    ((InMemoryProjectContextFactory) AppContext.RUN.contextFactory).projectConfigs.put(
+  @Module(overrides = true, includes = MoeModule.class)
+  class LocalTestModule {
+    @Provides public Ui ui() {
+      return new RecordingUi();
+    }
+    @Provides public ProjectContextFactory projectContextFactory() {
+      InMemoryProjectContextFactory contextFactory = new InMemoryProjectContextFactory();
+      contextFactory.projectConfigs.put(
         "moe_config.txt",
         "{\"name\":\"foo\",\"repositories\":{" +
         "\"int\":{\"type\":\"dummy\",\"project_space\":\"internal\"}," +
@@ -28,6 +34,17 @@ public class OneMigrationDirectiveTest extends TestCase {
         "\"translators\":[{\"from_project_space\":\"internal\"," +
         "\"to_project_space\":\"public\",\"steps\":[{\"name\":\"id_step\"," +
         "\"editor\":{\"type\":\"identity\"}}]}]}");
+      return contextFactory;
+    }
+  }
+
+  @Override
+  public void setUp() {
+    ObjectGraph graph = ObjectGraph.create(new LocalTestModule());
+    graph.injectStatics();
+  }
+
+  public void testOneMigration() throws Exception {
     OneMigrationDirective d = new OneMigrationDirective();
     d.getFlags().configFilename = "moe_config.txt";
     d.getFlags().fromRepository = "int(revision=1000)";
@@ -39,14 +56,6 @@ public class OneMigrationDirectiveTest extends TestCase {
   }
 
   public void testOneMigrationFailOnFromRevision() throws Exception {
-    ((InMemoryProjectContextFactory) AppContext.RUN.contextFactory).projectConfigs.put(
-        "moe_config.txt",
-        "{\"name\":\"foo\",\"repositories\":{" +
-        "\"int\":{\"type\":\"dummy\",\"project_space\":\"internal\"}," +
-        "\"pub\":{\"type\":\"dummy\"}}," +
-        "\"translators\":[{\"from_project_space\":\"internal\"," +
-        "\"to_project_space\":\"public\",\"steps\":[{\"name\":\"id_step\"," +
-        "\"editor\":{\"type\":\"identity\"}}]}]}");
     OneMigrationDirective d = new OneMigrationDirective();
     d.getFlags().configFilename = "moe_config.txt";
     d.getFlags().fromRepository = "x(revision=1000)";
@@ -62,14 +71,6 @@ public class OneMigrationDirectiveTest extends TestCase {
   }
 
   public void testOneMigrationFailOnToRevision() throws Exception {
-    ((InMemoryProjectContextFactory) AppContext.RUN.contextFactory).projectConfigs.put(
-        "moe_config.txt",
-        "{\"name\":\"foo\",\"repositories\":{" +
-        "\"int\":{\"type\":\"dummy\",\"project_space\":\"internal\"}," +
-        "\"pub\":{\"type\":\"dummy\"}}," +
-        "\"translators\":[{\"from_project_space\":\"internal\"," +
-        "\"to_project_space\":\"public\",\"steps\":[{\"name\":\"id_step\"," +
-        "\"editor\":{\"type\":\"identity\"}}]}]}");
     OneMigrationDirective d = new OneMigrationDirective();
     d.getFlags().configFilename = "moe_config.txt";
     d.getFlags().fromRepository = "int(revision=1000)";
