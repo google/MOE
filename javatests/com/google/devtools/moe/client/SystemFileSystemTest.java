@@ -2,7 +2,8 @@
 
 package com.google.devtools.moe.client;
 
-import com.google.common.base.Charsets;
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 import com.google.devtools.moe.client.Ui.Task;
@@ -134,7 +135,7 @@ public class SystemFileSystemTest extends TestCase {
     File tempDir = Files.createTempDir();
     File foo = new File(tempDir, "foo");
     File bar = new File(tempDir, "bar");
-    Files.write("Contents!", foo, Charsets.UTF_8);
+    Files.write("Contents!", foo, UTF_8);
     fs.copyFile(foo, bar);
     assertEquals(true, Files.equal(foo, bar));
   }
@@ -144,7 +145,7 @@ public class SystemFileSystemTest extends TestCase {
     File tempDir = Files.createTempDir();
     File foo = new File(tempDir, "foo");
     fs.write("Contents!", foo);
-    assertEquals("Contents!", Files.toString(foo, Charsets.UTF_8));
+    assertEquals("Contents!", Files.toString(foo, UTF_8));
   }
 
   public void testDeleteRecursively() throws Exception {
@@ -152,7 +153,7 @@ public class SystemFileSystemTest extends TestCase {
     File tempDir = Files.createTempDir();
     File foo = new File(tempDir, "foo");
     File bar = new File(tempDir, "bar");
-    Files.write("Contents!", foo, Charsets.UTF_8);
+    Files.write("Contents!", foo, UTF_8);
     fs.copyFile(foo, bar);
     fs.deleteRecursively(tempDir);
     assertEquals(false, tempDir.exists());
@@ -164,7 +165,7 @@ public class SystemFileSystemTest extends TestCase {
     FileSystem fs = new SystemFileSystem(null);
     File tempDir = Files.createTempDir();
     File foo = new File(tempDir, "foo");
-    Files.write("Contents!", foo, Charsets.UTF_8);
+    Files.write("Contents!", foo, UTF_8);
     assertEquals("Contents!", fs.fileToString(foo));
   }
 

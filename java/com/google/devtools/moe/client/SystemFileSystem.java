@@ -2,7 +2,8 @@
 
 package com.google.devtools.moe.client;
 
-import com.google.common.base.Charsets;
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -160,7 +161,7 @@ public class SystemFileSystem implements FileSystem {
 
   @Override
   public void write(String contents, File f) throws IOException {
-    Files.write(contents, f, Charsets.UTF_8);
+    Files.write(contents, f, UTF_8);
   }
 
   @Override
@@ -188,6 +189,6 @@ public class SystemFileSystem implements FileSystem {
 
   @Override
   public String fileToString(File f) throws IOException {
-      return Files.toString(f, Charsets.UTF_8);
+      return Files.toString(f, UTF_8);
   }
 }
