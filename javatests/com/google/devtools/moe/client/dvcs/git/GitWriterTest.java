@@ -92,7 +92,7 @@ public class GitWriterTest extends TestCase {
 
     mockFs.makeDirsForFile(new File(writerRoot, "file1"));
     mockFs.copyFile(new File(codebaseRoot, "file1"), new File(writerRoot, "file1"));
-    expectGitCmd("add", "file1");
+    expectGitCmd("add", "-f", "file1");
 
     control.replay();
 
@@ -115,7 +115,7 @@ public class GitWriterTest extends TestCase {
 
     mockFs.makeDirsForFile(new File(writerRoot, "file1"));
     mockFs.copyFile(new File(codebaseRoot, "file1"), new File(writerRoot, "file1"));
-    expectGitCmd("add", "file1");
+    expectGitCmd("add", "-f", "file1");
 
     control.replay();
 

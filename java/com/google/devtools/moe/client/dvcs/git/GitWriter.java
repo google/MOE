@@ -34,13 +34,13 @@ public class GitWriter extends AbstractDvcsWriter<GitClonedRepository> {
 
   @Override
   protected void addFile(String relativeFilename) throws CommandException {
-    revClone.runGitCommand("add", relativeFilename);
+    revClone.runGitCommand("add", "-f", relativeFilename);
   }
   
   @Override
   protected void modifyFile(String relativeFilename) throws CommandException {
     // Put the modification in the git index.
-    revClone.runGitCommand("add", relativeFilename);
+    revClone.runGitCommand("add", "-f", relativeFilename);
   }
   
   @Override

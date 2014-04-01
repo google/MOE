@@ -71,7 +71,13 @@ public abstract class AbstractDvcsWriter<T extends LocalClone> implements Writer
       try {
         putFile(filename, incomingChangeCodebase);
       } catch (CommandException e) {
-        throw new MoeProblem("problem occurred while running '" + e.cmd + "': " + e.stderr);
+        StringBuilder sb = new StringBuilder("Problem occurred while running '");
+        sb.append(e.cmd);
+        for (String arg : e.args) {
+          sb.append(" ").append(arg);
+        }
+        sb.append("': ").append(e.stderr);
+        throw new MoeProblem(sb.toString());
       }
     }
 
