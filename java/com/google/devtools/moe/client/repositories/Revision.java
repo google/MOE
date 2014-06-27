@@ -2,7 +2,6 @@
 
 package com.google.devtools.moe.client.repositories;
 
-import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.MoeProblem;
@@ -10,6 +9,7 @@ import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.project.ProjectContext;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * A Revision in a source control system.
@@ -35,15 +35,15 @@ public class Revision {
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(repositoryName, revId);
+    return Objects.hash(repositoryName, revId);
   }
 
   @Override
   public boolean equals(Object obj) {
     if (obj instanceof Revision) {
       Revision revisionObj = (Revision) obj;
-      return (Objects.equal(repositoryName, revisionObj.repositoryName) &&
-              Objects.equal(revId, revisionObj.revId));
+      return (Objects.equals(repositoryName, revisionObj.repositoryName) &&
+              Objects.equals(revId, revisionObj.revId));
     }
     return false;
   }  

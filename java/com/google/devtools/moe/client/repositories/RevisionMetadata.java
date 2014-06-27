@@ -3,13 +3,13 @@
 package com.google.devtools.moe.client.repositories;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import org.joda.time.DateTime;
 
 import java.util.List;
+import java.util.Objects;
 
 import javax.annotation.Nullable;
 
@@ -42,18 +42,18 @@ public class RevisionMetadata {
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(id, author, date, description, parents);
+    return Objects.hash(id, author, date, description, parents);
   }
 
   @Override
   public boolean equals(Object obj) {
     if (obj instanceof RevisionMetadata) {
       RevisionMetadata revisionMetadataObj = (RevisionMetadata) obj;
-      return (Objects.equal(id, revisionMetadataObj.id) &&
-              Objects.equal(author, revisionMetadataObj.author) &&
+      return (Objects.equals(id, revisionMetadataObj.id) &&
+              Objects.equals(author, revisionMetadataObj.author) &&
               date.isEqual(revisionMetadataObj.date) &&
-              Objects.equal(description, revisionMetadataObj.description) &&
-              Objects.equal(parents, revisionMetadataObj.parents));
+              Objects.equals(description, revisionMetadataObj.description) &&
+              Objects.equals(parents, revisionMetadataObj.parents));
     }
     return false;
   }

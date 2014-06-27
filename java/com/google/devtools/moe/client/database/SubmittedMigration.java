@@ -2,8 +2,9 @@
 
 package com.google.devtools.moe.client.database;
 
-import com.google.common.base.Objects;
 import com.google.devtools.moe.client.repositories.Revision;
+
+import java.util.Objects;
 
 /**
  * A SubmittedMigration holds information about a completed migration.
@@ -28,7 +29,7 @@ public class SubmittedMigration {
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(fromRevision, toRevision);
+    return Objects.hash(fromRevision, toRevision);
   }
 
   @Override
