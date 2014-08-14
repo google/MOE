@@ -4,6 +4,7 @@ package com.google.devtools.moe.client.dvcs.hg;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.MoeProblem;
@@ -49,7 +50,12 @@ public class HgWriter extends AbstractDvcsWriter<HgClonedRepository> {
 
   @Override
   protected void commitChanges(RevisionMetadata rm) throws CommandException {
-    revClone.runHgCommand("commit", "--message", rm.description);
+    List<String> args = Lists.newArrayList("commit", "--message", rm.description);
+    if (revClone.getConfig().getPreserveAuthors()) {
+      args.add("--user");
+      args.add(rm.author);
+    }
+    revClone.runHgCommand(args.toArray(new String[0]));
   }
 
   @Override

@@ -29,6 +29,9 @@ public class RepositoryConfig {
   @SerializedName("package")
   private String buildTargetPackage;
 
+  @SerializedName("preserve_authors")
+  private boolean preserveAuthors;
+
 
   private List<String> paths;
 
@@ -76,6 +79,10 @@ public class RepositoryConfig {
   public String getBuildTarget() {
     String result = buildTarget;
     return result;
+  }
+
+  public boolean getPreserveAuthors() {
+    return preserveAuthors;
   }
 
 
