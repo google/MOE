@@ -51,12 +51,15 @@ public class GitWriter extends AbstractDvcsWriter<GitClonedRepository> {
   
   @Override
   protected void commitChanges(RevisionMetadata rm) throws CommandException {
-    List<String> args = Lists.newArrayList("commit", "--all", "--message", rm.description);
+    List<String> args = Lists.newArrayList("commit",
+        "--all",
+        "--message", rm.description,
+        "--date", rm.date.toString());
     if (revClone.getConfig().getPreserveAuthors()) {
       args.add("--author");
       args.add(rm.author);
     }
-    revClone.runGitCommand(args.toArray(new String[0]));
+    revClone.runGitCommand(args.toArray(new String[args.size()]));
   }
   
   @Override
