@@ -16,7 +16,7 @@ public class EditorConfig {
 
   //only used for scrubbing editors
   @SerializedName("scrubber_config")
-  private JsonObject scrubberConfig;
+  private ScrubberConfig scrubberConfig;
 
   //only used for shell editors
   @SerializedName("command_string")
@@ -33,7 +33,7 @@ public class EditorConfig {
     return type;
   }
 
-  public JsonObject getScrubberConfig() {
+  public ScrubberConfig getScrubberConfig() {
     return scrubberConfig;
   }
 

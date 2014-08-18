@@ -11,8 +11,9 @@ import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Utils;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.project.EditorConfig;
+import com.google.devtools.moe.client.project.ProjectConfig;
 import com.google.devtools.moe.client.project.ProjectContext;
-import com.google.gson.JsonObject;
+import com.google.devtools.moe.client.project.ScrubberConfig;
 
 import java.io.File;
 import java.io.IOException;
@@ -48,9 +49,9 @@ public class ScrubbingEditor implements Editor {
       });
 
   private String name;
-  private JsonObject scrubberConfig;
+  private ScrubberConfig scrubberConfig;
 
-  ScrubbingEditor(String editorName, JsonObject scrubberConfig) {
+  ScrubbingEditor(String editorName, ScrubberConfig scrubberConfig) {
     name = editorName;
     this.scrubberConfig = scrubberConfig;
   }
@@ -81,7 +82,8 @@ public class ScrubbingEditor implements Editor {
               "--temp_dir", tempDir.getAbsolutePath(),
               "--output_tar", outputTar.getAbsolutePath(),
               // TODO(dbentley): allow configuring the scrubber config
-              "--config_data", (scrubberConfig == null) ? "{}" : scrubberConfig.toString(),
+              "--config_data",
+              (scrubberConfig == null) ? "{}" : ProjectConfig.makeGson().toJson(scrubberConfig),
               input.getPath().getAbsolutePath()),
           SCRUBBER_BINARY_SUPPLIER.get().getParentFile().getPath());
     } catch (CommandRunner.CommandException e) {

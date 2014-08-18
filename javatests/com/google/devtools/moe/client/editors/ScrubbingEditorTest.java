@@ -10,9 +10,9 @@ import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.project.ProjectConfig;
+import com.google.devtools.moe.client.project.ScrubberConfig;
 import com.google.devtools.moe.client.testing.ExtendedTestModule;
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 
 import dagger.ObjectGraph;
 
@@ -47,7 +47,8 @@ public class ScrubbingEditorTest extends TestCase {
                                      null /* CodebaseExpression is not needed here. */);
 
     Gson gson = ProjectConfig.makeGson();
-    JsonObject scrubberConfig = gson.fromJson("{\"foo\":\"bar\"}", JsonObject.class);
+    ScrubberConfig scrubberConfig =
+        gson.fromJson("{\"scrub_unknown_users\":\"true\"}", ScrubberConfig.class);
 
 
     expect(fileSystem.getResourceAsFile("/devtools/moe/scrubber/scrubber.par")).andReturn(
@@ -59,8 +60,12 @@ public class ScrubbingEditorTest extends TestCase {
         // Matches the ./scrubber.par used in ScrubbingEditor.java
         "./scrubber.par",
         ImmutableList.of("--temp_dir", "/scrubber_run_foo",
-                         "--output_tar", "/scrubber_run_foo/scrubbed.tar",
-                         "--config_data", "{\"foo\":\"bar\"}", "/codebase"),
+            "--output_tar", "/scrubber_run_foo/scrubbed.tar",
+            "--config_data", "{\"scrub_sensitive_comments\":true,"
+                + "\"scrub_non_documentation_comments\":false,\"scrub_all_comments\":false,"
+                + "\"scrub_unknown_users\":true,\"scrub_authors\":true,\"maximum_blank_lines\":0,"
+                + "\"scrub_java_testsize_annotations\":false,\"scrub_proto_comments\":false}",
+            "/codebase"),
         "/scrubber_extraction_foo")).andReturn("");
 
     expect(fileSystem.getTemporaryDirectory("expanded_tar_")).andReturn(expandedDir);
