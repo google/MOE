@@ -12,7 +12,6 @@ import com.google.devtools.moe.client.parser.Parser.ParseError;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.ProjectContext;
-import com.google.devtools.moe.client.repositories.Repository;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.writer.DraftRevision;
 import com.google.devtools.moe.client.writer.Writer;
@@ -42,12 +41,10 @@ public class OneMigrationDirective implements Directive {
     ProjectContext context;
     String toProjectSpace;
     RepositoryExpression toRepoEx, fromRepoEx;
-    Repository toRepo;
     try {
       context = AppContext.RUN.contextFactory.makeProjectContext(options.configFilename);
       toRepoEx = Parser.parseRepositoryExpression(options.toRepository);
       fromRepoEx = Parser.parseRepositoryExpression(options.fromRepository);
-      toRepo = context.getRepository(toRepoEx.getRepositoryName());
       toProjectSpace = context.config.getRepositoryConfig(toRepoEx.getRepositoryName())
           .getProjectSpace();
     } catch (ParseError e) {
@@ -81,7 +78,8 @@ public class OneMigrationDirective implements Directive {
 
     AppContext.RUN.ui.info(String.format("Migrating '%s' to '%s'", fromRepoEx, toRepoEx));
 
-    DraftRevision r = OneMigrationLogic.migrate(c, destination, revs, context, revs.get(0));
+    DraftRevision r = OneMigrationLogic.migrate(c, destination, revs, context, revs.get(0),
+        fromRepoEx.getRepositoryName(), toRepoEx.getRepositoryName());
     if (r == null) {
       return 1;
     }

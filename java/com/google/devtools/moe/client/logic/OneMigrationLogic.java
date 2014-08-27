@@ -8,7 +8,9 @@ import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.migrations.Migration;
 import com.google.devtools.moe.client.parser.Expression;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
+import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.ProjectContext;
+import com.google.devtools.moe.client.project.ScrubberConfig;
 import com.google.devtools.moe.client.repositories.MetadataScrubberConfig;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
@@ -37,9 +39,11 @@ public class OneMigrationLogic {
    */
   public static DraftRevision migrate(Codebase c, Writer destination,
                                       List<Revision> revisionsToMigrate,
-                                      ProjectContext context, Revision fromRevision) {
+                                      ProjectContext context, Revision fromRevision,
+                                      String fromRepository, String toRepository) {
     RevisionMetadata metadata = DetermineMetadataLogic.determine(
         context, revisionsToMigrate, fromRevision);
+    metadata = scrubAuthors(metadata, context, fromRepository, toRepository);
     return ChangeLogic.change(c, destination, metadata);
   }
 
@@ -84,6 +88,23 @@ public class OneMigrationLogic {
         ? DetermineMetadataLogic.determine(context, migration.fromRevisions, mostRecentFromRev)
         : DetermineMetadataLogic.determine(context, migration.fromRevisions, sc, mostRecentFromRev);
 
+    metadata = scrubAuthors(metadata, context, migration.config.getFromRepository(),
+        migration.config.getToRepository());
+
     return ChangeLogic.change(fromCodebase, destination, metadata);
+  }
+
+  private static RevisionMetadata scrubAuthors(RevisionMetadata metadata, ProjectContext context,
+      String fromRepository, String toRepository) {
+    try {
+      ScrubberConfig scrubber = context.config.findScrubberConfig(fromRepository, toRepository);
+      if (scrubber != null && scrubber.shouldScrubAuthor(metadata.author)) {
+        return new RevisionMetadata(
+            metadata.id, null /* author */, metadata.date, metadata.description, metadata.parents);
+      }
+    } catch (InvalidProject exception) {
+      throw new MoeProblem(exception.getMessage());
+    }
+    return metadata;
   }
 }

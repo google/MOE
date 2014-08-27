@@ -55,7 +55,7 @@ public class GitWriter extends AbstractDvcsWriter<GitClonedRepository> {
         "--all",
         "--message", rm.description,
         "--date", rm.date.toString());
-    if (revClone.getConfig().getPreserveAuthors()) {
+    if (rm.author != null) {
       args.add("--author");
       args.add(rm.author);
     }

@@ -114,6 +114,24 @@ public class ProjectConfig {
     return gson;
   }
 
+  public ScrubberConfig findScrubberConfig(String fromRepository, String toRepository) {
+    String fromProjectSpace = getRepositoryConfig(fromRepository).getProjectSpace();
+    String toProjectSpace = getRepositoryConfig(toRepository).getProjectSpace();
+    for (TranslatorConfig translator : getTranslators()) {
+      if (translator.getSteps() != null
+          && translator.getFromProjectSpace().equals(fromProjectSpace)
+          && translator.getToProjectSpace().equals(toProjectSpace)) {
+        for (StepConfig step : translator.getSteps()) {
+          if (step.getName().equals("scrub_step")) {
+            return step.getEditorConfig().getScrubberConfig();
+          }
+        }
+        break;
+      }
+    }
+    return null;
+  }
+
   void validate() throws InvalidProject {
     if (repositories == null) {
       repositories = Maps.newHashMap();
