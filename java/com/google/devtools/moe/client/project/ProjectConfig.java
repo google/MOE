@@ -122,7 +122,7 @@ public class ProjectConfig {
           && translator.getFromProjectSpace().equals(fromProjectSpace)
           && translator.getToProjectSpace().equals(toProjectSpace)) {
         for (StepConfig step : translator.getSteps()) {
-          if (step.getName().equals("scrub_step")) {
+          if (step.getEditorConfig().getType() == EditorType.scrubber) {
             return step.getEditorConfig().getScrubberConfig();
           }
         }
