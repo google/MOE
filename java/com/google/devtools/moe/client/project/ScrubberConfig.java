@@ -1,12 +1,13 @@
 package com.google.devtools.moe.client.project;
 
+import com.google.devtools.moe.client.AppContext;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.annotations.SerializedName;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -32,8 +33,9 @@ public class ScrubberConfig {
   @SerializedName("scrub_all_comments") private boolean scrubAllComments;
 
   // User options
-  @SerializedName("usernames_to_scrub") private List<String> usernamesToScrub;
-  @SerializedName("usernames_to_publish") private List<String> usernamesToPublish;
+  @SerializedName("usernames_to_scrub") private List<String> usernamesToScrub = new ArrayList<>();
+  @SerializedName("usernames_to_publish")
+  private List<String> usernamesToPublish = new ArrayList<>();
   @SerializedName("usernames_file") private String usernamesFile;
   @SerializedName("scrub_unknown_users") private boolean scrubUnknownUsers;
   @SerializedName("scrub_authors") private boolean scrubAuthors = true;
@@ -76,11 +78,11 @@ public class ScrubberConfig {
     if (usernamesFile != null) {
       try {
         UsernamesConfig usernamesConfig = ProjectConfig.makeGson().fromJson(
-            new BufferedReader(new FileReader(usernamesFile)),
+            AppContext.RUN.fileSystem.fileToString(new File(usernamesFile)),
             UsernamesConfig.class);
         addUsernames(usernamesToScrub, usernamesConfig.getScrubbableUsernames());
         addUsernames(usernamesToPublish, usernamesConfig.getPublishableUsernames());
-      } catch (FileNotFoundException exception) {
+      } catch (IOException exception) {
         throw new InvalidProject(
             "File " + usernamesFile + " referenced by usernames_file not found.");
       }
