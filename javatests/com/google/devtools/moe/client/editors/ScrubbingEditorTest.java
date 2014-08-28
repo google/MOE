@@ -47,8 +47,8 @@ public class ScrubbingEditorTest extends TestCase {
                                      null /* CodebaseExpression is not needed here. */);
 
     Gson gson = ProjectConfig.makeGson();
-    ScrubberConfig scrubberConfig = gson.fromJson(
-        "{\"scrub_unknown_users\":\"true\",\"usernames_file\":null}", ScrubberConfig.class);
+    ScrubberConfig scrubberConfig =
+        gson.fromJson("{\"scrub_unknown_users\":\"true\"}", ScrubberConfig.class);
 
 
     expect(fileSystem.getResourceAsFile("/devtools/moe/scrubber/scrubber.par")).andReturn(
@@ -63,7 +63,6 @@ public class ScrubbingEditorTest extends TestCase {
             "--output_tar", "/scrubber_run_foo/scrubbed.tar",
             "--config_data", "{\"scrub_sensitive_comments\":true,"
                 + "\"scrub_non_documentation_comments\":false,\"scrub_all_comments\":false,"
-                + "\"usernames_to_scrub\":[],\"usernames_to_publish\":[],"
                 + "\"scrub_unknown_users\":true,\"scrub_authors\":true,\"maximum_blank_lines\":0,"
                 + "\"scrub_java_testsize_annotations\":false,\"scrub_proto_comments\":false}",
             "/codebase"),
