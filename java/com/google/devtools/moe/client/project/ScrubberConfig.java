@@ -42,6 +42,7 @@ public class ScrubberConfig {
 
   // C/C++ options
   @SerializedName("c_includes_config_file") private String cIncludesConfigFile;
+  @SerializedName("c_includes_config") private JsonObject cIncludesConfig;
 
   // Java options
   @SerializedName("empty_java_file_action") private String emptyJavaFileAction;
