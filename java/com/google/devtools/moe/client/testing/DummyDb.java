@@ -19,6 +19,8 @@ import java.util.Set;
  */
 public class DummyDb implements Db {
 
+  private static final Joiner JOINER = Joiner.on("\n");
+
   public boolean returnEquivalences;
   public ArrayList<Equivalence> equivalences;
   public ArrayList<SubmittedMigration> migrations;
@@ -51,11 +53,12 @@ public class DummyDb implements Db {
 
   @Override
   public void writeToLocation(String dbLocation) {
-    Joiner j = Joiner.on("\n");
-    StringBuilder b = new StringBuilder("Equivalences:\n");
-    j.join(b, equivalences);
-    b.append("\nMigrations:\n");
-    j.join(b, migrations);
-    AppContext.RUN.ui.info(b.toString());
+    String b = new StringBuilder()
+        .append("Equivalences:\n")
+        .append(JOINER.join(equivalences))
+        .append("\nMigrations:\n")
+        .append(JOINER.join(migrations))
+        .toString();
+    AppContext.RUN.ui.info(b);
   }
 }
