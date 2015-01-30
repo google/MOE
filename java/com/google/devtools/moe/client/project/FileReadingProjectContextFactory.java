@@ -2,7 +2,8 @@
 
 package com.google.devtools.moe.client.project;
 
-import com.google.common.base.Charsets;
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.google.common.io.Files;
 import com.google.devtools.moe.client.Ui;
 
@@ -26,7 +27,7 @@ public class FileReadingProjectContextFactory implements ProjectContextFactory {
         String.format("Reading config file from %s", configFilename));
     try {
       try {
-        configText = Files.toString(new File(configFilename), Charsets.UTF_8);
+        configText = Files.toString(new File(configFilename), UTF_8);
       } catch (IOException e) {
         throw new InvalidProject(
             "Config File \"" + configFilename + "\" not accessible.");
