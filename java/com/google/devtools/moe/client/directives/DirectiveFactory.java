@@ -2,7 +2,7 @@
 
 package com.google.devtools.moe.client.directives;
 
-import com.google.devtools.moe.client.AppContext;
+import com.google.devtools.moe.client.Injector;
 
 /**
  * A Factory to create Directives based on the supplied command-line.
@@ -67,10 +67,10 @@ public class DirectiveFactory {
       return DirectiveType.valueOf(directiveText.toUpperCase()).directive;
     } catch (IllegalArgumentException e) {
       // Bad input, print all possible directives
-      AppContext.RUN.ui.info(directiveText + " is not a valid directive. Must be one of: ");
+      Injector.INSTANCE.ui.info(directiveText + " is not a valid directive. Must be one of: ");
 
       for (DirectiveType dir : DirectiveType.values()) {
-        AppContext.RUN.ui.info("* " + dir.name().toLowerCase() + ": " + dir.desc);
+        Injector.INSTANCE.ui.info("* " + dir.name().toLowerCase() + ": " + dir.desc);
       }
       return null;
     }

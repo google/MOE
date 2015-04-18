@@ -6,10 +6,13 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 
+import dagger.Provides;
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 /**
  * Ui that outputs to System.out and System.err
@@ -51,6 +54,7 @@ public class SystemUi extends Ui {
     logHelper(indent(msg));
   }
 
+  @Override
   public void debug(String msg) {
     logger.log(Level.INFO, msg);
   }
@@ -100,5 +104,12 @@ public class SystemUi extends Ui {
           indent("DONE: " + task.description + ": " + result));
     }
     currentOutput = null;
+  }
+
+  /** A Dagger module for binding this implementation of {@link Ui}. */
+  @dagger.Module(complete = false) public static class Module {
+    @Provides @Singleton public Ui ui(SystemUi impl) {
+      return impl;
+    }
   }
 }

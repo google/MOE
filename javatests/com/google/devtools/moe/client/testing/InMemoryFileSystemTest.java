@@ -5,24 +5,36 @@ package com.google.devtools.moe.client.testing;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.FileSystem.Lifetime;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.Lifetimes;
-
-import dagger.ObjectGraph;
+import com.google.devtools.moe.client.Moe;
+import com.google.devtools.moe.client.NullFileSystemModule;
+import com.google.devtools.moe.client.SystemCommandRunner;
 
 import junit.framework.TestCase;
 
 import java.io.File;
+
+import javax.inject.Singleton;
 
 /**
  * Unit tests for {@link InMemoryFileSystem}.
  *
  */
 public class InMemoryFileSystemTest extends TestCase {
+  // TODO(cgruber): Rework these when statics aren't inherent in the design.
+  @dagger.Component(modules = {
+      TestingModule.class,
+      SystemCommandRunner.Module.class,
+      NullFileSystemModule.class})
+  @Singleton
+  interface Component extends Moe.Component {
+    @Override Injector context(); // TODO (b/19676630) Remove when bug is fixed.
+  }
 
   @Override protected void setUp() throws Exception {
     super.setUp();
-    ObjectGraph graph = ObjectGraph.create(new ExtendedTestModule(null, null));
-    graph.injectStatics();
+    Injector.INSTANCE = DaggerInMemoryFileSystemTest_Component.create().context();
   }
 
   private static final Lifetime TRANSIENT = new Lifetime() {

@@ -8,7 +8,10 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
+import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.Moe;
 import com.google.devtools.moe.client.MoeProblem;
+import com.google.devtools.moe.client.NullFileSystemModule;
 import com.google.devtools.moe.client.database.Equivalence;
 import com.google.devtools.moe.client.database.EquivalenceMatcher;
 import com.google.devtools.moe.client.database.EquivalenceMatcher.EquivalenceMatchResult;
@@ -18,10 +21,10 @@ import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory.SearchType;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.testing.DummyDb;
-import com.google.devtools.moe.client.testing.ExtendedTestModule;
 import com.google.devtools.moe.client.testing.MoeAsserts;
+import com.google.devtools.moe.client.testing.TestingModule;
 
-import dagger.ObjectGraph;
+import dagger.Provides;
 
 import junit.framework.TestCase;
 
@@ -32,6 +35,8 @@ import org.joda.time.DateTimeZone;
 
 import java.io.File;
 import java.util.List;
+
+import javax.inject.Singleton;
 
 /**
  * Unit tests for HgRevisionHistory: that 'hg log' calls are as expected and parsed correctly.
@@ -50,10 +55,23 @@ public class HgRevisionHistoryTest extends TestCase {
   private final CommandRunner cmd = control.createMock(CommandRunner.class);
   private final RepositoryConfig config = control.createMock(RepositoryConfig.class);
 
+  // TODO(cgruber): Rework these when statics aren't inherent in the design.
+  @dagger.Component(modules = {TestingModule.class, NullFileSystemModule.class, Module.class})
+  @Singleton
+  interface Component extends Moe.Component {
+    @Override Injector context(); // TODO (b/19676630) Remove when bug is fixed.
+  }
+
+  @dagger.Module class Module {
+    @Provides public CommandRunner cmd() {
+      return cmd;
+    }
+  }
+
   @Override protected void setUp() throws Exception {
     super.setUp();
-    ObjectGraph graph = ObjectGraph.create(new ExtendedTestModule(null, cmd));
-    graph.injectStatics();
+    Injector.INSTANCE = DaggerHgRevisionHistoryTest_Component.builder().module(new Module()).build()
+        .context();
   }
 
   private HgClonedRepository mockClonedRepo(String repoName) {

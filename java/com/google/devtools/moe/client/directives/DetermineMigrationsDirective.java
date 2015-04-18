@@ -2,7 +2,7 @@
 
 package com.google.devtools.moe.client.directives;
 
-import com.google.devtools.moe.client.AppContext;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeOptions;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.database.Db;
@@ -35,9 +35,9 @@ public class DetermineMigrationsDirective implements Directive {
   public int perform() {
     ProjectContext context;
     try {
-      context = AppContext.RUN.contextFactory.makeProjectContext(options.configFilename);
+      context = Injector.INSTANCE.contextFactory.makeProjectContext(options.configFilename);
     } catch (InvalidProject e) {
-      AppContext.RUN.ui.error(e, "Error creating project");
+      Injector.INSTANCE.ui.error(e, "Error creating project");
       return 1;
     }
 
@@ -49,21 +49,21 @@ public class DetermineMigrationsDirective implements Directive {
       try {
         db = FileDb.makeDbFromFile(options.dbLocation);
       } catch (MoeProblem e) {
-        AppContext.RUN.ui.error(e, "Error creating DB");
+        Injector.INSTANCE.ui.error(e, "Error creating DB");
         return 1;
       }
     }
 
     MigrationConfig config = context.migrationConfigs.get(options.migrationName);
     if (config == null) {
-      AppContext.RUN.ui.error("No migration found with name " + options.migrationName);
+      Injector.INSTANCE.ui.error("No migration found with name " + options.migrationName);
       return 1;
     }
 
     List<Migration> migrations =
         DetermineMigrationsLogic.determineMigrations(context, config, db);
     for (Migration migration : migrations) {
-      AppContext.RUN.ui.info("Pending migration: " + migration);
+      Injector.INSTANCE.ui.info("Pending migration: " + migration);
     }
 
     return 0;

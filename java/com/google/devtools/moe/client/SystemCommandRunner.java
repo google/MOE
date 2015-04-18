@@ -6,12 +6,15 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
+import dagger.Provides;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 /**
  *
@@ -19,7 +22,11 @@ import javax.inject.Inject;
  */
 public class SystemCommandRunner implements CommandRunner {
 
-  @Inject Ui ui;
+  private final Ui ui;
+
+  @Inject SystemCommandRunner(Ui ui) {
+    this.ui = ui;
+  }
 
   @Override
   public CommandOutput runCommandWithFullOutput(
@@ -138,6 +145,13 @@ public class SystemCommandRunner implements CommandRunner {
         byteArray[i++] = b;
       }
       return new String(byteArray);
+    }
+  }
+
+  /** A Dagger module for binding this implementation of {@link CommandRunner}. */
+  @dagger.Module(complete = false) public static class Module {
+    @Provides @Singleton public CommandRunner runner(SystemCommandRunner impl) {
+      return impl;
     }
   }
 }

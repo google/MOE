@@ -1,6 +1,6 @@
 package com.google.devtools.moe.client.project;
 
-import com.google.devtools.moe.client.AppContext;
+import com.google.devtools.moe.client.Injector;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.annotations.SerializedName;
@@ -25,7 +25,7 @@ public class ScrubberConfig {
   @SerializedName("sensitive_words") private List<String> sensitiveWords;
   @SerializedName("sensitive_res") private List<String> sensitiveRes;
   private List<JsonObject> whitelist;
-  @SerializedName("scrub_sensitive_comments") private boolean scrubSensitiveComments = true;
+  @SerializedName("scrub_sensitive_comments") private final boolean scrubSensitiveComments = true;
   @SerializedName("rearranging_config") private JsonObject rearrangingConfig;
   @SerializedName("string_replacements") private List<Map<String, String>> stringReplacements;
   @SerializedName("regex_replacements") private List<Map<String, String>> regexReplacements;
@@ -33,12 +33,13 @@ public class ScrubberConfig {
   @SerializedName("scrub_all_comments") private boolean scrubAllComments;
 
   // User options
-  @SerializedName("usernames_to_scrub") private List<String> usernamesToScrub = new ArrayList<>();
+  @SerializedName("usernames_to_scrub")
+  private final List<String> usernamesToScrub = new ArrayList<>();
   @SerializedName("usernames_to_publish")
-  private List<String> usernamesToPublish = new ArrayList<>();
+  private final List<String> usernamesToPublish = new ArrayList<>();
   @SerializedName("usernames_file") private String usernamesFile;
   @SerializedName("scrub_unknown_users") private boolean scrubUnknownUsers;
-  @SerializedName("scrub_authors") private boolean scrubAuthors = true;
+  @SerializedName("scrub_authors") private final boolean scrubAuthors = true;
 
   // C/C++ options
   @SerializedName("c_includes_config_file") private String cIncludesConfigFile;
@@ -79,7 +80,7 @@ public class ScrubberConfig {
     if (usernamesFile != null) {
       try {
         UsernamesConfig usernamesConfig = ProjectConfig.makeGson().fromJson(
-            AppContext.RUN.fileSystem.fileToString(new File(usernamesFile)),
+            Injector.INSTANCE.fileSystem.fileToString(new File(usernamesFile)),
             UsernamesConfig.class);
         addUsernames(usernamesToScrub, usernamesConfig.getScrubbableUsernames());
         addUsernames(usernamesToPublish, usernamesConfig.getPublishableUsernames());

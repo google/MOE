@@ -15,22 +15,29 @@ import javax.inject.Singleton;
  *
  * @author cgruber@google.com (Christian Gruber)
  */
-@Module(injects = AppContext.class, staticInjections = AppContext.class)
+@Module
 public class MoeModule {
-  @Provides @Singleton public Ui ui(SystemUi sysui) {
+  @Provides
+  @Singleton
+  public Ui ui(SystemUi sysui) {
     return sysui;
   }
 
-  @Provides @Singleton public ProjectContextFactory projectContextFactory(
-      FileReadingProjectContextFactory factory) {
+  @Provides
+  @Singleton
+  public ProjectContextFactory projectContextFactory(FileReadingProjectContextFactory factory) {
     return factory;
   }
 
-  @Provides @Singleton public CommandRunner commandRunner(SystemCommandRunner runner) {
+  @Provides
+  @Singleton
+  public CommandRunner commandRunner(SystemCommandRunner runner) {
     return runner;
   }
 
-  @Provides @Singleton public FileSystem fileSystem(SystemFileSystem sysfs) {
+  @Provides
+  @Singleton
+  public FileSystem fileSystem(SystemFileSystem sysfs) {
     return sysfs;
   }
 }

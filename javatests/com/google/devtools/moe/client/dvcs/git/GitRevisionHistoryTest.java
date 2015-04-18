@@ -9,7 +9,11 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
+import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.Moe;
 import com.google.devtools.moe.client.MoeProblem;
+import com.google.devtools.moe.client.NullFileSystemModule;
+import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.database.Equivalence;
 import com.google.devtools.moe.client.database.EquivalenceMatcher;
 import com.google.devtools.moe.client.database.EquivalenceMatcher.EquivalenceMatchResult;
@@ -19,10 +23,8 @@ import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory.SearchType;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.testing.DummyDb;
-import com.google.devtools.moe.client.testing.ExtendedTestModule;
 import com.google.devtools.moe.client.testing.MoeAsserts;
-
-import dagger.ObjectGraph;
+import com.google.devtools.moe.client.testing.TestingModule;
 
 import junit.framework.TestCase;
 
@@ -34,6 +36,8 @@ import org.joda.time.DateTimeZone;
 
 import java.util.List;
 import java.util.Set;
+
+import javax.inject.Singleton;
 
 /**
  * Unit tests for GitRevisionHistory.
@@ -49,13 +53,24 @@ public class GitRevisionHistoryTest extends TestCase {
   private static final String LOG_FORMAT_ALL_METADATA =
       METADATA_JOINER.join("%H", "%an", "%ai", "%P", "%B");
 
-  private IMocksControl control = EasyMock.createControl();
-  private String repositoryName = "mockrepo";
-  private String localCloneTempDir = "/tmp/git_tipclone_mockrepo_12345";
+  private final IMocksControl control = EasyMock.createControl();
+  private final String repositoryName = "mockrepo";
+  private final String localCloneTempDir = "/tmp/git_tipclone_mockrepo_12345";
 
-  @Override public void setUp() {
-    ObjectGraph graph = ObjectGraph.create(new ExtendedTestModule(null, null));
-    graph.injectStatics();
+  // TODO(cgruber): Rework these when statics aren't inherent in the design.
+  @dagger.Component(modules = {
+      TestingModule.class,
+      SystemCommandRunner.Module.class,
+      NullFileSystemModule.class})
+  @Singleton
+  interface Component extends Moe.Component {
+    @Override Injector context(); // TODO (b/19676630) Remove when bug is fixed.
+  }
+
+
+  @Override protected void setUp() throws Exception {
+    super.setUp();
+    Injector.INSTANCE = DaggerGitRevisionHistoryTest_Component.create().context();
   }
 
   private GitClonedRepository mockClonedRepo(String repoName) {
@@ -381,7 +396,7 @@ public class GitRevisionHistoryTest extends TestCase {
    * A test for finding the last equivalence for the following history starting
    * with repo2{4} and <em>only searching linear history</em> instead of following multi-parent
    * commits:
-   * 
+   *
    *                                         _____
    *                                        |     |
    *                                        |  4  |

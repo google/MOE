@@ -5,16 +5,16 @@ package com.google.devtools.moe.client.codebase;
 import static org.easymock.EasyMock.expect;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.FileSystem;
+import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.Moe;
 import com.google.devtools.moe.client.MoeProblem;
-import com.google.devtools.moe.client.testing.AppContextForTesting;
+import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.testing.FileCodebaseCreator;
+import com.google.devtools.moe.client.testing.TestingModule;
 
-import dagger.Module;
-import dagger.ObjectGraph;
 import dagger.Provides;
 
 import junit.framework.TestCase;
@@ -26,6 +26,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import javax.inject.Singleton;
+
 /**
  * Tests for the FileCodebaseCreator class.
  *
@@ -35,8 +37,14 @@ public class FileCodebaseCreatorTest extends TestCase {
   private final IMocksControl control = EasyMock.createControl();
   private final FileSystem mockfs = control.createMock(FileSystem.class);
 
-  @Module(overrides = true, includes = AppContextForTesting.class)
-  class LocalTestModule {
+  // TODO(cgruber): Rework these when statics aren't inherent in the design.
+  @dagger.Component(modules = {TestingModule.class, SystemCommandRunner.Module.class, Module.class})
+  @Singleton
+  interface Component extends Moe.Component {
+    @Override Injector context(); // TODO (b/19676630) Remove when bug is fixed.
+  }
+
+  @dagger.Module class Module {
     @Provides public FileSystem fileSystem() {
       return mockfs;
     }
@@ -45,10 +53,9 @@ public class FileCodebaseCreatorTest extends TestCase {
   @Override
   public void setUp() throws Exception {
     super.setUp();
-    ObjectGraph graph = ObjectGraph.create(new LocalTestModule());
-    graph.injectStatics();
+    Injector.INSTANCE = DaggerFileCodebaseCreatorTest_Component.builder().module(new Module())
+        .build().context();
   }
-
 
   private void expectDirCopy(File src, File dest) throws Exception {
     expect(mockfs.exists(EasyMock.eq(src))).andReturn(true);
@@ -176,7 +183,7 @@ public class FileCodebaseCreatorTest extends TestCase {
                               EasyMock.<List<String>>anyObject(),
                               EasyMock.<String>anyObject())).andReturn(null);
     EasyMock.replay(mockcmd);
-    AppContext.RUN.cmd = mockcmd;
+    Injector.INSTANCE.cmd = mockcmd;
 
     control.replay();
     File codebasePath = FileCodebaseCreator.getCodebasePath(fileFolder);

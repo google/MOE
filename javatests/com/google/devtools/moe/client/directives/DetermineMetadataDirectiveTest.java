@@ -3,36 +3,48 @@
 package com.google.devtools.moe.client.directives;
 
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.moe.client.AppContext;
+import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.Moe;
+import com.google.devtools.moe.client.SystemCommandRunner;
+import com.google.devtools.moe.client.SystemFileSystem;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
-import com.google.devtools.moe.client.testing.ExtendedTestModule;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
 import com.google.devtools.moe.client.testing.RecordingUi;
-
-import dagger.ObjectGraph;
+import com.google.devtools.moe.client.testing.TestingModule;
 
 import junit.framework.TestCase;
 
 import org.joda.time.DateTime;
+
+import javax.inject.Singleton;
 
 /**
  * Test to ensure the DetermineMetadataDirective produces the expected output.
  *
  */
 public class DetermineMetadataDirectiveTest extends TestCase {
+  // TODO(cgruber): Rework these when statics aren't inherent in the design.
+  @dagger.Component(modules = {
+      TestingModule.class,
+      SystemCommandRunner.Module.class,
+      SystemFileSystem.Module.class})
+  @Singleton
+  interface Component extends Moe.Component {
+    @Override Injector context(); // TODO (b/19676630) Remove when bug is fixed.
+  }
 
   @Override
-  public void setUp() {
-    ObjectGraph graph = ObjectGraph.create(new ExtendedTestModule(null, null));
-    graph.injectStatics();
+  public void setUp() throws Exception {
+    super.setUp();
+    Injector.INSTANCE = DaggerDetermineMetadataDirectiveTest_Component.create().context();
   }
 
   /**
    *  When two or more revisions are given, the metadata fields are concatenated.
    */
   public void testDetermineMetadata() throws Exception {
-    ((InMemoryProjectContextFactory) AppContext.RUN.contextFactory).projectConfigs.put(
+    ((InMemoryProjectContextFactory) Injector.INSTANCE.contextFactory).projectConfigs.put(
         "moe_config.txt",
         "{\"name\": \"foo\", \"repositories\": {" +
         "\"internal\": {\"type\": \"dummy\"}}}");
@@ -45,7 +57,7 @@ public class DetermineMetadataDirectiveTest extends TestCase {
         "description\n-------------\ndescription",
         ImmutableList.of(new Revision("parent", "internal"),
         new Revision("parent", "internal")));
-    assertEquals(rm.toString(), ((RecordingUi) AppContext.RUN.ui).lastInfo);
+    assertEquals(rm.toString(), ((RecordingUi) Injector.INSTANCE.ui).lastInfo);
   }
 
   /**
@@ -53,7 +65,7 @@ public class DetermineMetadataDirectiveTest extends TestCase {
    *  that revision's metadata.
    */
   public void testDetermineMetadataOneRevision() throws Exception {
-    ((InMemoryProjectContextFactory) AppContext.RUN.contextFactory).projectConfigs.put(
+    ((InMemoryProjectContextFactory) Injector.INSTANCE.contextFactory).projectConfigs.put(
         "moe_config.txt",
         "{\"name\": \"foo\", \"repositories\": {" +
         "\"internal\": {\"type\": \"dummy\"}}}");
@@ -64,6 +76,6 @@ public class DetermineMetadataDirectiveTest extends TestCase {
     RevisionMetadata rm = new RevisionMetadata("7", "author",
         new DateTime(1L), "description",
         ImmutableList.of(new Revision("parent", "internal")));
-    assertEquals(rm.toString(), ((RecordingUi) AppContext.RUN.ui).lastInfo);
+    assertEquals(rm.toString(), ((RecordingUi) Injector.INSTANCE.ui).lastInfo);
   }
 }

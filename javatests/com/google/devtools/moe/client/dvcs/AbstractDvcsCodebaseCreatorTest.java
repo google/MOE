@@ -8,16 +8,18 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.FileSystem;
+import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.Moe;
+import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.LocalClone;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
-import com.google.devtools.moe.client.testing.ExtendedTestModule;
+import com.google.devtools.moe.client.testing.TestingModule;
 
-import dagger.ObjectGraph;
+import dagger.Provides;
 
 import junit.framework.TestCase;
 
@@ -26,6 +28,8 @@ import org.easymock.IMocksControl;
 
 import java.io.File;
 import java.util.Collections;
+
+import javax.inject.Singleton;
 
 /**
  * Tests for AbstractDvcsCodebaseCreator, esp. that create() archives at the right revision.
@@ -47,10 +51,23 @@ public class AbstractDvcsCodebaseCreatorTest extends TestCase {
         }
       };
 
+  // TODO(cgruber): Rework these when statics aren't inherent in the design.
+  @dagger.Component(modules = {TestingModule.class, SystemCommandRunner.Module.class, Module.class})
+  @Singleton
+  interface Component extends Moe.Component {
+    @Override Injector context(); // TODO (b/19676630) Remove when bug is fixed.
+  }
+
+  @dagger.Module class Module {
+    @Provides public FileSystem fileSystem() {
+      return mockFS;
+    }
+  }
+
   @Override protected void setUp() throws Exception {
     super.setUp();
-    ObjectGraph graph = ObjectGraph.create(new ExtendedTestModule(mockFS, null));
-    graph.injectStatics();
+    Injector.INSTANCE = DaggerAbstractDvcsCodebaseCreatorTest_Component.builder()
+        .module(new Module()).build().context();
 
     expect(mockRepo.getConfig()).andReturn(mockRepoConfig).anyTimes();
     expect(mockRepoConfig.getIgnoreFileRes()).andReturn(ImmutableList.<String>of());
@@ -60,7 +77,7 @@ public class AbstractDvcsCodebaseCreatorTest extends TestCase {
   public void testCreate_noGivenRev() throws Exception {
     String archiveTempDir = "/tmp/git_archive_mockrepo_head";
     // Short-circuit Utils.filterFilesByPredicate(ignore_files_re).
-    expect(AppContext.RUN.fileSystem.findFiles(new File(archiveTempDir)))
+    expect(Injector.INSTANCE.fileSystem.findFiles(new File(archiveTempDir)))
         .andReturn(ImmutableSet.<File>of());
 
     expect(mockRevHistory.findHighestRevision(null))
@@ -83,7 +100,7 @@ public class AbstractDvcsCodebaseCreatorTest extends TestCase {
     String givenRev = "givenrev";
     String archiveTempDir = "/tmp/git_reclone_mockrepo_head_" + givenRev;
     // Short-circuit Utils.filterFilesByPredicate(ignore_files_re).
-    expect(AppContext.RUN.fileSystem.findFiles(new File(archiveTempDir)))
+    expect(Injector.INSTANCE.fileSystem.findFiles(new File(archiveTempDir)))
         .andReturn(ImmutableSet.<File>of());
 
     expect(mockRevHistory.findHighestRevision(givenRev))

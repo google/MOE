@@ -2,7 +2,7 @@
 
 package com.google.devtools.moe.client.directives;
 
-import com.google.devtools.moe.client.AppContext;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeOptions;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.database.Db;
@@ -45,16 +45,16 @@ public class FindEquivalenceDirective implements Directive {
       try {
         db = FileDb.makeDbFromFile(options.dbLocation);
       } catch (MoeProblem e) {
-        AppContext.RUN.ui.error(e, "Error creating DB");
+        Injector.INSTANCE.ui.error(e, "Error creating DB");
         return 1;
       }
     }
 
     ProjectContext context;
     try {
-      context = AppContext.RUN.contextFactory.makeProjectContext(options.configFilename);
+      context = Injector.INSTANCE.contextFactory.makeProjectContext(options.configFilename);
     } catch (InvalidProject e) {
-      AppContext.RUN.ui.error(e, "Error creating project");
+      Injector.INSTANCE.ui.error(e, "Error creating project");
       return 1;
     }
 
@@ -62,7 +62,7 @@ public class FindEquivalenceDirective implements Directive {
     try {
       repoEx = Parser.parseRepositoryExpression(options.fromRepository);
     } catch (ParseError e) {
-      AppContext.RUN.ui.error(e, "Couldn't parse " + options.fromRepository);
+      Injector.INSTANCE.ui.error(e, "Couldn't parse " + options.fromRepository);
       return 1;
     }
 

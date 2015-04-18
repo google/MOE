@@ -5,8 +5,8 @@ package com.google.devtools.moe.client.editors;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Utils;
 import com.google.devtools.moe.client.codebase.Codebase;
@@ -38,18 +38,18 @@ public class ScrubbingEditor implements Editor {
           try {
             // TODO(dbentley): what will this resource be under ant?
             File scrubberBinary =
-                AppContext.RUN.fileSystem.getResourceAsFile("/devtools/moe/scrubber/scrubber.par");
-            AppContext.RUN.fileSystem.setExecutable(scrubberBinary);
+                Injector.INSTANCE.fileSystem.getResourceAsFile("/devtools/moe/scrubber/scrubber.par");
+            Injector.INSTANCE.fileSystem.setExecutable(scrubberBinary);
             return scrubberBinary;
           } catch (IOException ioEx) {
-            AppContext.RUN.ui.error(ioEx, "Error extracting scrubber");
+            Injector.INSTANCE.ui.error(ioEx, "Error extracting scrubber");
             throw new MoeProblem("Error extracting scrubber: " + ioEx.getMessage());
           }
         }
       });
 
-  private String name;
-  private ScrubberConfig scrubberConfig;
+  private final String name;
+  private final ScrubberConfig scrubberConfig;
 
   ScrubbingEditor(String editorName, ScrubberConfig scrubberConfig) {
     name = editorName;
@@ -70,11 +70,11 @@ public class ScrubbingEditor implements Editor {
    */
   @Override
   public Codebase edit(Codebase input, ProjectContext context, Map<String, String> options) {
-    File tempDir = AppContext.RUN.fileSystem.getTemporaryDirectory("scrubber_run_");
+    File tempDir = Injector.INSTANCE.fileSystem.getTemporaryDirectory("scrubber_run_");
     File outputTar = new File(tempDir, "scrubbed.tar");
 
     try {
-      AppContext.RUN.cmd.runCommand(
+      Injector.INSTANCE.cmd.runCommand(
           // The ./ preceding scrubber.par is sometimes needed.
           // TODO(user): figure out why
           "./scrubber.par",

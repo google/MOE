@@ -2,27 +2,39 @@
 
 package com.google.devtools.moe.client.directives;
 
-import com.google.devtools.moe.client.AppContext;
-import com.google.devtools.moe.client.testing.ExtendedTestModule;
+import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.Moe;
+import com.google.devtools.moe.client.NullFileSystemModule;
+import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
 import com.google.devtools.moe.client.testing.RecordingUi;
-
-import dagger.ObjectGraph;
+import com.google.devtools.moe.client.testing.TestingModule;
 
 import junit.framework.TestCase;
+
+import javax.inject.Singleton;
 
 /**
  */
 public class FindEquivalenceDirectiveTest extends TestCase {
+  // TODO(cgruber): Rework these when statics aren't inherent in the design.
+  @dagger.Component(modules = {
+      TestingModule.class,
+      SystemCommandRunner.Module.class,
+      NullFileSystemModule.class})
+  @Singleton
+  interface Component extends Moe.Component {
+    @Override Injector context(); // TODO (b/19676630) Remove when bug is fixed.
+  }
 
   @Override
-  public void setUp() {
-    ObjectGraph graph = ObjectGraph.create(new ExtendedTestModule(null, null));
-    graph.injectStatics();
+  public void setUp() throws Exception {
+    super.setUp();
+    Injector.INSTANCE = DaggerCreateCodebaseDirectiveTest_Component.create().context();
   }
 
   public void testFindEquivalenceDirective() throws Exception {
-    ((InMemoryProjectContextFactory) AppContext.RUN.contextFactory).projectConfigs.put(
+    ((InMemoryProjectContextFactory) Injector.INSTANCE.contextFactory).projectConfigs.put(
         "moe_config.txt",
         "{\"name\": \"test\",\"repositories\": {\"internal\": {\"type\": \"dummy\"}}}");
     FindEquivalenceDirective d = new FindEquivalenceDirective();
@@ -33,6 +45,6 @@ public class FindEquivalenceDirectiveTest extends TestCase {
     assertEquals(0, d.perform());
     assertEquals(
         "\"internal{1}\" == \"public{1,2}\"",
-        ((RecordingUi) AppContext.RUN.ui).lastInfo);
+        ((RecordingUi) Injector.INSTANCE.ui).lastInfo);
   }
 }

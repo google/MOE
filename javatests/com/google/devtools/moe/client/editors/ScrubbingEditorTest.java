@@ -8,13 +8,15 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
+import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.Moe;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.project.ProjectConfig;
 import com.google.devtools.moe.client.project.ScrubberConfig;
-import com.google.devtools.moe.client.testing.ExtendedTestModule;
+import com.google.devtools.moe.client.testing.TestingModule;
 import com.google.gson.Gson;
 
-import dagger.ObjectGraph;
+import dagger.Provides;
 
 import junit.framework.TestCase;
 
@@ -23,17 +25,35 @@ import org.easymock.IMocksControl;
 
 import java.io.File;
 
+import javax.inject.Singleton;
+
 /**
  * @author dbentley@google.com (Daniel Bentley)
  */
 public class ScrubbingEditorTest extends TestCase {
+  private final IMocksControl control = EasyMock.createControl();
+  private final FileSystem fileSystem = control.createMock(FileSystem.class);
+  private final CommandRunner cmd = control.createMock(CommandRunner.class);
+
+  // TODO(cgruber): Rework these when statics aren't inherent in the design.
+  @dagger.Component(modules = {TestingModule.class, Module.class})
+  @Singleton
+  interface Component extends Moe.Component {
+    @Override Injector context(); // TODO (b/19676630) Remove when bug is fixed.
+  }
+
+  @dagger.Module class Module {
+    @Provides public CommandRunner cmd() {
+      return cmd;
+    }
+    @Provides public FileSystem filesystem() {
+      return fileSystem;
+    }
+  }
 
   public void testScrubbing() throws Exception {
-    IMocksControl control = EasyMock.createControl();
-    FileSystem fileSystem = control.createMock(FileSystem.class);
-    CommandRunner cmd = control.createMock(CommandRunner.class);
-    ObjectGraph graph = ObjectGraph.create(new ExtendedTestModule(fileSystem, cmd));
-    graph.injectStatics();
+    Injector.INSTANCE = DaggerScrubbingEditorTest_Component.builder().module(new Module()).build()
+        .context();
 
     File scrubberTemp = new File("/scrubber_extraction_foo");
     File scrubberBin = new File(scrubberTemp, "scrubber.par");

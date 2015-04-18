@@ -7,13 +7,13 @@ import junit.framework.TestCase;
 
 
 
+
 /**
  * Test case for {@link ScrubberConfig}.
  */
 public class ScrubberConfigTest extends TestCase {
   private static final String PUBLISHABLE_USERS = "[\"publishable\"]";
   private static final String SCRUBBABLE_USERS = "[\"scrubbable\"]";
-
   private static final String UNKNOWN_AUTHOR = "Name <unknown@domain>";
   private static final String PUBLISHABLE_AUTHOR = "Name <publishable@domain>";
   private static final String SCRUBBABLE_AUTHOR = "Name <scrubbable@domain>";

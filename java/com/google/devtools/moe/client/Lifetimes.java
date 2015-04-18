@@ -25,14 +25,14 @@ public final class Lifetimes {
    * {@link Ui.Task} is completed.
    */
   public static final Lifetime currentTask() {
-    return AppContext.RUN.ui.currentTaskLifetime();
+    return Injector.INSTANCE.ui.currentTaskLifetime();
   }
 
   /**
    * Returns a {@code Lifetime} for a temp dir that should only be cleaned up when MOE terminates.
    */
   public static final Lifetime moeExecution() {
-    return AppContext.RUN.ui.moeExecutionLifetime();
+    return Injector.INSTANCE.ui.moeExecutionLifetime();
   }
 
   /**

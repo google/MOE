@@ -2,7 +2,7 @@
 
 package com.google.devtools.moe.client.directives;
 
-import com.google.devtools.moe.client.AppContext;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeOptions;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
@@ -34,9 +34,9 @@ public class DiffCodebasesDirective implements Directive {
   public int perform() {
     ProjectContext context;
     try {
-      context = AppContext.RUN.contextFactory.makeProjectContext(options.configFilename);
+      context = Injector.INSTANCE.contextFactory.makeProjectContext(options.configFilename);
     } catch (InvalidProject e) {
-      AppContext.RUN.ui.error(e, "Error creating project");
+      Injector.INSTANCE.ui.error(e, "Error creating project");
       return 1;
     }
 
@@ -45,10 +45,10 @@ public class DiffCodebasesDirective implements Directive {
       codebase1 = Parser.parseExpression(options.codebase1).createCodebase(context);
       codebase2 = Parser.parseExpression(options.codebase2).createCodebase(context);
     } catch (ParseError e) {
-      AppContext.RUN.ui.error(e, "Error parsing codebase expression");
+      Injector.INSTANCE.ui.error(e, "Error parsing codebase expression");
       return 1;
     } catch (CodebaseCreationError e) {
-      AppContext.RUN.ui.error(e, "Error creating codebase");
+      Injector.INSTANCE.ui.error(e, "Error creating codebase");
       return 1;
     }
 

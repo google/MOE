@@ -4,20 +4,27 @@ package com.google.devtools.moe.client;
 
 import com.google.devtools.moe.client.project.ProjectContextFactory;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
 /**
- * Context of stuff any MOE app should expect.
+ * A static class that acts as a sort of static holder for the key components.
+ *
+ * <p>This class is slated to be replaced more directly by a dagger component once
+ * more elements of the code have eliminated the static reference and task-scope
+ * is implemented.
  *
  * @author dbentley@google.com (Daniel Bentley)
+ * @author cgruber@google.com (Christian Gruber)
  */
 @Singleton
-public class AppContext {
+public class Injector {
 
   // TODO(cgruber): Eliminate this public static mutable.
-  @Inject
-  public static AppContext RUN;
+  public static Injector INSTANCE;
+
+  @Inject Injector() {} // Necessary to permit construction in Dagger2
 
   @Inject
   public ProjectContextFactory contextFactory = null;
@@ -29,6 +36,7 @@ public class AppContext {
   public CommandRunner cmd = null;
 
   @Inject
+  @Nullable
   public FileSystem fileSystem = null;
 
 }

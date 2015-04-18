@@ -2,7 +2,7 @@
 
 package com.google.devtools.moe.client.directives;
 
-import com.google.devtools.moe.client.AppContext;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeOptions;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.ProjectContext;
@@ -28,11 +28,11 @@ public class CheckConfigDirective implements Directive {
   @Override
   public int perform() {
     try {
-      ProjectContext context = AppContext.RUN.contextFactory.makeProjectContext(
+      ProjectContext context = Injector.INSTANCE.contextFactory.makeProjectContext(
           options.configFilename);
       return 0;
     } catch (InvalidProject e) {
-      AppContext.RUN.ui.error(e, "Invalid project");
+      Injector.INSTANCE.ui.error(e, "Invalid project");
       return 1;
     }
   }

@@ -10,16 +10,18 @@ import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.FileSystem;
+import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.Moe;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.parser.Term;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
-import com.google.devtools.moe.client.testing.ExtendedTestModule;
+import com.google.devtools.moe.client.testing.TestingModule;
 import com.google.devtools.moe.client.writer.DraftRevision;
 
-import dagger.ObjectGraph;
+import dagger.Provides;
 
 import junit.framework.TestCase;
 
@@ -28,6 +30,8 @@ import org.easymock.IMocksControl;
 import org.joda.time.DateTime;
 
 import java.io.File;
+
+import javax.inject.Singleton;
 
 /**
  * Test HgWriter by expect()ing file system calls and hg commands to add/remove files.
@@ -56,10 +60,26 @@ public class HgWriterTest extends TestCase {
 
   /* End helper methods */
 
+  // TODO(cgruber): Rework these when statics aren't inherent in the design.
+  @dagger.Component(modules = {TestingModule.class, Module.class})
+  @Singleton
+  interface Component extends Moe.Component {
+    @Override Injector context(); // TODO (b/19676630) Remove when bug is fixed.
+  }
+
+  @dagger.Module class Module {
+    @Provides public CommandRunner cmd() {
+      return mockCmd;
+    }
+    @Provides public FileSystem filesystem() {
+      return mockFs;
+    }
+  }
+
   @Override protected void setUp() throws Exception {
     super.setUp();
-    ObjectGraph graph = ObjectGraph.create(new ExtendedTestModule(mockFs, mockCmd));
-    graph.injectStatics();
+    Injector.INSTANCE =
+        DaggerHgWriterTest_Component.builder().module(new Module()).build().context();
 
     expect(mockRevClone.getLocalTempDir()).andReturn(WRITER_ROOT).anyTimes();
     expect(mockRevClone.getConfig()).andReturn(mockRepoConfig).anyTimes();

@@ -2,7 +2,7 @@
 
 package com.google.devtools.moe.client.directives;
 
-import com.google.devtools.moe.client.AppContext;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeOptions;
 import com.google.devtools.moe.client.Ui.Task;
 import com.google.devtools.moe.client.codebase.Codebase;
@@ -38,13 +38,13 @@ public class ChangeDirective implements Directive {
   public int perform() {
     ProjectContext context;
     try {
-      context = AppContext.RUN.contextFactory.makeProjectContext(options.configFilename);
+      context = Injector.INSTANCE.contextFactory.makeProjectContext(options.configFilename);
     } catch (InvalidProject e) {
-      AppContext.RUN.ui.error(e, "Error creating project");
+      Injector.INSTANCE.ui.error(e, "Error creating project");
       return 1;
     }
 
-    Task changeTask = AppContext.RUN.ui.pushTask(
+    Task changeTask = Injector.INSTANCE.ui.pushTask(
         "create_change",
         String.format("Creating a change in \"%s\" with contents \"%s\"",
                       options.destination, options.codebase));
@@ -53,10 +53,10 @@ public class ChangeDirective implements Directive {
     try {
       c = Parser.parseExpression(options.codebase).createCodebase(context);
     } catch (ParseError e) {
-      AppContext.RUN.ui.error(e, "Error parsing codebase");
+      Injector.INSTANCE.ui.error(e, "Error parsing codebase");
       return 1;
     } catch (CodebaseCreationError e) {
-      AppContext.RUN.ui.error(e, "Error creating codebase");
+      Injector.INSTANCE.ui.error(e, "Error creating codebase");
       return 1;
     }
 
@@ -64,10 +64,10 @@ public class ChangeDirective implements Directive {
     try {
       destination = Parser.parseRepositoryExpression(options.destination).createWriter(context);
     } catch (ParseError e) {
-      AppContext.RUN.ui.error(e, "Error parsing change destination");
+      Injector.INSTANCE.ui.error(e, "Error parsing change destination");
       return 1;
     } catch (WritingError e) {
-      AppContext.RUN.ui.error(e, "Error writing change");
+      Injector.INSTANCE.ui.error(e, "Error writing change");
       return 1;
     }
 
@@ -76,7 +76,7 @@ public class ChangeDirective implements Directive {
       return 1;
     }
 
-    AppContext.RUN.ui.popTaskAndPersist(changeTask, destination.getRoot());
+    Injector.INSTANCE.ui.popTaskAndPersist(changeTask, destination.getRoot());
     return 0;
   }
 

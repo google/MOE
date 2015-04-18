@@ -2,7 +2,7 @@
 
 package com.google.devtools.moe.client.directives;
 
-import com.google.devtools.moe.client.AppContext;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeOptions;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.database.DbStorage;
@@ -40,15 +40,15 @@ public class NoteEquivalenceDirective implements Directive {
   public int perform() {
     ProjectContext context;
     try {
-      context = AppContext.RUN.contextFactory.makeProjectContext(options.configFilename);
+      context = Injector.INSTANCE.contextFactory.makeProjectContext(options.configFilename);
     } catch (InvalidProject e) {
-      AppContext.RUN.ui.error(e, "Error creating project");
+      Injector.INSTANCE.ui.error(e, "Error creating project");
       return 1;
     }
 
     FileDb db;
     File dbFile = new File(options.dbLocation);
-    if (AppContext.RUN.fileSystem.exists(dbFile)) {
+    if (Injector.INSTANCE.fileSystem.exists(dbFile)) {
       db = FileDb.makeDbFromFile(dbFile.getAbsolutePath());
     } else {
       db = new FileDb(new DbStorage());
@@ -59,7 +59,7 @@ public class NoteEquivalenceDirective implements Directive {
       repoEx1 = Parser.parseRepositoryExpression(options.repo1);
       repoEx2 = Parser.parseRepositoryExpression(options.repo2);
     } catch (ParseError e) {
-      AppContext.RUN.ui.error(
+      Injector.INSTANCE.ui.error(
           e, "Couldn't parse " + (repoEx1 == null ? options.repo1 : options.repo2));
       return 1;
     }
@@ -79,7 +79,7 @@ public class NoteEquivalenceDirective implements Directive {
     db.noteEquivalence(newEq);
     db.writeToLocation(options.dbLocation);
 
-    AppContext.RUN.ui.info("Noted equivalence: " + newEq);
+    Injector.INSTANCE.ui.info("Noted equivalence: " + newEq);
 
     return 0;
   }

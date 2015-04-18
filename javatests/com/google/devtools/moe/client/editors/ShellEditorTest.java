@@ -7,10 +7,12 @@ import static org.easymock.EasyMock.expect;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
+import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.Moe;
 import com.google.devtools.moe.client.codebase.Codebase;
-import com.google.devtools.moe.client.testing.ExtendedTestModule;
+import com.google.devtools.moe.client.testing.TestingModule;
 
-import dagger.ObjectGraph;
+import dagger.Provides;
 
 import junit.framework.TestCase;
 
@@ -20,6 +22,8 @@ import org.easymock.IMocksControl;
 import java.io.File;
 import java.util.Vector;
 
+import javax.inject.Singleton;
+
 /**
  *
  */
@@ -28,10 +32,26 @@ public class ShellEditorTest extends TestCase {
   private final FileSystem fileSystem = control.createMock(FileSystem.class);
   private final CommandRunner cmd = control.createMock(CommandRunner.class);
 
+  // TODO(cgruber): Rework these when statics aren't inherent in the design.
+  @dagger.Component(modules = {TestingModule.class, Module.class})
+  @Singleton
+  interface Component extends Moe.Component {
+    @Override Injector context(); // TODO (b/19676630) Remove when bug is fixed.
+  }
+
+  @dagger.Module class Module {
+    @Provides public CommandRunner cmd() {
+      return cmd;
+    }
+    @Provides public FileSystem filesystem() {
+      return fileSystem;
+    }
+  }
+
   @Override protected void setUp() throws Exception {
     super.setUp();
-    ObjectGraph graph = ObjectGraph.create(new ExtendedTestModule(fileSystem, cmd));
-    graph.injectStatics();
+    Injector.INSTANCE = DaggerShellEditorTest_Component.builder().module(new Module()).build()
+        .context();
   }
 
   public void testShellStuff() throws Exception {

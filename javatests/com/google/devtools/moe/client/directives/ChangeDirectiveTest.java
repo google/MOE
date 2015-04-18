@@ -2,14 +2,17 @@
 
 package com.google.devtools.moe.client.directives;
 
-import com.google.devtools.moe.client.AppContext;
-import com.google.devtools.moe.client.testing.ExtendedTestModule;
+import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.Moe;
+import com.google.devtools.moe.client.NullFileSystemModule;
+import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
 import com.google.devtools.moe.client.testing.RecordingUi;
-
-import dagger.ObjectGraph;
+import com.google.devtools.moe.client.testing.TestingModule;
 
 import junit.framework.TestCase;
+
+import javax.inject.Singleton;
 
 /**
  * Tests for {@link ChangeDirective}.
@@ -17,15 +20,24 @@ import junit.framework.TestCase;
  * @author dbentley@google.com (Daniel Bentley)
  */
 public class ChangeDirectiveTest extends TestCase {
+  // TODO(cgruber): Rework these when statics aren't inherent in the design.
+  @dagger.Component(modules = {
+      TestingModule.class,
+      SystemCommandRunner.Module.class,
+      NullFileSystemModule.class})
+  @Singleton
+  interface Component extends Moe.Component {
+    @Override Injector context(); // TODO (b/19676630) Remove when bug is fixed.
+  }
 
   @Override
-  public void setUp() {
-    ObjectGraph graph = ObjectGraph.create(new ExtendedTestModule(null, null));
-    graph.injectStatics();
+  public void setUp() throws Exception {
+    super.setUp();
+    Injector.INSTANCE = DaggerChangeDirectiveTest_Component.create().context();
   }
 
   public void testChange() throws Exception {
-    ((InMemoryProjectContextFactory)AppContext.RUN.contextFactory).projectConfigs.put(
+    ((InMemoryProjectContextFactory)Injector.INSTANCE.contextFactory).projectConfigs.put(
         "moe_config.txt",
         "{\"name\": \"foo\", \"repositories\": {" +
         "\"internal\": {\"type\": \"dummy\"}}}");
@@ -34,6 +46,6 @@ public class ChangeDirectiveTest extends TestCase {
     d.getFlags().codebase = "internal";
     d.getFlags().destination = "internal";
     assertEquals(0, d.perform());
-    assertEquals("/dummy/writer/internal", ((RecordingUi) AppContext.RUN.ui).lastTaskResult);
+    assertEquals("/dummy/writer/internal", ((RecordingUi) Injector.INSTANCE.ui).lastTaskResult);
   }
 }

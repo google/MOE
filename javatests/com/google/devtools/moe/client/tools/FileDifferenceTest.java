@@ -3,15 +3,15 @@
 package com.google.devtools.moe.client.tools;
 
 import static org.easymock.EasyMock.expect;
-import static com.google.devtools.moe.client.tools.FileDifference.Comparison;
 
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
-import com.google.devtools.moe.client.testing.AppContextForTesting;
+import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.Moe;
+import com.google.devtools.moe.client.testing.TestingModule;
+import com.google.devtools.moe.client.tools.FileDifference.Comparison;
 
-import dagger.Module;
-import dagger.ObjectGraph;
 import dagger.Provides;
 
 import junit.framework.TestCase;
@@ -20,6 +20,8 @@ import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
 
 import java.io.File;
+
+import javax.inject.Singleton;
 
 /**
  * @author dbentley@google.com (Daniel Bentley)
@@ -30,8 +32,15 @@ public class FileDifferenceTest extends TestCase {
   private final FileSystem fileSystem = control.createMock(FileSystem.class);
   private final CommandRunner cmd = control.createMock(CommandRunner.class);
 
-  @Module(overrides = true, includes = AppContextForTesting.class)
-  class LocalTestModule {
+  // TODO(cgruber): Rework these when statics aren't inherent in the design.
+  @dagger.Component(modules = {TestingModule.class, Module.class})
+  @Singleton
+  interface Component extends Moe.Component {
+    @Override Injector context(); // TODO (b/19676630) Remove when bug is fixed.
+  }
+
+  @dagger.Module
+  class Module {
     @Provides public CommandRunner commandRunner() {
       return cmd;
     }
@@ -40,10 +49,13 @@ public class FileDifferenceTest extends TestCase {
     }
   }
 
-  public void testExistence() throws Exception {
-    ObjectGraph graph = ObjectGraph.create(new LocalTestModule());
-    graph.injectStatics();
+  @Override public void setUp() throws Exception {
+    super.setUp();
+    Injector.INSTANCE = DaggerFileDifferenceTest_Component.builder().module(new Module()).build()
+        .context();
+  }
 
+  public void testExistence() throws Exception {
     File file1 = new File("/1/foo");
     File file2 = new File("/2/foo");
 
@@ -64,9 +76,6 @@ public class FileDifferenceTest extends TestCase {
   }
 
   public void testExistence2() throws Exception {
-    ObjectGraph graph = ObjectGraph.create(new LocalTestModule());
-    graph.injectStatics();
-
     File file1 = new File("/1/foo");
     File file2 = new File("/2/foo");
 
@@ -87,9 +96,6 @@ public class FileDifferenceTest extends TestCase {
   }
 
   public void testExecutability() throws Exception {
-    ObjectGraph graph = ObjectGraph.create(new LocalTestModule());
-    graph.injectStatics();
-
     File file1 = new File("/1/foo");
     File file2 = new File("/2/foo");
 
@@ -109,9 +115,6 @@ public class FileDifferenceTest extends TestCase {
   }
 
   public void testExecutability2() throws Exception {
-    ObjectGraph graph = ObjectGraph.create(new LocalTestModule());
-    graph.injectStatics();
-
     File file1 = new File("/1/foo");
     File file2 = new File("/2/foo");
 
@@ -131,9 +134,6 @@ public class FileDifferenceTest extends TestCase {
   }
 
   public void testContents() throws Exception {
-    ObjectGraph graph = ObjectGraph.create(new LocalTestModule());
-    graph.injectStatics();
-
     File file1 = new File("/1/foo");
     File file2 = new File("/2/foo");
 
@@ -154,9 +154,6 @@ public class FileDifferenceTest extends TestCase {
   }
 
   public void testExecutabilityAndContents() throws Exception {
-    ObjectGraph graph = ObjectGraph.create(new LocalTestModule());
-    graph.injectStatics();
-
     File file1 = new File("/1/foo");
     File file2 = new File("/2/foo");
 
@@ -177,9 +174,6 @@ public class FileDifferenceTest extends TestCase {
   }
 
   public void testIdentical() throws Exception {
-    ObjectGraph graph = ObjectGraph.create(new LocalTestModule());
-    graph.injectStatics();
-
     File file1 = new File("/1/foo");
     File file2 = new File("/2/foo");
 

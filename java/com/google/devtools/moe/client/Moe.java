@@ -2,15 +2,9 @@
 
 package com.google.devtools.moe.client;
 
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.devtools.moe.client.directives.Directive;
 import com.google.devtools.moe.client.directives.DirectiveFactory;
-import com.google.devtools.moe.client.tasks.Task;
-import com.google.devtools.moe.client.tasks.TaskType;
-
-import dagger.ObjectGraph;
 
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -22,6 +16,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.inject.Singleton;
 
 /**
  * MOE (Make Open Easy) client.
@@ -37,7 +33,15 @@ public class Moe {
   private static final Logger logger = Logger.getLogger(Moe.class.getName());
   static final Logger allMoeLogger = Logger.getLogger("com.google.devtools.moe");
 
-  private Moe() {}
+  /**
+   * The Dagger surface for the MOE application.
+   */
+  // TODO(cgruber): Turn Injector into the component.
+  @Singleton
+  @dagger.Component(modules = MoeModule.class)
+  public interface Component {
+    Injector context(); // Legacy context object for static initialization.
+  }
 
   /**
    * a main() that works with the new Task framework.
@@ -56,8 +60,20 @@ public class Moe {
 
     // This needs to get called first, so that DirectiveFactory can report
     // errors appropriately.
-    ObjectGraph appGraph = ObjectGraph.create(MoeModule.class);
-    appGraph.injectStatics();
+    Moe.Component component = DaggerMoe_Component.create();
+    Injector.INSTANCE = component.context();
+
+    try {
+      directiveMain(args);
+    } catch (IOException e) {
+      System.exit(1);
+
+    }
+    return;
+    /*
+    // Tasks are a work in progress, which are only currently used to implement a
+    // HelloWorld style trivial task.  For now, leave them be until we get directive/task
+    // scopes hooked up in dagger.  Then this can be re-examined.
 
     TaskType t = TaskType.TASK_MAP.get(args[0]);
     if (t == null) {
@@ -88,6 +104,7 @@ public class Moe {
       System.out.println(result.message);
     }
     System.exit(result.exitCode);
+    */
   }
 
   // TODO(dbentley): remove all of this code when we're finished moving to Task
@@ -123,15 +140,15 @@ public class Moe {
 
     try {
       int result = d.perform();
-      Ui.Task terminateTask = AppContext.RUN.ui.pushTask(
+      Ui.Task terminateTask = Injector.INSTANCE.ui.pushTask(
           Ui.MOE_TERMINATION_TASK_NAME, "Final clean-up");
-      AppContext.RUN.fileSystem.cleanUpTempDirs();
-      AppContext.RUN.ui.popTask(terminateTask, "");
+      Injector.INSTANCE.fileSystem.cleanUpTempDirs();
+      Injector.INSTANCE.ui.popTask(terminateTask, "");
       System.exit(result);
     } catch (MoeProblem m) {
       // TODO(dbentley): have an option for verbosity; if it is above a threshold, print
       // a stack trace.
-      AppContext.RUN.ui.error(
+      Injector.INSTANCE.ui.error(
           m, "Moe encountered a problem; look above for explanation");
       System.exit(1);
     }
@@ -164,4 +181,6 @@ public class Moe {
 
     return processedArgs;
   }
+
+  private Moe() {}
 }

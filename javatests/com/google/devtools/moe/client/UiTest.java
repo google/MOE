@@ -2,8 +2,6 @@
 
 package com.google.devtools.moe.client;
 
-import dagger.Lazy;
-
 import junit.framework.TestCase;
 
 /**
@@ -13,16 +11,12 @@ public class UiTest extends TestCase {
 
   class NoOpUi extends Ui {
     NoOpUi() {
-      this.fileSystem = new SystemFileSystem(new Lazy<Ui>() {
-        @Override public Ui get() {
-          return NoOpUi.this;
-        }
-      });
+      this.fileSystem = new SystemFileSystem();
     }
-    public void info(String msg) {}
-    public void error(String msg) {}
-    public void error(Throwable e, String msg) {}
-    public void debug(String msg) {}
+    @Override public void info(String msg) {}
+    @Override public void error(String msg) {}
+    @Override public void error(Throwable e, String msg) {}
+    @Override public void debug(String msg) {}
   }
 
   public void testStackHelpers() throws Exception {
@@ -34,7 +28,9 @@ public class UiTest extends TestCase {
     t = ui.pushTask("foo", "bar");
     try {
       ui.popTask(new Ui.Task("baz", "quux"), "");
-      fail("Expected failure");
-    } catch (MoeProblem e) {}
+    } catch (MoeProblem expected) {
+      return;
+    }
+    fail("Expected failure");
   }
 }

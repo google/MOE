@@ -4,7 +4,7 @@ package com.google.devtools.moe.client.testing;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.moe.client.AppContext;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.database.Db;
 import com.google.devtools.moe.client.database.Equivalence;
 import com.google.devtools.moe.client.database.SubmittedMigration;
@@ -59,6 +59,6 @@ public class DummyDb implements Db {
         .append("\nMigrations:\n")
         .append(JOINER.join(migrations))
         .toString();
-    AppContext.RUN.ui.info(b);
+    Injector.INSTANCE.ui.info(b);
   }
 }

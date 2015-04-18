@@ -3,7 +3,7 @@
 package com.google.devtools.moe.client.parser;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.moe.client.AppContext;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
@@ -68,10 +68,10 @@ public class RepositoryExpression extends AbstractExpression {
       cc = repo.codebaseCreator;
     }
 
-    Ui.Task createTask = AppContext.RUN.ui.pushTask(
+    Ui.Task createTask = Injector.INSTANCE.ui.pushTask(
         "create_codebase", "Creating from '" + toString() + "'");
     Codebase c = cc.create(term.options);
-    AppContext.RUN.ui.popTaskAndPersist(createTask, c.getPath());
+    Injector.INSTANCE.ui.popTaskAndPersist(createTask, c.getPath());
     return c;
   }
 
@@ -86,15 +86,15 @@ public class RepositoryExpression extends AbstractExpression {
     Repository r = context.getRepository(term.identifier);
     WriterCreator wc = r.writerCreator;
 
-    Ui.Task t = AppContext.RUN.ui.pushTask(
+    Ui.Task t = Injector.INSTANCE.ui.pushTask(
         "create_writer",
         String.format("Creating Writer \"%s\"", term));
     try {
       Writer writer = wc.create(term.options);
-      AppContext.RUN.ui.popTaskAndPersist(t, writer.getRoot());
+      Injector.INSTANCE.ui.popTaskAndPersist(t, writer.getRoot());
       return writer;
     } catch (WritingError e) {
-      AppContext.RUN.ui.error(e, "Error creating writer");
+      Injector.INSTANCE.ui.error(e, "Error creating writer");
       throw e;
     }
   }

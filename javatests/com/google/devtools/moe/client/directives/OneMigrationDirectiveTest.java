@@ -2,28 +2,36 @@
 
 package com.google.devtools.moe.client.directives;
 
-import com.google.devtools.moe.client.AppContext;
-import com.google.devtools.moe.client.MoeModule;
+import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.Moe;
 import com.google.devtools.moe.client.MoeProblem;
-import com.google.devtools.moe.client.Ui;
+import com.google.devtools.moe.client.NullFileSystemModule;
+import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.project.ProjectContextFactory;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
 import com.google.devtools.moe.client.testing.RecordingUi;
 
-import dagger.Module;
-import dagger.ObjectGraph;
 import dagger.Provides;
 
 import junit.framework.TestCase;
 
+import javax.inject.Singleton;
+
 /**
  */
 public class OneMigrationDirectiveTest extends TestCase {
-  @Module(overrides = true, includes = MoeModule.class)
-  class LocalTestModule {
-    @Provides public Ui ui() {
-      return new RecordingUi();
-    }
+  // TODO(cgruber): Rework these when statics aren't inherent in the design.
+  @dagger.Component(modules = {
+      RecordingUi.Module.class,
+      SystemCommandRunner.Module.class,
+      NullFileSystemModule.class,
+      Module.class})
+  @Singleton
+  interface Component extends Moe.Component {
+    @Override Injector context(); // TODO (b/19676630) Remove when bug is fixed.
+  }
+
+  @dagger.Module class Module {
     @Provides public ProjectContextFactory projectContextFactory() {
       InMemoryProjectContextFactory contextFactory = new InMemoryProjectContextFactory();
       contextFactory.projectConfigs.put(
@@ -39,9 +47,10 @@ public class OneMigrationDirectiveTest extends TestCase {
   }
 
   @Override
-  public void setUp() {
-    ObjectGraph graph = ObjectGraph.create(new LocalTestModule());
-    graph.injectStatics();
+  public void setUp() throws Exception {
+    super.setUp();
+    Injector.INSTANCE = DaggerOneMigrationDirectiveTest_Component.builder().module(new Module())
+        .build().context();
   }
 
   public void testOneMigration() throws Exception {
@@ -52,7 +61,7 @@ public class OneMigrationDirectiveTest extends TestCase {
     assertEquals(0, d.perform());
     assertEquals(
         String.format("Created Draft Revision: %s", "/dummy/revision/pub"),
-        ((RecordingUi) AppContext.RUN.ui).lastInfo);
+        ((RecordingUi) Injector.INSTANCE.ui).lastInfo);
   }
 
   public void testOneMigrationFailOnFromRevision() throws Exception {

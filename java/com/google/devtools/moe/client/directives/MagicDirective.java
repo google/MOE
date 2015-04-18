@@ -5,7 +5,7 @@ package com.google.devtools.moe.client.directives;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.devtools.moe.client.AppContext;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeOptions;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
@@ -52,9 +52,9 @@ public class MagicDirective implements Directive {
   public int perform() {
     ProjectContext context;
     try {
-      context = AppContext.RUN.contextFactory.makeProjectContext(options.configFilename);
+      context = Injector.INSTANCE.contextFactory.makeProjectContext(options.configFilename);
     } catch (InvalidProject e) {
-      AppContext.RUN.ui.error(e, "Error creating project");
+      Injector.INSTANCE.ui.error(e, "Error creating project");
       return 1;
     }
 
@@ -66,7 +66,7 @@ public class MagicDirective implements Directive {
       try {
         db = FileDb.makeDbFromFile(options.dbLocation);
       } catch (MoeProblem e) {
-        AppContext.RUN.ui.error(e, "Error creating DB");
+        Injector.INSTANCE.ui.error(e, "Error creating DB");
         return 1;
       }
     }
@@ -82,13 +82,13 @@ public class MagicDirective implements Directive {
     ImmutableList.Builder<String> migrationsMadeBuilder = ImmutableList.builder();
 
     for (String migrationName : migrationNames) {
-      Ui.Task migrationTask = AppContext.RUN.ui.pushTask(
+      Ui.Task migrationTask = Injector.INSTANCE.ui.pushTask(
           "perform_migration",
           String.format("Performing migration '%s'", migrationName));
 
       MigrationConfig migrationConfig = context.migrationConfigs.get(migrationName);
       if (migrationConfig == null) {
-        AppContext.RUN.ui.error("No migration found with name " + migrationName);
+        Injector.INSTANCE.ui.error("No migration found with name " + migrationName);
         continue;
       }
 
@@ -96,7 +96,7 @@ public class MagicDirective implements Directive {
           DetermineMigrationsLogic.determineMigrations(context, migrationConfig, db);
 
       if (migrations.isEmpty()) {
-        AppContext.RUN.ui.info("No pending revisions to migrate for " + migrationName);
+        Injector.INSTANCE.ui.info("No pending revisions to migrate for " + migrationName);
         continue;
       }
 
@@ -127,26 +127,27 @@ public class MagicDirective implements Directive {
         Expression referenceToCodebase = new RepositoryExpression(migrationConfig.getToRepository())
               .withOption("localroot", toWriter.getRoot().getAbsolutePath());
 
-        Ui.Task oneMigrationTask = AppContext.RUN.ui.pushTask(
+        Ui.Task oneMigrationTask = Injector.INSTANCE.ui.pushTask(
             "perform_individual_migration",
             String.format("Performing individual migration '%s'", m.toString()));
         dr = OneMigrationLogic.migrate(m, context, toWriter, referenceToCodebase);
         lastMigratedRevision = m.fromRevisions.get(m.fromRevisions.size() - 1);
-        AppContext.RUN.ui.popTask(oneMigrationTask, "");
+        Injector.INSTANCE.ui.popTask(oneMigrationTask, "");
       }
 
       // TODO(user): Add properly formatted one-DraftRevison-per-Migration message for svn.
       migrationsMadeBuilder.add(String.format(
           "%s in repository %s", dr.getLocation(), migrationConfig.getToRepository()));
       toWriter.printPushMessage();
-      AppContext.RUN.ui.popTaskAndPersist(migrationTask, toWriter.getRoot());
+      Injector.INSTANCE.ui.popTaskAndPersist(migrationTask, toWriter.getRoot());
     }
 
     List<String> migrationsMade = migrationsMadeBuilder.build();
     if (migrationsMade.isEmpty()) {
-      AppContext.RUN.ui.info("No migrations made.");
+      Injector.INSTANCE.ui.info("No migrations made.");
     } else {
-      AppContext.RUN.ui.info("Created Draft Revisions:\n" + Joiner.on("\n").join(migrationsMade));
+      Injector.INSTANCE.ui.info("Created Draft Revisions:\n" + Joiner.on("\n")
+          .join(migrationsMade));
     }
 
     return 0;

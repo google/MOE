@@ -2,7 +2,7 @@
 
 package com.google.devtools.moe.client.directives;
 
-import com.google.devtools.moe.client.AppContext;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeOptions;
 import com.google.devtools.moe.client.parser.Parser;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
@@ -35,9 +35,9 @@ public class HighestRevisionDirective implements Directive {
   public int perform() {
     ProjectContext context;
     try {
-      context = AppContext.RUN.contextFactory.makeProjectContext(options.configFilename);
+      context = Injector.INSTANCE.contextFactory.makeProjectContext(options.configFilename);
     } catch (InvalidProject e) {
-      AppContext.RUN.ui.error(e, "Couldn't create project");
+      Injector.INSTANCE.ui.error(e, "Couldn't create project");
       return 1;
     }
 
@@ -45,7 +45,7 @@ public class HighestRevisionDirective implements Directive {
     try {
       repoEx = Parser.parseRepositoryExpression(options.repository);
     } catch (ParseError e) {
-      AppContext.RUN.ui.error(e, "Couldn't parse " + options.repository);
+      Injector.INSTANCE.ui.error(e, "Couldn't parse " + options.repository);
       return 1;
     }
 
@@ -53,7 +53,7 @@ public class HighestRevisionDirective implements Directive {
 
     RevisionHistory rh = r.revisionHistory;
     if (rh == null) {
-      AppContext.RUN.ui.error("Repository " + r.name + " does not support revision history.");
+      Injector.INSTANCE.ui.error("Repository " + r.name + " does not support revision history.");
       return 1;
     }
 
@@ -62,7 +62,7 @@ public class HighestRevisionDirective implements Directive {
       return 1;
     }
 
-    AppContext.RUN.ui.info("Highest revision in repository \"" + r.name + "\": " + rev.revId);
+    Injector.INSTANCE.ui.info("Highest revision in repository \"" + r.name + "\": " + rev.revId);
     return 0;
   }
 

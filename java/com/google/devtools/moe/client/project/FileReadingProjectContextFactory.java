@@ -18,8 +18,13 @@ import javax.inject.Inject;
  */
 public class FileReadingProjectContextFactory implements ProjectContextFactory {
 
-  @Inject Ui ui;
+  private final Ui ui;
 
+  @Inject public FileReadingProjectContextFactory(Ui ui) {
+    this.ui = ui;
+  }
+
+  @Override
   public ProjectContext makeProjectContext(String configFilename) throws InvalidProject{
     String configText;
     Ui.Task task = ui.pushTask(

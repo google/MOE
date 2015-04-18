@@ -5,7 +5,7 @@ package com.google.devtools.moe.client.logic;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.devtools.moe.client.AppContext;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.database.Db;
 import com.google.devtools.moe.client.database.Equivalence;
 import com.google.devtools.moe.client.database.EquivalenceMatcher;
@@ -48,14 +48,14 @@ public class DetermineMigrationsLogic {
         Lists.reverse(equivMatch.getRevisionsSinceEquivalence().getBreadthFirstHistory());
 
     if (revisionsSinceEquivalence.isEmpty()) {
-      AppContext.RUN.ui.info("No revisions found since last equivalence for migration '"
+      Injector.INSTANCE.ui.info("No revisions found since last equivalence for migration '"
           + migrationConfig.getName() + "'");
       return ImmutableList.of();
     }
 
     // TODO(user): Figure out how to report all equivalences.
     Equivalence lastEq = equivMatch.getEquivalences().get(0);
-    AppContext.RUN.ui.info(String.format("Found %d revisions in %s since equivalence (%s): %s",
+    Injector.INSTANCE.ui.info(String.format("Found %d revisions in %s since equivalence (%s): %s",
         revisionsSinceEquivalence.size(),
         migrationConfig.getFromRepository(),
         lastEq,

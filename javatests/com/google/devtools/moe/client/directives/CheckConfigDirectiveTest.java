@@ -2,27 +2,39 @@
 
 package com.google.devtools.moe.client.directives;
 
-import com.google.devtools.moe.client.AppContext;
-import com.google.devtools.moe.client.testing.ExtendedTestModule;
+import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.Moe;
+import com.google.devtools.moe.client.SystemCommandRunner;
+import com.google.devtools.moe.client.SystemFileSystem;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
-
-import dagger.ObjectGraph;
+import com.google.devtools.moe.client.testing.TestingModule;
 
 import junit.framework.TestCase;
+
+import javax.inject.Singleton;
 
 /**
  * @author dbentley@google.com (Daniel Bentley)
  */
 public class CheckConfigDirectiveTest extends TestCase {
+  // TODO(cgruber): Rework these when statics aren't inherent in the design.
+  @dagger.Component(modules = {
+      TestingModule.class,
+      SystemCommandRunner.Module.class,
+      SystemFileSystem.Module.class})
+  @Singleton
+  interface Component extends Moe.Component {
+    @Override Injector context(); // TODO (b/19676630) Remove when bug is fixed.
+  }
 
   @Override
-  public void setUp() {
-    ObjectGraph graph = ObjectGraph.create(new ExtendedTestModule(null, null));
-    graph.injectStatics();
+  public void setUp() throws Exception {
+    super.setUp();
+    Injector.INSTANCE = DaggerCheckConfigDirectiveTest_Component.create().context();
   }
 
   public void testEmptyConfigFilenameReturnsOne() throws Exception {
-    ((InMemoryProjectContextFactory)AppContext.RUN.contextFactory).projectConfigs.put(
+    ((InMemoryProjectContextFactory)Injector.INSTANCE.contextFactory).projectConfigs.put(
         "moe_config.txt",
         "");
     CheckConfigDirective d = new CheckConfigDirective();
@@ -30,7 +42,7 @@ public class CheckConfigDirectiveTest extends TestCase {
   }
 
   public void testEmptyConfigFileReturnsOne() throws Exception {
-    ((InMemoryProjectContextFactory)AppContext.RUN.contextFactory).projectConfigs.put(
+    ((InMemoryProjectContextFactory)Injector.INSTANCE.contextFactory).projectConfigs.put(
         "moe_config.txt",
         "");
     CheckConfigDirective d = new CheckConfigDirective();
@@ -39,7 +51,7 @@ public class CheckConfigDirectiveTest extends TestCase {
   }
 
   public void testSimpleConfigFileWorks() throws Exception {
-    ((InMemoryProjectContextFactory)AppContext.RUN.contextFactory).projectConfigs.put(
+    ((InMemoryProjectContextFactory)Injector.INSTANCE.contextFactory).projectConfigs.put(
         "moe_config.txt",
         "{\"name\": \"foo\", \"repositories\": " +
         "{\"public\": {\"type\": \"dummy\"}}}");

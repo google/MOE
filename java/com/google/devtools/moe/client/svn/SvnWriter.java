@@ -4,9 +4,9 @@ package com.google.devtools.moe.client.svn;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
-import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Utils;
 import com.google.devtools.moe.client.codebase.Codebase;
@@ -68,7 +68,7 @@ public class SvnWriter implements Writer {
 
     Set<String> codebaseFiles = c.getRelativeFilenames();
     Set<String> writerFiles = Utils.filterByRegEx(
-        Utils.makeFilenamesRelative(AppContext.RUN.fileSystem.findFiles(rootDirectory),
+        Utils.makeFilenamesRelative(Injector.INSTANCE.fileSystem.findFiles(rootDirectory),
                                     rootDirectory),
         ignoreFilePatterns);
     Set<String> union = Sets.union(codebaseFiles, writerFiles);
@@ -90,7 +90,7 @@ public class SvnWriter implements Writer {
                                   rm.description, rm.author);
     Utils.makeShellScript(script, rootDirectory.getAbsolutePath() + "/svn_commit.sh");
 
-    AppContext.RUN.ui.info(String.format("To submit, run: cd %s && ./svn_commit.sh && cd -",
+    Injector.INSTANCE.ui.info(String.format("To submit, run: cd %s && ./svn_commit.sh && cd -",
                                          rootDirectory.getAbsolutePath()));
     return dr;
   }
@@ -103,7 +103,7 @@ public class SvnWriter implements Writer {
    */
   void putFile(String relativeFilename, Codebase c) {
     try {
-      FileSystem fs = AppContext.RUN.fileSystem;
+      FileSystem fs = Injector.INSTANCE.fileSystem;
       File dest = new File(rootDirectory.getAbsolutePath(), relativeFilename);
       File src = c.getFile(relativeFilename);
       boolean srcExists = fs.exists(src);
@@ -147,7 +147,7 @@ public class SvnWriter implements Writer {
         } catch (CommandRunner.CommandException e) {
           // If the mime type setting fails, it's not really a big deal.
           // Just log it and keep going.
-          AppContext.RUN.ui.info(
+          Injector.INSTANCE.ui.info(
               String.format("Error setting mime-type for %s", relativeFilename));
         }
       }

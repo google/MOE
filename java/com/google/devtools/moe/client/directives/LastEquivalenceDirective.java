@@ -3,7 +3,7 @@
 package com.google.devtools.moe.client.directives;
 
 import com.google.common.base.Joiner;
-import com.google.devtools.moe.client.AppContext;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeOptions;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.database.Db;
@@ -41,9 +41,9 @@ public class LastEquivalenceDirective implements Directive {
   public int perform() {
     ProjectContext context;
     try {
-      context = AppContext.RUN.contextFactory.makeProjectContext(options.configFilename);
+      context = Injector.INSTANCE.contextFactory.makeProjectContext(options.configFilename);
     } catch (InvalidProject e) {
-      AppContext.RUN.ui.error(e, "Error creating project");
+      Injector.INSTANCE.ui.error(e, "Error creating project");
       return 1;
     }
 
@@ -55,7 +55,7 @@ public class LastEquivalenceDirective implements Directive {
       try {
         db = FileDb.makeDbFromFile(options.dbLocation);
       } catch (MoeProblem e) {
-        AppContext.RUN.ui.error(e, "Couldn't create DB");
+        Injector.INSTANCE.ui.error(e, "Couldn't create DB");
         return 1;
       }
     }
@@ -64,7 +64,7 @@ public class LastEquivalenceDirective implements Directive {
     try {
       repoEx = Parser.parseRepositoryExpression(options.fromRepository);
     } catch (ParseError e) {
-      AppContext.RUN.ui.error(e, "Couldn't parse " + options.fromRepository);
+      Injector.INSTANCE.ui.error(e, "Couldn't parse " + options.fromRepository);
       return 1;
     }
 
@@ -72,7 +72,7 @@ public class LastEquivalenceDirective implements Directive {
 
     RevisionHistory rh = r.revisionHistory;
     if (rh == null) {
-      AppContext.RUN.ui.error("Repository " + r.name + " does not support revision history.");
+      Injector.INSTANCE.ui.error("Repository " + r.name + " does not support revision history.");
       return 1;
     }
 
@@ -82,11 +82,11 @@ public class LastEquivalenceDirective implements Directive {
         options.withRepository, rev, db, rh);
 
     if (lastEquivs.isEmpty()) {
-      AppContext.RUN.ui.info(
+      Injector.INSTANCE.ui.info(
           String.format("No equivalence was found between %s and %s starting from %s.",
               rev.repositoryName, options.withRepository, rev));
     } else {
-      AppContext.RUN.ui.info(String.format(
+      Injector.INSTANCE.ui.info(String.format(
           "Last equivalence: %s", Joiner.on(", ").join(lastEquivs)));
     }
 

@@ -6,9 +6,9 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.FileSystem.Lifetime;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.Lifetimes;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.codebase.LocalClone;
@@ -75,7 +75,8 @@ public class HgClonedRepository implements LocalClone {
     Preconditions.checkState(!clonedLocally);
 
     String tempDirName = String.format("hg_clone_%s_", repositoryName);
-    localCloneTempDir = AppContext.RUN.fileSystem.getTemporaryDirectory(tempDirName, cloneLifetime);
+    localCloneTempDir =
+        Injector.INSTANCE.fileSystem.getTemporaryDirectory(tempDirName, cloneLifetime);
 
     try {
       Optional<String> branchName = repositoryConfig.getBranch();
@@ -111,7 +112,7 @@ public class HgClonedRepository implements LocalClone {
   @Override
   public File archiveAtRevision(String revId) {
     Preconditions.checkState(clonedLocally);
-    File archiveLocation = AppContext.RUN.fileSystem.getTemporaryDirectory(
+    File archiveLocation = Injector.INSTANCE.fileSystem.getTemporaryDirectory(
         String.format("hg_archive_%s_%s_", repositoryName, revId), Lifetimes.currentTask());
     try {
       ImmutableList.Builder<String> archiveArgs = ImmutableList.<String>builder();
@@ -120,7 +121,7 @@ public class HgClonedRepository implements LocalClone {
         archiveArgs.add("--rev=" + revId);
       }
       HgRepository.runHgCommand(archiveArgs.build(), localCloneTempDir.getAbsolutePath());
-      AppContext.RUN.fileSystem.deleteRecursively(new File(archiveLocation, ".hg_archival.txt"));
+      Injector.INSTANCE.fileSystem.deleteRecursively(new File(archiveLocation, ".hg_archival.txt"));
     } catch (CommandException e) {
       throw new MoeProblem(
           "Could not archive hg clone at " + localCloneTempDir.getAbsolutePath() + ": " + e.stderr);
@@ -139,7 +140,7 @@ public class HgClonedRepository implements LocalClone {
    * @return the stdout output of the command
    */
   String runHgCommand(String... args) throws CommandException {
-    return AppContext.RUN.cmd.runCommand("hg", ImmutableList.copyOf(args),
+    return Injector.INSTANCE.cmd.runCommand("hg", ImmutableList.copyOf(args),
         getLocalTempDir().getAbsolutePath() /*workingDirectory*/);
   }
 }

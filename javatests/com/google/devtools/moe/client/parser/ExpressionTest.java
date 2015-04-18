@@ -8,7 +8,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.FileSystem.Lifetime;
+import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.Moe;
 import com.google.devtools.moe.client.MoeProblem;
+import com.google.devtools.moe.client.NullFileSystemModule;
+import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.codebase.CodebaseCreator;
@@ -19,9 +23,7 @@ import com.google.devtools.moe.client.editors.TranslatorPath;
 import com.google.devtools.moe.client.editors.TranslatorStep;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.Repository;
-import com.google.devtools.moe.client.testing.ExtendedTestModule;
-
-import dagger.ObjectGraph;
+import com.google.devtools.moe.client.testing.TestingModule;
 
 import junit.framework.TestCase;
 
@@ -31,18 +33,30 @@ import org.easymock.IMocksControl;
 import java.io.File;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+import javax.inject.Singleton;
+
 /**
  * @author dbentley@google.com (Daniel Bentley)
  */
 public class ExpressionTest extends TestCase {
   private static final Map<String, String> EMPTY_MAP = ImmutableMap.of();
 
-  @Override
-  public void setUp() {
-    ObjectGraph graph = ObjectGraph.create(new ExtendedTestModule(null, null));
-    graph.injectStatics();
+  // TODO(cgruber): Rework these when statics aren't inherent in the design.
+  @dagger.Component(modules = {
+      TestingModule.class,
+      SystemCommandRunner.Module.class,
+      NullFileSystemModule.class})
+  @Singleton
+  interface Component extends Moe.Component {
+    @Override Injector context(); // TODO (b/19676630) Remove when bug is fixed.
   }
-  
+
+  @Override protected void setUp() throws Exception {
+    super.setUp();
+    Injector.INSTANCE = DaggerExpressionTest_Component.create().context();
+  }
+
   public void testNoSuchCreator() throws Exception {
     try {
       new RepositoryExpression("foo").createCodebase(ProjectContext.builder().build());
@@ -54,9 +68,13 @@ public class ExpressionTest extends TestCase {
 
   public void testFileCodebaseCreator() throws Exception {
     IMocksControl control = EasyMock.createControl();
-    FileSystem mockFs = control.createMock(FileSystem.class);
-    ObjectGraph graph = ObjectGraph.create(new ExtendedTestModule(mockFs, null));
-    graph.injectStatics();
+    final FileSystem mockFs = control.createMock(FileSystem.class);
+    Injector.INSTANCE = DaggerExpressionTest_Component.builder().nullFileSystemModule(
+        new NullFileSystemModule() {
+          @Override @Nullable public FileSystem filesystem() {
+            return mockFs;
+          }
+        }).build().context();
     expect(mockFs.exists(new File("/foo"))).andReturn(true);
     expect(mockFs.isDirectory(new File("/foo"))).andReturn(true);
     File copyLocation = new File("/tmp/copy");

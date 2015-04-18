@@ -2,28 +2,40 @@
 
 package com.google.devtools.moe.client.directives;
 
-import com.google.devtools.moe.client.AppContext;
-import com.google.devtools.moe.client.testing.ExtendedTestModule;
+import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.Moe;
+import com.google.devtools.moe.client.NullFileSystemModule;
+import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
 import com.google.devtools.moe.client.testing.RecordingUi;
-
-import dagger.ObjectGraph;
+import com.google.devtools.moe.client.testing.TestingModule;
 
 import junit.framework.TestCase;
+
+import javax.inject.Singleton;
 
 /**
  * @author dbentley@google.com (Daniel Bentley)
  */
 public class CreateCodebaseDirectiveTest extends TestCase {
+  // TODO(cgruber): Rework these when statics aren't inherent in the design.
+  @dagger.Component(modules = {
+      TestingModule.class,
+      SystemCommandRunner.Module.class,
+      NullFileSystemModule.class})
+  @Singleton
+  interface Component extends Moe.Component {
+    @Override Injector context(); // TODO (b/19676630) Remove when bug is fixed.
+  }
 
   @Override
-  public void setUp() {
-    ObjectGraph graph = ObjectGraph.create(new ExtendedTestModule(null, null));
-    graph.injectStatics();
+  public void setUp() throws Exception {
+    super.setUp();
+    Injector.INSTANCE = DaggerCreateCodebaseDirectiveTest_Component.create().context();
   }
 
   public void testCreateCodebase() throws Exception {
-    ((InMemoryProjectContextFactory)AppContext.RUN.contextFactory).projectConfigs.put(
+    ((InMemoryProjectContextFactory)Injector.INSTANCE.contextFactory).projectConfigs.put(
         "moe_config.txt",
         "{\"name\": \"foo\", \"repositories\": {" +
         "\"internal\": {\"type\": \"dummy\"}}}");
@@ -33,11 +45,11 @@ public class CreateCodebaseDirectiveTest extends TestCase {
     assertEquals(0, d.perform());
     assertEquals(
         String.format("Codebase \"%s\" created at %s", "internal", "/dummy/codebase/internal/1"),
-        ((RecordingUi)AppContext.RUN.ui).lastInfo);
+        ((RecordingUi)Injector.INSTANCE.ui).lastInfo);
   }
 
   public void testCreateCodebaseWithEditors() throws Exception {
-    ((InMemoryProjectContextFactory)AppContext.RUN.contextFactory).projectConfigs.put(
+    ((InMemoryProjectContextFactory)Injector.INSTANCE.contextFactory).projectConfigs.put(
         "moe_config.txt",
         "{\"name\": \"foo\", \"repositories\": {" +
         "\"internal\": {\"type\": \"dummy\"}}, \"editors\": {" +
@@ -49,6 +61,6 @@ public class CreateCodebaseDirectiveTest extends TestCase {
     assertEquals(
         String.format(
             "Codebase \"%s\" created at %s", "internal|identity", "/dummy/codebase/internal/1"),
-        ((RecordingUi)AppContext.RUN.ui).lastInfo);
+        ((RecordingUi)Injector.INSTANCE.ui).lastInfo);
   }
 }

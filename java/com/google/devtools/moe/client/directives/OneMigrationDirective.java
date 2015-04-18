@@ -2,7 +2,7 @@
 
 package com.google.devtools.moe.client.directives;
 
-import com.google.devtools.moe.client.AppContext;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeOptions;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
@@ -42,16 +42,16 @@ public class OneMigrationDirective implements Directive {
     String toProjectSpace;
     RepositoryExpression toRepoEx, fromRepoEx;
     try {
-      context = AppContext.RUN.contextFactory.makeProjectContext(options.configFilename);
+      context = Injector.INSTANCE.contextFactory.makeProjectContext(options.configFilename);
       toRepoEx = Parser.parseRepositoryExpression(options.toRepository);
       fromRepoEx = Parser.parseRepositoryExpression(options.fromRepository);
       toProjectSpace = context.config.getRepositoryConfig(toRepoEx.getRepositoryName())
           .getProjectSpace();
     } catch (ParseError e) {
-      AppContext.RUN.ui.error(e, "Couldn't parse expression");
+      Injector.INSTANCE.ui.error(e, "Couldn't parse expression");
       return 1;
     } catch (InvalidProject e) {
-      AppContext.RUN.ui.error(e, "Couldn't create project");
+      Injector.INSTANCE.ui.error(e, "Couldn't create project");
       return 1;
     }
 
@@ -64,7 +64,7 @@ public class OneMigrationDirective implements Directive {
           .translateTo(toProjectSpace)
           .createCodebase(context);
     } catch (CodebaseCreationError e) {
-      AppContext.RUN.ui.error(e, "Error creating codebase");
+      Injector.INSTANCE.ui.error(e, "Error creating codebase");
       return 1;
     }
 
@@ -72,11 +72,11 @@ public class OneMigrationDirective implements Directive {
     try {
       destination = toRepoEx.createWriter(context);
     } catch (WritingError e) {
-      AppContext.RUN.ui.error(e, "Error writing to repo");
+      Injector.INSTANCE.ui.error(e, "Error writing to repo");
       return 1;
     }
 
-    AppContext.RUN.ui.info(String.format("Migrating '%s' to '%s'", fromRepoEx, toRepoEx));
+    Injector.INSTANCE.ui.info(String.format("Migrating '%s' to '%s'", fromRepoEx, toRepoEx));
 
     DraftRevision r = OneMigrationLogic.migrate(c, destination, revs, context, revs.get(0),
         fromRepoEx.getRepositoryName(), toRepoEx.getRepositoryName());
@@ -84,7 +84,7 @@ public class OneMigrationDirective implements Directive {
       return 1;
     }
 
-    AppContext.RUN.ui.info("Created Draft Revision: " + r.getLocation());
+    Injector.INSTANCE.ui.info("Created Draft Revision: " + r.getLocation());
     return 0;
   }
 

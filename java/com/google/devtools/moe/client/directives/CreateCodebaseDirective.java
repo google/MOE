@@ -5,8 +5,8 @@ package com.google.devtools.moe.client.directives;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeOptions;
 import com.google.devtools.moe.client.Ui.Task;
 import com.google.devtools.moe.client.codebase.Codebase;
@@ -38,41 +38,41 @@ public class CreateCodebaseDirective implements Directive {
   public int perform() {
     ProjectContext context;
     try {
-      context = AppContext.RUN.contextFactory.makeProjectContext(options.configFilename);
+      context = Injector.INSTANCE.contextFactory.makeProjectContext(options.configFilename);
     } catch (InvalidProject e) {
-      AppContext.RUN.ui.error(e, "Error creating project");
+      Injector.INSTANCE.ui.error(e, "Error creating project");
       return 1;
     }
 
     Task createCodebaseTask =
-        AppContext.RUN.ui.pushTask("create_codebase", "Creating codebase " + options.codebase);
+        Injector.INSTANCE.ui.pushTask("create_codebase", "Creating codebase " + options.codebase);
     Codebase c;
     try {
       c = Parser.parseExpression(options.codebase).createCodebase(context);
     } catch (ParseError e) {
-      AppContext.RUN.ui.error(e, "Error creating codebase");
+      Injector.INSTANCE.ui.error(e, "Error creating codebase");
       return 1;
     } catch (CodebaseCreationError e) {
-      AppContext.RUN.ui.error(e, "Error creating codebase");
+      Injector.INSTANCE.ui.error(e, "Error creating codebase");
       return 1;
     }
-    AppContext.RUN.ui.info(
+    Injector.INSTANCE.ui.info(
         String.format("Codebase \"%s\" created at %s", c.toString(), c.getPath()));
 
     try {
       maybeWriteTar(c);
     } catch (CommandException e) {
-      AppContext.RUN.ui.error(e, "Error creating codebase tarfile");
+      Injector.INSTANCE.ui.error(e, "Error creating codebase tarfile");
       return 1;
     }
 
-    AppContext.RUN.ui.popTaskAndPersist(createCodebaseTask, c.getPath());
+    Injector.INSTANCE.ui.popTaskAndPersist(createCodebaseTask, c.getPath());
     return 0;
   }
 
   /**
    * If the user specified --tarfile, then tar up the codebase at the specified location.
-   * @throws CommandException 
+   * @throws CommandException
    */
   private void maybeWriteTar(Codebase codebase)
       throws CommandException {
@@ -82,12 +82,12 @@ public class CreateCodebaseDirective implements Directive {
       return;
     }
 
-    AppContext.RUN.cmd.runCommand(
+    Injector.INSTANCE.cmd.runCommand(
         "tar",
         ImmutableList.of(
             "--mtime=1980-01-01", "--owner=0", "--group=0", "-c", "-f", tarfilePath, "."),
         codebase.getPath().getAbsolutePath());
-    AppContext.RUN.ui.info(
+    Injector.INSTANCE.ui.info(
         String.format("tar of codebase \"%s\" created at %s", codebase.toString(), tarfilePath));
   }
 

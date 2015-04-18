@@ -5,8 +5,8 @@ package com.google.devtools.moe.client.dvcs.git;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.dvcs.AbstractDvcsWriter;
@@ -30,25 +30,25 @@ public class GitWriter extends AbstractDvcsWriter<GitClonedRepository> {
     return ImmutableList.<String>builder()
         .addAll(revClone.getConfig().getIgnoreFileRes())
         .add("^\\.git.*")
-        .build();    
+        .build();
   }
 
   @Override
   protected void addFile(String relativeFilename) throws CommandException {
     revClone.runGitCommand("add", "-f", relativeFilename);
   }
-  
+
   @Override
   protected void modifyFile(String relativeFilename) throws CommandException {
     // Put the modification in the git index.
     revClone.runGitCommand("add", "-f", relativeFilename);
   }
-  
+
   @Override
   protected void removeFile(String relativeFilename) throws CommandException {
     revClone.runGitCommand("rm", relativeFilename);
   }
-  
+
   @Override
   protected void commitChanges(RevisionMetadata rm) throws CommandException {
     List<String> args = Lists.newArrayList("commit",
@@ -61,7 +61,7 @@ public class GitWriter extends AbstractDvcsWriter<GitClonedRepository> {
     }
     revClone.runGitCommand(args.toArray(new String[args.size()]));
   }
-  
+
   @Override
   protected boolean hasPendingChanges() {
     // NB(yparghi): There may be a simpler way to do this, e.g. git diff or git commit --dry-run
@@ -83,7 +83,7 @@ public class GitWriter extends AbstractDvcsWriter<GitClonedRepository> {
       throw new MoeProblem("'git' command error: " + e);
     }
 
-    Ui ui = AppContext.RUN.ui;
+    Ui ui = Injector.INSTANCE.ui;
     ui.info("=====");
     ui.info("MOE changes have been committed to a clone at " + getRoot());
     if (moeBranchName.startsWith(GitClonedRepository.MOE_MIGRATIONS_BRANCH_PREFIX)) {

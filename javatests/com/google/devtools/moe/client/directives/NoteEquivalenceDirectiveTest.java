@@ -6,15 +6,14 @@ import static org.easymock.EasyMock.expect;
 
 import com.google.common.base.Joiner;
 import com.google.devtools.moe.client.FileSystem;
-import com.google.devtools.moe.client.MoeModule;
+import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.Moe;
 import com.google.devtools.moe.client.MoeProblem;
-import com.google.devtools.moe.client.Ui;
+import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.project.ProjectContextFactory;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
 import com.google.devtools.moe.client.testing.RecordingUi;
 
-import dagger.Module;
-import dagger.ObjectGraph;
 import dagger.Provides;
 
 import junit.framework.TestCase;
@@ -23,6 +22,8 @@ import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
 
 import java.io.File;
+
+import javax.inject.Singleton;
 
 /**
  * Tests for NoteEquivalenceDirective.
@@ -35,13 +36,19 @@ public class NoteEquivalenceDirectiveTest extends TestCase {
 
   NoteEquivalenceDirective d;
 
-  @Module(overrides = true, includes = MoeModule.class)
-  class LocalTestModule {
+  // TODO(cgruber): Rework these when statics aren't inherent in the design.
+  @dagger.Component(modules = {
+      RecordingUi.Module.class,
+      SystemCommandRunner.Module.class,
+      Module.class})
+  @Singleton
+  interface Component extends Moe.Component {
+    @Override Injector context(); // TODO (b/19676630) Remove when bug is fixed.
+  }
+
+  @dagger.Module class Module {
     @Provides public FileSystem fileSystem() {
       return mockFs;
-    }
-    @Provides public Ui ui() {
-      return new RecordingUi();
     }
     @Provides public ProjectContextFactory projectContextFactory() {
       InMemoryProjectContextFactory contextFactory = new InMemoryProjectContextFactory();
@@ -55,9 +62,10 @@ public class NoteEquivalenceDirectiveTest extends TestCase {
   }
 
   @Override
-  public void setUp() {
-    ObjectGraph graph = ObjectGraph.create(new LocalTestModule());
-    graph.injectStatics();
+  public void setUp() throws Exception {
+    super.setUp();
+    Injector.INSTANCE = DaggerNoteEquivalenceDirectiveTest_Component.builder().module(new Module())
+        .build().context();
 
     d = new NoteEquivalenceDirective();
     d.getFlags().configFilename = "moe_config.txt";

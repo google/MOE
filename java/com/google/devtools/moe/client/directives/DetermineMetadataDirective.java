@@ -2,7 +2,7 @@
 
 package com.google.devtools.moe.client.directives;
 
-import com.google.devtools.moe.client.AppContext;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeOptions;
 import com.google.devtools.moe.client.logic.DetermineMetadataLogic;
 import com.google.devtools.moe.client.parser.Parser;
@@ -31,9 +31,9 @@ public class DetermineMetadataDirective implements Directive {
   public int perform() {
     ProjectContext context;
     try {
-      context = AppContext.RUN.contextFactory.makeProjectContext(options.configFilename);
+      context = Injector.INSTANCE.contextFactory.makeProjectContext(options.configFilename);
     } catch (InvalidProject e) {
-      AppContext.RUN.ui.error(e, "Error creating project");
+      Injector.INSTANCE.ui.error(e, "Error creating project");
       return 1;
     }
 
@@ -41,7 +41,7 @@ public class DetermineMetadataDirective implements Directive {
     try {
       repoEx = Parser.parseRepositoryExpression(options.repositoryExpression);
     } catch (ParseError e) {
-      AppContext.RUN.ui.error(
+      Injector.INSTANCE.ui.error(
           e, "Couldn't parse " + options.repositoryExpression);
       return 1;
     }
@@ -49,7 +49,7 @@ public class DetermineMetadataDirective implements Directive {
     List<Revision> revs = Revision.fromRepositoryExpression(repoEx, context);
 
     RevisionMetadata rm = DetermineMetadataLogic.determine(context, revs, null);
-    AppContext.RUN.ui.info(rm.toString());
+    Injector.INSTANCE.ui.info(rm.toString());
     return 0;
   }
 

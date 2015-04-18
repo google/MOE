@@ -10,7 +10,7 @@ import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
 
-import dagger.Lazy;
+import dagger.Provides;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,6 +21,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 /**
  * A {@link FileSystem} using the real local filesystem via operations in {@link File}.
@@ -31,12 +32,7 @@ public class SystemFileSystem implements FileSystem {
 
   private final Map<File, Lifetime> tempDirLifetimes = Maps.newHashMap();
 
-  private final Lazy<Ui> lazyUi; // Lazy<Ui> to avert dependency cycle.
-
-  @Inject
-  SystemFileSystem(Lazy<Ui> lazyUi) {
-    this.lazyUi = lazyUi;
-  }
+  @Inject SystemFileSystem() {}
 
   @Override
   public File getTemporaryDirectory(String prefix) {
@@ -64,7 +60,6 @@ public class SystemFileSystem implements FileSystem {
       if (entry.getValue().shouldCleanUp()) {
         deleteRecursively(entry.getKey());
         tempDirIterator.remove();
-        lazyUi.get().debug("Deleted temp dir: " + entry.getKey());
       }
     }
   }
@@ -190,5 +185,12 @@ public class SystemFileSystem implements FileSystem {
   @Override
   public String fileToString(File f) throws IOException {
       return Files.toString(f, UTF_8);
+  }
+
+  /** A Dagger module for binding this implementation of {@link FileSystem}. */
+  @dagger.Module(complete = false) public static class Module {
+    @Provides @Singleton public FileSystem fileSystem(SystemFileSystem impl) {
+      return impl;
+    }
   }
 }
