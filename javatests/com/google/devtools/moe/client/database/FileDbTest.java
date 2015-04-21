@@ -8,7 +8,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
-import com.google.devtools.moe.client.Moe;
 import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.SystemFileSystem;
 import com.google.devtools.moe.client.repositories.Revision;
@@ -22,26 +21,17 @@ import org.easymock.IMocksControl;
 
 import java.io.File;
 
-import javax.inject.Singleton;
-
 /**
  */
 public class FileDbTest extends TestCase {
-  // TODO(cgruber): Rework these when statics aren't inherent in the design.
-  @dagger.Component(modules = {
-      RecordingUi.Module.class,
-      InMemoryProjectContextFactory.Module.class,
-      SystemCommandRunner.Module.class,
-      SystemFileSystem.Module.class})
-  @Singleton
-  interface Component extends Moe.Component {
-    @Override Injector context(); // TODO (b/19676630) Remove when bug is fixed.
-  }
+  private final InMemoryProjectContextFactory contextFactory = new InMemoryProjectContextFactory();
+  private final RecordingUi ui = new RecordingUi();
+  private final SystemCommandRunner cmd = new SystemCommandRunner(ui);
 
   @Override
   public void setUp() throws Exception {
     super.setUp();
-    Injector.INSTANCE = DaggerFileDbTest_Component.create().context();
+    Injector.INSTANCE = new Injector(new SystemFileSystem(), cmd, contextFactory, ui);
   }
 
   public void testValidDb() throws Exception {
@@ -121,7 +111,7 @@ public class FileDbTest extends TestCase {
   public void testMakeDbFromFile() throws Exception {
     IMocksControl control = EasyMock.createControl();
     FileSystem fileSystem = control.createMock(FileSystem.class);
-    Injector.INSTANCE.fileSystem = fileSystem;
+    Injector.INSTANCE = new Injector(fileSystem, cmd, contextFactory, ui);
 
     File dbFile = new File("/path/to/db");
     String dbText = Joiner.on("\n").join(
@@ -152,7 +142,7 @@ public class FileDbTest extends TestCase {
   public void testWriteDbToFile() throws Exception {
     IMocksControl control = EasyMock.createControl();
     FileSystem fileSystem = control.createMock(FileSystem.class);
-    Injector.INSTANCE.fileSystem = fileSystem;
+    Injector.INSTANCE = new Injector(fileSystem, cmd, contextFactory, ui);
 
     File dbFile = new File("/path/to/db");
     String dbText = Joiner.on("\n").join(

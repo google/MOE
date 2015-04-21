@@ -68,10 +68,10 @@ public class RepositoryExpression extends AbstractExpression {
       cc = repo.codebaseCreator;
     }
 
-    Ui.Task createTask = Injector.INSTANCE.ui.pushTask(
-        "create_codebase", "Creating from '" + toString() + "'");
+    Ui.Task createTask =
+        Injector.INSTANCE.ui().pushTask("create_codebase", "Creating from '" + toString() + "'");
     Codebase c = cc.create(term.options);
-    Injector.INSTANCE.ui.popTaskAndPersist(createTask, c.getPath());
+    Injector.INSTANCE.ui().popTaskAndPersist(createTask, c.getPath());
     return c;
   }
 
@@ -86,15 +86,16 @@ public class RepositoryExpression extends AbstractExpression {
     Repository r = context.getRepository(term.identifier);
     WriterCreator wc = r.writerCreator;
 
-    Ui.Task t = Injector.INSTANCE.ui.pushTask(
+    Ui.Task t =
+        Injector.INSTANCE.ui().pushTask(
         "create_writer",
         String.format("Creating Writer \"%s\"", term));
     try {
       Writer writer = wc.create(term.options);
-      Injector.INSTANCE.ui.popTaskAndPersist(t, writer.getRoot());
+      Injector.INSTANCE.ui().popTaskAndPersist(t, writer.getRoot());
       return writer;
     } catch (WritingError e) {
-      Injector.INSTANCE.ui.error(e, "Error creating writer");
+      Injector.INSTANCE.ui().error(e, "Error creating writer");
       throw e;
     }
   }

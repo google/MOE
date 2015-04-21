@@ -7,7 +7,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.FileSystem.Lifetime;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.Lifetimes;
-import com.google.devtools.moe.client.Moe;
 import com.google.devtools.moe.client.NullFileSystemModule;
 import com.google.devtools.moe.client.SystemCommandRunner;
 
@@ -28,8 +27,8 @@ public class InMemoryFileSystemTest extends TestCase {
       SystemCommandRunner.Module.class,
       NullFileSystemModule.class})
   @Singleton
-  interface Component extends Moe.Component {
-    @Override Injector context(); // TODO (b/19676630) Remove when bug is fixed.
+  interface Component {
+    Injector context(); // TODO (b/19676630) Remove when bug is fixed.
   }
 
   @Override protected void setUp() throws Exception {

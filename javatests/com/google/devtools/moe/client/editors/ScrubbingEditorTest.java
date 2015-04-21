@@ -9,7 +9,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
-import com.google.devtools.moe.client.Moe;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.project.ProjectConfig;
 import com.google.devtools.moe.client.project.ScrubberConfig;
@@ -38,8 +37,8 @@ public class ScrubbingEditorTest extends TestCase {
   // TODO(cgruber): Rework these when statics aren't inherent in the design.
   @dagger.Component(modules = {TestingModule.class, Module.class})
   @Singleton
-  interface Component extends Moe.Component {
-    @Override Injector context(); // TODO (b/19676630) Remove when bug is fixed.
+  interface Component {
+    Injector context(); // TODO (b/19676630) Remove when bug is fixed.
   }
 
   @dagger.Module class Module {

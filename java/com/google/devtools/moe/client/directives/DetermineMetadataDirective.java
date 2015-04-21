@@ -2,14 +2,15 @@
 
 package com.google.devtools.moe.client.directives;
 
-import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeOptions;
+import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.logic.DetermineMetadataLogic;
 import com.google.devtools.moe.client.parser.Parser;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.ProjectContext;
+import com.google.devtools.moe.client.project.ProjectContextFactory;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 
@@ -17,23 +18,32 @@ import org.kohsuke.args4j.Option;
 
 import java.util.List;
 
+import javax.inject.Inject;
+
 /**
- * Combines the metadata for the given revisions into one
- * consolidated metadata. Useful for when multiple revisions
- * in one repository need to be exported as one revision in the other.
+ * Combines the metadata for the given revisions into one consolidated metadata. Useful for when
+ * multiple revisions in one repository need to be exported as one revision in the other.
  *
  */
-public class DetermineMetadataDirective implements Directive {
-
+public class DetermineMetadataDirective extends Directive {
   private final DetermineMetadataOptions options = new DetermineMetadataOptions();
+
+  private final ProjectContextFactory contextFactory;
+  private final Ui ui;
+
+  @Inject
+  DetermineMetadataDirective(ProjectContextFactory contextFactory, Ui ui) {
+    this.contextFactory = contextFactory;
+    this.ui = ui;
+  }
 
   @Override
   public int perform() {
     ProjectContext context;
     try {
-      context = Injector.INSTANCE.contextFactory.makeProjectContext(options.configFilename);
+      context = contextFactory.makeProjectContext(options.configFilename);
     } catch (InvalidProject e) {
-      Injector.INSTANCE.ui.error(e, "Error creating project");
+      ui.error(e, "Error creating project");
       return 1;
     }
 
@@ -41,21 +51,25 @@ public class DetermineMetadataDirective implements Directive {
     try {
       repoEx = Parser.parseRepositoryExpression(options.repositoryExpression);
     } catch (ParseError e) {
-      Injector.INSTANCE.ui.error(
-          e, "Couldn't parse " + options.repositoryExpression);
+      ui.error(e, "Couldn't parse " + options.repositoryExpression);
       return 1;
     }
 
     List<Revision> revs = Revision.fromRepositoryExpression(repoEx, context);
 
     RevisionMetadata rm = DetermineMetadataLogic.determine(context, revs, null);
-    Injector.INSTANCE.ui.info(rm.toString());
+    ui.info(rm.toString());
     return 0;
   }
 
   @Override
   public DetermineMetadataOptions getFlags() {
     return options;
+  }
+
+  @Override
+  public String getDescription() {
+    return "Consolidates the metadata for a set of revisions";
   }
 
   static class DetermineMetadataOptions extends MoeOptions {

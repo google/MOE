@@ -69,7 +69,7 @@ public class FileDb implements Db {
   @Override
   public void writeToLocation(String dbLocation) {
     try {
-      Injector.INSTANCE.fileSystem.write(toJsonString(), new File(dbLocation));
+      Injector.INSTANCE.fileSystem().write(toJsonString(), new File(dbLocation));
     } catch (IOException e) {
       throw new MoeProblem(e.getMessage());
     }
@@ -86,7 +86,7 @@ public class FileDb implements Db {
 
   public static FileDb makeDbFromFile(String path) throws MoeProblem {
     try {
-      String dbText = Injector.INSTANCE.fileSystem.fileToString(new File(path));
+      String dbText = Injector.INSTANCE.fileSystem().fileToString(new File(path));
       try {
         return makeDbFromDbText(dbText);
       } catch (InvalidProject e) {

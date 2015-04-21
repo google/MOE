@@ -3,38 +3,24 @@
 package com.google.devtools.moe.client.directives;
 
 import com.google.devtools.moe.client.Injector;
-import com.google.devtools.moe.client.Moe;
 import com.google.devtools.moe.client.MoeProblem;
-import com.google.devtools.moe.client.NullFileSystemModule;
 import com.google.devtools.moe.client.SystemCommandRunner;
-import com.google.devtools.moe.client.project.ProjectContextFactory;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
 import com.google.devtools.moe.client.testing.RecordingUi;
 
-import dagger.Provides;
-
 import junit.framework.TestCase;
-
-import javax.inject.Singleton;
 
 /**
  */
 public class OneMigrationDirectiveTest extends TestCase {
-  // TODO(cgruber): Rework these when statics aren't inherent in the design.
-  @dagger.Component(modules = {
-      RecordingUi.Module.class,
-      SystemCommandRunner.Module.class,
-      NullFileSystemModule.class,
-      Module.class})
-  @Singleton
-  interface Component extends Moe.Component {
-    @Override Injector context(); // TODO (b/19676630) Remove when bug is fixed.
-  }
+  private final InMemoryProjectContextFactory contextFactory = new InMemoryProjectContextFactory();
+  private final RecordingUi ui = new RecordingUi();
+  private final SystemCommandRunner cmd = new SystemCommandRunner(ui);
 
-  @dagger.Module class Module {
-    @Provides public ProjectContextFactory projectContextFactory() {
-      InMemoryProjectContextFactory contextFactory = new InMemoryProjectContextFactory();
-      contextFactory.projectConfigs.put(
+  @Override
+  public void setUp() throws Exception {
+    super.setUp();
+    contextFactory.projectConfigs.put(
         "moe_config.txt",
         "{\"name\":\"foo\",\"repositories\":{" +
         "\"int\":{\"type\":\"dummy\",\"project_space\":\"internal\"}," +
@@ -42,30 +28,22 @@ public class OneMigrationDirectiveTest extends TestCase {
         "\"translators\":[{\"from_project_space\":\"internal\"," +
         "\"to_project_space\":\"public\",\"steps\":[{\"name\":\"id_step\"," +
         "\"editor\":{\"type\":\"identity\"}}]}]}");
-      return contextFactory;
-    }
-  }
-
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    Injector.INSTANCE = DaggerOneMigrationDirectiveTest_Component.builder().module(new Module())
-        .build().context();
+    Injector.INSTANCE = new Injector(null, cmd, contextFactory, ui);
   }
 
   public void testOneMigration() throws Exception {
-    OneMigrationDirective d = new OneMigrationDirective();
+    OneMigrationDirective d = new OneMigrationDirective(contextFactory, ui);
     d.getFlags().configFilename = "moe_config.txt";
     d.getFlags().fromRepository = "int(revision=1000)";
     d.getFlags().toRepository = "pub(revision=2)";
     assertEquals(0, d.perform());
     assertEquals(
         String.format("Created Draft Revision: %s", "/dummy/revision/pub"),
-        ((RecordingUi) Injector.INSTANCE.ui).lastInfo);
+        ((RecordingUi) Injector.INSTANCE.ui()).lastInfo);
   }
 
   public void testOneMigrationFailOnFromRevision() throws Exception {
-    OneMigrationDirective d = new OneMigrationDirective();
+    OneMigrationDirective d = new OneMigrationDirective(contextFactory, ui);
     d.getFlags().configFilename = "moe_config.txt";
     d.getFlags().fromRepository = "x(revision=1000)";
     d.getFlags().toRepository = "pub(revision=2)";
@@ -80,7 +58,7 @@ public class OneMigrationDirectiveTest extends TestCase {
   }
 
   public void testOneMigrationFailOnToRevision() throws Exception {
-    OneMigrationDirective d = new OneMigrationDirective();
+    OneMigrationDirective d = new OneMigrationDirective(contextFactory, ui);
     d.getFlags().configFilename = "moe_config.txt";
     d.getFlags().fromRepository = "int(revision=1000)";
     d.getFlags().toRepository = "x(revision=2)";

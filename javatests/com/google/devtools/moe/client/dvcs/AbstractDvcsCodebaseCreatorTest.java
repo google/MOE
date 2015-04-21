@@ -10,7 +10,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
-import com.google.devtools.moe.client.Moe;
 import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.LocalClone;
@@ -54,8 +53,8 @@ public class AbstractDvcsCodebaseCreatorTest extends TestCase {
   // TODO(cgruber): Rework these when statics aren't inherent in the design.
   @dagger.Component(modules = {TestingModule.class, SystemCommandRunner.Module.class, Module.class})
   @Singleton
-  interface Component extends Moe.Component {
-    @Override Injector context(); // TODO (b/19676630) Remove when bug is fixed.
+  interface Component {
+    Injector context(); // TODO (b/19676630) Remove when bug is fixed.
   }
 
   @dagger.Module class Module {
@@ -77,8 +76,8 @@ public class AbstractDvcsCodebaseCreatorTest extends TestCase {
   public void testCreate_noGivenRev() throws Exception {
     String archiveTempDir = "/tmp/git_archive_mockrepo_head";
     // Short-circuit Utils.filterFilesByPredicate(ignore_files_re).
-    expect(Injector.INSTANCE.fileSystem.findFiles(new File(archiveTempDir)))
-        .andReturn(ImmutableSet.<File>of());
+    expect(Injector.INSTANCE.fileSystem().findFiles(new File(archiveTempDir))).andReturn(
+        ImmutableSet.<File>of());
 
     expect(mockRevHistory.findHighestRevision(null))
         .andReturn(new Revision("mock head changeset ID", MOCK_REPO_NAME));
@@ -100,8 +99,8 @@ public class AbstractDvcsCodebaseCreatorTest extends TestCase {
     String givenRev = "givenrev";
     String archiveTempDir = "/tmp/git_reclone_mockrepo_head_" + givenRev;
     // Short-circuit Utils.filterFilesByPredicate(ignore_files_re).
-    expect(Injector.INSTANCE.fileSystem.findFiles(new File(archiveTempDir)))
-        .andReturn(ImmutableSet.<File>of());
+    expect(Injector.INSTANCE.fileSystem().findFiles(new File(archiveTempDir))).andReturn(
+        ImmutableSet.<File>of());
 
     expect(mockRevHistory.findHighestRevision(givenRev))
         .andReturn(new Revision(givenRev, MOCK_REPO_NAME));

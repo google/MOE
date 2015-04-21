@@ -46,6 +46,6 @@ public class SvnRepository {
       throws CommandRunner.CommandException {
     ImmutableList.Builder<String> withAuthArgs = new ImmutableList.Builder<String>();
     withAuthArgs.add("--no-auth-cache").addAll(args);
-    return Injector.INSTANCE.cmd.runCommand("svn", withAuthArgs.build(), workingDirectory);
+    return Injector.INSTANCE.cmd().runCommand("svn", withAuthArgs.build(), workingDirectory);
   }
 }

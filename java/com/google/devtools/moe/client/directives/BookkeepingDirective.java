@@ -3,29 +3,38 @@
 package com.google.devtools.moe.client.directives;
 
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeOptions;
 import com.google.devtools.moe.client.MoeProblem;
+import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.database.Db;
 import com.google.devtools.moe.client.database.FileDb;
 import com.google.devtools.moe.client.logic.BookkeepingLogic;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.ProjectContext;
+import com.google.devtools.moe.client.project.ProjectContextFactory;
 import com.google.devtools.moe.client.testing.DummyDb;
 
 import org.kohsuke.args4j.Option;
 
 import java.util.List;
 
+import javax.inject.Inject;
+
 /**
  * Perform the necessary checks to update MOE's db.
  *
  */
-public class BookkeepingDirective implements Directive {
-
+public class BookkeepingDirective extends Directive {
   private final BookkeepingOptions options = new BookkeepingOptions();
 
-  public BookkeepingDirective() {}
+  private final ProjectContextFactory contextFactory;
+  private final Ui ui;
+
+  @Inject
+  BookkeepingDirective(ProjectContextFactory contextFactory, Ui ui) {
+    this.contextFactory = contextFactory;
+    this.ui = ui;
+  }
 
   @Override
   public BookkeepingOptions getFlags() {
@@ -36,9 +45,9 @@ public class BookkeepingDirective implements Directive {
   public int perform() {
     ProjectContext context;
     try {
-      context = Injector.INSTANCE.contextFactory.makeProjectContext(options.configFilename);
+      context = contextFactory.makeProjectContext(options.configFilename);
     } catch (InvalidProject e) {
-      Injector.INSTANCE.ui.error(e, "Error creating project");
+      ui.error(e, "Error creating project");
       return 1;
     }
 
@@ -50,13 +59,18 @@ public class BookkeepingDirective implements Directive {
       try {
         db = FileDb.makeDbFromFile(options.dbLocation);
       } catch (MoeProblem e) {
-        Injector.INSTANCE.ui.error(e, "Error creating DB");
+        ui.error(e, "Error creating DB");
         return 1;
       }
     }
 
     List<String> names = ImmutableList.copyOf(context.migrationConfigs.keySet());
     return BookkeepingLogic.bookkeep(names, db, options.dbLocation, context);
+  }
+
+  @Override
+  public String getDescription() {
+    return "Updates the database";
   }
 
   static class BookkeepingOptions extends MoeOptions {

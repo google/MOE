@@ -41,13 +41,13 @@ public class PatchingEditor implements Editor {
    */
   @Override
   public Codebase edit(Codebase input, ProjectContext context, Map<String, String> options) {
-    File tempDir = Injector.INSTANCE.fileSystem.getTemporaryDirectory("patcher_run_");
+    File tempDir = Injector.INSTANCE.fileSystem().getTemporaryDirectory("patcher_run_");
     String patchFilePath = options.get("file");
     if (patchFilePath == null || patchFilePath.equals("")) {
       return input;
     } else {
       File patchFile = new File(patchFilePath);
-      if (!Injector.INSTANCE.fileSystem.isReadable(patchFile)) {
+      if (!Injector.INSTANCE.fileSystem().isReadable(patchFile)) {
         throw new MoeProblem(String.format(
             "cannot read file %s", patchFilePath));
       }
@@ -59,7 +59,7 @@ public class PatchingEditor implements Editor {
         throw new MoeProblem(e.getMessage());
       }
       try {
-        Injector.INSTANCE.cmd.runCommand(
+        Injector.INSTANCE.cmd().runCommand(
             "patch",
             ImmutableList.of(
                 "-p0",

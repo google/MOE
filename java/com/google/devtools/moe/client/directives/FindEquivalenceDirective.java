@@ -2,9 +2,9 @@
 
 package com.google.devtools.moe.client.directives;
 
-import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeOptions;
 import com.google.devtools.moe.client.MoeProblem;
+import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.database.Db;
 import com.google.devtools.moe.client.database.FileDb;
 import com.google.devtools.moe.client.logic.FindEquivalenceLogic;
@@ -13,6 +13,7 @@ import com.google.devtools.moe.client.parser.Parser.ParseError;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.ProjectContext;
+import com.google.devtools.moe.client.project.ProjectContextFactory;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.testing.DummyDb;
 
@@ -20,15 +21,23 @@ import org.kohsuke.args4j.Option;
 
 import java.util.List;
 
+import javax.inject.Inject;
+
 /**
  * Finds revisions in a repository that are equivalent to a given revision.
  *
  */
-public class FindEquivalenceDirective implements Directive {
-
+public class FindEquivalenceDirective extends Directive {
   private final FindEquivalenceOptions options = new FindEquivalenceOptions();
 
-  public FindEquivalenceDirective() {}
+  private final ProjectContextFactory contextFactory;
+  private final Ui ui;
+
+  @Inject
+  FindEquivalenceDirective(ProjectContextFactory contextFactory, Ui ui) {
+    this.contextFactory = contextFactory;
+    this.ui = ui;
+  }
 
   @Override
   public FindEquivalenceOptions getFlags() {
@@ -45,16 +54,16 @@ public class FindEquivalenceDirective implements Directive {
       try {
         db = FileDb.makeDbFromFile(options.dbLocation);
       } catch (MoeProblem e) {
-        Injector.INSTANCE.ui.error(e, "Error creating DB");
+        ui.error(e, "Error creating DB");
         return 1;
       }
     }
 
     ProjectContext context;
     try {
-      context = Injector.INSTANCE.contextFactory.makeProjectContext(options.configFilename);
+      context = contextFactory.makeProjectContext(options.configFilename);
     } catch (InvalidProject e) {
-      Injector.INSTANCE.ui.error(e, "Error creating project");
+      ui.error(e, "Error creating project");
       return 1;
     }
 
@@ -62,7 +71,7 @@ public class FindEquivalenceDirective implements Directive {
     try {
       repoEx = Parser.parseRepositoryExpression(options.fromRepository);
     } catch (ParseError e) {
-      Injector.INSTANCE.ui.error(e, "Couldn't parse " + options.fromRepository);
+      ui.error(e, "Couldn't parse " + options.fromRepository);
       return 1;
     }
 
@@ -70,6 +79,11 @@ public class FindEquivalenceDirective implements Directive {
 
     FindEquivalenceLogic.printEquivalences(revs, options.inRepository, db);
     return 0;
+  }
+
+  @Override
+  public String getDescription() {
+    return "Finds revisions in one repository that are equivalent to a given revision in another";
   }
 
   static class FindEquivalenceOptions extends MoeOptions {

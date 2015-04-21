@@ -58,17 +58,18 @@ public class BookkeepingLogic {
           .translateTo(to.getProjectSpace())
           .createCodebase(context);
     } catch (CodebaseCreationError e) {
-      Injector.INSTANCE.ui.error(e, "Could not generate codebase");
+      Injector.INSTANCE.ui().error(e, "Could not generate codebase");
       return;
     }
 
-    Ui.Task t = Injector.INSTANCE.ui.pushTask(
+    Ui.Task t =
+        Injector.INSTANCE.ui().pushTask(
         "diff_codebases",
         String.format("Diff codebases '%s' and '%s'", from.toString(), to.toString()));
     if (!CodebaseDifference.diffCodebases(from, to).areDifferent()) {
       db.noteEquivalence(new Equivalence(fromHead, toHead));
     }
-    Injector.INSTANCE.ui.popTask(t, "");
+    Injector.INSTANCE.ui().popTask(t, "");
   }
 
   /**
@@ -86,7 +87,8 @@ public class BookkeepingLogic {
 
     List<Revision> linearToRevs =
         equivMatch.getRevisionsSinceEquivalence().getBreadthFirstHistory();
-    Injector.INSTANCE.ui.info(String.format(
+    Injector.INSTANCE.ui().info(
+        String.format(
         "Found %d revisions in %s since equivalence (%s): %s",
         linearToRevs.size(),
         toRepository,
@@ -115,8 +117,9 @@ public class BookkeepingLogic {
                                        Db db, ProjectContext context, boolean inverse) {
     SubmittedMigration migration = new SubmittedMigration(fromRev, toRev);
     if (!db.noteMigration(migration)) {
-      Injector.INSTANCE.ui.info("Skipping bookkeeping of this SubmittedMigration "
-          + "because it was already in the Db: " + migration);
+      Injector.INSTANCE.ui().info(
+          "Skipping bookkeeping of this SubmittedMigration " + "because it was already in the Db: "
+              + migration);
       return;
     }
 
@@ -140,21 +143,21 @@ public class BookkeepingLogic {
 
       to = toEx.createCodebase(context);
       from = fromEx.createCodebase(context);
-
     } catch (CodebaseCreationError e) {
-      Injector.INSTANCE.ui.error(e, "Could not generate codebase");
+      Injector.INSTANCE.ui().error(e, "Could not generate codebase");
       return;
     }
 
-    Ui.Task t = Injector.INSTANCE.ui.pushTask(
+    Ui.Task t =
+        Injector.INSTANCE.ui().pushTask(
         "diff_codebases",
         String.format("Diff codebases '%s' and '%s'", from.toString(), to.toString()));
     if (!CodebaseDifference.diffCodebases(from, to).areDifferent()) {
       Equivalence newEquiv = new Equivalence(fromRev, toRev);
       db.noteEquivalence(newEquiv);
-      Injector.INSTANCE.ui.info("Codebases are identical, noted new equivalence: " + newEquiv);
+      Injector.INSTANCE.ui().info("Codebases are identical, noted new equivalence: " + newEquiv);
     }
-    Injector.INSTANCE.ui.popTask(t, "");
+    Injector.INSTANCE.ui().popTask(t, "");
   }
 
   /**
@@ -185,22 +188,23 @@ public class BookkeepingLogic {
    * MOE's way of keeping the db up-to-date.
    *
    * @param migrationNames the names of all migrations
-   * @param db  the database to update
-   * @param dbLocation  where db is located
+   * @param db the database to update
+   * @param dbLocation where db is located
    * @param context the ProjectContext to evaluate in
-   * @return  0 on success, 1 on failure
+   * @return 0 on success, 1 on failure
    */
-  public static int bookkeep(List<String> migrationNames, Db db, String dbLocation,
-                             ProjectContext context) {
-    Ui.Task t = Injector.INSTANCE.ui.pushTask("perform_checks", "Updating database");
+  public static int bookkeep(
+      List<String> migrationNames, Db db, String dbLocation, ProjectContext context) {
+    Ui.Task t = Injector.INSTANCE.ui().pushTask("perform_checks", "Updating database");
     for (String s : migrationNames) {
       MigrationConfig m = context.migrationConfigs.get(s);
       if (m == null) {
-        Injector.INSTANCE.ui.error(String.format("No migration '%s' in MOE config", s));
+        Injector.INSTANCE.ui().error(String.format("No migration '%s' in MOE config", s));
         return 1;
       }
 
-      Ui.Task bookkeepOneMigrationTask = Injector.INSTANCE.ui.pushTask(
+      Ui.Task bookkeepOneMigrationTask =
+          Injector.INSTANCE.ui().pushTask(
           "bookkeping_one_migration",
           String.format("Doing bookkeeping between '%s' and '%s' for migration '%s'",
                         m.getFromRepository(), m.getToRepository(), m.getName()));
@@ -210,31 +214,32 @@ public class BookkeepingLogic {
 
       // TODO(user): ? Switch the order of these two checks, so that we don't have to look back
       // through the history for irrelevant equivalences if there's one at head.
-      Ui.Task checkMigrationsTask = Injector.INSTANCE.ui.pushTask(
+      Ui.Task checkMigrationsTask =
+          Injector.INSTANCE.ui().pushTask(
           "check_migrations",
           String.format(
               "Checking completed migrations for new equivalence between '%s' and '%s'",
               m.getFromRepository(), m.getToRepository()));
       updateCompletedMigrations(
-          m.getFromRepository(), m.getToRepository(), db, context,
-          migrationTranslator.isInverse());
-      Injector.INSTANCE.ui.popTask(checkMigrationsTask, "");
+          m.getFromRepository(), m.getToRepository(), db, context, migrationTranslator.isInverse());
+      Injector.INSTANCE.ui().popTask(checkMigrationsTask, "");
 
       // Skip head-equivalence checking for inverse translation -- assume it will be performed via
       // the forward-translated migration.
       if (!migrationTranslator.isInverse()) {
-        Ui.Task checkHeadsTask = Injector.INSTANCE.ui.pushTask(
+        Ui.Task checkHeadsTask =
+            Injector.INSTANCE.ui().pushTask(
             "check_heads",
             String.format(
                 "Checking head equivalence between '%s' and '%s'",
                 m.getFromRepository(), m.getToRepository()));
         updateHeadEquivalence(m.getFromRepository(), m.getToRepository(), db, context);
-        Injector.INSTANCE.ui.popTask(checkHeadsTask, "");
+        Injector.INSTANCE.ui().popTask(checkHeadsTask, "");
       }
 
-      Injector.INSTANCE.ui.popTask(bookkeepOneMigrationTask, "");
+      Injector.INSTANCE.ui().popTask(bookkeepOneMigrationTask, "");
     }
-    Injector.INSTANCE.ui.popTask(t, "");
+    Injector.INSTANCE.ui().popTask(t, "");
     db.writeToLocation(dbLocation);
     return 0;
   }

@@ -37,12 +37,12 @@ public class ScrubbingEditor implements Editor {
         @Override public File get() {
           try {
             // TODO(dbentley): what will this resource be under ant?
-            File scrubberBinary =
-                Injector.INSTANCE.fileSystem.getResourceAsFile("/devtools/moe/scrubber/scrubber.par");
-            Injector.INSTANCE.fileSystem.setExecutable(scrubberBinary);
+            File scrubberBinary = Injector.INSTANCE.fileSystem()
+                .getResourceAsFile("/devtools/moe/scrubber/scrubber.par");
+            Injector.INSTANCE.fileSystem().setExecutable(scrubberBinary);
             return scrubberBinary;
           } catch (IOException ioEx) {
-            Injector.INSTANCE.ui.error(ioEx, "Error extracting scrubber");
+            Injector.INSTANCE.ui().error(ioEx, "Error extracting scrubber");
             throw new MoeProblem("Error extracting scrubber: " + ioEx.getMessage());
           }
         }
@@ -70,11 +70,11 @@ public class ScrubbingEditor implements Editor {
    */
   @Override
   public Codebase edit(Codebase input, ProjectContext context, Map<String, String> options) {
-    File tempDir = Injector.INSTANCE.fileSystem.getTemporaryDirectory("scrubber_run_");
+    File tempDir = Injector.INSTANCE.fileSystem().getTemporaryDirectory("scrubber_run_");
     File outputTar = new File(tempDir, "scrubbed.tar");
 
     try {
-      Injector.INSTANCE.cmd.runCommand(
+      Injector.INSTANCE.cmd().runCommand(
           // The ./ preceding scrubber.par is sometimes needed.
           // TODO(user): figure out why
           "./scrubber.par",

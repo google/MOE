@@ -63,8 +63,8 @@ public class RenamingEditor implements Editor {
   @VisibleForTesting
   void copyDirectoryAndRename(File srcFile, File srcFolder, File destFolder)
       throws IOException {
-    if (Injector.INSTANCE.fileSystem.isDirectory(srcFile)) {
-      File[] files = Injector.INSTANCE.fileSystem.listFiles(srcFile);
+    if (Injector.INSTANCE.fileSystem().isDirectory(srcFile)) {
+      File[] files = Injector.INSTANCE.fileSystem().listFiles(srcFile);
       for (File subFile : files) {
         copyDirectoryAndRename(subFile, srcFolder, destFolder);
       }
@@ -72,8 +72,8 @@ public class RenamingEditor implements Editor {
       // "/srcFolder/path/to/file" -> "path/to/file"
       String relativePath = srcFolder.toURI().relativize(srcFile.toURI()).getPath();
       File renamedFile = new File(destFolder, renameFile(relativePath));
-      Injector.INSTANCE.fileSystem.makeDirsForFile(renamedFile);
-      Injector.INSTANCE.fileSystem.copyFile(srcFile, renamedFile);
+      Injector.INSTANCE.fileSystem().makeDirsForFile(renamedFile);
+      Injector.INSTANCE.fileSystem().copyFile(srcFile, renamedFile);
     }
   }
 
@@ -110,7 +110,7 @@ public class RenamingEditor implements Editor {
    */
   @Override
   public Codebase edit(Codebase input, ProjectContext context, Map<String, String> options) {
-    File tempDir = Injector.INSTANCE.fileSystem.getTemporaryDirectory("rename_run_");
+    File tempDir = Injector.INSTANCE.fileSystem().getTemporaryDirectory("rename_run_");
     try {
       copyDirectoryAndRename(input.getPath().getAbsoluteFile(),
                              input.getPath().getAbsoluteFile(),

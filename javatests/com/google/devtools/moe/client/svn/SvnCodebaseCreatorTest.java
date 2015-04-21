@@ -10,7 +10,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
-import com.google.devtools.moe.client.Moe;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreator;
 import com.google.devtools.moe.client.project.RepositoryConfig;
@@ -40,8 +39,8 @@ public class SvnCodebaseCreatorTest extends TestCase {
   // TODO(cgruber): Rework these when statics aren't inherent in the design.
   @dagger.Component(modules = {TestingModule.class, Module.class})
   @Singleton
-  interface Component extends Moe.Component {
-    @Override Injector context(); // TODO (b/19676630) Remove when bug is fixed.
+  interface Component {
+    Injector context(); // TODO (b/19676630) Remove when bug is fixed.
   }
 
   @dagger.Module
@@ -77,8 +76,8 @@ public class SvnCodebaseCreatorTest extends TestCase {
         ImmutableList.of("--no-auth-cache", "export", "http://foo/svn/trunk/", "-r", "45",
                          "/dummy/path/45"), "")).andReturn("");
     // Short-circuit Utils.filterFiles for ignore_files_re.
-    expect(Injector.INSTANCE.fileSystem.findFiles(new File("/dummy/path/45")))
-        .andReturn(ImmutableSet.<File>of());
+    expect(Injector.INSTANCE.fileSystem().findFiles(new File("/dummy/path/45"))).andReturn(
+        ImmutableSet.<File>of());
 
     control.replay();
     CodebaseCreator cc = new SvnCodebaseCreator("testing", mockConfig, revisionHistory);

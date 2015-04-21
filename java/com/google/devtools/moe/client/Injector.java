@@ -24,19 +24,36 @@ public class Injector {
   // TODO(cgruber): Eliminate this public static mutable.
   public static Injector INSTANCE;
 
-  @Inject Injector() {} // Necessary to permit construction in Dagger2
+  @Nullable private final FileSystem fileSystem;
+  private final CommandRunner cmd;
+  private final ProjectContextFactory contextFactory;
+  private final Ui ui;
 
   @Inject
-  public ProjectContextFactory contextFactory = null;
+  public Injector(
+      @Nullable FileSystem fileSystem,
+      CommandRunner cmd,
+      ProjectContextFactory contextFactory,
+      Ui ui) {
+    this.fileSystem = fileSystem;
+    this.cmd = cmd;
+    this.contextFactory = contextFactory;
+    this.ui = ui;
+  }
 
-  @Inject
-  public Ui ui = null;
+  public CommandRunner cmd() {
+    return cmd;
+  }
 
-  @Inject
-  public CommandRunner cmd = null;
+  public ProjectContextFactory contextFactory() {
+    return contextFactory;
+  }
 
-  @Inject
-  @Nullable
-  public FileSystem fileSystem = null;
+  public FileSystem fileSystem() {
+    return fileSystem;
+  }
 
+  public Ui ui() {
+    return ui;
+  }
 }

@@ -2,9 +2,10 @@
 
 package com.google.devtools.moe.client.directives;
 
-import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.MoeOptions;
 import com.google.devtools.moe.client.MoeProblem;
+import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.database.DbStorage;
 import com.google.devtools.moe.client.database.Equivalence;
 import com.google.devtools.moe.client.database.FileDb;
@@ -13,6 +14,7 @@ import com.google.devtools.moe.client.parser.Parser.ParseError;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.ProjectContext;
+import com.google.devtools.moe.client.project.ProjectContextFactory;
 import com.google.devtools.moe.client.repositories.Repository;
 import com.google.devtools.moe.client.repositories.Revision;
 
@@ -20,16 +22,26 @@ import org.kohsuke.args4j.Option;
 
 import java.io.File;
 
+import javax.inject.Inject;
+
 /**
- * Note an equivalence from the command line in the Db file at the given path, or create a Db file
- * at that path with the new equivalence.
+ * Note an equivalence from the command line in the database file at the given path, or create a
+ * database file at that path with the new equivalence.
  *
  */
-public class NoteEquivalenceDirective implements Directive {
-
+public class NoteEquivalenceDirective extends Directive {
   private final NoteEquivalenceOptions options = new NoteEquivalenceOptions();
 
-  NoteEquivalenceDirective() {}
+  private final ProjectContextFactory contextFactory;
+  private final FileSystem fileSystem;
+  private final Ui ui;
+
+  @Inject
+  NoteEquivalenceDirective(ProjectContextFactory contextFactory, FileSystem fileSystem, Ui ui) {
+    this.contextFactory = contextFactory;
+    this.fileSystem = fileSystem;
+    this.ui = ui;
+  }
 
   @Override
   public NoteEquivalenceOptions getFlags() {
@@ -40,15 +52,15 @@ public class NoteEquivalenceDirective implements Directive {
   public int perform() {
     ProjectContext context;
     try {
-      context = Injector.INSTANCE.contextFactory.makeProjectContext(options.configFilename);
+      context = contextFactory.makeProjectContext(options.configFilename);
     } catch (InvalidProject e) {
-      Injector.INSTANCE.ui.error(e, "Error creating project");
+      ui.error(e, "Error creating project");
       return 1;
     }
 
     FileDb db;
     File dbFile = new File(options.dbLocation);
-    if (Injector.INSTANCE.fileSystem.exists(dbFile)) {
+    if (fileSystem.exists(dbFile)) {
       db = FileDb.makeDbFromFile(dbFile.getAbsolutePath());
     } else {
       db = new FileDb(new DbStorage());
@@ -59,8 +71,7 @@ public class NoteEquivalenceDirective implements Directive {
       repoEx1 = Parser.parseRepositoryExpression(options.repo1);
       repoEx2 = Parser.parseRepositoryExpression(options.repo2);
     } catch (ParseError e) {
-      Injector.INSTANCE.ui.error(
-          e, "Couldn't parse " + (repoEx1 == null ? options.repo1 : options.repo2));
+      ui.error(e, "Couldn't parse " + (repoEx1 == null ? options.repo1 : options.repo2));
       return 1;
     }
 
@@ -79,9 +90,14 @@ public class NoteEquivalenceDirective implements Directive {
     db.noteEquivalence(newEq);
     db.writeToLocation(options.dbLocation);
 
-    Injector.INSTANCE.ui.info("Noted equivalence: " + newEq);
+    ui.info("Noted equivalence: " + newEq);
 
     return 0;
+  }
+
+  @Override
+  public String getDescription() {
+    return "Notes a new equivalence in a database file.";
   }
 
   static class NoteEquivalenceOptions extends MoeOptions {

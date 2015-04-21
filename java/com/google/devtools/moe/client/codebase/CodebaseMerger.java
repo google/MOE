@@ -35,7 +35,7 @@ public class CodebaseMerger {
     this.modifiedCodebase = modifiedCodebase;
     this.destinationCodebase = destinationCodebase;
 
-    File mergedDir = Injector.INSTANCE.fileSystem.getTemporaryDirectory("merged_codebase_");
+    File mergedDir = Injector.INSTANCE.fileSystem().getTemporaryDirectory("merged_codebase_");
     RepositoryExpression mergedExpression = new RepositoryExpression(
         new Term("merged", ImmutableMap.<String, String>of()));
     this.mergedCodebase = new Codebase(mergedDir, "merged", mergedExpression);
@@ -72,9 +72,12 @@ public class CodebaseMerger {
    * Print the results of a merge to the UI.
    */
   public void report() {
-    Injector.INSTANCE.ui.info(String.format("Merged codebase generated at: %s",
-        mergedCodebase.getPath().getAbsolutePath()));
-    Injector.INSTANCE.ui.info(String.format("%d files merged successfully\n%d files have merge "
+    Injector.INSTANCE.ui().info(
+        String.format(
+            "Merged codebase generated at: %s", mergedCodebase.getPath().getAbsolutePath()));
+    Injector.INSTANCE.ui().info(
+        String.format(
+            "%d files merged successfully\n%d files have merge "
         + "conflicts. Edit the following files to resolve conflicts:\n%s", mergedFiles.size(),
         failedToMergeFiles.size(), failedToMergeFiles.toString()));
   }
@@ -88,7 +91,7 @@ public class CodebaseMerger {
    * written to.
    */
   private File copyToMergedCodebase(String filename, File destFile) {
-    FileSystem fs = Injector.INSTANCE.fileSystem;
+    FileSystem fs = Injector.INSTANCE.fileSystem();
     File mergedFile = mergedCodebase.getFile(filename);
     try {
       fs.makeDirsForFile(mergedFile);
@@ -113,7 +116,7 @@ public class CodebaseMerger {
    * @param filename the name of the file to merge
    */
   public void generateMergedFile(String filename) {
-    FileSystem fs = Injector.INSTANCE.fileSystem;
+    FileSystem fs = Injector.INSTANCE.fileSystem();
 
     File origFile = originalCodebase.getFile(filename);
     boolean origExists = fs.exists(origFile);
@@ -162,7 +165,10 @@ public class CodebaseMerger {
     try {
       // Merges the changes that lead from origFile to modFile into mergedFile (which is a copy
       // of destFile). After, mergedFile will have the combined changes of modFile and destFile.
-      mergeOutput = Injector.INSTANCE.cmd.runCommand("merge", ImmutableList.of(
+      mergeOutput =
+          Injector.INSTANCE.cmd().runCommand(
+              "merge",
+              ImmutableList.of(
           mergedFile.getAbsolutePath(), origFile.getAbsolutePath(), modFile.getAbsolutePath()),
           this.mergedCodebase.getPath().getAbsolutePath());
       // Return status was 0 and the merge was successful. Note it.

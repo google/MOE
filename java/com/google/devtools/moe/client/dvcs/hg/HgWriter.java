@@ -72,7 +72,7 @@ public class HgWriter extends AbstractDvcsWriter<HgClonedRepository> {
 
   @Override
   public void printPushMessage() {
-    Ui ui = Injector.INSTANCE.ui;
+    Ui ui = Injector.INSTANCE.ui();
     ui.info("=====");
     ui.info("MOE changes have been committed to a clone at " + getRoot());
     ui.info("Changes may have created a new head. Merge heads if needed, then push to remote.");

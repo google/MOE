@@ -21,10 +21,10 @@ import javax.inject.Singleton;
  * @author dbentley@google.com (Daniel Bentley)
  */
 public class SystemCommandRunner implements CommandRunner {
-
   private final Ui ui;
 
-  @Inject SystemCommandRunner(Ui ui) {
+  @Inject
+  public SystemCommandRunner(Ui ui) {
     this.ui = ui;
   }
 

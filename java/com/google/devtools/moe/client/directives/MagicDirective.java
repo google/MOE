@@ -5,7 +5,6 @@ package com.google.devtools.moe.client.directives;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeOptions;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
@@ -21,6 +20,7 @@ import com.google.devtools.moe.client.parser.Expression;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.ProjectContext;
+import com.google.devtools.moe.client.project.ProjectContextFactory;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.testing.DummyDb;
 import com.google.devtools.moe.client.writer.DraftRevision;
@@ -31,17 +31,25 @@ import org.kohsuke.args4j.Option;
 
 import java.util.List;
 
+import javax.inject.Inject;
+
 /**
  * Update the MOE db then perform all migration(s) specified in the MOE config. Repeated
  * invocations, then, will result in a state of all pending migrations performed, and all performed
  * migrations and new equivalences stored in the db.
  *
  */
-public class MagicDirective implements Directive {
-
+public class MagicDirective extends Directive {
   private final MagicOptions options = new MagicOptions();
 
-  public MagicDirective() {}
+  private final ProjectContextFactory contextFactory;
+  private final Ui ui;
+
+  @Inject
+  MagicDirective(ProjectContextFactory contextFactory, Ui ui) {
+    this.contextFactory = contextFactory;
+    this.ui = ui;
+  }
 
   @Override
   public MagicOptions getFlags() {
@@ -52,9 +60,9 @@ public class MagicDirective implements Directive {
   public int perform() {
     ProjectContext context;
     try {
-      context = Injector.INSTANCE.contextFactory.makeProjectContext(options.configFilename);
+      context = contextFactory.makeProjectContext(options.configFilename);
     } catch (InvalidProject e) {
-      Injector.INSTANCE.ui.error(e, "Error creating project");
+      ui.error(e, "Error creating project");
       return 1;
     }
 
@@ -66,7 +74,7 @@ public class MagicDirective implements Directive {
       try {
         db = FileDb.makeDbFromFile(options.dbLocation);
       } catch (MoeProblem e) {
-        Injector.INSTANCE.ui.error(e, "Error creating DB");
+        ui.error(e, "Error creating DB");
         return 1;
       }
     }
@@ -82,13 +90,14 @@ public class MagicDirective implements Directive {
     ImmutableList.Builder<String> migrationsMadeBuilder = ImmutableList.builder();
 
     for (String migrationName : migrationNames) {
-      Ui.Task migrationTask = Injector.INSTANCE.ui.pushTask(
+      Ui.Task migrationTask =
+          ui.pushTask(
           "perform_migration",
           String.format("Performing migration '%s'", migrationName));
 
       MigrationConfig migrationConfig = context.migrationConfigs.get(migrationName);
       if (migrationConfig == null) {
-        Injector.INSTANCE.ui.error("No migration found with name " + migrationName);
+        ui.error("No migration found with name " + migrationName);
         continue;
       }
 
@@ -96,7 +105,7 @@ public class MagicDirective implements Directive {
           DetermineMigrationsLogic.determineMigrations(context, migrationConfig, db);
 
       if (migrations.isEmpty()) {
-        Injector.INSTANCE.ui.info("No pending revisions to migrate for " + migrationName);
+        ui.info("No pending revisions to migrate for " + migrationName);
         continue;
       }
 
@@ -127,30 +136,35 @@ public class MagicDirective implements Directive {
         Expression referenceToCodebase = new RepositoryExpression(migrationConfig.getToRepository())
               .withOption("localroot", toWriter.getRoot().getAbsolutePath());
 
-        Ui.Task oneMigrationTask = Injector.INSTANCE.ui.pushTask(
-            "perform_individual_migration",
+        Ui.Task oneMigrationTask =
+            ui.pushTask(
+                "perform_individual_migration",
             String.format("Performing individual migration '%s'", m.toString()));
         dr = OneMigrationLogic.migrate(m, context, toWriter, referenceToCodebase);
         lastMigratedRevision = m.fromRevisions.get(m.fromRevisions.size() - 1);
-        Injector.INSTANCE.ui.popTask(oneMigrationTask, "");
+        ui.popTask(oneMigrationTask, "");
       }
 
       // TODO(user): Add properly formatted one-DraftRevison-per-Migration message for svn.
       migrationsMadeBuilder.add(String.format(
           "%s in repository %s", dr.getLocation(), migrationConfig.getToRepository()));
       toWriter.printPushMessage();
-      Injector.INSTANCE.ui.popTaskAndPersist(migrationTask, toWriter.getRoot());
+      ui.popTaskAndPersist(migrationTask, toWriter.getRoot());
     }
 
     List<String> migrationsMade = migrationsMadeBuilder.build();
     if (migrationsMade.isEmpty()) {
-      Injector.INSTANCE.ui.info("No migrations made.");
+      ui.info("No migrations made.");
     } else {
-      Injector.INSTANCE.ui.info("Created Draft Revisions:\n" + Joiner.on("\n")
-          .join(migrationsMade));
+      ui.info("Created Draft Revisions:\n" + Joiner.on("\n").join(migrationsMade));
     }
 
     return 0;
+  }
+
+  @Override
+  public String getDescription() {
+    return "Updates database and performs all migrations";
   }
 
   static class MagicOptions extends MoeOptions {

@@ -59,6 +59,6 @@ public class DummyDb implements Db {
         .append("\nMigrations:\n")
         .append(JOINER.join(migrations))
         .toString();
-    Injector.INSTANCE.ui.info(b);
+    Injector.INSTANCE.ui().info(b);
   }
 }

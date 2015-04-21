@@ -43,14 +43,15 @@ public class ChangeLogic {
       Codebase c, Writer destination, @Nullable RevisionMetadata rm) {
     DraftRevision r;
     try {
-      Ui.Task t = Injector.INSTANCE.ui.pushTask(
+      Ui.Task t =
+          Injector.INSTANCE.ui().pushTask(
           "push_codebase",
           "Putting files from Codebase into Writer");
       r = (rm == null) ? destination.putCodebase(c) : destination.putCodebase(c, rm);
-      Injector.INSTANCE.ui.popTask(t, "");
+      Injector.INSTANCE.ui().popTask(t, "");
       return r;
     } catch (WritingError e) {
-      Injector.INSTANCE.ui.error(e, "Error writing change");
+      Injector.INSTANCE.ui().error(e, "Error writing change");
     }
     return null;
   }

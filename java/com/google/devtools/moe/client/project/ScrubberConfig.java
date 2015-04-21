@@ -79,9 +79,10 @@ public class ScrubberConfig {
     // TODO(cgruber): Create a custom deserializer that does this logic once, on deserialization.
     if (usernamesFile != null) {
       try {
-        UsernamesConfig usernamesConfig = ProjectConfig.makeGson().fromJson(
-            Injector.INSTANCE.fileSystem.fileToString(new File(usernamesFile)),
-            UsernamesConfig.class);
+        UsernamesConfig usernamesConfig =
+            ProjectConfig.makeGson().fromJson(
+                Injector.INSTANCE.fileSystem().fileToString(new File(usernamesFile)),
+                UsernamesConfig.class);
         addUsernames(usernamesToScrub, usernamesConfig.getScrubbableUsernames());
         addUsernames(usernamesToPublish, usernamesConfig.getPublishableUsernames());
       } catch (IOException exception) {
@@ -116,5 +117,4 @@ public class ScrubberConfig {
     }
     return false;
   }
-
 }

@@ -96,7 +96,7 @@ public class FileDifference {
     @Override
     public FileDifference diffFiles(String relativeFilename, File file1, File file2) {
       // Diff their existence.
-      FileSystem fileSystem = Injector.INSTANCE.fileSystem;
+      FileSystem fileSystem = Injector.INSTANCE.fileSystem();
       boolean file1Exists = fileSystem.exists(file1);
       boolean file2Exists = fileSystem.exists(file2);
 
@@ -113,7 +113,7 @@ public class FileDifference {
       String contentDiff = null;
 
       try {
-       Injector.INSTANCE.cmd.runCommand(
+        Injector.INSTANCE.cmd().runCommand(
             "diff",
             // -N treats absent files as empty.
             ImmutableList.of("-N", file1.getAbsolutePath(), file2.getAbsolutePath()), "");

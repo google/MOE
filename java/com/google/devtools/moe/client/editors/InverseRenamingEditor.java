@@ -68,7 +68,7 @@ public class InverseRenamingEditor implements InverseEditor {
   @Override
   public Codebase inverseEdit(Codebase input, Codebase referenceFrom, Codebase referenceTo,
       ProjectContext context, Map<String, String> options) {
-    File tempDir = Injector.INSTANCE.fileSystem.getTemporaryDirectory("inverse_rename_run_");
+    File tempDir = Injector.INSTANCE.fileSystem().getTemporaryDirectory("inverse_rename_run_");
     inverseRenameAndCopy(input, tempDir, referenceTo);
     return new Codebase(tempDir, referenceTo.getProjectSpace(), referenceTo.getExpression());
   }
@@ -105,10 +105,10 @@ public class InverseRenamingEditor implements InverseEditor {
     File inputFile = new File(inputRoot, inputFilename);
     File destFile = new File(destRoot, destFilename);
     try {
-      Injector.INSTANCE.fileSystem.makeDirsForFile(destFile);
-      Injector.INSTANCE.fileSystem.copyFile(inputFile, destFile);
+      Injector.INSTANCE.fileSystem().makeDirsForFile(destFile);
+      Injector.INSTANCE.fileSystem().copyFile(inputFile, destFile);
     } catch (IOException e) {
-      Injector.INSTANCE.ui.error(e, e.getMessage());
+      Injector.INSTANCE.ui().error(e, e.getMessage());
       throw new MoeProblem(e.getMessage());
     }
   }

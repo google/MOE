@@ -46,7 +46,8 @@ public class SvnCodebaseCreator implements CodebaseCreator {
 
     Revision rev = revisionHistory.findHighestRevision(revId);
 
-    File exportPath = Injector.INSTANCE.fileSystem.getTemporaryDirectory(
+    File exportPath =
+        Injector.INSTANCE.fileSystem().getTemporaryDirectory(
         String.format("svn_export_%s_%s_", name, rev.revId));
 
     try {

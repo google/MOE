@@ -9,11 +9,9 @@ import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
-import com.google.devtools.moe.client.Moe;
 import com.google.devtools.moe.client.Ui;
-import com.google.devtools.moe.client.testing.TestingModule;
-
-import dagger.Provides;
+import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
+import com.google.devtools.moe.client.testing.RecordingUi;
 
 import junit.framework.TestCase;
 
@@ -22,8 +20,6 @@ import org.easymock.IMocksControl;
 
 import java.io.File;
 import java.util.List;
-
-import javax.inject.Singleton;
 
 /**
  * Unit tests for the CodebaseMerger class.
@@ -49,33 +45,17 @@ import javax.inject.Singleton;
  *
  */
 public class CodebaseMergerTest extends TestCase {
-
+  private final InMemoryProjectContextFactory contextFactory = new InMemoryProjectContextFactory();
+  private final RecordingUi ui = new RecordingUi();
   private final IMocksControl control = EasyMock.createControl();
   private final FileSystem fileSystem = control.createMock(FileSystem.class);
   private final CommandRunner cmd = control.createMock(CommandRunner.class);
   private Codebase orig, dest, mod;
 
-  // TODO(cgruber): Rework these when statics aren't inherent in the design.
-  @dagger.Component(modules = {TestingModule.class, Module.class})
-  @Singleton
-  interface Component extends Moe.Component {
-    @Override Injector context(); // TODO (b/19676630) Remove when bug is fixed.
-  }
-
-  @dagger.Module class Module {
-    @Provides public CommandRunner commandRunner() {
-      return cmd;
-    }
-    @Provides public FileSystem fileSystem() {
-      return fileSystem;
-    }
-  }
-
   @Override
   public void setUp() throws Exception {
     super.setUp();
-    Injector.INSTANCE = DaggerCodebaseMergerTest_Component.builder().module(new Module()).build()
-        .context();
+    Injector.INSTANCE = new Injector(fileSystem, cmd, contextFactory, ui);
     orig = control.createMock(Codebase.class);
     dest = control.createMock(Codebase.class);
     mod = control.createMock(Codebase.class);
@@ -397,7 +377,7 @@ public class CodebaseMergerTest extends TestCase {
    */
   public void testMerge() throws Exception {
     Ui ui = control.createMock(Ui.class);
-    Injector.INSTANCE.ui = ui;
+    Injector.INSTANCE = new Injector(fileSystem, cmd, contextFactory, ui);
 
     File mergedCodebaseLocation = new File("merged_codebase_7");
     expect(fileSystem.getTemporaryDirectory("merged_codebase_")).andReturn(mergedCodebaseLocation);

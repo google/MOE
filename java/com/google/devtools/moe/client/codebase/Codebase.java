@@ -88,7 +88,7 @@ public class Codebase {
    *         and not absolute paths.
    */
   public Set<String> getRelativeFilenames() {
-    return Utils.makeFilenamesRelative(Injector.INSTANCE.fileSystem.findFiles(path), path);
+    return Utils.makeFilenamesRelative(Injector.INSTANCE.fileSystem().findFiles(path), path);
   }
 
   /**

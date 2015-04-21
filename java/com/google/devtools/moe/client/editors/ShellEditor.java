@@ -50,7 +50,7 @@ public class ShellEditor implements Editor {
    */
   @Override
   public Codebase edit(Codebase input, ProjectContext context, Map<String, String> options) {
-    File tempDir = Injector.INSTANCE.fileSystem.getTemporaryDirectory("shell_run_");
+    File tempDir = Injector.INSTANCE.fileSystem().getTemporaryDirectory("shell_run_");
     try {
      Utils.copyDirectory(input.getPath(), tempDir);
     } catch (IOException e) {
@@ -59,8 +59,8 @@ public class ShellEditor implements Editor {
       throw new MoeProblem(e.getMessage());
     }
     try {
-      Injector.INSTANCE.cmd.runCommand("bash", ImmutableList.of("-c", this.commandString),
-          tempDir.getAbsolutePath());
+      Injector.INSTANCE.cmd().runCommand(
+          "bash", ImmutableList.of("-c", this.commandString), tempDir.getAbsolutePath());
     } catch (CommandRunner.CommandException e) {
       throw new MoeProblem(e.getMessage());
     }

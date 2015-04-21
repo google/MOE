@@ -48,14 +48,17 @@ public class DetermineMigrationsLogic {
         Lists.reverse(equivMatch.getRevisionsSinceEquivalence().getBreadthFirstHistory());
 
     if (revisionsSinceEquivalence.isEmpty()) {
-      Injector.INSTANCE.ui.info("No revisions found since last equivalence for migration '"
-          + migrationConfig.getName() + "'");
+      Injector.INSTANCE.ui().info(
+          "No revisions found since last equivalence for migration '" + migrationConfig.getName()
+              + "'");
       return ImmutableList.of();
     }
 
     // TODO(user): Figure out how to report all equivalences.
     Equivalence lastEq = equivMatch.getEquivalences().get(0);
-    Injector.INSTANCE.ui.info(String.format("Found %d revisions in %s since equivalence (%s): %s",
+    Injector.INSTANCE.ui().info(
+        String.format(
+            "Found %d revisions in %s since equivalence (%s): %s",
         revisionsSinceEquivalence.size(),
         migrationConfig.getFromRepository(),
         lastEq,

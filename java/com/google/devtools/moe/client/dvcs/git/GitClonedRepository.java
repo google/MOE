@@ -78,7 +78,7 @@ public class GitClonedRepository implements LocalClone {
 
     String tempDirName = String.format("git_clone_%s_", repositoryName);
     localCloneTempDir =
-        Injector.INSTANCE.fileSystem.getTemporaryDirectory(tempDirName, cloneLifetime);
+        Injector.INSTANCE.fileSystem().getTemporaryDirectory(tempDirName, cloneLifetime);
     Optional<String> branchName = repositoryConfig.getBranch();
 
     try {
@@ -121,11 +121,14 @@ public class GitClonedRepository implements LocalClone {
     if (Strings.isNullOrEmpty(revId)) {
       revId = "HEAD";
     }
-    File archiveLocation = Injector.INSTANCE.fileSystem.getTemporaryDirectory(
+    File archiveLocation =
+        Injector.INSTANCE.fileSystem().getTemporaryDirectory(
         String.format("git_archive_%s_%s_", repositoryName, revId),
         Lifetimes.currentTask());
     // Using this just to get a filename.
-    String tarballPath = Injector.INSTANCE.fileSystem.getTemporaryDirectory(
+    String tarballPath =
+        Injector.INSTANCE.fileSystem()
+            .getTemporaryDirectory(
         String.format("git_tarball_%s_%s.tar.", repositoryName, revId),
         Lifetimes.currentTask()).getAbsolutePath();
     try {
@@ -141,10 +144,10 @@ public class GitClonedRepository implements LocalClone {
           revId);
 
       // Make the directory to untar into
-      Injector.INSTANCE.fileSystem.makeDirs(archiveLocation);
+      Injector.INSTANCE.fileSystem().makeDirs(archiveLocation);
 
       // Untar the tarball we just made
-      Injector.INSTANCE.cmd.runCommand(
+      Injector.INSTANCE.cmd().runCommand(
           "tar",
           ImmutableList.<String>of(
               "xf",
@@ -173,7 +176,9 @@ public class GitClonedRepository implements LocalClone {
    * @return a string containing the STDOUT result
    */
   String runGitCommand(String... args) throws CommandException {
-    return Injector.INSTANCE.cmd.runCommand("git", ImmutableList.copyOf(args),
+    return Injector.INSTANCE.cmd().runCommand(
+        "git",
+        ImmutableList.copyOf(args),
         getLocalTempDir().getAbsolutePath() /*workingDirectory*/);
   }
 }

@@ -2,8 +2,8 @@
 
 package com.google.devtools.moe.client.directives;
 
-import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeOptions;
+import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.logic.MergeCodebasesLogic;
@@ -11,8 +11,11 @@ import com.google.devtools.moe.client.parser.Parser;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.ProjectContext;
+import com.google.devtools.moe.client.project.ProjectContextFactory;
 
 import org.kohsuke.args4j.Option;
+
+import javax.inject.Inject;
 
 /**
  * Merge three codebases into one.
@@ -20,9 +23,17 @@ import org.kohsuke.args4j.Option;
  * See MergeCodebasesLogic.merge() for a more detailed description.
  *
  */
-public class MergeCodebasesDirective implements Directive {
-
+public class MergeCodebasesDirective extends Directive {
   private final MergeCodebasesOptions options = new MergeCodebasesOptions();
+
+  private final ProjectContextFactory contextFactory;
+  private final Ui ui;
+
+  @Inject
+  MergeCodebasesDirective(ProjectContextFactory contextFactory, Ui ui) {
+    this.contextFactory = contextFactory;
+    this.ui = ui;
+  }
 
   @Override
   public MoeOptions getFlags() {
@@ -33,9 +44,9 @@ public class MergeCodebasesDirective implements Directive {
   public int perform() {
     ProjectContext context;
     try {
-      context = Injector.INSTANCE.contextFactory.makeProjectContext(options.configFilename);
+      context = contextFactory.makeProjectContext(options.configFilename);
     } catch (InvalidProject e) {
-      Injector.INSTANCE.ui.error(e, "Error creating project");
+      ui.error(e, "Error creating project");
       return 1;
     }
 
@@ -46,16 +57,21 @@ public class MergeCodebasesDirective implements Directive {
       destinationCodebase =
           Parser.parseExpression(options.destinationCodebase).createCodebase(context);
     } catch (ParseError e) {
-      Injector.INSTANCE.ui.error(e, "Error parsing");
+      ui.error(e, "Error parsing");
       return 1;
     } catch (CodebaseCreationError e) {
-      Injector.INSTANCE.ui.error(e, "Error creating codebase");
+      ui.error(e, "Error creating codebase");
       return 1;
     }
     Codebase mergedCodebase = MergeCodebasesLogic.merge(originalCodebase, destinationCodebase,
         modifiedCodebase);
 
     return 0;
+  }
+
+  @Override
+  public String getDescription() {
+    return "Merges three codebases into a new codebase";
   }
 
   static class MergeCodebasesOptions extends MoeOptions {

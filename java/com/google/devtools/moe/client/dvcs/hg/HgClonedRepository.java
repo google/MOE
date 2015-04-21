@@ -76,7 +76,7 @@ public class HgClonedRepository implements LocalClone {
 
     String tempDirName = String.format("hg_clone_%s_", repositoryName);
     localCloneTempDir =
-        Injector.INSTANCE.fileSystem.getTemporaryDirectory(tempDirName, cloneLifetime);
+        Injector.INSTANCE.fileSystem().getTemporaryDirectory(tempDirName, cloneLifetime);
 
     try {
       Optional<String> branchName = repositoryConfig.getBranch();
@@ -112,7 +112,8 @@ public class HgClonedRepository implements LocalClone {
   @Override
   public File archiveAtRevision(String revId) {
     Preconditions.checkState(clonedLocally);
-    File archiveLocation = Injector.INSTANCE.fileSystem.getTemporaryDirectory(
+    File archiveLocation =
+        Injector.INSTANCE.fileSystem().getTemporaryDirectory(
         String.format("hg_archive_%s_%s_", repositoryName, revId), Lifetimes.currentTask());
     try {
       ImmutableList.Builder<String> archiveArgs = ImmutableList.<String>builder();
@@ -121,7 +122,8 @@ public class HgClonedRepository implements LocalClone {
         archiveArgs.add("--rev=" + revId);
       }
       HgRepository.runHgCommand(archiveArgs.build(), localCloneTempDir.getAbsolutePath());
-      Injector.INSTANCE.fileSystem.deleteRecursively(new File(archiveLocation, ".hg_archival.txt"));
+      Injector.INSTANCE.fileSystem().deleteRecursively(
+          new File(archiveLocation, ".hg_archival.txt"));
     } catch (CommandException e) {
       throw new MoeProblem(
           "Could not archive hg clone at " + localCloneTempDir.getAbsolutePath() + ": " + e.stderr);
@@ -140,7 +142,7 @@ public class HgClonedRepository implements LocalClone {
    * @return the stdout output of the command
    */
   String runHgCommand(String... args) throws CommandException {
-    return Injector.INSTANCE.cmd.runCommand("hg", ImmutableList.copyOf(args),
-        getLocalTempDir().getAbsolutePath() /*workingDirectory*/);
+    return Injector.INSTANCE.cmd().runCommand(
+        "hg", ImmutableList.copyOf(args), getLocalTempDir().getAbsolutePath() /*workingDirectory*/);
   }
 }

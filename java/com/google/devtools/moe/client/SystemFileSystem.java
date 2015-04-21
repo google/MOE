@@ -29,10 +29,10 @@ import javax.inject.Singleton;
  * @author dbentley@google.com (Daniel Bentley)
  */
 public class SystemFileSystem implements FileSystem {
-
   private final Map<File, Lifetime> tempDirLifetimes = Maps.newHashMap();
 
-  @Inject SystemFileSystem() {}
+  @Inject
+  public SystemFileSystem() {}
 
   @Override
   public File getTemporaryDirectory(String prefix) {

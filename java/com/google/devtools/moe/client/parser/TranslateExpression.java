@@ -45,7 +45,8 @@ public class TranslateExpression extends AbstractExpression {
               context.translators.keySet()));
     }
 
-    Ui.Task translateTask = Injector.INSTANCE.ui.pushTask(
+    Ui.Task translateTask =
+        Injector.INSTANCE.ui().pushTask(
         "translate",
         String.format(
             "Translating %s from project space \"%s\" to \"%s\"",
@@ -56,9 +57,9 @@ public class TranslateExpression extends AbstractExpression {
 
     // Don't mark the translated codebase for persistence if it wasn't allocated by the Translator.
     if (translatedCodebase.equals(codebaseToTranslate)) {
-      Injector.INSTANCE.ui.popTask(translateTask, translatedCodebase.getPath() + " (unmodified)");
+      Injector.INSTANCE.ui().popTask(translateTask, translatedCodebase.getPath() + " (unmodified)");
     } else {
-      Injector.INSTANCE.ui.popTaskAndPersist(translateTask, translatedCodebase.getPath());
+      Injector.INSTANCE.ui().popTaskAndPersist(translateTask, translatedCodebase.getPath());
     }
     return translatedCodebase.copyWithExpression(this).copyWithProjectSpace(toProjectSpace);
   }

@@ -2,20 +2,15 @@
 
 package com.google.devtools.moe.client;
 
-import com.google.common.collect.Lists;
-import com.google.devtools.moe.client.directives.Directive;
-import com.google.devtools.moe.client.directives.DirectiveFactory;
+import static com.google.devtools.moe.client.Ui.MOE_TERMINATION_TASK_NAME;
 
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
+import com.google.devtools.moe.client.directives.Directive;
+import com.google.devtools.moe.client.directives.Directives;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.inject.Singleton;
 
@@ -30,7 +25,6 @@ import javax.inject.Singleton;
  * @author dbentley@google.com (Daniel Bentley)
  */
 public class Moe {
-  private static final Logger logger = Logger.getLogger(Moe.class.getName());
   static final Logger allMoeLogger = Logger.getLogger("com.google.devtools.moe");
 
   /**
@@ -39,8 +33,10 @@ public class Moe {
   // TODO(cgruber): Turn Injector into the component.
   @Singleton
   @dagger.Component(modules = MoeModule.class)
-  public interface Component {
-    Injector context(); // Legacy context object for static initialization.
+  public abstract static class Component {
+    public abstract Injector context(); // Legacy context object for static initialization.
+
+    public abstract Directives directives();
   }
 
   /**
@@ -50,26 +46,44 @@ public class Moe {
     ConsoleHandler sysErrHandler = new ConsoleHandler();
     sysErrHandler.setLevel(Level.WARNING);
     allMoeLogger.addHandler(sysErrHandler);
-
     allMoeLogger.setUseParentHandlers(false);
+    System.exit(doMain(args));
+  }
 
+  /** Implements the main method logic for Moe, returning an error code if there is any */
+  static int doMain(String... args) {
     if (args.length < 1) {
       System.err.println("Usage: moe <directive>");
-      System.exit(1);
+      return 1;
     }
-
-    // This needs to get called first, so that DirectiveFactory can report
-    // errors appropriately.
+    // This needs to get called first, so that DirectiveFactory can report errors appropriately.
     Moe.Component component = DaggerMoe_Component.create();
     Injector.INSTANCE = component.context();
 
     try {
-      directiveMain(args);
+      Directive d = component.directives().getDirective(args[0]);
+      if (d == null) {
+        return 1; // Directive lookup will have reported the error already..
+      }
+      boolean parseError = !d.parseFlags(args);
+      if (d.getFlags().shouldDisplayHelp() || parseError) {
+        return parseError ? 1 : 0;
+      }
+      int result = d.perform();
+      Ui.Task terminateTask =
+          Injector.INSTANCE.ui().pushTask(MOE_TERMINATION_TASK_NAME, "Final clean-up");
+      Injector.INSTANCE.fileSystem().cleanUpTempDirs();
+      Injector.INSTANCE.ui().popTask(terminateTask, "");
+      return result;
+    } catch (MoeProblem m) {
+      // TODO(dbentley): implement verbose mode; if it is above a threshold, print a stack trace.
+      Injector.INSTANCE.ui().error(m, "Moe encountered a problem; look above for explanation");
+      return 1;
     } catch (IOException e) {
-      System.exit(1);
-
+      return 1;
     }
-    return;
+    // Exit early since we're postponing Task usage until post-dagger2.
+
     /*
     // Tasks are a work in progress, which are only currently used to implement a
     // HelloWorld style trivial task.  For now, leave them be until we get directive/task
@@ -105,81 +119,6 @@ public class Moe {
     }
     System.exit(result.exitCode);
     */
-  }
-
-  // TODO(dbentley): remove all of this code when we're finished moving to Task
-  public static void directiveMain(String[] args) throws IOException {
-    if (args.length < 1) {
-      System.err.println("Usage: moe <directive>");
-      System.exit(1);
-    }
-
-    Directive d = DirectiveFactory.makeDirective(args[0]);
-    if (d == null) {
-      // DirectiveFactory.makeDirective has failed and reported the error.
-      System.exit(1);
-    }
-
-    MoeOptions flags = d.getFlags();
-    CmdLineParser parser = new CmdLineParser(flags);
-    boolean parseError = false;
-    try {
-      List<String> nextArgs = Lists.newArrayList(args);
-      nextArgs.remove(0); // Remove the directive.
-      parser.parseArgument(
-          processArgs(nextArgs).toArray(new String[] {}));
-    } catch (CmdLineException e) {
-      logger.log(Level.SEVERE, "Failure", e);
-      parseError = true;
-    }
-
-    if (flags.shouldDisplayHelp() || parseError) {
-      parser.printUsage(System.err);
-      System.exit(parseError ? 1 : 0);
-    }
-
-    try {
-      int result = d.perform();
-      Ui.Task terminateTask = Injector.INSTANCE.ui.pushTask(
-          Ui.MOE_TERMINATION_TASK_NAME, "Final clean-up");
-      Injector.INSTANCE.fileSystem.cleanUpTempDirs();
-      Injector.INSTANCE.ui.popTask(terminateTask, "");
-      System.exit(result);
-    } catch (MoeProblem m) {
-      // TODO(dbentley): have an option for verbosity; if it is above a threshold, print
-      // a stack trace.
-      Injector.INSTANCE.ui.error(
-          m, "Moe encountered a problem; look above for explanation");
-      System.exit(1);
-    }
-  }
-
-  private static List<String> processArgs(List<String> args) {
-    // Args4j has a different format that the old command-line parser.
-    // So we use some voodoo to get the args into the format that args4j
-    // expects.
-    Pattern argPattern = Pattern.compile("(--[a-zA-Z_]+)=(.*)");
-    Pattern quotesPattern = Pattern.compile("^['\"](.*)['\"]$");
-    List<String> processedArgs = Lists.newArrayList();
-
-    for (String arg : args) {
-      Matcher matcher = argPattern.matcher(arg);
-      if (matcher.matches()) {
-        processedArgs.add(matcher.group(1));
-
-        String value = matcher.group(2);
-        Matcher quotesMatcher = quotesPattern.matcher(value);
-        if (quotesMatcher.matches()) {
-          processedArgs.add(quotesMatcher.group(1));
-        } else {
-          processedArgs.add(value);
-        }
-      } else {
-        processedArgs.add(arg);
-      }
-    }
-
-    return processedArgs;
   }
 
   private Moe() {}

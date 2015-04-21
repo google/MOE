@@ -9,7 +9,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.Injector;
-import com.google.devtools.moe.client.Moe;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.NullFileSystemModule;
 import com.google.devtools.moe.client.database.Equivalence;
@@ -58,8 +57,8 @@ public class HgRevisionHistoryTest extends TestCase {
   // TODO(cgruber): Rework these when statics aren't inherent in the design.
   @dagger.Component(modules = {TestingModule.class, NullFileSystemModule.class, Module.class})
   @Singleton
-  interface Component extends Moe.Component {
-    @Override Injector context(); // TODO (b/19676630) Remove when bug is fixed.
+  interface Component {
+    Injector context(); // TODO (b/19676630) Remove when bug is fixed.
   }
 
   @dagger.Module class Module {

@@ -35,10 +35,9 @@ public class FindEquivalenceLogic {
         }
       }
       if (equivalences.isEmpty()) {
-        Injector.INSTANCE.ui.info(
-            noEquivalenceBuilder(rev.repositoryName, rev.revId, inRepo));
+        Injector.INSTANCE.ui().info(noEquivalenceBuilder(rev.repositoryName, rev.revId, inRepo));
       } else {
-        Injector.INSTANCE.ui.info(
+        Injector.INSTANCE.ui().info(
           equivalenceBuilder(rev.repositoryName, rev.revId,
               inRepo, result.toString()));
       }

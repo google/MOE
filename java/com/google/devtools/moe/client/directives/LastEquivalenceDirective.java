@@ -3,9 +3,9 @@
 package com.google.devtools.moe.client.directives;
 
 import com.google.common.base.Joiner;
-import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeOptions;
 import com.google.devtools.moe.client.MoeProblem;
+import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.database.Db;
 import com.google.devtools.moe.client.database.Equivalence;
 import com.google.devtools.moe.client.database.FileDb;
@@ -15,6 +15,7 @@ import com.google.devtools.moe.client.parser.Parser.ParseError;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.ProjectContext;
+import com.google.devtools.moe.client.project.ProjectContextFactory;
 import com.google.devtools.moe.client.repositories.Repository;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
@@ -24,13 +25,23 @@ import org.kohsuke.args4j.Option;
 
 import java.util.List;
 
+import javax.inject.Inject;
+
 /**
  * Get the last Equivalence between two repositories.
  *
  */
-public class LastEquivalenceDirective implements Directive {
-
+public class LastEquivalenceDirective extends Directive {
   private final LastEquivalenceOptions options = new LastEquivalenceOptions();
+
+  private final ProjectContextFactory contextFactory;
+  private final Ui ui;
+
+  @Inject
+  LastEquivalenceDirective(ProjectContextFactory contextFactory, Ui ui) {
+    this.contextFactory = contextFactory;
+    this.ui = ui;
+  }
 
   @Override
   public MoeOptions getFlags() {
@@ -41,9 +52,9 @@ public class LastEquivalenceDirective implements Directive {
   public int perform() {
     ProjectContext context;
     try {
-      context = Injector.INSTANCE.contextFactory.makeProjectContext(options.configFilename);
+      context = contextFactory.makeProjectContext(options.configFilename);
     } catch (InvalidProject e) {
-      Injector.INSTANCE.ui.error(e, "Error creating project");
+      ui.error(e, "Error creating project");
       return 1;
     }
 
@@ -55,7 +66,7 @@ public class LastEquivalenceDirective implements Directive {
       try {
         db = FileDb.makeDbFromFile(options.dbLocation);
       } catch (MoeProblem e) {
-        Injector.INSTANCE.ui.error(e, "Couldn't create DB");
+        ui.error(e, "Couldn't create DB");
         return 1;
       }
     }
@@ -64,7 +75,7 @@ public class LastEquivalenceDirective implements Directive {
     try {
       repoEx = Parser.parseRepositoryExpression(options.fromRepository);
     } catch (ParseError e) {
-      Injector.INSTANCE.ui.error(e, "Couldn't parse " + options.fromRepository);
+      ui.error(e, "Couldn't parse " + options.fromRepository);
       return 1;
     }
 
@@ -72,7 +83,7 @@ public class LastEquivalenceDirective implements Directive {
 
     RevisionHistory rh = r.revisionHistory;
     if (rh == null) {
-      Injector.INSTANCE.ui.error("Repository " + r.name + " does not support revision history.");
+      ui.error("Repository " + r.name + " does not support revision history.");
       return 1;
     }
 
@@ -82,15 +93,22 @@ public class LastEquivalenceDirective implements Directive {
         options.withRepository, rev, db, rh);
 
     if (lastEquivs.isEmpty()) {
-      Injector.INSTANCE.ui.info(
-          String.format("No equivalence was found between %s and %s starting from %s.",
-              rev.repositoryName, options.withRepository, rev));
+      ui.info(
+          String.format(
+              "No equivalence was found between %s and %s starting from %s.",
+              rev.repositoryName,
+              options.withRepository,
+              rev));
     } else {
-      Injector.INSTANCE.ui.info(String.format(
-          "Last equivalence: %s", Joiner.on(", ").join(lastEquivs)));
+      ui.info(String.format("Last equivalence: %s", Joiner.on(", ").join(lastEquivs)));
     }
 
     return 0;
+  }
+
+  @Override
+  public String getDescription() {
+    return "Finds the last equivalence";
   }
 
   static class LastEquivalenceOptions extends MoeOptions {

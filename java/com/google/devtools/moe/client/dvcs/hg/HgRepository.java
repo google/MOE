@@ -73,6 +73,6 @@ public class HgRepository {
 
   static String runHgCommand(List<String> args, String workingDirectory)
       throws CommandRunner.CommandException {
-    return Injector.INSTANCE.cmd.runCommand("hg", args, workingDirectory);
+    return Injector.INSTANCE.cmd().runCommand("hg", args, workingDirectory);
   }
 }

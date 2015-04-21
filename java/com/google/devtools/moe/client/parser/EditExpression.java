@@ -37,13 +37,14 @@ public class EditExpression extends AbstractExpression {
       throw new CodebaseCreationError("no editor " + editorName);
     }
 
-    Ui.Task editTask = Injector.INSTANCE.ui.pushTask(
+    Ui.Task editTask =
+        Injector.INSTANCE.ui().pushTask(
         "edit",
         "Editing " + codebaseToEdit.getPath() + " with editor " + editor.getDescription());
 
     Codebase editedCodebase = editor.edit(codebaseToEdit, context, editOp.term.options);
 
-    Injector.INSTANCE.ui.popTaskAndPersist(editTask, editedCodebase.getPath());
+    Injector.INSTANCE.ui().popTaskAndPersist(editTask, editedCodebase.getPath());
     return editedCodebase.copyWithExpression(this);
   }
 

@@ -23,12 +23,12 @@ public class DiffCodebasesLogic {
     CodebaseDifference diff = CodebaseDifference.diffCodebases(c1, c2);
 
     if (diff.areDifferent()) {
-      Injector.INSTANCE.ui.info(
+      Injector.INSTANCE.ui().info(
           String.format("Codebases \"%s\" and \"%s\" differ:\n%s",
                         c1.toString(), c2.toString(),
                         new PatchCodebaseDifferenceRenderer().render(diff)));
     } else {
-      Injector.INSTANCE.ui.info(
+      Injector.INSTANCE.ui().info(
           String.format("Codebases \"%s\" and \"%s\" are identical",
                         c1.toString(), c2.toString()));
     }

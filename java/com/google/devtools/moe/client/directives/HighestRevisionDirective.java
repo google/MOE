@@ -2,29 +2,38 @@
 
 package com.google.devtools.moe.client.directives;
 
-import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeOptions;
+import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.parser.Parser;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.ProjectContext;
+import com.google.devtools.moe.client.project.ProjectContextFactory;
 import com.google.devtools.moe.client.repositories.Repository;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
 
 import org.kohsuke.args4j.Option;
 
+import javax.inject.Inject;
+
 /**
  * Print the head revision of a repository.
  *
  * @author dbentley@google.com (Daniel Bentley)
  */
-public class HighestRevisionDirective implements Directive {
-
+public class HighestRevisionDirective extends Directive {
   private final HighestRevisionOptions options = new HighestRevisionOptions();
 
-  public HighestRevisionDirective() {}
+  private final ProjectContextFactory contextFactory;
+  private final Ui ui;
+
+  @Inject
+  HighestRevisionDirective(ProjectContextFactory contextFactory, Ui ui) {
+    this.contextFactory = contextFactory;
+    this.ui = ui;
+  }
 
   @Override
   public HighestRevisionOptions getFlags() {
@@ -35,9 +44,9 @@ public class HighestRevisionDirective implements Directive {
   public int perform() {
     ProjectContext context;
     try {
-      context = Injector.INSTANCE.contextFactory.makeProjectContext(options.configFilename);
+      context = contextFactory.makeProjectContext(options.configFilename);
     } catch (InvalidProject e) {
-      Injector.INSTANCE.ui.error(e, "Couldn't create project");
+      ui.error(e, "Couldn't create project");
       return 1;
     }
 
@@ -45,7 +54,7 @@ public class HighestRevisionDirective implements Directive {
     try {
       repoEx = Parser.parseRepositoryExpression(options.repository);
     } catch (ParseError e) {
-      Injector.INSTANCE.ui.error(e, "Couldn't parse " + options.repository);
+      ui.error(e, "Couldn't parse " + options.repository);
       return 1;
     }
 
@@ -53,7 +62,7 @@ public class HighestRevisionDirective implements Directive {
 
     RevisionHistory rh = r.revisionHistory;
     if (rh == null) {
-      Injector.INSTANCE.ui.error("Repository " + r.name + " does not support revision history.");
+      ui.error("Repository " + r.name + " does not support revision history.");
       return 1;
     }
 
@@ -62,8 +71,13 @@ public class HighestRevisionDirective implements Directive {
       return 1;
     }
 
-    Injector.INSTANCE.ui.info("Highest revision in repository \"" + r.name + "\": " + rev.revId);
+    ui.info("Highest revision in repository \"" + r.name + "\": " + rev.revId);
     return 0;
+  }
+
+  @Override
+  public String getDescription() {
+    return "Finds the highest revision in a source control repository";
   }
 
   static class HighestRevisionOptions extends MoeOptions {

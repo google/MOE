@@ -7,14 +7,10 @@ import static org.easymock.EasyMock.expect;
 import com.google.common.base.Joiner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
-import com.google.devtools.moe.client.Moe;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.SystemCommandRunner;
-import com.google.devtools.moe.client.project.ProjectContextFactory;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
 import com.google.devtools.moe.client.testing.RecordingUi;
-
-import dagger.Provides;
 
 import junit.framework.TestCase;
 
@@ -23,51 +19,29 @@ import org.easymock.IMocksControl;
 
 import java.io.File;
 
-import javax.inject.Singleton;
-
 /**
  * Tests for NoteEquivalenceDirective.
  *
  */
 public class NoteEquivalenceDirectiveTest extends TestCase {
-
+  public final InMemoryProjectContextFactory contextFactory = new InMemoryProjectContextFactory();
+  public final RecordingUi ui = new RecordingUi();
   private final IMocksControl control = EasyMock.createControl();
   private final FileSystem mockFs = control.createMock(FileSystem.class);
+  private final SystemCommandRunner cmd = new SystemCommandRunner(ui);
 
   NoteEquivalenceDirective d;
 
-  // TODO(cgruber): Rework these when statics aren't inherent in the design.
-  @dagger.Component(modules = {
-      RecordingUi.Module.class,
-      SystemCommandRunner.Module.class,
-      Module.class})
-  @Singleton
-  interface Component extends Moe.Component {
-    @Override Injector context(); // TODO (b/19676630) Remove when bug is fixed.
-  }
-
-  @dagger.Module class Module {
-    @Provides public FileSystem fileSystem() {
-      return mockFs;
-    }
-    @Provides public ProjectContextFactory projectContextFactory() {
-      InMemoryProjectContextFactory contextFactory = new InMemoryProjectContextFactory();
-      contextFactory.projectConfigs.put(
-          "moe_config.txt",
-          "{'name': 'foo', 'repositories': {" +
-          "'internal': {'type': 'dummy'}, 'public': {'type': 'dummy'}" +
-          "}}");
-      return contextFactory;
-    }
-  }
-
   @Override
   public void setUp() throws Exception {
+    contextFactory.projectConfigs.put(
+        "moe_config.txt",
+        "{'name': 'foo', 'repositories': {"
+            + "  'internal': {'type': 'dummy'}, 'public': {'type': 'dummy'}" + "}}");
     super.setUp();
-    Injector.INSTANCE = DaggerNoteEquivalenceDirectiveTest_Component.builder().module(new Module())
-        .build().context();
+    Injector.INSTANCE = new Injector(mockFs, cmd, contextFactory, ui);
 
-    d = new NoteEquivalenceDirective();
+    d = new NoteEquivalenceDirective(contextFactory, mockFs, ui);
     d.getFlags().configFilename = "moe_config.txt";
     d.getFlags().dbLocation = "/foo/db.txt";
   }

@@ -83,7 +83,7 @@ public class GitWriter extends AbstractDvcsWriter<GitClonedRepository> {
       throw new MoeProblem("'git' command error: " + e);
     }
 
-    Ui ui = Injector.INSTANCE.ui;
+    Ui ui = Injector.INSTANCE.ui();
     ui.info("=====");
     ui.info("MOE changes have been committed to a clone at " + getRoot());
     if (moeBranchName.startsWith(GitClonedRepository.MOE_MIGRATIONS_BRANCH_PREFIX)) {

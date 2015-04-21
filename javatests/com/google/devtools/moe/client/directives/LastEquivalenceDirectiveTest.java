@@ -3,44 +3,32 @@
 package com.google.devtools.moe.client.directives;
 
 import com.google.devtools.moe.client.Injector;
-import com.google.devtools.moe.client.Moe;
-import com.google.devtools.moe.client.NullFileSystemModule;
 import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
 import com.google.devtools.moe.client.testing.RecordingUi;
-import com.google.devtools.moe.client.testing.TestingModule;
 
 import junit.framework.TestCase;
-
-import javax.inject.Singleton;
 
 /**
  * Unit test for LastEquivalenceDirective.
  *
  */
 public class LastEquivalenceDirectiveTest extends TestCase {
-  // TODO(cgruber): Rework these when statics aren't inherent in the design.
-  @dagger.Component(modules = {
-      TestingModule.class,
-      SystemCommandRunner.Module.class,
-      NullFileSystemModule.class})
-  @Singleton
-  interface Component extends Moe.Component {
-    @Override Injector context(); // TODO (b/19676630) Remove when bug is fixed.
-  }
+  private final InMemoryProjectContextFactory contextFactory = new InMemoryProjectContextFactory();
+  private final RecordingUi ui = new RecordingUi();
+  private final SystemCommandRunner cmd = new SystemCommandRunner(ui);
 
   @Override
   public void setUp() throws Exception {
     super.setUp();
-    Injector.INSTANCE = DaggerCreateCodebaseDirectiveTest_Component.create().context();
+    Injector.INSTANCE = new Injector(null, cmd, contextFactory, ui);
   }
 
   public void testPerform() throws Exception {
-    ((InMemoryProjectContextFactory) Injector.INSTANCE.contextFactory).projectConfigs.put(
+    contextFactory.projectConfigs.put(
         "moe_config.txt",
-        "{\"name\": \"foo\", \"repositories\": {" +
-        "\"internal\": {\"type\": \"dummy\"}}}");
-    LastEquivalenceDirective d = new LastEquivalenceDirective();
+        "{\"name\": \"foo\", \"repositories\": {\"internal\": {\"type\": \"dummy\"}}}");
+    LastEquivalenceDirective d = new LastEquivalenceDirective(contextFactory, ui);
     LastEquivalenceDirective.LastEquivalenceOptions options =
         ((LastEquivalenceDirective.LastEquivalenceOptions) d.getFlags());
     options.configFilename = "moe_config.txt";
@@ -49,6 +37,6 @@ public class LastEquivalenceDirectiveTest extends TestCase {
     options.withRepository = "public";
     assertEquals(0, d.perform());
     assertEquals("Last equivalence: internal{1} == public{1}",
-                 ((RecordingUi) Injector.INSTANCE.ui).lastInfo);
+        ((RecordingUi) Injector.INSTANCE.ui()).lastInfo);
   }
 }
