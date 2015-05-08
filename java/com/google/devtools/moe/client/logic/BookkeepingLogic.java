@@ -46,8 +46,8 @@ public class BookkeepingLogic {
   private static void updateHeadEquivalence(String fromRepository, String toRepository,
                                             Db db, ProjectContext context) {
     Codebase to, from;
-    RevisionHistory fromHistory = context.getRepository(fromRepository).revisionHistory;
-    RevisionHistory toHistory = context.getRepository(toRepository).revisionHistory;
+    RevisionHistory fromHistory = context.getRepository(fromRepository).revisionHistory();
+    RevisionHistory toHistory = context.getRepository(toRepository).revisionHistory();
     Revision toHead = toHistory.findHighestRevision(null);
     Revision fromHead = fromHistory.findHighestRevision(null);
 
@@ -79,7 +79,7 @@ public class BookkeepingLogic {
   private static void updateCompletedMigrations(
       String fromRepository, String toRepository, Db db, ProjectContext context, boolean inverse) {
 
-    RevisionHistory toHistory = context.getRepository(toRepository).revisionHistory;
+    RevisionHistory toHistory = context.getRepository(toRepository).revisionHistory();
     EquivalenceMatchResult equivMatch = toHistory.findRevisions(
         null /*revision*/,
         new EquivalenceMatcher(fromRepository, db),

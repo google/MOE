@@ -24,7 +24,7 @@ import org.joda.time.DateTime;
 public class DummyRepository {
 
   public static class DummyRevisionHistory implements RevisionHistory {
-    private String name;
+    private final String name;
 
     public DummyRevisionHistory(String name) {
       this.name = name;
@@ -79,7 +79,7 @@ public class DummyRepository {
 
     WriterCreator writerCreator = new DummyWriterCreator(repositoryName);
 
-    return new Repository(repositoryName, revisionHistory, codebaseCreator, writerCreator);
+    return Repository.create(repositoryName, revisionHistory, codebaseCreator, writerCreator);
   }
 
 }

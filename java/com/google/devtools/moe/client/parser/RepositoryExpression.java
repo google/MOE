@@ -65,7 +65,7 @@ public class RepositoryExpression extends AbstractExpression {
       cc = new FileCodebaseCreator();
     } else {
       Repository repo = context.getRepository(repositoryName);
-      cc = repo.codebaseCreator;
+      cc = repo.codebaseCreator();
     }
 
     Ui.Task createTask =
@@ -84,7 +84,7 @@ public class RepositoryExpression extends AbstractExpression {
    */
   public Writer createWriter(ProjectContext context) throws WritingError {
     Repository r = context.getRepository(term.identifier);
-    WriterCreator wc = r.writerCreator;
+    WriterCreator wc = r.writerCreator();
 
     Ui.Task t =
         Injector.INSTANCE.ui().pushTask(

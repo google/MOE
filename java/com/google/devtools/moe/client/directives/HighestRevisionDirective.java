@@ -60,9 +60,9 @@ public class HighestRevisionDirective extends Directive {
 
     Repository r = context.getRepository(repoEx.getRepositoryName());
 
-    RevisionHistory rh = r.revisionHistory;
+    RevisionHistory rh = r.revisionHistory();
     if (rh == null) {
-      ui.error("Repository " + r.name + " does not support revision history.");
+      ui.error("Repository " + r.name() + " does not support revision history.");
       return 1;
     }
 
@@ -71,7 +71,7 @@ public class HighestRevisionDirective extends Directive {
       return 1;
     }
 
-    ui.info("Highest revision in repository \"" + r.name + "\": " + rev.revId);
+    ui.info("Highest revision in repository \"" + r.name() + "\": " + rev.revId);
     return 0;
   }
 

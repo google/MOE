@@ -39,7 +39,7 @@ public class DetermineMigrationsLogic {
     // TODO(user): Decide whether to migrate linear or graph history here. Once DVCS Writers
     // support writing a graph of Revisions, we'll need to opt for linear or graph history based
     // on the MigrationConfig (e.g. whether or not the destination repo is linear-only).
-    EquivalenceMatchResult equivMatch = fromRepo.revisionHistory.findRevisions(
+    EquivalenceMatchResult equivMatch = fromRepo.revisionHistory().findRevisions(
         null,  // Start at head.
         new EquivalenceMatcher(migrationConfig.getToRepository(), db),
         SearchType.LINEAR);

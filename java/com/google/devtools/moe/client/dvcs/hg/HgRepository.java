@@ -68,7 +68,7 @@ public class HgRepository {
 
     HgWriterCreator wc = new HgWriterCreator(freshSupplier, rh);
 
-    return new Repository(name, rh, cc, wc);
+    return Repository.create(name, rh, cc, wc);
   }
 
   static String runHgCommand(List<String> args, String workingDirectory)

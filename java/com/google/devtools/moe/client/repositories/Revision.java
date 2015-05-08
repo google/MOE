@@ -46,13 +46,13 @@ public class Revision {
               Objects.equals(revId, revisionObj.revId));
     }
     return false;
-  }  
-  
+  }
+
   @Override
   public String toString() {
     return this.repositoryName + "{" + revId + "}";
   }
-  
+
   /**
    * Return the list of Revisions given by a RepositoryExpression like "internal(revision=3,4,5)".
    */
@@ -64,7 +64,7 @@ public class Revision {
           "Repository expression must have a 'revision' option, e.g. internal(revision=3,4,5).");
     }
 
-    RevisionHistory rh = repo.revisionHistory;
+    RevisionHistory rh = repo.revisionHistory();
     ImmutableList.Builder<Revision> revBuilder = ImmutableList.builder();
     for (String revId : repoEx.getOption("revision").split(",")) {
       revBuilder.add(rh.findHighestRevision(revId));

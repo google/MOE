@@ -39,7 +39,7 @@ public class SvnRepository {
 
     SvnWriterCreator ec = new SvnWriterCreator(config, rh);
 
-    return new Repository(name, rh, cc, ec);
+    return Repository.create(name, rh, cc, ec);
   }
 
   static String runSvnCommand(List<String> args, String workingDirectory)

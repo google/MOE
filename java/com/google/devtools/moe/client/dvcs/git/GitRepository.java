@@ -69,7 +69,7 @@ public class GitRepository {
 
     GitWriterCreator wc = new GitWriterCreator(freshSupplier, rh);
 
-    return new Repository(name, rh, cc, wc);
+    return Repository.create(name, rh, cc, wc);
   }
 
   /**

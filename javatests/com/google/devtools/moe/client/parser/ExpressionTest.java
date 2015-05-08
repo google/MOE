@@ -22,7 +22,9 @@ import com.google.devtools.moe.client.editors.TranslatorPath;
 import com.google.devtools.moe.client.editors.TranslatorStep;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.Repository;
+import com.google.devtools.moe.client.repositories.RevisionHistory;
 import com.google.devtools.moe.client.testing.TestingModule;
+import com.google.devtools.moe.client.writer.WriterCreator;
 
 import junit.framework.TestCase;
 
@@ -151,7 +153,9 @@ public class ExpressionTest extends TestCase {
 
   public void testParseAndEvaluate() throws Exception {
     IMocksControl control = EasyMock.createControl();
+    RevisionHistory rh = control.createMock(RevisionHistory.class);
     CodebaseCreator cc = control.createMock(CodebaseCreator.class);
+    WriterCreator wc = control.createMock(WriterCreator.class);
     Editor e = control.createMock(Editor.class);
     Editor translatorEditor = control.createMock(Editor.class);
 
@@ -164,17 +168,17 @@ public class ExpressionTest extends TestCase {
         new TranslatorStep("quux", translatorEditor)));
 
     ProjectContext context = ProjectContext.builder()
-        .withRepositories(ImmutableMap.of("foo", new Repository("foo", null, cc, null)))
+        .withRepositories(ImmutableMap.of("foo", Repository.create("foo", rh, cc, wc)))
         .withTranslators(ImmutableMap.of(tPath, t))
         .withEditors(ImmutableMap.of("bar", e)).build();
 
-    Codebase firstCb = new Codebase(new File("/first"), "foo",
+    Codebase firstCb = new Codebase(firstDir, "foo",
         new RepositoryExpression(new Term("foo", EMPTY_MAP)));
 
-    Codebase secondCb = new Codebase(new File("/second"), "public",
+    Codebase secondCb = new Codebase(secondDir, "public",
         new RepositoryExpression(new Term("foo2", EMPTY_MAP)));
 
-    Codebase finalCb = new Codebase(new File("/final"), "public",
+    Codebase finalCb = new Codebase(finalDir, "public",
         new RepositoryExpression(new Term("foo3", EMPTY_MAP)));
 
     expect(cc.create(EMPTY_MAP)).andReturn(firstCb);

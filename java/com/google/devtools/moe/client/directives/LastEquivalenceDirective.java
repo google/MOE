@@ -81,9 +81,9 @@ public class LastEquivalenceDirective extends Directive {
 
     Repository r = context.getRepository(repoEx.getRepositoryName());
 
-    RevisionHistory rh = r.revisionHistory;
+    RevisionHistory rh = r.revisionHistory();
     if (rh == null) {
-      ui.error("Repository " + r.name + " does not support revision history.");
+      ui.error("Repository " + r.name() + " does not support revision history.");
       return 1;
     }
 
