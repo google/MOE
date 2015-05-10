@@ -11,6 +11,8 @@ import com.google.devtools.moe.client.repositories.RevisionMetadata;
 
 import junit.framework.TestCase;
 
+import org.joda.time.DateTime;
+
 import java.util.List;
 
 /**
@@ -53,7 +55,9 @@ public class EquivalenceMatcherTest extends TestCase {
     Revision startingRev = new Revision("1003", "repo1");
     List<Revision> matching = ImmutableList.of(new Revision("1002", "repo1"));
     RevisionGraph nonMatching = RevisionGraph.builder(matching)
-        .addRevision(startingRev, new RevisionMetadata("id", "author", "date", "desc", matching))
+        .addRevision(
+            startingRev,
+            new RevisionMetadata("id", "author", DateTime.now(), "desc", matching))
         .build();
 
     EquivalenceMatchResult result = equivalenceMatcher.makeResult(nonMatching, matching);

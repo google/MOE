@@ -5,8 +5,8 @@ package com.google.devtools.moe.client.dvcs.git;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.Lifetimes;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.RepositoryConfig;
@@ -69,14 +69,14 @@ public class GitRepository {
 
     GitWriterCreator wc = new GitWriterCreator(freshSupplier, rh);
 
-    return new Repository(name, rh, cc, wc);
+    return Repository.create(name, rh, cc, wc);
   }
-  
+
   /**
    * Run git with the specified args in the specified directory.
    */
-  static String runGitCommand(List<String> args, String workingDirectory) 
+  static String runGitCommand(List<String> args, String workingDirectory)
       throws CommandRunner.CommandException {
-    return AppContext.RUN.cmd.runCommand("git", args, workingDirectory);
+    return Injector.INSTANCE.cmd().runCommand("git", args, workingDirectory);
   }
 }

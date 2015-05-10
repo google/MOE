@@ -33,15 +33,13 @@ public abstract class MetadataScrubber {
       List<String> words, String replacement, boolean wordAlone) {
     String newId = new String(rm.id);
     String newAuthor = new String(rm.author);
-    String newDate = new String(rm.date);
     String newDescription = new String(rm.description);
     for (String word : words) {
       String regex = (wordAlone) ? ("(?i)(\\b)" + word + "(\\b)") : ("(?i)" + word);
       newId = newId.replaceAll(regex, replacement);
       newAuthor = newAuthor.replaceAll(regex, replacement);
-      newDate = newDate.replaceAll(regex, replacement);
       newDescription = newDescription.replaceAll(regex, replacement);
     }
-    return new RevisionMetadata(newId, newAuthor, newDate, newDescription, rm.parents);
+    return new RevisionMetadata(newId, newAuthor, rm.date, newDescription, rm.parents);
   }
 }

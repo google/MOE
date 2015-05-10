@@ -9,7 +9,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.devtools.moe.client.AppContext;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.project.EditorConfig;
@@ -68,7 +68,7 @@ public class InverseRenamingEditor implements InverseEditor {
   @Override
   public Codebase inverseEdit(Codebase input, Codebase referenceFrom, Codebase referenceTo,
       ProjectContext context, Map<String, String> options) {
-    File tempDir = AppContext.RUN.fileSystem.getTemporaryDirectory("inverse_rename_run_");
+    File tempDir = Injector.INSTANCE.fileSystem().getTemporaryDirectory("inverse_rename_run_");
     inverseRenameAndCopy(input, tempDir, referenceTo);
     return new Codebase(tempDir, referenceTo.getProjectSpace(), referenceTo.getExpression());
   }
@@ -105,10 +105,10 @@ public class InverseRenamingEditor implements InverseEditor {
     File inputFile = new File(inputRoot, inputFilename);
     File destFile = new File(destRoot, destFilename);
     try {
-      AppContext.RUN.fileSystem.makeDirsForFile(destFile);
-      AppContext.RUN.fileSystem.copyFile(inputFile, destFile);
+      Injector.INSTANCE.fileSystem().makeDirsForFile(destFile);
+      Injector.INSTANCE.fileSystem().copyFile(inputFile, destFile);
     } catch (IOException e) {
-      AppContext.RUN.ui.error(e, e.getMessage());
+      Injector.INSTANCE.ui().error(e, e.getMessage());
       throw new MoeProblem(e.getMessage());
     }
   }

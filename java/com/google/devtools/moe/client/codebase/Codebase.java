@@ -2,9 +2,9 @@
 
 package com.google.devtools.moe.client.codebase;
 
-import com.google.devtools.moe.client.AppContext;
-import com.google.devtools.moe.client.Utils;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
+import com.google.devtools.moe.client.Utils;
 import com.google.devtools.moe.client.parser.Expression;
 
 import java.io.File;
@@ -78,7 +78,7 @@ public class Codebase {
   public boolean equals(Object other) {
     return other instanceof Codebase && getPath().equals(((Codebase) other).getPath());
   }
-  
+
   @Override public int hashCode() {
     return getPath().hashCode();
   }
@@ -88,7 +88,7 @@ public class Codebase {
    *         and not absolute paths.
    */
   public Set<String> getRelativeFilenames() {
-    return Utils.makeFilenamesRelative(AppContext.RUN.fileSystem.findFiles(path), path);
+    return Utils.makeFilenamesRelative(Injector.INSTANCE.fileSystem().findFiles(path), path);
   }
 
   /**

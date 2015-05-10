@@ -41,8 +41,10 @@
 				<attribute name="Main-Class" value="com.google.devtools.moe.client.Moe" />
 			</manifest>
 			<zipfileset src="lib/args4j-2.0.9.jar"/>
+			<zipfileset src="lib/dagger-2.0.jar"/>
 			<zipfileset src="lib/gson-2.2.jar"/>
-			<zipfileset src="lib/guava-r09.jar"/>
+			<zipfileset src="lib/guava-18.0.jar"/>
+			<zipfileset src="lib/javax.inject-1.jar"/>
 		</jar>
 	</target>
 

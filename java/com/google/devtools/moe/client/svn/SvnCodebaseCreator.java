@@ -4,8 +4,8 @@ package com.google.devtools.moe.client.svn;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Utils;
 import com.google.devtools.moe.client.codebase.Codebase;
@@ -46,7 +46,8 @@ public class SvnCodebaseCreator implements CodebaseCreator {
 
     Revision rev = revisionHistory.findHighestRevision(revId);
 
-    File exportPath = AppContext.RUN.fileSystem.getTemporaryDirectory(
+    File exportPath =
+        Injector.INSTANCE.fileSystem().getTemporaryDirectory(
         String.format("svn_export_%s_%s_", name, rev.revId));
 
     try {

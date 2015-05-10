@@ -2,23 +2,31 @@
 
 package com.google.devtools.moe.client.directives;
 
-import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.MoeOptions;
+import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.project.InvalidProject;
-import com.google.devtools.moe.client.project.ProjectContext;
+import com.google.devtools.moe.client.project.ProjectContextFactory;
 
 import org.kohsuke.args4j.Option;
+
+import javax.inject.Inject;
 
 /**
  * Reads a MOE Project's configuration and reads it, checking for errors.
  *
  * @author dbentley@google.com (Daniel Bentley)
  */
-public class CheckConfigDirective implements Directive {
-
+public class CheckConfigDirective extends Directive {
   private final CheckConfigOptions options = new CheckConfigOptions();
 
-  public CheckConfigDirective() {}
+  private final ProjectContextFactory contextFactory;
+  private final Ui ui;
+
+  @Inject
+  CheckConfigDirective(ProjectContextFactory contextFactory, Ui ui) {
+    this.contextFactory = contextFactory;
+    this.ui = ui;
+  }
 
   @Override
   public CheckConfigOptions getFlags() {
@@ -28,13 +36,17 @@ public class CheckConfigDirective implements Directive {
   @Override
   public int perform() {
     try {
-      ProjectContext context = AppContext.RUN.contextFactory.makeProjectContext(
-          options.configFilename);
+      contextFactory.makeProjectContext(options.configFilename);
       return 0;
     } catch (InvalidProject e) {
-      AppContext.RUN.ui.error(e, "Invalid project");
+      ui.error(e, "Invalid project");
       return 1;
     }
+  }
+
+  @Override
+  public String getDescription() {
+    return "Checks that the project's configuration is valid";
   }
 
   static class CheckConfigOptions extends MoeOptions {

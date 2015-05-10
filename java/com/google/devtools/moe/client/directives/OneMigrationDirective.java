@@ -2,8 +2,8 @@
 
 package com.google.devtools.moe.client.directives;
 
-import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.MoeOptions;
+import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.logic.OneMigrationLogic;
@@ -12,7 +12,7 @@ import com.google.devtools.moe.client.parser.Parser.ParseError;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.ProjectContext;
-import com.google.devtools.moe.client.repositories.Repository;
+import com.google.devtools.moe.client.project.ProjectContextFactory;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.writer.DraftRevision;
 import com.google.devtools.moe.client.writer.Writer;
@@ -22,15 +22,23 @@ import org.kohsuke.args4j.Option;
 
 import java.util.List;
 
+import javax.inject.Inject;
+
 /**
  * Perform a single migration using command line flags.
  *
  */
-public class OneMigrationDirective implements Directive {
-
+public class OneMigrationDirective extends Directive {
   private final OneMigrationOptions options = new OneMigrationOptions();
 
-  public OneMigrationDirective() {}
+  private final ProjectContextFactory contextFactory;
+  private final Ui ui;
+
+  @Inject
+  OneMigrationDirective(ProjectContextFactory contextFactory, Ui ui) {
+    this.contextFactory = contextFactory;
+    this.ui = ui;
+  }
 
   @Override
   public OneMigrationOptions getFlags() {
@@ -42,23 +50,17 @@ public class OneMigrationDirective implements Directive {
     ProjectContext context;
     String toProjectSpace;
     RepositoryExpression toRepoEx, fromRepoEx;
-    Repository toRepo;
     try {
-      context = AppContext.RUN.contextFactory.makeProjectContext(options.configFilename);
+      context = contextFactory.makeProjectContext(options.configFilename);
       toRepoEx = Parser.parseRepositoryExpression(options.toRepository);
       fromRepoEx = Parser.parseRepositoryExpression(options.fromRepository);
-      toRepo = context.repositories.get(toRepoEx.getRepositoryName());
-      if (toRepo == null) {
-        AppContext.RUN.ui.error("No repository " + toRepoEx.getRepositoryName());
-        return 1;
-      }
-      toProjectSpace = context.config.getRepositoryConfigs().get(toRepoEx.getRepositoryName())
+      toProjectSpace = context.config.getRepositoryConfig(toRepoEx.getRepositoryName())
           .getProjectSpace();
     } catch (ParseError e) {
-      AppContext.RUN.ui.error(e, "Couldn't parse expression");
+      ui.error(e, "Couldn't parse expression");
       return 1;
     } catch (InvalidProject e) {
-      AppContext.RUN.ui.error(e, "Couldn't create project");
+      ui.error(e, "Couldn't create project");
       return 1;
     }
 
@@ -71,7 +73,7 @@ public class OneMigrationDirective implements Directive {
           .translateTo(toProjectSpace)
           .createCodebase(context);
     } catch (CodebaseCreationError e) {
-      AppContext.RUN.ui.error(e, "Error creating codebase");
+      ui.error(e, "Error creating codebase");
       return 1;
     }
 
@@ -79,19 +81,25 @@ public class OneMigrationDirective implements Directive {
     try {
       destination = toRepoEx.createWriter(context);
     } catch (WritingError e) {
-      AppContext.RUN.ui.error(e, "Error writing to repo");
+      ui.error(e, "Error writing to repo");
       return 1;
     }
 
-    AppContext.RUN.ui.info(String.format("Migrating '%s' to '%s'", fromRepoEx, toRepoEx));
+    ui.info(String.format("Migrating '%s' to '%s'", fromRepoEx, toRepoEx));
 
-    DraftRevision r = OneMigrationLogic.migrate(c, destination, revs, context, revs.get(0));
+    DraftRevision r = OneMigrationLogic.migrate(c, destination, revs, context, revs.get(0),
+        fromRepoEx.getRepositoryName(), toRepoEx.getRepositoryName());
     if (r == null) {
       return 1;
     }
 
-    AppContext.RUN.ui.info("Created Draft Revision: " + r.getLocation());
+    ui.info("Created Draft Revision: " + r.getLocation());
     return 0;
+  }
+
+  @Override
+  public String getDescription() {
+    return "Performs a single migration";
   }
 
   static class OneMigrationOptions extends MoeOptions {

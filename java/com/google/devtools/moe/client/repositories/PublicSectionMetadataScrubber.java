@@ -23,7 +23,7 @@ public class PublicSectionMetadataScrubber extends MetadataScrubber {
 
   @Override
   public RevisionMetadata scrub(RevisionMetadata rm) {
-    List<String> lines = ImmutableList.copyOf(Splitter.on("\n").split(rm.description));
+    List<String> lines = ImmutableList.copyOf(Splitter.on('\n').split(rm.description));
     int startPublicSection = -1;
     int endPublicSection = -1;
     int currentLine = 0;

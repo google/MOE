@@ -2,15 +2,42 @@
 
 package com.google.devtools.moe.client;
 
-import com.google.inject.AbstractModule;
+import com.google.devtools.moe.client.project.FileReadingProjectContextFactory;
+import com.google.devtools.moe.client.project.ProjectContextFactory;
+
+import dagger.Module;
+import dagger.Provides;
+
+import javax.inject.Singleton;
 
 /**
  * Module to register bindings for MOE.
  *
- * @author dbentley@google.com (Daniel Bentley)
+ * @author cgruber@google.com (Christian Gruber)
  */
-public class MoeModule extends AbstractModule {
+@Module
+public class MoeModule {
+  @Provides
+  @Singleton
+  public Ui ui(SystemUi sysui) {
+    return sysui;
+  }
 
-  // TODO(dbentley): make this Module matter again
-  public void configure() {}
+  @Provides
+  @Singleton
+  public ProjectContextFactory projectContextFactory(FileReadingProjectContextFactory factory) {
+    return factory;
+  }
+
+  @Provides
+  @Singleton
+  public CommandRunner commandRunner(SystemCommandRunner runner) {
+    return runner;
+  }
+
+  @Provides
+  @Singleton
+  public FileSystem fileSystem(SystemFileSystem sysfs) {
+    return sysfs;
+  }
 }

@@ -2,8 +2,8 @@
 
 package com.google.devtools.moe.client.directives;
 
-import com.google.devtools.moe.client.AppContext;
-import com.google.devtools.moe.client.testing.AppContextForTesting;
+import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
 import com.google.devtools.moe.client.testing.RecordingUi;
 
@@ -15,22 +15,26 @@ import junit.framework.TestCase;
  * @author dbentley@google.com (Daniel Bentley)
  */
 public class ChangeDirectiveTest extends TestCase {
+  private final InMemoryProjectContextFactory contextFactory = new InMemoryProjectContextFactory();
+  private final RecordingUi ui = new RecordingUi();
+  private final SystemCommandRunner cmd = new SystemCommandRunner(ui);
 
   @Override
-  public void setUp() {
-    AppContextForTesting.initForTest();
+  public void setUp() throws Exception {
+    super.setUp();
+    Injector.INSTANCE = new Injector(null, cmd, contextFactory, ui);
   }
 
   public void testChange() throws Exception {
-    ((InMemoryProjectContextFactory)AppContext.RUN.contextFactory).projectConfigs.put(
+    InMemoryProjectContextFactory contextFactory = new InMemoryProjectContextFactory();
+    contextFactory.projectConfigs.put(
         "moe_config.txt",
-        "{\"name\": \"foo\", \"repositories\": {" +
-        "\"internal\": {\"type\": \"dummy\"}}}");
-    ChangeDirective d = new ChangeDirective();
+        "{\"name\": \"foo\", \"repositories\": {\"internal\": {\"type\": \"dummy\"}}}");
+    ChangeDirective d = new ChangeDirective(contextFactory, ui);
     d.getFlags().configFilename = "moe_config.txt";
     d.getFlags().codebase = "internal";
     d.getFlags().destination = "internal";
     assertEquals(0, d.perform());
-    assertEquals("/dummy/writer/internal", ((RecordingUi) AppContext.RUN.ui).lastTaskResult);
+    assertEquals("/dummy/writer/internal", ui.lastTaskResult);
   }
 }

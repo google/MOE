@@ -29,7 +29,7 @@ public class ProjectContextTest extends TestCase {
     // Test the .makeRepositoryFromConfig method.
     Repository repository = ProjectContext.makeRepositoryFromConfig("myRepository", config);
     assertNotNull(repository);
-    assertEquals("myRepository", repository.name);
+    assertEquals("myRepository", repository.name());
   }
 
   /**
@@ -46,9 +46,9 @@ public class ProjectContextTest extends TestCase {
     // Test the method with all reserved repository keywords.
     for (String keyword : ImmutableList.of("file")) {
       try {
-        Repository repository = ProjectContext.makeRepositoryFromConfig(keyword, config);
-        fail("ProjectContext.makeRepositoryFromConfig does not check " +
-             "for the reserved keyword '" + keyword + "' in the repository name.");
+        ProjectContext.makeRepositoryFromConfig(keyword, config);
+        fail("ProjectContext.makeRepositoryFromConfig does not check "
+             + "for the reserved keyword '" + keyword + "' in the repository name.");
       } catch (InvalidProject expected) {}
     }
   }

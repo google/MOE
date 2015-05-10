@@ -2,13 +2,12 @@
 
 package com.google.devtools.moe.client.project;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
-
-import javax.annotation.Nullable;
 
 /**
  * Configuration for a MOE Repository.
@@ -30,6 +29,9 @@ public class RepositoryConfig {
   @SerializedName("package")
   private String buildTargetPackage;
 
+  @SerializedName("preserve_authors")
+  private boolean preserveAuthors;
+
 
   private List<String> paths;
 
@@ -40,6 +42,9 @@ public class RepositoryConfig {
   @SerializedName("ignore_file_res")
   private List<String> ignoreFileRes = ImmutableList.of();
 
+  @SerializedName("executable_file_res")
+  private List<String> executableFileRes = ImmutableList.of();
+
   /**
    * List of regexes for filepaths to ignore changes to. In other words, in the repo's Writer,
    * changes to filepaths matching any of these regexes will be ignored -- no additions, deletions,
@@ -48,11 +53,8 @@ public class RepositoryConfig {
   @SerializedName("ignore_incoming_changes_res")
   private List<String> ignoreIncomingChangesRes = ImmutableList.of();
 
-  /**
-   * List of branches in this repository from which to import changes.
-   */
-  @SerializedName("import_branches")
-  private List<String> importBranches = null;
+  @SerializedName("branch")
+  private String branch = null;
 
   private RepositoryConfig() {} // Constructed by gson
 
@@ -79,6 +81,10 @@ public class RepositoryConfig {
     return result;
   }
 
+  public boolean getPreserveAuthors() {
+    return preserveAuthors;
+  }
+
 
   public List<String> getIgnoreFileRes() {
     return ignoreFileRes;
@@ -89,10 +95,21 @@ public class RepositoryConfig {
   }
 
   /**
-   * Returns the branches in this repository from which to import changes, null if none specified.
+   * Returns the branch of this repository to use. New changes to migrate will be searched for only
+   * on this branch, and incoming changes will be written onto this branch.
    */
-  @Nullable public List<String> getImportBranches() {
-    return importBranches;
+  public Optional<String> getBranch() {
+    return Optional.fromNullable(branch);
+  }
+
+  /**
+   * Returns a list of regexes for file paths that should be marked executable. For version control
+   * or build systems that don't support the executable bit, use these regexes to indicate which
+   * files should be marked executable. Any files that don't match one of these regexes will be
+   * marked non-executable.
+   */
+  public List<String> getExecutableFileRes() {
+    return executableFileRes;
   }
 
   void validate() throws InvalidProject {

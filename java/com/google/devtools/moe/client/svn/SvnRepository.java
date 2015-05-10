@@ -4,12 +4,12 @@ package com.google.devtools.moe.client.svn;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.devtools.moe.client.CommandRunner;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.project.RepositoryType;
 import com.google.devtools.moe.client.repositories.Repository;
-import com.google.devtools.moe.client.AppContext;
-import com.google.devtools.moe.client.CommandRunner;
 
 import java.util.List;
 
@@ -39,13 +39,13 @@ public class SvnRepository {
 
     SvnWriterCreator ec = new SvnWriterCreator(config, rh);
 
-    return new Repository(name, rh, cc, ec);
+    return Repository.create(name, rh, cc, ec);
   }
 
   static String runSvnCommand(List<String> args, String workingDirectory)
       throws CommandRunner.CommandException {
     ImmutableList.Builder<String> withAuthArgs = new ImmutableList.Builder<String>();
     withAuthArgs.add("--no-auth-cache").addAll(args);
-    return AppContext.RUN.cmd.runCommand("svn", withAuthArgs.build(), workingDirectory);
+    return Injector.INSTANCE.cmd().runCommand("svn", withAuthArgs.build(), workingDirectory);
   }
 }

@@ -11,12 +11,18 @@ import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
+import javax.annotation.Nullable;
+import javax.inject.Inject;
+
 /**
  * User Interface interface for MOE.
  *
  * @author dbentley@google.com (Daniel Bentley)
  */
-public abstract class Ui {
+public abstract class Ui implements Messenger {
+
+  //TODO(cgruber): Make this not nullable (No-Op filesystem for testing perhaps?)
+  @Inject @Nullable protected FileSystem fileSystem;
 
   /**
    * The name of the Task pushed to the Ui for clean-up when MOE is about to exit. This name is
@@ -24,31 +30,7 @@ public abstract class Ui {
    */
   public static final String MOE_TERMINATION_TASK_NAME = "moe_termination";
 
-  protected final Deque<Task> stack;
-
-  public Ui() {
-    stack = new ArrayDeque<Task>();
-  }
-
-  /**
-   * Sends an informational message to the user.
-   *
-   * @param msg  the informational message.
-   */
-  public abstract void info(String msg);
-
-  /**
-   * Reports an error to the user.
-   */
-  public abstract void error(String msg);
-
-  /**
-   * Reports an error to the user.
-   */
-  public abstract void error(Throwable e, String msg);
-
-  /** Sends a debug message to the logs. */
-  public abstract void debug(String msg);
+  protected final Deque<Task> stack = new ArrayDeque<Task>();
 
   public static class Task {
     public final String taskName;
@@ -104,9 +86,9 @@ public abstract class Ui {
                         stack.toString()));
     }
 
-    if (AppContext.RUN.fileSystem != null) {
+    if (fileSystem != null) {
       try {
-        AppContext.RUN.fileSystem.cleanUpTempDirs();
+        fileSystem.cleanUpTempDirs();
       } catch (IOException ioEx) {
         error(ioEx, "Error cleaning up temp dirs");
         throw new MoeProblem("Error cleaning up temp dirs: " + ioEx);
@@ -126,7 +108,7 @@ public abstract class Ui {
    * constitute outputs of MOE execution.
    */
   public void popTaskAndPersist(Task task, File persistentResult) {
-    if (AppContext.RUN.fileSystem != null) {
+    if (fileSystem != null) {
       Lifetime newLifetime;
       if (stack.size() == 1) {
         newLifetime = Lifetimes.persistent();
@@ -134,7 +116,7 @@ public abstract class Ui {
         Task parentTask = Iterables.get(stack, 1);
         newLifetime = new TaskLifetime(parentTask);
       }
-      AppContext.RUN.fileSystem.setLifetime(persistentResult, newLifetime);
+      fileSystem.setLifetime(persistentResult, newLifetime);
     }
 
     popTask(task, persistentResult.getAbsolutePath());

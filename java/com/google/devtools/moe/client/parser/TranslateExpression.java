@@ -3,7 +3,7 @@
 package com.google.devtools.moe.client.parser;
 
 import com.google.common.base.Preconditions;
-import com.google.devtools.moe.client.AppContext;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
@@ -38,11 +38,15 @@ public class TranslateExpression extends AbstractExpression {
     Translator translator = context.translators.get(path);
     if (translator == null) {
       throw new CodebaseCreationError(
-          String.format("Could not find translator from project space \"%s\" to \"%s\"",
-                        codebaseToTranslate.getProjectSpace(), toProjectSpace));
+          String.format(
+              "Could not find translator from project space \"%s\" to \"%s\".\n" +
+              "Translators only available for %s",
+              codebaseToTranslate.getProjectSpace(), toProjectSpace,
+              context.translators.keySet()));
     }
 
-    Ui.Task translateTask = AppContext.RUN.ui.pushTask(
+    Ui.Task translateTask =
+        Injector.INSTANCE.ui().pushTask(
         "translate",
         String.format(
             "Translating %s from project space \"%s\" to \"%s\"",
@@ -53,9 +57,9 @@ public class TranslateExpression extends AbstractExpression {
 
     // Don't mark the translated codebase for persistence if it wasn't allocated by the Translator.
     if (translatedCodebase.equals(codebaseToTranslate)) {
-      AppContext.RUN.ui.popTask(translateTask, translatedCodebase.getPath() + " (unmodified)");
+      Injector.INSTANCE.ui().popTask(translateTask, translatedCodebase.getPath() + " (unmodified)");
     } else {
-      AppContext.RUN.ui.popTaskAndPersist(translateTask, translatedCodebase.getPath());
+      Injector.INSTANCE.ui().popTaskAndPersist(translateTask, translatedCodebase.getPath());
     }
     return translatedCodebase.copyWithExpression(this).copyWithProjectSpace(toProjectSpace);
   }

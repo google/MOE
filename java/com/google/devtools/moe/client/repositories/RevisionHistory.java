@@ -28,14 +28,26 @@ public interface RevisionHistory {
   public RevisionMetadata getMetadata(Revision revision);
 
   /**
+   * The type of history search to perform in
+   * {@link RevisionHistory#findRevisions(Revision, RevisionMatcher, SearchType)}.
+   */
+  public enum SearchType {
+    /** Search backward only through a revision's first parent. */
+    LINEAR,
+    /** Search backward through each of a revision's parents. */
+    BRANCHED,
+  }
+
+  /**
    * Starting at the specified revision, searches the revision history backwards, stopping at
    * matching Revisions. {@link RevisionMatcher#matches(Revision)} is called on the given
    * RevisionMatcher for the starting Revisions, then their parents, then the parents' parents, and
-   * so on. Then, {@link RevisionMatcher#makeResult(RevisionGraph, java.util.List)} is called with
-   * the non-matching and matching Revisions found, and the result is returned.
+   * so on. Then, {@link RevisionMatcher#makeResult(java.util.List, java.util.List)} is called with
+   * the non-matching (in breadth-first, child-to-parent order) and matching Revisions, and the
+   * result is returned.
    *
    * <p>For example, say you have a RevisionMatcher that matches on revision IDs starting with
-   * "match", and this method is called on this Revision history, starting at the top:
+   * "match", and you search this history, starting at the top revision:
    * <pre>
    *       nonmatch_4
    *       /         \
@@ -48,18 +60,19 @@ public interface RevisionHistory {
    *                ...
    * </pre>
    *
-   * <p>History is traversed in breadth-first order, and {@link RevisionMatcher#matches(Revision)}
-   * is called on each Revision. The traversal doesn't proceed past any matching Revision. Finally,
-   * {@link RevisionMatcher#makeResult(RevisionGraph, java.util.List)} is called with a
-   * RevisionGraph of the non-matching Revisions (in this case, nonmatch_4, nonmatch_3a,
-   * nonmatch_3b, and nonmatch_2a in that breadth-first order) and a List of the matching Revisions
-   * in the order encountered (in this case, match_2b and match_1). This method returns the
-   * (arbitrary) result of that call.
+   * <p>History is traversed in breadth-first order starting at {@code nonmatch_4}, and doesn't
+   * proceed past {@code match_1} or {@code match_2b}. Finally,
+   * {@link RevisionMatcher#makeResult(java.util.List, java.util.List)} is called with a list of
+   * the non-matching Revisions (nonmatch_4, nonmatch_3a, nonmatch_3b, and nonmatch_2a in that
+   * breadth-first order) and a List of the matching Revisions in the order encountered (in this
+   * case, match_2b and match_1). This method returns the (arbitrary) result of that call.
    *
    * @param revision  the Revision to start at. If null, then start at head revision(s).
    * @param matcher  the RevisionMatcher to apply
+   * @param searchType  the type of history search to perform
    * @return the result of the search, as specified by the type of RevisionMatcher
    */
   //TODO(user): allow specifying multiple Revisions (for case of multiple heads)
-  public <T> T findRevisions(@Nullable Revision revision, RevisionMatcher<T> matcher);
+  public <T> T findRevisions(
+      @Nullable Revision revision, RevisionMatcher<T> matcher, SearchType searchType);
 }

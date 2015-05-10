@@ -6,12 +6,15 @@ import static org.easymock.EasyMock.expect;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.FileSystem;
+import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.project.ProjectContext;
-import com.google.devtools.moe.client.testing.AppContextForTesting;
+import com.google.devtools.moe.client.testing.TestingModule;
+
+import dagger.Provides;
 
 import junit.framework.TestCase;
 
@@ -21,17 +24,37 @@ import org.easymock.IMocksControl;
 import java.io.File;
 import java.io.IOException;
 
+import javax.inject.Singleton;
+
 /**
  * Unit tests for inverse renaming
  *
  */
 public class InverseRenamingEditorTest extends TestCase {
 
+  private final IMocksControl control = EasyMock.createControl();
+  private final FileSystem mockFs = control.createMock(FileSystem.class);
+
+  // TODO(cgruber): Rework these when statics aren't inherent in the design.
+  @dagger.Component(modules = {TestingModule.class, SystemCommandRunner.Module.class, Module.class})
+  @Singleton
+  interface Component {
+    Injector context(); // TODO (b/19676630) Remove when bug is fixed.
+  }
+
+  @dagger.Module class Module {
+    @Provides public FileSystem filesystem() {
+      return mockFs;
+    }
+  }
+
+  @Override protected void setUp() throws Exception {
+    super.setUp();
+    Injector.INSTANCE = DaggerInverseRenamingEditorTest_Component.builder().module(new Module())
+        .build().context();
+  }
+
   public void testEdit() throws Exception {
-    AppContextForTesting.initForTest();
-    IMocksControl control = EasyMock.createControl();
-    FileSystem mockFs = control.createMock(FileSystem.class);
-    AppContext.RUN.fileSystem = mockFs;
     ProjectContext context = ProjectContext.builder().build();
 
     InverseRenamingEditor inverseRenamey = new InverseRenamingEditor(

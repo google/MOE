@@ -2,9 +2,9 @@
 
 package com.google.devtools.moe.client.directives;
 
-import com.google.devtools.moe.client.AppContext;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
-import com.google.devtools.moe.client.testing.AppContextForTesting;
+import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
 import com.google.devtools.moe.client.testing.RecordingUi;
 
@@ -13,14 +13,14 @@ import junit.framework.TestCase;
 /**
  */
 public class OneMigrationDirectiveTest extends TestCase {
+  private final InMemoryProjectContextFactory contextFactory = new InMemoryProjectContextFactory();
+  private final RecordingUi ui = new RecordingUi();
+  private final SystemCommandRunner cmd = new SystemCommandRunner(ui);
 
   @Override
-  public void setUp() {
-    AppContextForTesting.initForTest();
-  }
-
-  public void testOneMigration() throws Exception {
-    ((InMemoryProjectContextFactory) AppContext.RUN.contextFactory).projectConfigs.put(
+  public void setUp() throws Exception {
+    super.setUp();
+    contextFactory.projectConfigs.put(
         "moe_config.txt",
         "{\"name\":\"foo\",\"repositories\":{" +
         "\"int\":{\"type\":\"dummy\",\"project_space\":\"internal\"}," +
@@ -28,26 +28,22 @@ public class OneMigrationDirectiveTest extends TestCase {
         "\"translators\":[{\"from_project_space\":\"internal\"," +
         "\"to_project_space\":\"public\",\"steps\":[{\"name\":\"id_step\"," +
         "\"editor\":{\"type\":\"identity\"}}]}]}");
-    OneMigrationDirective d = new OneMigrationDirective();
+    Injector.INSTANCE = new Injector(null, cmd, contextFactory, ui);
+  }
+
+  public void testOneMigration() throws Exception {
+    OneMigrationDirective d = new OneMigrationDirective(contextFactory, ui);
     d.getFlags().configFilename = "moe_config.txt";
     d.getFlags().fromRepository = "int(revision=1000)";
     d.getFlags().toRepository = "pub(revision=2)";
     assertEquals(0, d.perform());
     assertEquals(
         String.format("Created Draft Revision: %s", "/dummy/revision/pub"),
-        ((RecordingUi) AppContext.RUN.ui).lastInfo);
+        ((RecordingUi) Injector.INSTANCE.ui()).lastInfo);
   }
 
   public void testOneMigrationFailOnFromRevision() throws Exception {
-    ((InMemoryProjectContextFactory) AppContext.RUN.contextFactory).projectConfigs.put(
-        "moe_config.txt",
-        "{\"name\":\"foo\",\"repositories\":{" +
-        "\"int\":{\"type\":\"dummy\",\"project_space\":\"internal\"}," +
-        "\"pub\":{\"type\":\"dummy\"}}," +
-        "\"translators\":[{\"from_project_space\":\"internal\"," +
-        "\"to_project_space\":\"public\",\"steps\":[{\"name\":\"id_step\"," +
-        "\"editor\":{\"type\":\"identity\"}}]}]}");
-    OneMigrationDirective d = new OneMigrationDirective();
+    OneMigrationDirective d = new OneMigrationDirective(contextFactory, ui);
     d.getFlags().configFilename = "moe_config.txt";
     d.getFlags().fromRepository = "x(revision=1000)";
     d.getFlags().toRepository = "pub(revision=2)";
@@ -55,26 +51,24 @@ public class OneMigrationDirectiveTest extends TestCase {
       d.perform();
       fail("OneMigrationDirective didn't fail on invalid repository 'x'.");
     } catch (MoeProblem expected) {
-      assertEquals("No repository x", expected.getMessage());
+      assertEquals(
+          "No such repository 'x' in the config. Found: [int, pub]",
+          expected.getMessage());
     }
   }
 
   public void testOneMigrationFailOnToRevision() throws Exception {
-    ((InMemoryProjectContextFactory) AppContext.RUN.contextFactory).projectConfigs.put(
-        "moe_config.txt",
-        "{\"name\":\"foo\",\"repositories\":{" +
-        "\"int\":{\"type\":\"dummy\",\"project_space\":\"internal\"}," +
-        "\"pub\":{\"type\":\"dummy\"}}," +
-        "\"translators\":[{\"from_project_space\":\"internal\"," +
-        "\"to_project_space\":\"public\",\"steps\":[{\"name\":\"id_step\"," +
-        "\"editor\":{\"type\":\"identity\"}}]}]}");
-    OneMigrationDirective d = new OneMigrationDirective();
+    OneMigrationDirective d = new OneMigrationDirective(contextFactory, ui);
     d.getFlags().configFilename = "moe_config.txt";
     d.getFlags().fromRepository = "int(revision=1000)";
     d.getFlags().toRepository = "x(revision=2)";
-    assertEquals(1, d.perform());
-    assertEquals(
-        String.format("No repository x"),
-        ((RecordingUi) AppContext.RUN.ui).lastError);
+    try {
+      int result = d.perform();
+      fail("OneMigrationDirective didn't fail on invalid repository 'x'.");
+    } catch (MoeProblem expected) {
+      assertEquals(
+          "No such repository 'x' in the config. Found: [int, pub]",
+          expected.getMessage());
+    }
   }
 }

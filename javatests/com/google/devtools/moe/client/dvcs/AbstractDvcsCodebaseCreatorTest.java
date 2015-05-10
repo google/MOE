@@ -8,14 +8,17 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.FileSystem;
+import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.LocalClone;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
-import com.google.devtools.moe.client.testing.AppContextForTesting;
+import com.google.devtools.moe.client.testing.TestingModule;
+
+import dagger.Provides;
 
 import junit.framework.TestCase;
 
@@ -25,49 +28,56 @@ import org.easymock.IMocksControl;
 import java.io.File;
 import java.util.Collections;
 
+import javax.inject.Singleton;
+
 /**
  * Tests for AbstractDvcsCodebaseCreator, esp. that create() archives at the right revision.
  *
  */
 public class AbstractDvcsCodebaseCreatorTest extends TestCase {
-
   private static final String MOCK_REPO_NAME = "mockrepo";
 
-  private IMocksControl control;
-  private LocalClone mockRepo;
-  private RevisionHistory mockRevHistory;
-  private RepositoryConfig mockRepoConfig;
-  private AbstractDvcsCodebaseCreator codebaseCreator;
+  private final IMocksControl control = EasyMock.createControl();
+  private final FileSystem mockFS = control.createMock(FileSystem.class);
+  private final RepositoryConfig mockRepoConfig = control.createMock(RepositoryConfig.class);
+
+  private final LocalClone mockRepo = control.createMock(LocalClone.class);
+  private final RevisionHistory mockRevHistory = control.createMock(RevisionHistory.class);
+  private final AbstractDvcsCodebaseCreator codebaseCreator =
+      new AbstractDvcsCodebaseCreator(Suppliers.ofInstance(mockRepo), mockRevHistory, "public") {
+        @Override protected LocalClone cloneAtLocalRoot(String localroot) {
+          throw new UnsupportedOperationException();
+        }
+      };
+
+  // TODO(cgruber): Rework these when statics aren't inherent in the design.
+  @dagger.Component(modules = {TestingModule.class, SystemCommandRunner.Module.class, Module.class})
+  @Singleton
+  interface Component {
+    Injector context(); // TODO (b/19676630) Remove when bug is fixed.
+  }
+
+  @dagger.Module class Module {
+    @Provides public FileSystem fileSystem() {
+      return mockFS;
+    }
+  }
 
   @Override protected void setUp() throws Exception {
     super.setUp();
-
-    AppContextForTesting.initForTest();
-    control = EasyMock.createControl();
-    AppContext.RUN.fileSystem = control.createMock(FileSystem.class);
-    mockRepo = control.createMock(LocalClone.class);
-    mockRevHistory = control.createMock(RevisionHistory.class);
-    mockRepoConfig = control.createMock(RepositoryConfig.class);
+    Injector.INSTANCE = DaggerAbstractDvcsCodebaseCreatorTest_Component.builder()
+        .module(new Module()).build().context();
 
     expect(mockRepo.getConfig()).andReturn(mockRepoConfig).anyTimes();
     expect(mockRepoConfig.getIgnoreFileRes()).andReturn(ImmutableList.<String>of());
     expect(mockRepo.getRepositoryName()).andReturn(MOCK_REPO_NAME);
-
-    codebaseCreator = new AbstractDvcsCodebaseCreator(
-        Suppliers.ofInstance(mockRepo),
-        mockRevHistory,
-        "public") {
-          @Override protected LocalClone cloneAtLocalRoot(String localroot) {
-            throw new UnsupportedOperationException();
-          }
-    };
   }
 
   public void testCreate_noGivenRev() throws Exception {
     String archiveTempDir = "/tmp/git_archive_mockrepo_head";
     // Short-circuit Utils.filterFilesByPredicate(ignore_files_re).
-    expect(AppContext.RUN.fileSystem.findFiles(new File(archiveTempDir)))
-        .andReturn(ImmutableSet.<File>of());
+    expect(Injector.INSTANCE.fileSystem().findFiles(new File(archiveTempDir))).andReturn(
+        ImmutableSet.<File>of());
 
     expect(mockRevHistory.findHighestRevision(null))
         .andReturn(new Revision("mock head changeset ID", MOCK_REPO_NAME));
@@ -89,8 +99,8 @@ public class AbstractDvcsCodebaseCreatorTest extends TestCase {
     String givenRev = "givenrev";
     String archiveTempDir = "/tmp/git_reclone_mockrepo_head_" + givenRev;
     // Short-circuit Utils.filterFilesByPredicate(ignore_files_re).
-    expect(AppContext.RUN.fileSystem.findFiles(new File(archiveTempDir)))
-        .andReturn(ImmutableSet.<File>of());
+    expect(Injector.INSTANCE.fileSystem().findFiles(new File(archiveTempDir))).andReturn(
+        ImmutableSet.<File>of());
 
     expect(mockRevHistory.findHighestRevision(givenRev))
         .andReturn(new Revision(givenRev, MOCK_REPO_NAME));

@@ -11,6 +11,8 @@ import com.google.common.collect.Sets;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Lifetimes;
 
+import dagger.Provides;
+
 import java.io.File;
 import java.util.Iterator;
 import java.util.List;
@@ -18,12 +20,13 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import javax.inject.Singleton;
+
 /**
  * An in-memory {@link FileSystem} for use in testing.
  *
  */
 public class InMemoryFileSystem implements FileSystem {
-
   private static final Splitter SEP_SPLITTER = Splitter.on(File.separator).omitEmptyStrings();
   private static final String TEMP_DIR_PREFIX = "/tmp/moe_".replace('/', File.separatorChar);
 
@@ -281,5 +284,12 @@ public class InMemoryFileSystem implements FileSystem {
     Preconditions.checkArgument(
         isDirectory(file),
         "An existent dir was expected: " + file.getAbsolutePath() + "; current files: " + files);
+  }
+
+  /** A Dagger module for binding this implementation of {@link FileSystem}. */
+  @dagger.Module(complete = false) public static class Module {
+    @Provides @Singleton public FileSystem fileSystem(InMemoryFileSystem impl) {
+      return impl;
+    }
   }
 }

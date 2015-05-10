@@ -5,11 +5,13 @@ package com.google.devtools.moe.client.editors;
 import static org.easymock.EasyMock.expect;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.codebase.Codebase;
-import com.google.devtools.moe.client.testing.AppContextForTesting;
+import com.google.devtools.moe.client.testing.TestingModule;
+
+import dagger.Provides;
 
 import junit.framework.TestCase;
 
@@ -19,19 +21,39 @@ import org.easymock.IMocksControl;
 import java.io.File;
 import java.util.Vector;
 
+import javax.inject.Singleton;
+
 /**
  *
  */
 public class ShellEditorTest extends TestCase {
+  private final IMocksControl control = EasyMock.createControl();
+  private final FileSystem fileSystem = control.createMock(FileSystem.class);
+  private final CommandRunner cmd = control.createMock(CommandRunner.class);
+
+  // TODO(cgruber): Rework these when statics aren't inherent in the design.
+  @dagger.Component(modules = {TestingModule.class, Module.class})
+  @Singleton
+  interface Component {
+    Injector context(); // TODO (b/19676630) Remove when bug is fixed.
+  }
+
+  @dagger.Module class Module {
+    @Provides public CommandRunner cmd() {
+      return cmd;
+    }
+    @Provides public FileSystem filesystem() {
+      return fileSystem;
+    }
+  }
+
+  @Override protected void setUp() throws Exception {
+    super.setUp();
+    Injector.INSTANCE = DaggerShellEditorTest_Component.builder().module(new Module()).build()
+        .context();
+  }
+
   public void testShellStuff() throws Exception {
-
-    AppContextForTesting.initForTest();
-    IMocksControl control = EasyMock.createControl();
-    FileSystem fileSystem = control.createMock(FileSystem.class);
-    CommandRunner cmd = control.createMock(CommandRunner.class);
-    AppContext.RUN.cmd = cmd;
-    AppContext.RUN.fileSystem = fileSystem;
-
     File shellRun = new File("/shell_run_foo");
     File codebaseFile = new File("/codebase");
 

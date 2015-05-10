@@ -6,11 +6,12 @@ import static org.easymock.EasyMock.expect;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.Ui;
-import com.google.devtools.moe.client.testing.AppContextForTesting;
+import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
+import com.google.devtools.moe.client.testing.RecordingUi;
 
 import junit.framework.TestCase;
 
@@ -44,21 +45,17 @@ import java.util.List;
  *
  */
 public class CodebaseMergerTest extends TestCase {
-
-  private IMocksControl control;
-  private FileSystem fileSystem;
-  private CommandRunner cmd;
+  private final InMemoryProjectContextFactory contextFactory = new InMemoryProjectContextFactory();
+  private final RecordingUi ui = new RecordingUi();
+  private final IMocksControl control = EasyMock.createControl();
+  private final FileSystem fileSystem = control.createMock(FileSystem.class);
+  private final CommandRunner cmd = control.createMock(CommandRunner.class);
   private Codebase orig, dest, mod;
 
   @Override
-  public void setUp() {
-    AppContextForTesting.initForTest();
-    control = EasyMock.createControl();
-    fileSystem = control.createMock(FileSystem.class);
-    cmd = control.createMock(CommandRunner.class);
-    AppContext.RUN.cmd = cmd;
-    AppContext.RUN.fileSystem = fileSystem;
-
+  public void setUp() throws Exception {
+    super.setUp();
+    Injector.INSTANCE = new Injector(fileSystem, cmd, contextFactory, ui);
     orig = control.createMock(Codebase.class);
     dest = control.createMock(Codebase.class);
     mod = control.createMock(Codebase.class);
@@ -380,7 +377,7 @@ public class CodebaseMergerTest extends TestCase {
    */
   public void testMerge() throws Exception {
     Ui ui = control.createMock(Ui.class);
-    AppContext.RUN.ui = ui;
+    Injector.INSTANCE = new Injector(fileSystem, cmd, contextFactory, ui);
 
     File mergedCodebaseLocation = new File("merged_codebase_7");
     expect(fileSystem.getTemporaryDirectory("merged_codebase_")).andReturn(mergedCodebaseLocation);

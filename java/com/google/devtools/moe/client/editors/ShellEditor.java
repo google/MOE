@@ -3,8 +3,8 @@
 package com.google.devtools.moe.client.editors;
 
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Utils;
 import com.google.devtools.moe.client.codebase.Codebase;
@@ -25,7 +25,7 @@ import java.util.Map;
  */
 public class ShellEditor implements Editor {
 
-  private String name, commandString;
+  private final String name, commandString;
 
   ShellEditor(String editorName, String commandString) {
     name = editorName;
@@ -50,7 +50,7 @@ public class ShellEditor implements Editor {
    */
   @Override
   public Codebase edit(Codebase input, ProjectContext context, Map<String, String> options) {
-    File tempDir = AppContext.RUN.fileSystem.getTemporaryDirectory("shell_run_");
+    File tempDir = Injector.INSTANCE.fileSystem().getTemporaryDirectory("shell_run_");
     try {
      Utils.copyDirectory(input.getPath(), tempDir);
     } catch (IOException e) {
@@ -59,8 +59,8 @@ public class ShellEditor implements Editor {
       throw new MoeProblem(e.getMessage());
     }
     try {
-      AppContext.RUN.cmd.runCommand("bash", ImmutableList.of("-c", this.commandString),
-          tempDir.getAbsolutePath());
+      Injector.INSTANCE.cmd().runCommand(
+          "bash", ImmutableList.of("-c", this.commandString), tempDir.getAbsolutePath());
     } catch (CommandRunner.CommandException e) {
       throw new MoeProblem(e.getMessage());
     }

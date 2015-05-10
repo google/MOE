@@ -2,9 +2,6 @@
 
 package com.google.devtools.moe.client;
 
-import com.google.devtools.moe.client.Ui;
-import com.google.devtools.moe.client.testing.AppContextForTesting;
-
 import junit.framework.TestCase;
 
 /**
@@ -13,14 +10,16 @@ import junit.framework.TestCase;
 public class UiTest extends TestCase {
 
   class NoOpUi extends Ui {
-    public void info(String msg) {}
-    public void error(String msg) {}
-    public void error(Throwable e, String msg) {}
-    public void debug(String msg) {}
+    NoOpUi() {
+      this.fileSystem = new SystemFileSystem();
+    }
+    @Override public void info(String msg) {}
+    @Override public void error(String msg) {}
+    @Override public void error(Throwable e, String msg) {}
+    @Override public void debug(String msg) {}
   }
 
   public void testStackHelpers() throws Exception {
-    AppContextForTesting.initForTest();
     Ui ui = new NoOpUi();
     Ui.Task t = ui.pushTask("foo", "bar");
     ui.popTask(t, "");
@@ -29,7 +28,9 @@ public class UiTest extends TestCase {
     t = ui.pushTask("foo", "bar");
     try {
       ui.popTask(new Ui.Task("baz", "quux"), "");
-      fail("Expected failure");
-    } catch (MoeProblem e) {}
+    } catch (MoeProblem expected) {
+      return;
+    }
+    fail("Expected failure");
   }
 }

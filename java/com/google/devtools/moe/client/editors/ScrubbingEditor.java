@@ -5,14 +5,15 @@ package com.google.devtools.moe.client.editors;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Utils;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.project.EditorConfig;
+import com.google.devtools.moe.client.project.ProjectConfig;
 import com.google.devtools.moe.client.project.ProjectContext;
-import com.google.gson.JsonObject;
+import com.google.devtools.moe.client.project.ScrubberConfig;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,21 +37,21 @@ public class ScrubbingEditor implements Editor {
         @Override public File get() {
           try {
             // TODO(dbentley): what will this resource be under ant?
-            File scrubberBinary =
-                AppContext.RUN.fileSystem.getResourceAsFile("/devtools/moe/scrubber/scrubber.par");
-            AppContext.RUN.fileSystem.setExecutable(scrubberBinary);
+            File scrubberBinary = Injector.INSTANCE.fileSystem()
+                .getResourceAsFile("/devtools/moe/scrubber/scrubber.par");
+            Injector.INSTANCE.fileSystem().setExecutable(scrubberBinary);
             return scrubberBinary;
           } catch (IOException ioEx) {
-            AppContext.RUN.ui.error(ioEx, "Error extracting scrubber");
+            Injector.INSTANCE.ui().error(ioEx, "Error extracting scrubber");
             throw new MoeProblem("Error extracting scrubber: " + ioEx.getMessage());
           }
         }
       });
 
-  private String name;
-  private JsonObject scrubberConfig;
+  private final String name;
+  private final ScrubberConfig scrubberConfig;
 
-  ScrubbingEditor(String editorName, JsonObject scrubberConfig) {
+  ScrubbingEditor(String editorName, ScrubberConfig scrubberConfig) {
     name = editorName;
     this.scrubberConfig = scrubberConfig;
   }
@@ -69,11 +70,11 @@ public class ScrubbingEditor implements Editor {
    */
   @Override
   public Codebase edit(Codebase input, ProjectContext context, Map<String, String> options) {
-    File tempDir = AppContext.RUN.fileSystem.getTemporaryDirectory("scrubber_run_");
+    File tempDir = Injector.INSTANCE.fileSystem().getTemporaryDirectory("scrubber_run_");
     File outputTar = new File(tempDir, "scrubbed.tar");
 
     try {
-      AppContext.RUN.cmd.runCommand(
+      Injector.INSTANCE.cmd().runCommand(
           // The ./ preceding scrubber.par is sometimes needed.
           // TODO(user): figure out why
           "./scrubber.par",
@@ -81,7 +82,8 @@ public class ScrubbingEditor implements Editor {
               "--temp_dir", tempDir.getAbsolutePath(),
               "--output_tar", outputTar.getAbsolutePath(),
               // TODO(dbentley): allow configuring the scrubber config
-              "--config_data", (scrubberConfig == null) ? "{}" : scrubberConfig.toString(),
+              "--config_data",
+              (scrubberConfig == null) ? "{}" : ProjectConfig.makeGson().toJson(scrubberConfig),
               input.getPath().getAbsolutePath()),
           SCRUBBER_BINARY_SUPPLIER.get().getParentFile().getPath());
     } catch (CommandRunner.CommandException e) {

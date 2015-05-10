@@ -2,12 +2,15 @@
 
 package com.google.devtools.moe.client;
 
-import com.google.common.base.Charsets;
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
+
+import dagger.Provides;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,14 +20,19 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 /**
  * A {@link FileSystem} using the real local filesystem via operations in {@link File}.
  *
  * @author dbentley@google.com (Daniel Bentley)
  */
 public class SystemFileSystem implements FileSystem {
-
   private final Map<File, Lifetime> tempDirLifetimes = Maps.newHashMap();
+
+  @Inject
+  public SystemFileSystem() {}
 
   @Override
   public File getTemporaryDirectory(String prefix) {
@@ -52,7 +60,6 @@ public class SystemFileSystem implements FileSystem {
       if (entry.getValue().shouldCleanUp()) {
         deleteRecursively(entry.getKey());
         tempDirIterator.remove();
-        AppContext.RUN.ui.debug("Deleted temp dir: " + entry.getKey());
       }
     }
   }
@@ -123,12 +130,12 @@ public class SystemFileSystem implements FileSystem {
 
   @Override
   public void setExecutable(File f) {
-    f.setExecutable(true);
+    f.setExecutable(true, false);
   }
 
   @Override
   public void setNonExecutable(File f) {
-    f.setExecutable(false);
+    f.setExecutable(false, false);
   }
 
   @Override
@@ -144,12 +151,12 @@ public class SystemFileSystem implements FileSystem {
   @Override
   public void copyFile(File src, File dest) throws IOException {
     Files.copy(src, dest);
-    dest.setExecutable(src.canExecute());
+    dest.setExecutable(src.canExecute(), false);
   }
 
   @Override
   public void write(String contents, File f) throws IOException {
-    Files.write(contents, f, Charsets.UTF_8);
+    Files.write(contents, f, UTF_8);
   }
 
   @Override
@@ -168,7 +175,7 @@ public class SystemFileSystem implements FileSystem {
         getTemporaryDirectory("resource_extraction_", Lifetimes.moeExecution()),
         name);
     makeDirsForFile(extractedFile);
-    OutputStream os = Files.newOutputStreamSupplier(extractedFile).getOutput();
+    OutputStream os = Files.asByteSink(extractedFile).openStream();
     Resources.copy(
         SystemFileSystem.class.getResource(resource), os);
     os.close();
@@ -177,6 +184,13 @@ public class SystemFileSystem implements FileSystem {
 
   @Override
   public String fileToString(File f) throws IOException {
-      return Files.toString(f, Charsets.UTF_8);
+      return Files.toString(f, UTF_8);
+  }
+
+  /** A Dagger module for binding this implementation of {@link FileSystem}. */
+  @dagger.Module(complete = false) public static class Module {
+    @Provides @Singleton public FileSystem fileSystem(SystemFileSystem impl) {
+      return impl;
+    }
   }
 }

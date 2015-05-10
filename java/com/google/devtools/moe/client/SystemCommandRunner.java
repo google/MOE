@@ -6,29 +6,35 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
+import dagger.Provides;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.Process;
-import java.lang.ProcessBuilder;
-import java.lang.Thread;
 import java.util.List;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
 /**
  *
  * @author dbentley@google.com (Daniel Bentley)
  */
 public class SystemCommandRunner implements CommandRunner {
+  private final Ui ui;
 
-  public String runCommand(String cmd, List<String> args, String workingDirectory)
-      throws CommandException {
-    ImmutableList<String> cmdArgs = (new ImmutableList.Builder<String>()).add(cmd).
-        addAll(args).build();
+  @Inject
+  public SystemCommandRunner(Ui ui) {
+    this.ui = ui;
+  }
 
-    if (AppContext.RUN != null) {
-      AppContext.RUN.ui.debug(
-          workingDirectory + "$ " + Joiner.on(" ").join(cmdArgs));
-    }
+  @Override
+  public CommandOutput runCommandWithFullOutput(
+      String cmd, List<String> args, String workingDirectory) throws CommandException {
+    ImmutableList<String> cmdArgs = (new ImmutableList.Builder<String>()).add(cmd).addAll(args)
+        .build();
+
+    ui.debug(workingDirectory + "$ " + Joiner.on(" ").join(cmdArgs));
 
     ProcessBuilder pb = new ProcessBuilder(cmdArgs);
     if (workingDirectory != null && !workingDirectory.isEmpty()) {
@@ -95,11 +101,16 @@ public class SystemCommandRunner implements CommandRunner {
       throw new MoeProblem(String.format("Interrupted while running process: %s", cmdArgs));
     }
     if (returnStatus == 0) {
-      return stdoutData;
+      return new CommandOutput(stdoutData, stderrData);
     }
     throw new CommandException(cmd, args, stdoutData, stderrData, returnStatus);
   }
 
+  @Override
+  public String runCommand(String cmd, List<String> args, String workingDirectory)
+      throws CommandException {
+    return runCommandWithFullOutput(cmd, args, workingDirectory).getStdout();
+  }
 
   private static class Sink {
     private final List<Byte> bytes = Lists.newArrayList();
@@ -134,6 +145,13 @@ public class SystemCommandRunner implements CommandRunner {
         byteArray[i++] = b;
       }
       return new String(byteArray);
+    }
+  }
+
+  /** A Dagger module for binding this implementation of {@link CommandRunner}. */
+  @dagger.Module(complete = false) public static class Module {
+    @Provides @Singleton public CommandRunner runner(SystemCommandRunner impl) {
+      return impl;
     }
   }
 }

@@ -5,13 +5,15 @@ package com.google.devtools.moe.client.codebase;
 import static org.easymock.EasyMock.expect;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.FileSystem;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
-import com.google.devtools.moe.client.testing.AppContextForTesting;
+import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.testing.FileCodebaseCreator;
+import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
+import com.google.devtools.moe.client.testing.RecordingUi;
 
 import junit.framework.TestCase;
 
@@ -27,16 +29,16 @@ import java.util.List;
  *
  */
 public class FileCodebaseCreatorTest extends TestCase {
+  private final InMemoryProjectContextFactory contextFactory = new InMemoryProjectContextFactory();
+  private final RecordingUi ui = new RecordingUi();
+  private final SystemCommandRunner cmd = new SystemCommandRunner(ui);
+  private final IMocksControl control = EasyMock.createControl();
+  private final FileSystem mockfs = control.createMock(FileSystem.class);
 
-  private IMocksControl control;
-  private FileSystem mockfs;
-
-  @Override protected void setUp() throws Exception {
+  @Override
+  public void setUp() throws Exception {
     super.setUp();
-    AppContextForTesting.initForTest();
-    control = EasyMock.createControl();
-    mockfs = control.createMock(FileSystem.class);
-    AppContext.RUN.fileSystem = mockfs;
+    Injector.INSTANCE = new Injector(mockfs, cmd, contextFactory, ui);
   }
 
   private void expectDirCopy(File src, File dest) throws Exception {
@@ -165,7 +167,7 @@ public class FileCodebaseCreatorTest extends TestCase {
                               EasyMock.<List<String>>anyObject(),
                               EasyMock.<String>anyObject())).andReturn(null);
     EasyMock.replay(mockcmd);
-    AppContext.RUN.cmd = mockcmd;
+    Injector.INSTANCE = new Injector(mockfs, mockcmd, contextFactory, ui);
 
     control.replay();
     File codebasePath = FileCodebaseCreator.getCodebasePath(fileFolder);

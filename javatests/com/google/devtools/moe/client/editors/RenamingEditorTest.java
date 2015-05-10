@@ -5,13 +5,15 @@ package com.google.devtools.moe.client.editors;
 import static org.easymock.EasyMock.expect;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.codebase.Codebase;
-import com.google.devtools.moe.client.testing.AppContextForTesting;
+import com.google.devtools.moe.client.testing.TestingModule;
 import com.google.gson.JsonObject;
+
+import dagger.Provides;
 
 import junit.framework.TestCase;
 
@@ -21,9 +23,36 @@ import org.easymock.IMocksControl;
 import java.io.File;
 import java.util.Map;
 
+import javax.inject.Singleton;
+
 /**
  */
 public class RenamingEditorTest extends TestCase {
+  private final IMocksControl control = EasyMock.createControl();
+  private final FileSystem fileSystem = control.createMock(FileSystem.class);
+  private final CommandRunner cmd = control.createMock(CommandRunner.class);
+
+  // TODO(cgruber): Rework these when statics aren't inherent in the design.
+  @dagger.Component(modules = {TestingModule.class, Module.class})
+  @Singleton
+  interface Component {
+    Injector context(); // TODO (b/19676630) Remove when bug is fixed.
+  }
+
+  @dagger.Module class Module {
+    @Provides public CommandRunner cmd() {
+      return cmd;
+    }
+    @Provides public FileSystem filesystem() {
+      return fileSystem;
+    }
+  }
+
+  @Override protected void setUp() throws Exception {
+    super.setUp();
+    Injector.INSTANCE = DaggerRenamingEditorTest_Component.builder().module(new Module()).build()
+        .context();
+  }
 
   public void testRenameFile_NoRegex() throws Exception {
     RenamingEditor renamer = new RenamingEditor(
@@ -61,13 +90,6 @@ public class RenamingEditorTest extends TestCase {
   }
 
   public void testCopyDirectoryAndRename() throws Exception {
-    AppContextForTesting.initForTest();
-    IMocksControl control = EasyMock.createControl();
-    FileSystem fileSystem = control.createMock(FileSystem.class);
-    CommandRunner cmd = control.createMock(CommandRunner.class);
-    AppContext.RUN.cmd = cmd;
-    AppContext.RUN.fileSystem = fileSystem;
-
     File srcContents = new File("/src/olddummy/file1");
     File srcContents2 = new File("/src/olddummy/file2");
     File src = new File("/src");
@@ -106,13 +128,6 @@ public class RenamingEditorTest extends TestCase {
     File oldSubFile = new File("/codebase/moe.txt");
     File renameRun = new File("/rename_run_foo");
     File newSubFile = new File(renameRun, "joe.txt");
-
-    AppContextForTesting.initForTest();
-    IMocksControl control = EasyMock.createControl();
-    FileSystem fileSystem = control.createMock(FileSystem.class);
-    CommandRunner cmd = control.createMock(CommandRunner.class);
-    AppContext.RUN.cmd = cmd;
-    AppContext.RUN.fileSystem = fileSystem;
 
     expect(fileSystem.getTemporaryDirectory("rename_run_")).andReturn(renameRun);
 

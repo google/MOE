@@ -3,9 +3,9 @@
 package com.google.devtools.moe.client.dvcs;
 
 import com.google.common.collect.Sets;
-import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.FileSystem;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Utils;
 import com.google.devtools.moe.client.codebase.Codebase;
@@ -61,8 +61,7 @@ public abstract class AbstractDvcsWriter<T extends LocalClone> implements Writer
     Set<String> codebaseFiles = incomingChangeCodebase.getRelativeFilenames();
     Set<String> writerRepoFiles = Utils.filterByRegEx(
         Utils.makeFilenamesRelative(
-            AppContext.RUN.fileSystem.findFiles(getRoot()),
-            getRoot()),
+            Injector.INSTANCE.fileSystem().findFiles(getRoot()), getRoot()),
         getIgnoreFilePatterns());
 
     Set<String> filesToUpdate = Sets.union(codebaseFiles, writerRepoFiles);
@@ -71,7 +70,13 @@ public abstract class AbstractDvcsWriter<T extends LocalClone> implements Writer
       try {
         putFile(filename, incomingChangeCodebase);
       } catch (CommandException e) {
-        throw new MoeProblem("problem occurred while running '" + e.cmd + "': " + e.stderr);
+        StringBuilder sb = new StringBuilder("Problem occurred while running '");
+        sb.append(e.cmd);
+        for (String arg : e.args) {
+          sb.append(" ").append(arg);
+        }
+        sb.append("': ").append(e.stderr);
+        throw new MoeProblem(sb.toString());
       }
     }
 
@@ -95,7 +100,7 @@ public abstract class AbstractDvcsWriter<T extends LocalClone> implements Writer
 
   private void putFile(String relativeFilename, Codebase incomingChangeCodebase)
       throws CommandException {
-    FileSystem fs = AppContext.RUN.fileSystem;
+    FileSystem fs = Injector.INSTANCE.fileSystem();
     File src = incomingChangeCodebase.getFile(relativeFilename);
     File dest = new File(getRoot().getAbsolutePath(), relativeFilename);
     boolean srcExists = fs.exists(src);
@@ -148,7 +153,7 @@ public abstract class AbstractDvcsWriter<T extends LocalClone> implements Writer
     if (hasPendingChanges()) {
       try {
         commitChanges(revMetaData);
-        AppContext.RUN.ui.info(
+        Injector.INSTANCE.ui().info(
             "Converted draft revision to writer at " + getRoot().getAbsolutePath());
       } catch (CommandException e) {
         throw new WritingError("Error committing: " + e);

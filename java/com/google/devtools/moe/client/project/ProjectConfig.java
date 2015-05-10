@@ -6,7 +6,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
+import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.migrations.MigrationConfig;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -47,10 +49,26 @@ public class ProjectConfig {
     return name;
   }
 
-  public Map<String, RepositoryConfig> getRepositoryConfigs()
-      throws InvalidProject {
+  /**
+   * Returns a mapping of {@link RepositoryConfig} by name in this config. Useful for inspection of
+   * this config's contents.
+   */
+  Map<String, RepositoryConfig> getRepositoryConfigs() {
     Preconditions.checkNotNull(repositories);
     return Collections.unmodifiableMap(repositories);
+  }
+
+  /**
+   * Returns the {@link RepositoryConfig} in this config with the given name.
+   *
+   * @throws MoeProblem if no such repository with the given name exists
+   */
+  public RepositoryConfig getRepositoryConfig(String repositoryName) {
+    if (!repositories.containsKey(repositoryName)) {
+      throw new MoeProblem("No such repository '" + repositoryName + "' in the config. Found: "
+          + ImmutableSortedSet.copyOf(repositories.keySet()));
+    }
+    return repositories.get(repositoryName);
   }
 
   public Map<String, EditorConfig> getEditorConfigs() {
@@ -94,6 +112,24 @@ public class ProjectConfig {
         .registerTypeAdapter(JsonObject.class, new JsonObjectDeserializer())
         .create();
     return gson;
+  }
+
+  public ScrubberConfig findScrubberConfig(String fromRepository, String toRepository) {
+    String fromProjectSpace = getRepositoryConfig(fromRepository).getProjectSpace();
+    String toProjectSpace = getRepositoryConfig(toRepository).getProjectSpace();
+    for (TranslatorConfig translator : getTranslators()) {
+      if (translator.getSteps() != null
+          && translator.getFromProjectSpace().equals(fromProjectSpace)
+          && translator.getToProjectSpace().equals(toProjectSpace)) {
+        for (StepConfig step : translator.getSteps()) {
+          if (step.getEditorConfig().getType() == EditorType.scrubber) {
+            return step.getEditorConfig().getScrubberConfig();
+          }
+        }
+        break;
+      }
+    }
+    return null;
   }
 
   void validate() throws InvalidProject {

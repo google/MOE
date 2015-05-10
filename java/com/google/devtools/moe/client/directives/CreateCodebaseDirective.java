@@ -5,9 +5,10 @@ package com.google.devtools.moe.client.directives;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.moe.client.AppContext;
+import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.MoeOptions;
+import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.Ui.Task;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
@@ -15,19 +16,30 @@ import com.google.devtools.moe.client.parser.Parser;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.ProjectContext;
+import com.google.devtools.moe.client.project.ProjectContextFactory;
 
 import org.kohsuke.args4j.Option;
+
+import javax.inject.Inject;
 
 /**
  * Print the head revision of a repository.
  *
  * @author dbentley@google.com (Daniel Bentley)
  */
-public class CreateCodebaseDirective implements Directive {
-
+public class CreateCodebaseDirective extends Directive {
   private final CreateCodebaseOptions options = new CreateCodebaseOptions();
 
-  public CreateCodebaseDirective() {}
+  private final CommandRunner cmd;
+  private final ProjectContextFactory contextFactory;
+  private final Ui ui;
+
+  @Inject
+  CreateCodebaseDirective(CommandRunner cmd, ProjectContextFactory contextFactory, Ui ui) {
+    this.cmd = cmd;
+    this.contextFactory = contextFactory;
+    this.ui = ui;
+  }
 
   @Override
   public CreateCodebaseOptions getFlags() {
@@ -38,41 +50,40 @@ public class CreateCodebaseDirective implements Directive {
   public int perform() {
     ProjectContext context;
     try {
-      context = AppContext.RUN.contextFactory.makeProjectContext(options.configFilename);
+      context = contextFactory.makeProjectContext(options.configFilename);
     } catch (InvalidProject e) {
-      AppContext.RUN.ui.error(e, "Error creating project");
+      ui.error(e, "Error creating project");
       return 1;
     }
 
     Task createCodebaseTask =
-        AppContext.RUN.ui.pushTask("create_codebase", "Creating codebase " + options.codebase);
+        ui.pushTask("create_codebase", "Creating codebase " + options.codebase);
     Codebase c;
     try {
       c = Parser.parseExpression(options.codebase).createCodebase(context);
     } catch (ParseError e) {
-      AppContext.RUN.ui.error(e, "Error creating codebase");
+      ui.error(e, "Error creating codebase");
       return 1;
     } catch (CodebaseCreationError e) {
-      AppContext.RUN.ui.error(e, "Error creating codebase");
+      ui.error(e, "Error creating codebase");
       return 1;
     }
-    AppContext.RUN.ui.info(
-        String.format("Codebase \"%s\" created at %s", c.toString(), c.getPath()));
+    ui.info(String.format("Codebase \"%s\" created at %s", c.toString(), c.getPath()));
 
     try {
       maybeWriteTar(c);
     } catch (CommandException e) {
-      AppContext.RUN.ui.error(e, "Error creating codebase tarfile");
+      ui.error(e, "Error creating codebase tarfile");
       return 1;
     }
 
-    AppContext.RUN.ui.popTaskAndPersist(createCodebaseTask, c.getPath());
+    ui.popTaskAndPersist(createCodebaseTask, c.getPath());
     return 0;
   }
 
   /**
    * If the user specified --tarfile, then tar up the codebase at the specified location.
-   * @throws CommandException 
+   * @throws CommandException
    */
   private void maybeWriteTar(Codebase codebase)
       throws CommandException {
@@ -82,12 +93,18 @@ public class CreateCodebaseDirective implements Directive {
       return;
     }
 
-    AppContext.RUN.cmd.runCommand(
+    cmd.runCommand(
         "tar",
-        ImmutableList.of("-c", "-f", tarfilePath, "."),
+        ImmutableList.of(
+            "--mtime=1980-01-01", "--owner=0", "--group=0", "-c", "-f", tarfilePath, "."),
         codebase.getPath().getAbsolutePath());
-    AppContext.RUN.ui.info(
+    ui.info(
         String.format("tar of codebase \"%s\" created at %s", codebase.toString(), tarfilePath));
+  }
+
+  @Override
+  public String getDescription() {
+    return "Creates a codebase from a codebase expression";
   }
 
   static class CreateCodebaseOptions extends MoeOptions {

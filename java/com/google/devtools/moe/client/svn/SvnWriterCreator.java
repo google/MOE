@@ -3,7 +3,7 @@
 package com.google.devtools.moe.client.svn;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.moe.client.AppContext;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.Utils;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.Revision;
@@ -34,7 +34,8 @@ public class SvnWriterCreator implements WriterCreator {
     Utils.checkKeys(options, ImmutableSet.of("revision"));
     String revId = options.get("revision");
     Revision r = revisionHistory.findHighestRevision(options.get("revision"));
-    File tempDir = AppContext.RUN.fileSystem.getTemporaryDirectory(
+    File tempDir =
+        Injector.INSTANCE.fileSystem().getTemporaryDirectory(
         String.format("svn_writer_%s_", r.revId));
     SvnWriter writer = new SvnWriter(config, r, tempDir);
     writer.checkOut();

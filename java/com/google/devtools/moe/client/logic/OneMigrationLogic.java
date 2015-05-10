@@ -10,6 +10,7 @@ import com.google.devtools.moe.client.parser.Expression;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.ProjectContext;
+import com.google.devtools.moe.client.project.ScrubberConfig;
 import com.google.devtools.moe.client.repositories.MetadataScrubberConfig;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
@@ -38,9 +39,11 @@ public class OneMigrationLogic {
    */
   public static DraftRevision migrate(Codebase c, Writer destination,
                                       List<Revision> revisionsToMigrate,
-                                      ProjectContext context, Revision fromRevision) {
+                                      ProjectContext context, Revision fromRevision,
+                                      String fromRepository, String toRepository) {
     RevisionMetadata metadata = DetermineMetadataLogic.determine(
         context, revisionsToMigrate, fromRevision);
+    metadata = scrubAuthors(metadata, context, fromRepository, toRepository);
     return ChangeLogic.change(c, destination, metadata);
   }
 
@@ -67,8 +70,8 @@ public class OneMigrationLogic {
 
     Codebase fromCodebase;
     try {
-      String toProjectSpace = context.config.getRepositoryConfigs()
-          .get(migration.config.getToRepository()).getProjectSpace();
+      String toProjectSpace =
+          context.config.getRepositoryConfig(migration.config.getToRepository()).getProjectSpace();
 
       fromCodebase = new RepositoryExpression(migration.config.getFromRepository())
           .atRevision(mostRecentFromRev.revId)
@@ -76,8 +79,6 @@ public class OneMigrationLogic {
           .withReferenceToCodebase(referenceToCodebase)
           .createCodebase(context);
 
-    } catch (InvalidProject e) {
-      throw new MoeProblem(e.getMessage());
     } catch (CodebaseCreationError e) {
       throw new MoeProblem(e.getMessage());
     }
@@ -87,6 +88,23 @@ public class OneMigrationLogic {
         ? DetermineMetadataLogic.determine(context, migration.fromRevisions, mostRecentFromRev)
         : DetermineMetadataLogic.determine(context, migration.fromRevisions, sc, mostRecentFromRev);
 
+    metadata = scrubAuthors(metadata, context, migration.config.getFromRepository(),
+        migration.config.getToRepository());
+
     return ChangeLogic.change(fromCodebase, destination, metadata);
+  }
+
+  private static RevisionMetadata scrubAuthors(RevisionMetadata metadata, ProjectContext context,
+      String fromRepository, String toRepository) {
+    try {
+      ScrubberConfig scrubber = context.config.findScrubberConfig(fromRepository, toRepository);
+      if (scrubber != null && scrubber.shouldScrubAuthor(metadata.author)) {
+        return new RevisionMetadata(
+            metadata.id, null /* author */, metadata.date, metadata.description, metadata.parents);
+      }
+    } catch (InvalidProject exception) {
+      throw new MoeProblem(exception.getMessage());
+    }
+    return metadata;
   }
 }

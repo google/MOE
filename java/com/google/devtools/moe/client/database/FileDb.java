@@ -4,7 +4,7 @@ package com.google.devtools.moe.client.database;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.moe.client.AppContext;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.repositories.Revision;
@@ -69,7 +69,7 @@ public class FileDb implements Db {
   @Override
   public void writeToLocation(String dbLocation) {
     try {
-      AppContext.RUN.fileSystem.write(toJsonString(), new File(dbLocation));
+      Injector.INSTANCE.fileSystem().write(toJsonString(), new File(dbLocation));
     } catch (IOException e) {
       throw new MoeProblem(e.getMessage());
     }
@@ -86,7 +86,7 @@ public class FileDb implements Db {
 
   public static FileDb makeDbFromFile(String path) throws MoeProblem {
     try {
-      String dbText = AppContext.RUN.fileSystem.fileToString(new File(path));
+      String dbText = Injector.INSTANCE.fileSystem().fileToString(new File(path));
       try {
         return makeDbFromDbText(dbText);
       } catch (InvalidProject e) {

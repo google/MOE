@@ -2,7 +2,7 @@
 
 package com.google.devtools.moe.client.logic;
 
-import com.google.devtools.moe.client.AppContext;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.tools.CodebaseDifference;
 import com.google.devtools.moe.client.tools.PatchCodebaseDifferenceRenderer;
@@ -23,12 +23,12 @@ public class DiffCodebasesLogic {
     CodebaseDifference diff = CodebaseDifference.diffCodebases(c1, c2);
 
     if (diff.areDifferent()) {
-      AppContext.RUN.ui.info(
+      Injector.INSTANCE.ui().info(
           String.format("Codebases \"%s\" and \"%s\" differ:\n%s",
                         c1.toString(), c2.toString(),
                         new PatchCodebaseDifferenceRenderer().render(diff)));
     } else {
-      AppContext.RUN.ui.info(
+      Injector.INSTANCE.ui().info(
           String.format("Codebases \"%s\" and \"%s\" are identical",
                         c1.toString(), c2.toString()));
     }

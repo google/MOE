@@ -6,8 +6,13 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 
+import dagger.Provides;
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
 /**
  * Ui that outputs to System.out and System.err
@@ -15,13 +20,13 @@ import java.util.logging.Logger;
  * @author dbentley@google.com (Daniel Bentley)
  */
 public class SystemUi extends Ui {
-  private final Logger logger =
-      Logger.getLogger(SystemUi.class.getName());
+  private final Logger logger = Logger.getLogger(SystemUi.class.getName());
 
   // We store the task that is the current output, if any, so that we can special case a Task that
   // is popped right after it is pushed. In this case, we can output: "Doing...Done" on one line.
   Ui.Task currentOutput;
 
+  @Inject
   public SystemUi() {
     super();
     currentOutput = null;
@@ -49,6 +54,7 @@ public class SystemUi extends Ui {
     logHelper(indent(msg));
   }
 
+  @Override
   public void debug(String msg) {
     logger.log(Level.INFO, msg);
   }
@@ -98,5 +104,12 @@ public class SystemUi extends Ui {
           indent("DONE: " + task.description + ": " + result));
     }
     currentOutput = null;
+  }
+
+  /** A Dagger module for binding this implementation of {@link Ui}. */
+  @dagger.Module(complete = false) public static class Module {
+    @Provides @Singleton public Ui ui(SystemUi impl) {
+      return impl;
+    }
   }
 }

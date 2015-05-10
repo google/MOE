@@ -2,16 +2,21 @@
 
 package com.google.devtools.moe.client.database;
 
+import static org.easymock.EasyMock.expect;
+
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.FileSystem;
+import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.SystemCommandRunner;
+import com.google.devtools.moe.client.SystemFileSystem;
 import com.google.devtools.moe.client.repositories.Revision;
-import com.google.devtools.moe.client.testing.AppContextForTesting;
+import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
+import com.google.devtools.moe.client.testing.RecordingUi;
 
 import junit.framework.TestCase;
+
 import org.easymock.EasyMock;
-import static org.easymock.EasyMock.expect;
 import org.easymock.IMocksControl;
 
 import java.io.File;
@@ -19,10 +24,14 @@ import java.io.File;
 /**
  */
 public class FileDbTest extends TestCase {
+  private final InMemoryProjectContextFactory contextFactory = new InMemoryProjectContextFactory();
+  private final RecordingUi ui = new RecordingUi();
+  private final SystemCommandRunner cmd = new SystemCommandRunner(ui);
 
   @Override
-  public void setUp() {
-    AppContextForTesting.initForTest();
+  public void setUp() throws Exception {
+    super.setUp();
+    Injector.INSTANCE = new Injector(new SystemFileSystem(), cmd, contextFactory, ui);
   }
 
   public void testValidDb() throws Exception {
@@ -102,7 +111,7 @@ public class FileDbTest extends TestCase {
   public void testMakeDbFromFile() throws Exception {
     IMocksControl control = EasyMock.createControl();
     FileSystem fileSystem = control.createMock(FileSystem.class);
-    AppContext.RUN.fileSystem = fileSystem;
+    Injector.INSTANCE = new Injector(fileSystem, cmd, contextFactory, ui);
 
     File dbFile = new File("/path/to/db");
     String dbText = Joiner.on("\n").join(
@@ -133,7 +142,7 @@ public class FileDbTest extends TestCase {
   public void testWriteDbToFile() throws Exception {
     IMocksControl control = EasyMock.createControl();
     FileSystem fileSystem = control.createMock(FileSystem.class);
-    AppContext.RUN.fileSystem = fileSystem;
+    Injector.INSTANCE = new Injector(fileSystem, cmd, contextFactory, ui);
 
     File dbFile = new File("/path/to/db");
     String dbText = Joiner.on("\n").join(

@@ -2,12 +2,13 @@
 
 package com.google.devtools.moe.client.dvcs.git;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.FileSystem.Lifetime;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.Lifetimes;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.codebase.LocalClone;
@@ -21,6 +22,15 @@ import java.io.IOException;
  */
 public class GitClonedRepository implements LocalClone {
 
+  /**
+   * A prefix for branches MOE creates to write migrated changes. For example, if there have been
+   * revisions in a to-repository since an equivalence revision, MOE won't try to merge or rebase
+   * those changes -- instead, it will create a branch with this prefix from the equivalence
+   * revision.
+   */
+  static final String MOE_MIGRATIONS_BRANCH_PREFIX = "moe_writing_branch_from_";
+
+
   private final String repositoryName;
   private final RepositoryConfig repositoryConfig;
   /**
@@ -32,7 +42,7 @@ public class GitClonedRepository implements LocalClone {
   private boolean clonedLocally;
   /** The revision of this clone, a Git hash ID */
   private String revId;
-  
+
   GitClonedRepository(String repositoryName, RepositoryConfig repositoryConfig) {
     this(repositoryName, repositoryConfig, repositoryConfig.getUrl());
   }
@@ -67,15 +77,17 @@ public class GitClonedRepository implements LocalClone {
     Preconditions.checkState(!clonedLocally);
 
     String tempDirName = String.format("git_clone_%s_", repositoryName);
-    localCloneTempDir = AppContext.RUN.fileSystem.getTemporaryDirectory(tempDirName, cloneLifetime);
+    localCloneTempDir =
+        Injector.INSTANCE.fileSystem().getTemporaryDirectory(tempDirName, cloneLifetime);
+    Optional<String> branchName = repositoryConfig.getBranch();
 
     try {
-      GitRepository.runGitCommand(
-          ImmutableList.<String>of(
-              "clone",
-              repositoryUrl,
-              localCloneTempDir.getAbsolutePath()),
-          "" /*workingDirectory*/);
+      ImmutableList.Builder<String> cloneArgs = ImmutableList.<String>builder();
+      cloneArgs.add("clone", repositoryUrl, localCloneTempDir.getAbsolutePath());
+      if (branchName.isPresent()) {
+        cloneArgs.add("--branch", branchName.get());
+      }
+      GitRepository.runGitCommand(cloneArgs.build(), "" /*workingDirectory*/);
       clonedLocally = true;
       this.revId = "HEAD";
     } catch (CommandException e) {
@@ -89,13 +101,12 @@ public class GitClonedRepository implements LocalClone {
     Preconditions.checkState(clonedLocally);
     Preconditions.checkState("HEAD".equals(this.revId));
     try {
-      String headCommitId =
-          runGitCommand("show-ref", "--heads", "--hash", GitWriter.DEFAULT_BRANCH_NAME).trim();
+      String headHash = runGitCommand("rev-parse", "HEAD").trim();
       // If we are updating to a revision other than the branch's head, branch from that revision.
       // Otherwise, no update/checkout is necessary since we are already at the desired revId,
       // branch head.
-      if (!headCommitId.equals(revId)) {
-        runGitCommand("checkout", revId, "-b", "moe_writing_branch_from_" + revId);
+      if (!headHash.equals(revId)) {
+        runGitCommand("checkout", revId, "-b", MOE_MIGRATIONS_BRANCH_PREFIX + revId);
       }
       this.revId = revId;
     } catch (CommandException e) {
@@ -110,11 +121,14 @@ public class GitClonedRepository implements LocalClone {
     if (Strings.isNullOrEmpty(revId)) {
       revId = "HEAD";
     }
-    File archiveLocation = AppContext.RUN.fileSystem.getTemporaryDirectory(
+    File archiveLocation =
+        Injector.INSTANCE.fileSystem().getTemporaryDirectory(
         String.format("git_archive_%s_%s_", repositoryName, revId),
         Lifetimes.currentTask());
     // Using this just to get a filename.
-    String tarballPath = AppContext.RUN.fileSystem.getTemporaryDirectory(
+    String tarballPath =
+        Injector.INSTANCE.fileSystem()
+            .getTemporaryDirectory(
         String.format("git_tarball_%s_%s.tar.", repositoryName, revId),
         Lifetimes.currentTask()).getAbsolutePath();
     try {
@@ -130,25 +144,25 @@ public class GitClonedRepository implements LocalClone {
           revId);
 
       // Make the directory to untar into
-      AppContext.RUN.fileSystem.makeDirs(archiveLocation);
+      Injector.INSTANCE.fileSystem().makeDirs(archiveLocation);
 
       // Untar the tarball we just made
-      AppContext.RUN.cmd.runCommand(
-          "tar", 
+      Injector.INSTANCE.cmd().runCommand(
+          "tar",
           ImmutableList.<String>of(
               "xf",
               tarballPath,
               "-C",
               archiveLocation.getAbsolutePath()),
           "");
-    
+
     } catch (CommandException e) {
       throw new MoeProblem(
-          "Could not archive git clone at " + 
+          "Could not archive git clone at " +
             localCloneTempDir.getAbsolutePath() + ": " + e.stderr);
     } catch (IOException e) {
       throw new MoeProblem(
-          "IOException archiving clone at " + 
+          "IOException archiving clone at " +
               localCloneTempDir.getAbsolutePath() +
               " to revision " + revId + ": " + e);
     }
@@ -157,12 +171,14 @@ public class GitClonedRepository implements LocalClone {
 
   /**
    * Runs a git command with the given arguments, in this cloned repository's directory.
-   * 
+   *
    * @param args a list of arguments for git
    * @return a string containing the STDOUT result
    */
   String runGitCommand(String... args) throws CommandException {
-    return AppContext.RUN.cmd.runCommand("git", ImmutableList.copyOf(args),
+    return Injector.INSTANCE.cmd().runCommand(
+        "git",
+        ImmutableList.copyOf(args),
         getLocalTempDir().getAbsolutePath() /*workingDirectory*/);
   }
 }

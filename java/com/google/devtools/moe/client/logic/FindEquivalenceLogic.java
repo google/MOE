@@ -2,7 +2,7 @@
 
 package com.google.devtools.moe.client.logic;
 
-import com.google.devtools.moe.client.AppContext;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.database.Db;
 import com.google.devtools.moe.client.repositories.Revision;
 
@@ -35,10 +35,9 @@ public class FindEquivalenceLogic {
         }
       }
       if (equivalences.isEmpty()) {
-        AppContext.RUN.ui.info(
-            noEquivalenceBuilder(rev.repositoryName, rev.revId, inRepo));
+        Injector.INSTANCE.ui().info(noEquivalenceBuilder(rev.repositoryName, rev.revId, inRepo));
       } else {
-        AppContext.RUN.ui.info(
+        Injector.INSTANCE.ui().info(
           equivalenceBuilder(rev.repositoryName, rev.revId,
               inRepo, result.toString()));
       }

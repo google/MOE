@@ -5,8 +5,8 @@ package com.google.devtools.moe.client.dvcs.hg;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.Lifetimes;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.RepositoryConfig;
@@ -68,11 +68,11 @@ public class HgRepository {
 
     HgWriterCreator wc = new HgWriterCreator(freshSupplier, rh);
 
-    return new Repository(name, rh, cc, wc);
+    return Repository.create(name, rh, cc, wc);
   }
 
   static String runHgCommand(List<String> args, String workingDirectory)
       throws CommandRunner.CommandException {
-    return AppContext.RUN.cmd.runCommand("hg", args, workingDirectory);
+    return Injector.INSTANCE.cmd().runCommand("hg", args, workingDirectory);
   }
 }

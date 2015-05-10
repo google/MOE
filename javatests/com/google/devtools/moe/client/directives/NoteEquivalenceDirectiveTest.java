@@ -5,9 +5,10 @@ package com.google.devtools.moe.client.directives;
 import static org.easymock.EasyMock.expect;
 
 import com.google.common.base.Joiner;
-import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.FileSystem;
-import com.google.devtools.moe.client.testing.AppContextForTesting;
+import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.MoeProblem;
+import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
 import com.google.devtools.moe.client.testing.RecordingUi;
 
@@ -23,27 +24,26 @@ import java.io.File;
  *
  */
 public class NoteEquivalenceDirectiveTest extends TestCase {
+  public final InMemoryProjectContextFactory contextFactory = new InMemoryProjectContextFactory();
+  public final RecordingUi ui = new RecordingUi();
+  private final IMocksControl control = EasyMock.createControl();
+  private final FileSystem mockFs = control.createMock(FileSystem.class);
+  private final SystemCommandRunner cmd = new SystemCommandRunner(ui);
 
   NoteEquivalenceDirective d;
-  IMocksControl control;
-  FileSystem mockFs;
 
   @Override
-  public void setUp() {
-    AppContextForTesting.initForTest();
-    ((InMemoryProjectContextFactory) AppContext.RUN.contextFactory).projectConfigs.put(
+  public void setUp() throws Exception {
+    contextFactory.projectConfigs.put(
         "moe_config.txt",
-        "{'name': 'foo', 'repositories': {" +
-        "'internal': {'type': 'dummy'}, 'public': {'type': 'dummy'}" +
-        "}}");
+        "{'name': 'foo', 'repositories': {"
+            + "  'internal': {'type': 'dummy'}, 'public': {'type': 'dummy'}" + "}}");
+    super.setUp();
+    Injector.INSTANCE = new Injector(mockFs, cmd, contextFactory, ui);
 
-    d = new NoteEquivalenceDirective();
+    d = new NoteEquivalenceDirective(contextFactory, mockFs, ui);
     d.getFlags().configFilename = "moe_config.txt";
     d.getFlags().dbLocation = "/foo/db.txt";
-
-    control = EasyMock.createControl();
-    mockFs = control.createMock(FileSystem.class);
-    AppContext.RUN.fileSystem = mockFs;
   }
 
   public void testPerform_invalidRepo() throws Exception {
@@ -53,11 +53,15 @@ public class NoteEquivalenceDirectiveTest extends TestCase {
     expect(mockFs.exists(new File("/foo/db.txt"))).andReturn(false);
 
     control.replay();
-    int result = d.perform();
+    try {
+      d.perform();
+      fail("NoteEquivalenceDirective didn't fail on invalid repository 'nonexistent'.");
+    } catch (MoeProblem expected) {
+      assertEquals(
+          "No such repository 'nonexistent' in the config. Found: [internal, public]",
+          expected.getMessage());
+    }
     control.verify();
-
-    assertEquals(1, result);
-    assertEquals("Unknown repository: nonexistent", ((RecordingUi) AppContext.RUN.ui).lastError);
   }
 
   public void testPerform_newDbFile() throws Exception {

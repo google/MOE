@@ -3,7 +3,7 @@
 package com.google.devtools.moe.client.parser;
 
 import com.google.common.base.Preconditions;
-import com.google.devtools.moe.client.AppContext;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
@@ -37,13 +37,14 @@ public class EditExpression extends AbstractExpression {
       throw new CodebaseCreationError("no editor " + editorName);
     }
 
-    Ui.Task editTask = AppContext.RUN.ui.pushTask(
+    Ui.Task editTask =
+        Injector.INSTANCE.ui().pushTask(
         "edit",
         "Editing " + codebaseToEdit.getPath() + " with editor " + editor.getDescription());
 
     Codebase editedCodebase = editor.edit(codebaseToEdit, context, editOp.term.options);
 
-    AppContext.RUN.ui.popTaskAndPersist(editTask, editedCodebase.getPath());
+    Injector.INSTANCE.ui().popTaskAndPersist(editTask, editedCodebase.getPath());
     return editedCodebase.copyWithExpression(this);
   }
 

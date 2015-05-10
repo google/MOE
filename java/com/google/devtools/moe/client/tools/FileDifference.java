@@ -4,9 +4,9 @@ package com.google.devtools.moe.client.tools;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
 
 import java.io.File;
@@ -96,7 +96,7 @@ public class FileDifference {
     @Override
     public FileDifference diffFiles(String relativeFilename, File file1, File file2) {
       // Diff their existence.
-      FileSystem fileSystem = AppContext.RUN.fileSystem;
+      FileSystem fileSystem = Injector.INSTANCE.fileSystem();
       boolean file1Exists = fileSystem.exists(file1);
       boolean file2Exists = fileSystem.exists(file2);
 
@@ -113,7 +113,7 @@ public class FileDifference {
       String contentDiff = null;
 
       try {
-       AppContext.RUN.cmd.runCommand(
+        Injector.INSTANCE.cmd().runCommand(
             "diff",
             // -N treats absent files as empty.
             ImmutableList.of("-N", file1.getAbsolutePath(), file2.getAbsolutePath()), "");

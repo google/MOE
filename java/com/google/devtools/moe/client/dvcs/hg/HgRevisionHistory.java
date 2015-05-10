@@ -13,6 +13,10 @@ import com.google.devtools.moe.client.repositories.AbstractRevisionHistory;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
+
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -24,11 +28,8 @@ import javax.annotation.Nullable;
  *
  */
 public class HgRevisionHistory extends AbstractRevisionHistory {
-
-  /**
-   * The default Hg branch in which to look for revisions.
-   */
-  static final String DEFAULT_BRANCH = "default";
+  private static final DateTimeFormatter HG_DATE_FMT =
+      DateTimeFormat.forPattern("yyyy-MM-dd HH:mm Z");
 
   private final Supplier<HgClonedRepository> tipCloneSupplier;
 
@@ -47,7 +48,7 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
   public Revision findHighestRevision(@Nullable String revId) {
     ImmutableList.Builder<String> argsBuilder = ImmutableList.<String>builder()
         .add("log")
-        .add("--branch=" + DEFAULT_BRANCH)
+        .add("--branch=" + tipCloneSupplier.get().getBranch())
         // Ensure one revision only, to be safe.
         .add("--limit=1")
         // Format output as "changesetID" alone.
@@ -94,7 +95,7 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
         "--limit=1",
         // Format output as "changesetID < author < date < description < parents".
         // Since parents is a list, need to use stringify before applying another filter.
-        "--template={node|escape} < {author|escape} < {date|date|escape} < " +
+        "--template={node|escape} < {author|escape} < {date|isodate|escape} < " +
                     "{desc|escape} < {parents|stringify|escape}",
         // Use the debug option to get all parents
         "--debug");
@@ -137,7 +138,7 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
     }
     ImmutableList.Builder<Revision> parentBuilder = ImmutableList.<Revision>builder();
     // group 5 contains all of the parents, each separated by a space
-    for (String parent : Splitter.on(" ").split(unescape(m.group(5)))) {
+    for (String parent : Splitter.on(' ').split(unescape(m.group(5)))) {
       if (!parent.isEmpty()) {
         // A parent is of the form revisionId:changesetId. When null, a parent is denoted by
         // revisionId of -1 and changesetId of 0000000000000000000000000000000000000000.
@@ -148,10 +149,12 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
         }
       }
     }
+
+    DateTime date = HG_DATE_FMT.parseDateTime(unescape(m.group(3)));
     return new RevisionMetadata(
         unescape(m.group(1)),  // id
         unescape(m.group(2)),  // author
-        unescape(m.group(3)),  // date
+        date,
         unescape(m.group(4)),  // description
         parentBuilder.build());  // parents
   }
@@ -159,35 +162,28 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
   @Override
   protected List<Revision> findHeadRevisions() {
     HgClonedRepository tipClone = tipCloneSupplier.get();
-    List<String> importBranches = tipClone.getConfig().getImportBranches();
-    if (importBranches == null) {
-      importBranches = ImmutableList.of("default");
-    }
 
-    ImmutableList<String> args = ImmutableList.of(
-        "heads",
-        // Format output as "changesetID branch".
-        "--template={node} {branch}\n");
     String heads;
     try {
-      heads = HgRepository.runHgCommand(args, tipClone.getLocalTempDir().getAbsolutePath());
+      heads = HgRepository.runHgCommand(
+          // Format output as "changesetID branch".
+          ImmutableList.of("heads", tipClone.getBranch(), "--template={node} {branch}\n"),
+          tipClone.getLocalTempDir().getAbsolutePath());
     } catch (CommandException e) {
       throw new MoeProblem(
           String.format("Failed hg run: %s %d %s %s",
-                        args.toString(),
+                        e.args.toString(),
                         e.returnStatus,
                         e.stdout,
                         e.stderr));
     }
 
     ImmutableList.Builder<Revision> result = ImmutableList.<Revision>builder();
-    for (String changesetIDAndBranch : Splitter.on("\n").omitEmptyStrings().split(heads)) {
+    for (String changesetIDAndBranch : Splitter.on('\n').omitEmptyStrings().split(heads)) {
       String[] changesetIDAndBranchParts = changesetIDAndBranch.split(" ");
       String changesetID = changesetIDAndBranchParts[0];
       String branch = changesetIDAndBranchParts[1];
-      if (importBranches.contains(branch)) {
-        result.add(new Revision(changesetID, tipClone.getRepositoryName()));
-      }
+      result.add(new Revision(changesetID, tipClone.getRepositoryName()));
     }
     return result.build();
   }

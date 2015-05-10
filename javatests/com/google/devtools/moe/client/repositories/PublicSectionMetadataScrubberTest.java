@@ -7,6 +7,8 @@ import com.google.common.collect.ImmutableList;
 
 import junit.framework.TestCase;
 
+import org.joda.time.DateTime;
+
 /**
  * Tests for PublicSectionMetadataScrubber.
  *
@@ -17,7 +19,7 @@ public class PublicSectionMetadataScrubberTest extends TestCase {
     return new RevisionMetadata(
         "commit_number",
         "author@google.com",
-        "3/7/2001",
+        new DateTime(1L),
         Joiner.on("\n").join(desc),
         ImmutableList.of(new Revision("parentId1", "repo"), new Revision("parentId2", "repo")));
   }

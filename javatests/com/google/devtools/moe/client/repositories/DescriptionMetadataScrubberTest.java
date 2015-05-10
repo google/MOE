@@ -6,6 +6,8 @@ import com.google.common.collect.ImmutableList;
 
 import junit.framework.TestCase;
 
+import org.joda.time.DateTime;
+
 /**
  * Testing for DescriptionMetadataScrubber (changelog transformations).
  *
@@ -16,7 +18,7 @@ public class DescriptionMetadataScrubberTest extends TestCase {
     RevisionMetadata rm = new RevisionMetadata(
         "commit_number",
         "author@google.com",
-        "3/7/2001",
+        new DateTime(1L),
         "some changes",
         ImmutableList.of(new Revision("parentId1", "repo"), new Revision("parentId2", "repo")));
 
@@ -24,23 +26,23 @@ public class DescriptionMetadataScrubberTest extends TestCase {
     RevisionMetadata rmExpected = new RevisionMetadata(
         "commit_number",
         "author@google.com",
-        "3/7/2001",
+        new DateTime(1L),
         "some changes!!!",
         ImmutableList.of(new Revision("parentId1", "repo"), new Revision("parentId2", "repo")));
     assertEquals(rmExpected, new DescriptionMetadataScrubber("{description}!!!").scrub(rm));
 
     // Test various formats.
     assertEquals(
-        "some changes on 3/7/2001",
+        "some changes on 1969/12/31",
         new DescriptionMetadataScrubber("{description} on {date}").scrub(rm).description);
 
     assertEquals(
-        "some changes on 3/7/2001\nby: author@google.com",
+        "some changes on 1969/12/31\nby: author@google.com",
         new DescriptionMetadataScrubber("{description} on {date}\nby: {author}")
             .scrub(rm).description);
 
     assertEquals(
-        "3/7/2001 saw the birth of commit_number",
+        "1969/12/31 saw the birth of commit_number",
         new DescriptionMetadataScrubber("{date} saw the birth of {id}").scrub(rm).description);
 
     assertEquals(

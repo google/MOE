@@ -4,7 +4,7 @@ package com.google.devtools.moe.client.testing;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.moe.client.AppContext;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.database.Db;
 import com.google.devtools.moe.client.database.Equivalence;
 import com.google.devtools.moe.client.database.SubmittedMigration;
@@ -18,6 +18,8 @@ import java.util.Set;
  *
  */
 public class DummyDb implements Db {
+
+  private static final Joiner JOINER = Joiner.on("\n");
 
   public boolean returnEquivalences;
   public ArrayList<Equivalence> equivalences;
@@ -51,11 +53,12 @@ public class DummyDb implements Db {
 
   @Override
   public void writeToLocation(String dbLocation) {
-    Joiner j = Joiner.on("\n");
-    StringBuilder b = new StringBuilder("Equivalences:\n");
-    j.join(b, equivalences);
-    b.append("\nMigrations:\n");
-    j.join(b, migrations);
-    AppContext.RUN.ui.info(b.toString());
+    String b = new StringBuilder()
+        .append("Equivalences:\n")
+        .append(JOINER.join(equivalences))
+        .append("\nMigrations:\n")
+        .append(JOINER.join(migrations))
+        .toString();
+    Injector.INSTANCE.ui().info(b);
   }
 }

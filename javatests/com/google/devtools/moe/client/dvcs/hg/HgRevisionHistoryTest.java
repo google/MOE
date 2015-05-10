@@ -6,55 +6,78 @@ import static org.easymock.EasyMock.expect;
 
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
+import com.google.devtools.moe.client.NullFileSystemModule;
 import com.google.devtools.moe.client.database.Equivalence;
 import com.google.devtools.moe.client.database.EquivalenceMatcher;
 import com.google.devtools.moe.client.database.EquivalenceMatcher.EquivalenceMatchResult;
 import com.google.devtools.moe.client.database.FileDb;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.Revision;
+import com.google.devtools.moe.client.repositories.RevisionHistory.SearchType;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
-import com.google.devtools.moe.client.testing.AppContextForTesting;
 import com.google.devtools.moe.client.testing.DummyDb;
+import com.google.devtools.moe.client.testing.MoeAsserts;
+import com.google.devtools.moe.client.testing.TestingModule;
+
+import dagger.Provides;
 
 import junit.framework.TestCase;
 
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 import java.io.File;
 import java.util.List;
+
+import javax.inject.Singleton;
 
 /**
  * Unit tests for HgRevisionHistory: that 'hg log' calls are as expected and parsed correctly.
  *
  */
 public class HgRevisionHistoryTest extends TestCase {
+  private static final String HG_COMMIT_DATE = "2012-07-09 06:00 -0700";
+  private static final DateTime DATE =
+      // 2012/7/9, 6am
+      new DateTime(2012, 7, 9, 6, 0, DateTimeZone.forOffsetHours(-7));
 
   private static final String MOCK_REPO_NAME = "mockrepo";
   private static final String CLONE_TEMP_DIR = "/tmp/hg_tipclone_mockrepo_12345";
 
-  private IMocksControl control;
-  private CommandRunner cmd;
-  private RepositoryConfig config;
+  private final IMocksControl control = EasyMock.createControl();
+  private final CommandRunner cmd = control.createMock(CommandRunner.class);
+  private final RepositoryConfig config = control.createMock(RepositoryConfig.class);
+
+  // TODO(cgruber): Rework these when statics aren't inherent in the design.
+  @dagger.Component(modules = {TestingModule.class, NullFileSystemModule.class, Module.class})
+  @Singleton
+  interface Component {
+    Injector context(); // TODO (b/19676630) Remove when bug is fixed.
+  }
+
+  @dagger.Module class Module {
+    @Provides public CommandRunner cmd() {
+      return cmd;
+    }
+  }
 
   @Override protected void setUp() throws Exception {
     super.setUp();
-    AppContextForTesting.initForTest();
-    control = EasyMock.createControl();
-    cmd = control.createMock(CommandRunner.class);
-    AppContext.RUN.cmd = cmd;
+    Injector.INSTANCE = DaggerHgRevisionHistoryTest_Component.builder().module(new Module()).build()
+        .context();
   }
 
   private HgClonedRepository mockClonedRepo(String repoName) {
     HgClonedRepository mockRepo = control.createMock(HgClonedRepository.class);
     expect(mockRepo.getRepositoryName()).andReturn(repoName).anyTimes();
     expect(mockRepo.getLocalTempDir()).andReturn(new File(CLONE_TEMP_DIR)).anyTimes();
-
-    config = control.createMock(RepositoryConfig.class);
+    expect(mockRepo.getBranch()).andReturn("mybranch").anyTimes();
     expect(mockRepo.getConfig()).andReturn(config).anyTimes();
     return mockRepo;
   }
@@ -67,7 +90,7 @@ public class HgRevisionHistoryTest extends TestCase {
             "hg",
             ImmutableList.<String>of(
                 "log",
-                "--branch=" + HgRevisionHistory.DEFAULT_BRANCH,
+                "--branch=mybranch",
                 "--limit=1",
                 "--template={node}"),
             CLONE_TEMP_DIR /*workingDirectory*/))
@@ -91,7 +114,7 @@ public class HgRevisionHistoryTest extends TestCase {
             "hg",
             ImmutableList.<String>of(
                 "log",
-                "--branch=default",
+                "--branch=mybranch",
                 "--limit=1",
                 "--template={node}",
                 "--rev=bogusChangeset"),
@@ -127,11 +150,12 @@ public class HgRevisionHistoryTest extends TestCase {
                 "--rev=2",
                 "--limit=1",
                 "--template={node|escape} < {author|escape} < " +
-                            "{date|date|escape} < {desc|escape} < " +
+                            "{date|isodate|escape} < {desc|escape} < " +
                             "{parents|stringify|escape}",
                 "--debug"),
             CLONE_TEMP_DIR /*workingDirectory*/))
-        .andReturn("2 < uid@google.com < date < description < 1:parent1 2:parent2");
+        .andReturn("2 < uid@google.com < " + HG_COMMIT_DATE +
+            " < description < 1:parent1 2:parent2");
 
     control.replay();
 
@@ -139,7 +163,7 @@ public class HgRevisionHistoryTest extends TestCase {
     RevisionMetadata result = revHistory.getMetadata(new Revision("2", "mockrepo"));
     assertEquals("2", result.id);
     assertEquals("uid@google.com", result.author);
-    assertEquals("date", result.date);
+    MoeAsserts.assertSameDate(DATE, result.date);
     assertEquals("description", result.description);
     assertEquals(ImmutableList.of(new Revision("parent1", MOCK_REPO_NAME),
                                   new Revision("parent2", MOCK_REPO_NAME)),
@@ -159,11 +183,12 @@ public class HgRevisionHistoryTest extends TestCase {
                 "--rev=2",
                 "--limit=1",
                 "--template={node|escape} < {author|escape} < " +
-                            "{date|date|escape} < {desc|escape} < " +
+                            "{date|isodate|escape} < {desc|escape} < " +
                             "{parents|stringify|escape}",
                 "--debug"),
             CLONE_TEMP_DIR /*workingDirectory*/))
-        .andReturn("2 < u&lt;id@google.com < &amp;amp < &gt;description < 1:parent");
+        .andReturn("2 < u&lt;id@google.com < " + HG_COMMIT_DATE +
+            " < &gt;description&amp;amp < 1:parent");
 
     control.replay();
 
@@ -171,8 +196,8 @@ public class HgRevisionHistoryTest extends TestCase {
     RevisionMetadata result = revHistory.getMetadata(new Revision("2", "mockrepo"));
     assertEquals("2", result.id);
     assertEquals("u<id@google.com", result.author);
-    assertEquals("&amp", result.date);
-    assertEquals(">description", result.description);
+    MoeAsserts.assertSameDate(DATE, result.date);
+    assertEquals(">description&amp", result.description);
     assertEquals(ImmutableList.of(new Revision("parent", MOCK_REPO_NAME)), result.parents);
 
     control.verify();
@@ -185,10 +210,10 @@ public class HgRevisionHistoryTest extends TestCase {
     control.replay();
 
     RevisionMetadata rm = rh.parseMetadata(
-        "1 < foo@google.com < date1 < foo < 1:p1 -1:p2\n");
+        "1 < foo@google.com < " + HG_COMMIT_DATE + " < foo < 1:p1 -1:p2\n");
     assertEquals("1", rm.id);
     assertEquals("foo@google.com", rm.author);
-    assertEquals("date1", rm.date);
+    MoeAsserts.assertSameDate(DATE, rm.date);
     assertEquals("foo", rm.description);
     assertEquals(ImmutableList.of(new Revision("p1", MOCK_REPO_NAME)),
                  rm.parents);
@@ -198,13 +223,13 @@ public class HgRevisionHistoryTest extends TestCase {
 
   public void testFindHeadRevisions() throws Exception {
     HgClonedRepository mockRepo = mockClonedRepo(MOCK_REPO_NAME);
-    expect(config.getImportBranches()).andReturn(ImmutableList.of("branch1", "branch2", "unused"));
 
     expect(
         cmd.runCommand(
             "hg",
             ImmutableList.<String>of(
                 "heads",
+                "mybranch",
                 "--template={node} {branch}\n"),
             CLONE_TEMP_DIR /*workingDirectory*/))
         .andReturn("mockChangesetID1 branch1\nmockChangesetID2 branch2\nmockChangesetID3 unused");
@@ -223,7 +248,6 @@ public class HgRevisionHistoryTest extends TestCase {
 
   public void testFindNewRevisions() throws Exception {
     HgClonedRepository mockRepo = mockClonedRepo(MOCK_REPO_NAME);
-    expect(config.getImportBranches()).andReturn(null);
     DummyDb db = new DummyDb(false);
 
     expect(
@@ -231,6 +255,7 @@ public class HgRevisionHistoryTest extends TestCase {
             "hg",
             ImmutableList.<String>of(
                 "heads",
+                "mybranch",
                 "--template={node} {branch}\n"),
             CLONE_TEMP_DIR /*workingDirectory*/))
         .andReturn("mockChangesetID default\n");
@@ -243,11 +268,12 @@ public class HgRevisionHistoryTest extends TestCase {
                 "--rev=mockChangesetID",
                 "--limit=1",
                 "--template={node|escape} < {author|escape} < " +
-                            "{date|date|escape} < {desc|escape} < " +
+                            "{date|isodate|escape} < {desc|escape} < " +
                             "{parents|stringify|escape}",
                 "--debug"),
             CLONE_TEMP_DIR /*workingDirectory*/))
-        .andReturn("mockChangesetID < uid@google.com < date < description < 1:parent");
+        .andReturn("mockChangesetID < uid@google.com < " + HG_COMMIT_DATE +
+            " < description < 1:parent");
 
     expect(
         cmd.runCommand(
@@ -257,18 +283,18 @@ public class HgRevisionHistoryTest extends TestCase {
                 "--rev=parent",
                 "--limit=1",
                 "--template={node|escape} < {author|escape} < " +
-                            "{date|date|escape} < {desc|escape} < " +
+                            "{date|isodate|escape} < {desc|escape} < " +
                             "{parents|stringify|escape}",
                 "--debug"),
             CLONE_TEMP_DIR /*workingDirectory*/))
-        .andReturn("parent < uid@google.com < date < description < ");
+        .andReturn("parent < uid@google.com < " + HG_COMMIT_DATE + " < description < ");
 
     control.replay();
 
     HgRevisionHistory rh = new HgRevisionHistory(Suppliers.ofInstance(mockRepo));
-    List<Revision> newRevisions = rh.findRevisions(null, new EquivalenceMatcher("public", db))
-        .getRevisionsSinceEquivalence()
-        .getLinearHistory();
+    List<Revision> newRevisions =
+        rh.findRevisions(null, new EquivalenceMatcher("public", db), SearchType.LINEAR)
+        .getRevisionsSinceEquivalence().getBreadthFirstHistory();
     assertEquals(2, newRevisions.size());
     assertEquals(MOCK_REPO_NAME, newRevisions.get(0).repositoryName);
     assertEquals("mockChangesetID", newRevisions.get(0).revId);
@@ -315,34 +341,34 @@ public class HgRevisionHistoryTest extends TestCase {
   public void testFindLastEquivalence() throws Exception {
     // Mock cloned repo
     HgClonedRepository mockRepo = mockClonedRepo("repo2");
-    expect(config.getImportBranches()).andReturn(null);
 
     expect(
         cmd.runCommand(
             "hg",
             ImmutableList.<String>of(
                 "heads",
+                "mybranch",
                 "--template={node} {branch}\n"),
             CLONE_TEMP_DIR /*workingDirectory*/))
         .andReturn("4 default\n");
 
     expect(cmd.runCommand("hg", ImmutableList.of("log", "--rev=4", "--limit=1",
-        "--template={node|escape} < {author|escape} < {date|date|escape} < " +
+        "--template={node|escape} < {author|escape} < {date|isodate|escape} < " +
         "{desc|escape} < {parents|stringify|escape}", "--debug"),
         CLONE_TEMP_DIR /*workingDirectory*/))
-        .andReturn("4 < author < date < description < par1:3a par2:3b");
+        .andReturn("4 < author < " + HG_COMMIT_DATE + " < description < par1:3a par2:3b");
 
     expect(cmd.runCommand("hg", ImmutableList.of("log", "--rev=3a", "--limit=1",
-        "--template={node|escape} < {author|escape} < {date|date|escape} < " +
+        "--template={node|escape} < {author|escape} < {date|isodate|escape} < " +
         "{desc|escape} < {parents|stringify|escape}", "--debug"),
         CLONE_TEMP_DIR /*workingDirectory*/))
-        .andReturn("3a < author < date < description < par1:2 -1:0");
+        .andReturn("3a < author < " + HG_COMMIT_DATE + " < description < par1:2 -1:0");
 
     expect(cmd.runCommand("hg", ImmutableList.of("log", "--rev=3b", "--limit=1",
-        "--template={node|escape} < {author|escape} < {date|date|escape} < " +
+        "--template={node|escape} < {author|escape} < {date|isodate|escape} < " +
         "{desc|escape} < {parents|stringify|escape}", "--debug"),
         CLONE_TEMP_DIR /*workingDirectory*/))
-        .andReturn("3b < author < date < description < par1:2 -1:0");
+        .andReturn("3b < author < " + HG_COMMIT_DATE + " < description < par1:2 -1:0");
 
     control.replay();
 
@@ -351,7 +377,7 @@ public class HgRevisionHistoryTest extends TestCase {
     HgRevisionHistory history = new HgRevisionHistory(Suppliers.ofInstance(mockRepo));
 
     EquivalenceMatchResult result =
-        history.findRevisions(null, new EquivalenceMatcher("repo1", database));
+        history.findRevisions(null, new EquivalenceMatcher("repo1", database), SearchType.BRANCHED);
 
     Equivalence expectedEq = new Equivalence(new Revision("1002", "repo1"),
                                              new Revision("2", "repo2"));
@@ -407,28 +433,28 @@ public class HgRevisionHistoryTest extends TestCase {
     HgClonedRepository mockRepo = mockClonedRepo("repo2");
 
     expect(cmd.runCommand("hg", ImmutableList.of("log", "--rev=4", "--limit=1",
-        "--template={node|escape} < {author|escape} < {date|date|escape} < " +
+        "--template={node|escape} < {author|escape} < {date|isodate|escape} < " +
         "{desc|escape} < {parents|stringify|escape}", "--debug"),
         CLONE_TEMP_DIR /*workingDirectory*/))
-        .andReturn("4 < author < date < description < par1:3a par2:3b");
+        .andReturn("4 < author < " + HG_COMMIT_DATE + " < description < par1:3a par2:3b");
 
     expect(cmd.runCommand("hg", ImmutableList.of("log", "--rev=3a", "--limit=1",
-        "--template={node|escape} < {author|escape} < {date|date|escape} < " +
+        "--template={node|escape} < {author|escape} < {date|isodate|escape} < " +
         "{desc|escape} < {parents|stringify|escape}", "--debug"),
         CLONE_TEMP_DIR /*workingDirectory*/))
-        .andReturn("3a < author < date < description < par1:2 -1:0");
+        .andReturn("3a < author < " + HG_COMMIT_DATE + " < description < par1:2 -1:0");
 
     expect(cmd.runCommand("hg", ImmutableList.of("log", "--rev=3b", "--limit=1",
-        "--template={node|escape} < {author|escape} < {date|date|escape} < " +
+        "--template={node|escape} < {author|escape} < {date|isodate|escape} < " +
         "{desc|escape} < {parents|stringify|escape}", "--debug"),
         CLONE_TEMP_DIR /*workingDirectory*/))
-        .andReturn("3b < author < date < description < par1:2 -1:0");
+        .andReturn("3b < author < " + HG_COMMIT_DATE + " < description < par1:2 -1:0");
 
     expect(cmd.runCommand("hg", ImmutableList.of("log", "--rev=2", "--limit=1",
-        "--template={node|escape} < {author|escape} < {date|date|escape} < " +
+        "--template={node|escape} < {author|escape} < {date|isodate|escape} < " +
         "{desc|escape} < {parents|stringify|escape}", "--debug"),
         CLONE_TEMP_DIR /*workingDirectory*/))
-        .andReturn("2 < author < date < description < -1:0 -1:0");
+        .andReturn("2 < author < " + HG_COMMIT_DATE + " < description < -1:0 -1:0");
 
     control.replay();
 
@@ -436,7 +462,7 @@ public class HgRevisionHistoryTest extends TestCase {
 
     HgRevisionHistory history = new HgRevisionHistory(Suppliers.ofInstance(mockRepo));
     EquivalenceMatchResult result = history.findRevisions(
-        new Revision("4", "repo2"), new EquivalenceMatcher("repo1", database));
+        new Revision("4", "repo2"), new EquivalenceMatcher("repo1", database), SearchType.BRANCHED);
 
     assertEquals(0, result.getEquivalences().size());
 

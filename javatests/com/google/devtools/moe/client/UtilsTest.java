@@ -7,7 +7,9 @@ import static org.easymock.EasyMock.expect;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.moe.client.testing.AppContextForTesting;
+import com.google.devtools.moe.client.testing.TestingModule;
+
+import dagger.Provides;
 
 import junit.framework.TestCase;
 
@@ -17,10 +19,39 @@ import org.easymock.IMocksControl;
 import java.io.File;
 import java.util.List;
 
+import javax.inject.Singleton;
+
 /**
  * @author dbentley@google.com (Daniel Bentley)
  */
 public class UtilsTest extends TestCase {
+
+  private final IMocksControl control = EasyMock.createControl();
+  private final FileSystem fileSystem = control.createMock(FileSystem.class);
+  private final CommandRunner mockcmd = control.createMock(CommandRunner.class);
+
+  // TODO(cgruber): Rework these when statics aren't inherent in the design.
+  @dagger.Component(modules = {TestingModule.class, Module.class})
+  @Singleton
+  interface Component {
+    Injector context(); // TODO (b/19676630) Remove when bug is fixed.
+  }
+
+  @dagger.Module class Module {
+    @Provides public CommandRunner commandRunner() {
+      return mockcmd;
+    }
+    @Provides public FileSystem fileSystem() {
+      return fileSystem;
+    }
+  }
+
+  @Override
+  public void setUp() throws Exception {
+    super.setUp();
+    Injector.INSTANCE = DaggerUtilsTest_Component.builder().module(new Module()).build().context();
+  }
+
   public void testFilterByRegEx() throws Exception {
     assertEquals(
         ImmutableSet.of("foo", "br"),
@@ -68,32 +99,23 @@ public class UtilsTest extends TestCase {
    * @throws Exception
    */
   public void testExpandToDirectory() throws Exception {
-    // Set up the test environment.
-    AppContextForTesting.initForTest();
     String filePath = "/foo/bar.tar";
     File file = new File(filePath);
 
-    FileSystem mockfs = EasyMock.createMock(FileSystem.class);
-    expect(mockfs.getTemporaryDirectory(EasyMock.<String>anyObject())).andReturn(new File("/test"));
-    mockfs.makeDirs(EasyMock.<File>anyObject());
+    expect(fileSystem.getTemporaryDirectory(EasyMock.<String>anyObject()))
+        .andReturn(new File("/test"));
+    fileSystem.makeDirs(EasyMock.<File>anyObject());
     EasyMock.expectLastCall().once();
-    EasyMock.replay(mockfs);
-    AppContext.RUN.fileSystem = mockfs;
-
-    CommandRunner mockcmd = EasyMock.createMock(CommandRunner.class);
     expect(mockcmd.runCommand(EasyMock.<String>anyObject(),
                               EasyMock.<List<String>>anyObject(),
                               EasyMock.<String>anyObject())).andReturn(null);
-    EasyMock.replay(mockcmd);
-    AppContext.RUN.cmd = mockcmd;
-
+    control.replay();
     // Run the .expandToDirectory method.
     File directory = Utils.expandToDirectory(file);
     assertNotNull(directory);
     assertEquals("/test", directory.toString());
 
-    EasyMock.verify(mockfs);
-    EasyMock.verify(mockcmd);
+    control.verify();
   }
 
   /**
@@ -102,8 +124,6 @@ public class UtilsTest extends TestCase {
    * @throws Exception
    */
   public void testUnsupportedExpandToDirectory() throws Exception {
-    // Set up the test environment.
-    AppContextForTesting.initForTest();
     String filePath = "/foo/bar.unsupportedArchive";
     File file = new File(filePath);
 
@@ -113,16 +133,10 @@ public class UtilsTest extends TestCase {
   }
 
   public void testExpandTar() throws Exception {
-    AppContextForTesting.initForTest();
-    IMocksControl control = EasyMock.createControl();
-    FileSystem fileSystem = control.createMock(FileSystem.class);
-    CommandRunner cmd = control.createMock(CommandRunner.class);
-    AppContext.RUN.cmd = cmd;
-    AppContext.RUN.fileSystem = fileSystem;
     fileSystem.makeDirs(new File("/dummy/path/45.expanded"));
     expect(fileSystem.getTemporaryDirectory("expanded_tar_"))
         .andReturn(new File("/dummy/path/45.expanded"));
-    expect(cmd.runCommand(
+    expect(mockcmd.runCommand(
         "tar",
         ImmutableList.of("-xf", "/dummy/path/45.tar"),
         "/dummy/path/45.expanded")).andReturn("");
@@ -133,12 +147,6 @@ public class UtilsTest extends TestCase {
   }
 
   public void testCopyDirectory() throws Exception {
-    AppContextForTesting.initForTest();
-    IMocksControl control = EasyMock.createControl();
-    FileSystem fileSystem = control.createMock(FileSystem.class);
-    CommandRunner cmd = control.createMock(CommandRunner.class);
-    AppContext.RUN.cmd = cmd;
-    AppContext.RUN.fileSystem = fileSystem;
     File srcContents = new File("/src/dummy/file");
     File src = new File("/src");
     File dest = new File("/dest");
@@ -163,12 +171,6 @@ public class UtilsTest extends TestCase {
   }
 
   public void testMakeShellScript() throws Exception {
-    AppContextForTesting.initForTest();
-    IMocksControl control = EasyMock.createControl();
-    FileSystem fileSystem = control.createMock(FileSystem.class);
-    CommandRunner cmd = control.createMock(CommandRunner.class);
-    AppContext.RUN.cmd = cmd;
-    AppContext.RUN.fileSystem = fileSystem;
     File script = new File("/path/to/script");
 
     fileSystem.write("#!/bin/sh -e\nmessage contents", script);

@@ -7,9 +7,9 @@ import static org.easymock.EasyMock.expect;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
@@ -17,40 +17,58 @@ import com.google.devtools.moe.client.parser.Term;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
-import com.google.devtools.moe.client.testing.AppContextForTesting;
+import com.google.devtools.moe.client.testing.TestingModule;
 import com.google.devtools.moe.client.writer.DraftRevision;
+
+import dagger.Provides;
 
 import junit.framework.TestCase;
 
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
+import org.joda.time.DateTime;
 
 import java.io.File;
 import java.util.List;
+
+import javax.inject.Singleton;
 
 /**
  * @author dbentley@google.com (Daniel Bentley)
  */
 public class SvnWriterTest extends TestCase {
 
-  private IMocksControl control;
-  private RepositoryConfig mockConfig;
-  private FileSystem fileSystem;
-  private CommandRunner cmd;
+  private final IMocksControl control = EasyMock.createControl();
+  private final FileSystem fileSystem = control.createMock(FileSystem.class);
+  private final CommandRunner cmd = control.createMock(CommandRunner.class);
+  private final RepositoryConfig mockConfig = control.createMock(RepositoryConfig.class);
 
-  @Override public void setUp() throws Exception {
-    AppContextForTesting.initForTest();
-    control = EasyMock.createControl();
-    mockConfig = control.createMock(RepositoryConfig.class);
+  // TODO(cgruber): Rework these when statics aren't inherent in the design.
+  @dagger.Component(modules = {TestingModule.class, Module.class})
+  @Singleton
+  interface Component {
+    Injector context(); // TODO (b/19676630) Remove when bug is fixed.
+  }
+
+
+  @dagger.Module
+  class Module {
+    @Provides public CommandRunner commandRunner() {
+      return cmd;
+    }
+    @Provides public FileSystem fileSystem() {
+      return fileSystem;
+    }
+  }
+
+  @Override protected void setUp() throws Exception {
+    super.setUp();
+    Injector.INSTANCE =
+        DaggerSvnWriterTest_Component.builder().module(new Module()).build().context();
+
     expect(mockConfig.getUrl()).andReturn("http://foo/svn/trunk/").anyTimes();
     expect(mockConfig.getProjectSpace()).andReturn("public").anyTimes();
     expect(mockConfig.getIgnoreFileRes()).andReturn(ImmutableList.<String>of()).anyTimes();
-
-    fileSystem = control.createMock(FileSystem.class);
-    cmd = control.createMock(CommandRunner.class);
-
-    AppContext.RUN.cmd = cmd;
-    AppContext.RUN.fileSystem = fileSystem;
   }
 
   private void expectSvnCommand(List<String> args, String workingDirectory, String result,
@@ -215,8 +233,9 @@ public class SvnWriterTest extends TestCase {
     control.replay();
     Codebase c = new Codebase(f("/codebase"), "public",
                               e("public", ImmutableMap.<String, String>of()));
-    RevisionMetadata rm = new RevisionMetadata("rev1", "author", "data", "desc",
-                                               ImmutableList.<Revision>of());
+    RevisionMetadata rm = new RevisionMetadata(
+        "rev1", "author", new DateTime(1L), "desc",
+        ImmutableList.<Revision>of());
     SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"));
     DraftRevision r = e.putCodebase(c, rm);
     control.verify();

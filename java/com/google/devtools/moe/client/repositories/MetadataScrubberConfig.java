@@ -17,6 +17,9 @@ public class MetadataScrubberConfig {
   @SerializedName("scrub_confidential_words")
   private boolean scrubConfidentialWords = true;
 
+  @SerializedName("sensitive_res")
+  private List<String> sensitiveRes = ImmutableList.of();
+
   /**
    * Formatting for changelog adapted from fromRepository for commits in toRepository. See
    * {@link DescriptionMetadataScrubber}.
@@ -39,6 +42,11 @@ public class MetadataScrubberConfig {
     return scrubConfidentialWords;
   }
 
+  /** A list of regular expressions for sensitive text to be scrubbed from revision metadata. */
+  public List<String> getSensitiveRes() {
+    return sensitiveRes;
+  }
+
   public String getLogFormat() {
     return logFormat;
   }
@@ -53,7 +61,7 @@ public class MetadataScrubberConfig {
       scrubbersBuilder.add(new MetadataUsernameScrubber(getUsernamesToScrub()));
     }
 
-    if (getScrubConfidentialWords()) {
+    if (scrubConfidentialWords) {
       // Here is where you can use a MetadataScrubber that scrubs confidential words.
     }
 

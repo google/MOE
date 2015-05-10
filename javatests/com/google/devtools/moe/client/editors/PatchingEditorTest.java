@@ -2,32 +2,59 @@
 
 package com.google.devtools.moe.client.editors;
 
+import static org.easymock.EasyMock.expect;
+
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.moe.client.AppContext;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
-import com.google.devtools.moe.client.codebase.Codebase;
-import com.google.devtools.moe.client.testing.AppContextForTesting;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
+import com.google.devtools.moe.client.codebase.Codebase;
+import com.google.devtools.moe.client.testing.TestingModule;
+
+import dagger.Provides;
+
+import junit.framework.TestCase;
 
 import org.easymock.EasyMock;
-import static org.easymock.EasyMock.expect;
 import org.easymock.IMocksControl;
-import junit.framework.TestCase;
 
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.inject.Singleton;
+
 /**
  */
 public class PatchingEditorTest extends TestCase {
-  public void testNoSuchPatchFile() throws Exception {
-    AppContextForTesting.initForTest();
-    IMocksControl control = EasyMock.createControl();
-    FileSystem fileSystem = control.createMock(FileSystem.class);
-    AppContext.RUN.fileSystem = fileSystem;
+  private final IMocksControl control = EasyMock.createControl();
+  private final FileSystem fileSystem = control.createMock(FileSystem.class);
+  private final CommandRunner cmd = control.createMock(CommandRunner.class);
 
+  // TODO(cgruber): Rework these when statics aren't inherent in the design.
+  @dagger.Component(modules = {TestingModule.class, Module.class})
+  @Singleton
+  interface Component {
+    Injector context(); // TODO (b/19676630) Remove when bug is fixed.
+  }
+
+  @dagger.Module class Module {
+    @Provides public CommandRunner cmd() {
+      return cmd;
+    }
+    @Provides public FileSystem filesystem() {
+      return fileSystem;
+    }
+  }
+
+  @Override protected void setUp() throws Exception {
+    super.setUp();
+    Injector.INSTANCE = DaggerPatchingEditorTest_Component.builder().module(new Module()).build()
+        .context();
+  }
+
+  public void testNoSuchPatchFile() throws Exception {
     File patcherRun = new File("/patcher_run_foo");
     File codebaseFile = new File("/codebase");
     Codebase codebase = new Codebase(codebaseFile, "internal", null);
@@ -51,13 +78,6 @@ public class PatchingEditorTest extends TestCase {
   }
 
   public void testPatching() throws Exception {
-    AppContextForTesting.initForTest();
-    IMocksControl control = EasyMock.createControl();
-    FileSystem fileSystem = control.createMock(FileSystem.class);
-    CommandRunner cmd = control.createMock(CommandRunner.class);
-    AppContext.RUN.cmd = cmd;
-    AppContext.RUN.fileSystem = fileSystem;
-
     File patcherRun = new File("/patcher_run_foo");
     File patchFile = new File("/patchfile");
     File codebaseFile = new File("/codebase");
@@ -88,6 +108,5 @@ public class PatchingEditorTest extends TestCase {
         options);
 
     control.verify();
-
   }
 }

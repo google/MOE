@@ -4,16 +4,18 @@ package com.google.devtools.moe.client.tasks;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.moe.client.MoeOptions;
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
+
+import dagger.Module;
+import dagger.Provides;
 
 import java.util.Map;
 
 /**
- * The Guice module for creating a task from the command line.
+ * The module for creating a task from the command line.
  *
  */
-public class TaskType extends AbstractModule {
+@Module(injects = Task.class)
+public class TaskType {
 
   private final String desc;
   private final MoeOptions options;
@@ -23,9 +25,17 @@ public class TaskType extends AbstractModule {
     return options;
   }
 
-  protected void configure() {
-    bind(MoeOptions.class).toInstance(options);
-    bind(Task.TaskCreator.class).to(taskCreatorClass);
+  @Provides
+  public MoeOptions provideOptions() {
+    return options;
+  }
+
+  @Provides Task.TaskCreator provideTaskCreator() {
+    try {
+      return taskCreatorClass.newInstance();
+    } catch (InstantiationException | IllegalAccessException e) {
+      throw new IllegalStateException("TaskCreator could not be created.", e);
+    }
   }
 
   @Provides

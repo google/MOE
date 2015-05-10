@@ -63,11 +63,11 @@ public class Utils {
 
   /** Applies the given Function to all files under baseDir. */
   public static void doToFiles(File baseDir, Function<File, Void> doFunction) {
-    for (File file : AppContext.RUN.fileSystem.findFiles(baseDir)) {
+    for (File file : Injector.INSTANCE.fileSystem().findFiles(baseDir)) {
       doFunction.apply(file);
     }
   }
-  
+
   /** Delete files under baseDir whose paths relative to baseDir don't match the given Predicate. */
   public static void filterFiles(File baseDir, final Predicate<CharSequence> positiveFilter) {
     final URI baseUri = baseDir.toURI();
@@ -75,7 +75,7 @@ public class Utils {
       @Override public Void apply(File file) {
         if (!positiveFilter.apply(baseUri.relativize(file.toURI()).getPath())) {
           try {
-            AppContext.RUN.fileSystem.deleteRecursively(file);
+                Injector.INSTANCE.fileSystem().deleteRecursively(file);
           } catch (IOException e) {
             throw new MoeProblem("Error deleting file: " + file);
           }
@@ -110,15 +110,15 @@ public class Utils {
   }
 
   public static File expandTar(File tar) throws IOException, CommandException {
-    File expandedDir = AppContext.RUN.fileSystem.getTemporaryDirectory("expanded_tar_");
-    AppContext.RUN.fileSystem.makeDirs(expandedDir);
+    File expandedDir = Injector.INSTANCE.fileSystem().getTemporaryDirectory("expanded_tar_");
+    Injector.INSTANCE.fileSystem().makeDirs(expandedDir);
     try {
-      AppContext.RUN.cmd.runCommand(
+      Injector.INSTANCE.cmd().runCommand(
           "tar",
           ImmutableList.of("-xf", tar.getAbsolutePath()),
           expandedDir.getAbsolutePath());
     } catch (CommandRunner.CommandException e) {
-      AppContext.RUN.fileSystem.deleteRecursively(expandedDir);
+      Injector.INSTANCE.fileSystem().deleteRecursively(expandedDir);
       throw e;
     }
     return expandedDir;
@@ -129,21 +129,20 @@ public class Utils {
     if (src == null) {
       return;
     }
-    AppContext.RUN.fileSystem.makeDirsForFile(dest);
-    if (AppContext.RUN.fileSystem.isFile(src)) {
-      AppContext.RUN.fileSystem.copyFile(src, dest);
+    Injector.INSTANCE.fileSystem().makeDirsForFile(dest);
+    if (Injector.INSTANCE.fileSystem().isFile(src)) {
+      Injector.INSTANCE.fileSystem().copyFile(src, dest);
       return;
     }
-    File[] files = AppContext.RUN.fileSystem.listFiles(src);
+    File[] files = Injector.INSTANCE.fileSystem().listFiles(src);
     if (files != null) {
       for (File subFile : files) {
-        File newFile = new File(dest,
-                                AppContext.RUN.fileSystem.getName(subFile));
-        if (AppContext.RUN.fileSystem.isDirectory(subFile)) {
+        File newFile = new File(dest, Injector.INSTANCE.fileSystem().getName(subFile));
+        if (Injector.INSTANCE.fileSystem().isDirectory(subFile)) {
           copyDirectory(subFile, newFile);
         } else {
-          AppContext.RUN.fileSystem.makeDirsForFile(newFile);
-          AppContext.RUN.fileSystem.copyFile(subFile, newFile);
+          Injector.INSTANCE.fileSystem().makeDirsForFile(newFile);
+          Injector.INSTANCE.fileSystem().copyFile(subFile, newFile);
         }
       }
     }
@@ -159,8 +158,8 @@ public class Utils {
   public static void makeShellScript(String content, String name) {
     try {
       File script = new File(name);
-      AppContext.RUN.fileSystem.write("#!/bin/sh -e\n" + content, script);
-      AppContext.RUN.fileSystem.setExecutable(script);
+      Injector.INSTANCE.fileSystem().write("#!/bin/sh -e\n" + content, script);
+      Injector.INSTANCE.fileSystem().setExecutable(script);
     } catch (IOException e) {
       throw new MoeProblem("Could not generate shell script: " + e);
     }

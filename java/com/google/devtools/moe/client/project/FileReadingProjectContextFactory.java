@@ -2,13 +2,15 @@
 
 package com.google.devtools.moe.client.project;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
+import com.google.common.io.Files;
+import com.google.devtools.moe.client.Ui;
+
 import java.io.File;
 import java.io.IOException;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
-import com.google.devtools.moe.client.AppContext;
-import com.google.devtools.moe.client.Ui;
+import javax.inject.Inject;
 
 /**
  *
@@ -16,14 +18,21 @@ import com.google.devtools.moe.client.Ui;
  */
 public class FileReadingProjectContextFactory implements ProjectContextFactory {
 
+  private final Ui ui;
+
+  @Inject public FileReadingProjectContextFactory(Ui ui) {
+    this.ui = ui;
+  }
+
+  @Override
   public ProjectContext makeProjectContext(String configFilename) throws InvalidProject{
     String configText;
-    Ui.Task task = AppContext.RUN.ui.pushTask(
+    Ui.Task task = ui.pushTask(
         "read_config",
         String.format("Reading config file from %s", configFilename));
     try {
       try {
-        configText = Files.toString(new File(configFilename), Charsets.UTF_8);
+        configText = Files.toString(new File(configFilename), UTF_8);
       } catch (IOException e) {
         throw new InvalidProject(
             "Config File \"" + configFilename + "\" not accessible.");
@@ -31,7 +40,7 @@ public class FileReadingProjectContextFactory implements ProjectContextFactory {
 
       return ProjectContext.makeProjectContextFromConfigText(configText);
     } finally {
-      AppContext.RUN.ui.popTask(task, "");
+      ui.popTask(task, "");
     }
   }
 

@@ -2,7 +2,7 @@
 
 package com.google.devtools.moe.client.logic;
 
-import com.google.devtools.moe.client.AppContext;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
@@ -43,14 +43,15 @@ public class ChangeLogic {
       Codebase c, Writer destination, @Nullable RevisionMetadata rm) {
     DraftRevision r;
     try {
-      Ui.Task t = AppContext.RUN.ui.pushTask(
+      Ui.Task t =
+          Injector.INSTANCE.ui().pushTask(
           "push_codebase",
           "Putting files from Codebase into Writer");
       r = (rm == null) ? destination.putCodebase(c) : destination.putCodebase(c, rm);
-      AppContext.RUN.ui.popTask(t, "");
+      Injector.INSTANCE.ui().popTask(t, "");
       return r;
     } catch (WritingError e) {
-      AppContext.RUN.ui.error(e, "Error writing change");
+      Injector.INSTANCE.ui().error(e, "Error writing change");
     }
     return null;
   }
