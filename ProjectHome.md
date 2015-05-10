@@ -1,0 +1,1 @@
+An implementation of the MOE client in Java. This brings the advantages of static typing and also a chance to architect things.
