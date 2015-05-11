@@ -30,19 +30,19 @@ public interface CommandRunner {
       this.returnStatus = returnStatus;
     }
   }
-  
+
   /**
    * The complete result, including stdout and stderr, of running a command.
    */
   public static class CommandOutput {
     private final String stdout;
     private final String stderr;
-    
+
     public CommandOutput(String stdout, String stderr) {
       this.stdout = stdout;
       this.stderr = stderr;
     }
-    
+
     public String getStdout() { return stdout; }
     public String getStderr() { return stderr; }
   }

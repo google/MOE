@@ -107,7 +107,7 @@ public class SystemUi extends Ui {
   }
 
   /** A Dagger module for binding this implementation of {@link Ui}. */
-  @dagger.Module(complete = false) public static class Module {
+  @dagger.Module public static class Module {
     @Provides @Singleton public Ui ui(SystemUi impl) {
       return impl;
     }
