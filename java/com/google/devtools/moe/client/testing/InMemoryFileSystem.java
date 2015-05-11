@@ -287,7 +287,7 @@ public class InMemoryFileSystem implements FileSystem {
   }
 
   /** A Dagger module for binding this implementation of {@link FileSystem}. */
-  @dagger.Module public static class Module {
+  @dagger.Module(complete = false) public static class Module {
     @Provides @Singleton public FileSystem fileSystem(InMemoryFileSystem impl) {
       return impl;
     }
