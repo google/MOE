@@ -149,7 +149,7 @@ public class SystemCommandRunner implements CommandRunner {
   }
 
   /** A Dagger module for binding this implementation of {@link CommandRunner}. */
-  @dagger.Module public static class Module {
+  @dagger.Module(complete = false) public static class Module {
     @Provides @Singleton public CommandRunner runner(SystemCommandRunner impl) {
       return impl;
     }

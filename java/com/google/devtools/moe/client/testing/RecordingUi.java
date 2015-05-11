@@ -45,7 +45,7 @@ public class RecordingUi extends SystemUi {
   }
 
   /** A Dagger module for binding this implementation of {@link Ui}. */
-  @dagger.Module public static class Module {
+  @dagger.Module(complete = false) public static class Module {
     @Provides @Singleton public Ui ui(RecordingUi impl) {
       return impl;
     }
