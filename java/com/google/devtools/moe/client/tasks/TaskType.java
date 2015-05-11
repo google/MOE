@@ -14,7 +14,7 @@ import java.util.Map;
  * The module for creating a task from the command line.
  *
  */
-@Module(injects = Task.class)
+@Module
 public class TaskType {
 
   private final String desc;
