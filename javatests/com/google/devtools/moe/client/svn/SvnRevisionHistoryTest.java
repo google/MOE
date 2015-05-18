@@ -49,7 +49,6 @@ public class SvnRevisionHistoryTest extends TestCase {
 
   private final IMocksControl control = EasyMock.createControl();
   private final CommandRunner cmd = control.createMock(CommandRunner.class);
-  private final SvnUtil util = new SvnUtil(cmd);
 
   // TODO(cgruber): Rework these when statics aren't inherent in the design.
   @dagger.Component(modules = {TestingModule.class, NullFileSystemModule.class, Module.class})
@@ -95,8 +94,8 @@ public class SvnRevisionHistoryTest extends TestCase {
       throw new RuntimeException(e);
     }
     control.replay();
-    SvnRevisionHistory history =
-        new SvnRevisionHistory("internal_svn", "http://foo/svn/trunk/", util);
+    SvnRevisionHistory history = new SvnRevisionHistory("internal_svn",
+        "http://foo/svn/trunk/");
     Revision result = history.findHighestRevision("");
     assertEquals(result.revId, "3");
 
@@ -106,8 +105,8 @@ public class SvnRevisionHistoryTest extends TestCase {
   }
 
   public void testParseMetadata() {
-    SvnRevisionHistory history =
-        new SvnRevisionHistory("internal_svn", "http://foo/svn/trunk/", null);
+    SvnRevisionHistory history = new SvnRevisionHistory("internal_svn",
+        "http://foo/svn/trunk/");
     List<RevisionMetadata> rs = history.parseMetadata(
         "<log><logentry revision=\"2\"><author>uid@google.com</author>" +
         "<date>" + SVN_COMMIT_DATE + "</date><msg>description</msg></logentry>" +
@@ -144,8 +143,8 @@ public class SvnRevisionHistoryTest extends TestCase {
       throw new RuntimeException(e);
     }
     control.replay();
-    SvnRevisionHistory history =
-        new SvnRevisionHistory("internal_svn", "http://foo/svn/trunk/", util);
+    SvnRevisionHistory history = new SvnRevisionHistory("internal_svn",
+        "http://foo/svn/trunk/");
     RevisionMetadata result = history.getMetadata(new Revision("3", "internal_svn"));
     assertEquals("3", result.id);
     assertEquals("uid@google.com", result.author);
@@ -188,8 +187,8 @@ public class SvnRevisionHistoryTest extends TestCase {
     msg.appendChild(doc.createTextNode("description"));
     logEntry.appendChild(msg);
 
-    SvnRevisionHistory history =
-        new SvnRevisionHistory("internal_svn", "http://foo/svn/trunk/", null);
+    SvnRevisionHistory history = new SvnRevisionHistory("internal_svn", "http://foo/svn/trunk/");
+
     RevisionMetadata result = history.parseMetadataNodeList(
         "7",
         doc.getElementsByTagName("logentry").item(0).getChildNodes(),
@@ -253,8 +252,8 @@ public class SvnRevisionHistoryTest extends TestCase {
     }
 
     control.replay();
-    SvnRevisionHistory history =
-        new SvnRevisionHistory("internal_svn", "http://foo/svn/trunk/", util);
+    SvnRevisionHistory history = new SvnRevisionHistory("internal_svn",
+        "http://foo/svn/trunk/");
     List<Revision> newRevisions =
         history.findRevisions(null, new EquivalenceMatcher("public", db), SearchType.LINEAR)
         .getRevisionsSinceEquivalence().getBreadthFirstHistory();
@@ -327,7 +326,7 @@ public class SvnRevisionHistoryTest extends TestCase {
     control.replay();
 
     FileDb database = FileDb.makeDbFromDbText(testDb1);
-    SvnRevisionHistory history = new SvnRevisionHistory("repo2", "http://foo/svn/trunk/", util);
+    SvnRevisionHistory history = new SvnRevisionHistory("repo2", "http://foo/svn/trunk/");
 
     EquivalenceMatchResult result = history.findRevisions(
         new Revision("4", "repo2"), new EquivalenceMatcher("repo1", database), SearchType.LINEAR);
@@ -397,7 +396,7 @@ public class SvnRevisionHistoryTest extends TestCase {
     control.replay();
 
     FileDb database = FileDb.makeDbFromDbText(testDb2);
-    SvnRevisionHistory history = new SvnRevisionHistory("repo2", "http://foo/svn/trunk/", util);
+    SvnRevisionHistory history = new SvnRevisionHistory("repo2", "http://foo/svn/trunk/");
 
     EquivalenceMatchResult result = history.findRevisions(
         new Revision("2", "repo2"), new EquivalenceMatcher("repo1", database), SearchType.LINEAR);

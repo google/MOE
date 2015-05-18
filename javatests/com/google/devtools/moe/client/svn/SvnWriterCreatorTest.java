@@ -32,7 +32,6 @@ public class SvnWriterCreatorTest extends TestCase {
   private final IMocksControl control = EasyMock.createControl();
   private final FileSystem fileSystem = control.createMock(FileSystem.class);
   private final CommandRunner cmd = control.createMock(CommandRunner.class);
-  private final SvnUtil util = new SvnUtil(cmd);
 
   // TODO(cgruber): Rework these when statics aren't inherent in the design.
   @dagger.Component(modules = {TestingModule.class, Module.class})
@@ -74,7 +73,7 @@ public class SvnWriterCreatorTest extends TestCase {
                          "/dummy/path/45"), "")).andReturn("");
 
     control.replay();
-    SvnWriterCreator c = new SvnWriterCreator(mockConfig, revisionHistory, util);
+    SvnWriterCreator c = new SvnWriterCreator(mockConfig, revisionHistory);
     c.create(ImmutableMap.of("revision", "45"));
     control.verify();
 

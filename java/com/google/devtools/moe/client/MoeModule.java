@@ -4,7 +4,6 @@ package com.google.devtools.moe.client;
 
 import com.google.devtools.moe.client.project.FileReadingProjectContextFactory;
 import com.google.devtools.moe.client.project.ProjectContextFactory;
-import com.google.devtools.moe.client.repositories.Repositories;
 
 import dagger.Module;
 import dagger.Provides;
@@ -16,7 +15,7 @@ import javax.inject.Singleton;
  *
  * @author cgruber@google.com (Christian Gruber)
  */
-@Module(includes = Repositories.Defaults.class)
+@Module
 public class MoeModule {
   @Provides
   @Singleton

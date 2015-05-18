@@ -6,7 +6,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.io.Files;
 import com.google.devtools.moe.client.Ui;
-import com.google.devtools.moe.client.repositories.Repositories;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,17 +13,19 @@ import java.io.IOException;
 import javax.inject.Inject;
 
 /**
- * Creates a ProjectContext from a configuration file loaded from the file system.
+ *
+ * @author dbentley@google.com (Daniel Bentley)
  */
-public class FileReadingProjectContextFactory extends ProjectContextFactory {
+public class FileReadingProjectContextFactory implements ProjectContextFactory {
+
   private final Ui ui;
 
-  @Inject public FileReadingProjectContextFactory(Ui ui, Repositories repositories) {
-    super(repositories);
+  @Inject public FileReadingProjectContextFactory(Ui ui) {
     this.ui = ui;
   }
 
-  @Override public ProjectConfig loadConfiguration(String configFilename) throws InvalidProject {
+  @Override
+  public ProjectContext makeProjectContext(String configFilename) throws InvalidProject{
     String configText;
     Ui.Task task = ui.pushTask(
         "read_config",
@@ -36,7 +37,8 @@ public class FileReadingProjectContextFactory extends ProjectContextFactory {
         throw new InvalidProject(
             "Config File \"" + configFilename + "\" not accessible.");
       }
-      return ProjectConfig.makeProjectConfigFromConfigText(configText);
+
+      return ProjectContext.makeProjectContextFromConfigText(configText);
     } finally {
       ui.popTask(task, "");
     }

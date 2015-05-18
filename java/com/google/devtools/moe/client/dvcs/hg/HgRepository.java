@@ -2,39 +2,36 @@
 
 package com.google.devtools.moe.client.dvcs.hg;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.devtools.moe.client.CommandRunner.CommandException;
+import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.Lifetimes;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.RepositoryConfig;
+import com.google.devtools.moe.client.project.RepositoryType;
 import com.google.devtools.moe.client.repositories.Repository;
 
 import java.util.List;
 
-import javax.inject.Inject;
-
 /**
- * Creates a Mercurial (hg) implementation of {@link Repository}.
+ * A helper class of static methods to create a Repository for Mercurial (herein Hg).
+ *
  */
-public class HgRepositoryFactory implements Repository.Factory {
+public class HgRepository {
 
-  // TODO(cgruber) remove static reference to Injector
-  @Inject HgRepositoryFactory() {}
-
-  @Override public String type() {
-    return "hg";
-  }
+  // Do not instantiate.
+  private HgRepository() {}
 
   /**
    * Create a Repository from a RepositoryConfig indicating an Hg repo ("type" == "hg").
    *
    * @throws InvalidProject if RepositoryConfig is missing a repo URL.
    */
-  @Override public Repository create(final String name, final RepositoryConfig config)
-      throws InvalidProject {
-    config.checkType(this);
+  public static Repository makeHgRepositoryFromConfig(
+      final String name, final RepositoryConfig config) throws InvalidProject {
+    Preconditions.checkArgument(config.getType() == RepositoryType.hg);
 
     final String url = config.getUrl();
     if (url == null || url.isEmpty()) {
@@ -75,7 +72,7 @@ public class HgRepositoryFactory implements Repository.Factory {
   }
 
   static String runHgCommand(List<String> args, String workingDirectory)
-      throws CommandException {
+      throws CommandRunner.CommandException {
     return Injector.INSTANCE.cmd().runCommand("hg", args, workingDirectory);
   }
 }

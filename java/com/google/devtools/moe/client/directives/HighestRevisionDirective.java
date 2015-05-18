@@ -44,7 +44,7 @@ public class HighestRevisionDirective extends Directive {
   public int perform() {
     ProjectContext context;
     try {
-      context = contextFactory.create(options.configFilename);
+      context = contextFactory.makeProjectContext(options.configFilename);
     } catch (InvalidProject e) {
       ui.error(e, "Couldn't create project");
       return 1;

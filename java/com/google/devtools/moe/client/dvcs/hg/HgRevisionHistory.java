@@ -61,8 +61,7 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
     String changesetID;
     HgClonedRepository tipClone = tipCloneSupplier.get();
     try {
-      changesetID = HgRepositoryFactory.runHgCommand(
-          args, tipClone.getLocalTempDir().getAbsolutePath());
+      changesetID = HgRepository.runHgCommand(args, tipClone.getLocalTempDir().getAbsolutePath());
     } catch (CommandException e) {
       throw new MoeProblem(
           String.format(
@@ -102,7 +101,7 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
         "--debug");
     String log;
     try {
-      log = HgRepositoryFactory.runHgCommand(args, tipClone.getLocalTempDir().getAbsolutePath());
+      log = HgRepository.runHgCommand(args, tipClone.getLocalTempDir().getAbsolutePath());
     } catch (CommandException e) {
       throw new MoeProblem(
           String.format("Failed hg run: %s %d %s %s",
@@ -166,7 +165,7 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
 
     String heads;
     try {
-      heads = HgRepositoryFactory.runHgCommand(
+      heads = HgRepository.runHgCommand(
           // Format output as "changesetID branch".
           ImmutableList.of("heads", tipClone.getBranch(), "--template={node} {branch}\n"),
           tipClone.getLocalTempDir().getAbsolutePath());

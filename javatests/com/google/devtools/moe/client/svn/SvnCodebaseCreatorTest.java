@@ -35,7 +35,6 @@ public class SvnCodebaseCreatorTest extends TestCase {
   private final IMocksControl control = EasyMock.createControl();
   private final FileSystem fileSystem = control.createMock(FileSystem.class);
   private final CommandRunner cmd = control.createMock(CommandRunner.class);
-  private final SvnUtil util = new SvnUtil(cmd);
 
   // TODO(cgruber): Rework these when statics aren't inherent in the design.
   @dagger.Component(modules = {TestingModule.class, Module.class})
@@ -81,7 +80,7 @@ public class SvnCodebaseCreatorTest extends TestCase {
         ImmutableSet.<File>of());
 
     control.replay();
-    CodebaseCreator cc = new SvnCodebaseCreator("testing", mockConfig, revisionHistory, util);
+    CodebaseCreator cc = new SvnCodebaseCreator("testing", mockConfig, revisionHistory);
     Codebase r = cc.create(ImmutableMap.of("revision", "46"));
     assertEquals("/dummy/path/45", r.getPath().getAbsolutePath());
     assertEquals("internal", r.getProjectSpace());

@@ -61,7 +61,7 @@ public class FindEquivalenceDirective extends Directive {
 
     ProjectContext context;
     try {
-      context = contextFactory.create(options.configFilename);
+      context = contextFactory.makeProjectContext(options.configFilename);
     } catch (InvalidProject e) {
       ui.error(e, "Error creating project");
       return 1;

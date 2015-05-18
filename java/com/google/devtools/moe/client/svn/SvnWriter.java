@@ -32,13 +32,11 @@ public class SvnWriter implements Writer {
   private final RepositoryConfig config;
   private final Revision revision;
   private final File rootDirectory;
-  private final SvnUtil util;
 
-  public SvnWriter(RepositoryConfig config, Revision revision, File tempDir, SvnUtil util) {
+  public SvnWriter(RepositoryConfig config, Revision revision, File tempDir) {
     this.config = config;
     this.revision = revision;
     this.rootDirectory = tempDir;
-    this.util = util;
   }
 
   @Override
@@ -48,8 +46,9 @@ public class SvnWriter implements Writer {
 
   public void checkOut() {
     try {
-      util.runSvnCommand("co",
-          "-r", revision.revId, config.getUrl(), rootDirectory.getAbsolutePath());
+      SvnRepository.runSvnCommand(
+          ImmutableList.of(
+              "co", "-r", revision.revId, config.getUrl(), rootDirectory.getAbsolutePath()), "");
     } catch (CommandRunner.CommandException e) {
       throw new MoeProblem("Could not check out from svn: " + e.stderr);
     }
@@ -100,14 +99,14 @@ public class SvnWriter implements Writer {
   /**
    * Put file from c into this writer. (Helper function.)
    *
-   * @param relativePath  the filename to put
-   * @param codebase  the Codebase to take the file from
+   * @param relativeFilename  the filename to put
+   * @param c  the Codebase to take the file from
    */
-  void putFile(String relativePath, Codebase codebase) {
+  void putFile(String relativeFilename, Codebase c) {
     try {
       FileSystem fs = Injector.INSTANCE.fileSystem();
-      File dest = new File(rootDirectory.getAbsolutePath(), relativePath);
-      File src = codebase.getFile(relativePath);
+      File dest = new File(rootDirectory.getAbsolutePath(), relativeFilename);
+      File src = c.getFile(relativeFilename);
       boolean srcExists = fs.exists(src);
       boolean destExists = fs.exists(dest);
 
@@ -117,11 +116,12 @@ public class SvnWriter implements Writer {
       if (!srcExists && !destExists) {
         throw new MoeProblem(
             String.format("Neither src nor dests exists. Unreachable code:%n%s%n%s%n%s",
-                          relativePath, src, dest));
+                          relativeFilename, src, dest));
       }
 
       if (!srcExists) {
-        util.runSvnCommandWithWorkingDirectory(rootDirectory.getAbsolutePath(), "rm", relativePath);
+        SvnRepository.runSvnCommand(
+            ImmutableList.of("rm", relativeFilename), rootDirectory.getAbsolutePath());
         // TODO(dbentley): handle newly-empty directories
         return;
       }
@@ -134,30 +134,34 @@ public class SvnWriter implements Writer {
       }
 
       if (!destExists) {
-        util.runSvnCommandWithWorkingDirectory(
-            rootDirectory.getAbsolutePath(), "add", "--parents", relativePath);
+        SvnRepository.runSvnCommand(
+            ImmutableList.of("add", "--parents", relativeFilename),
+            rootDirectory.getAbsolutePath());
       }
 
-      String mimeType = guessMimeType(relativePath);
+      String mimeType = guessMimeType(relativeFilename);
       if (mimeType != null) {
         try {
-          util.runSvnCommandWithWorkingDirectory(
-              rootDirectory.getAbsolutePath(), "propset", "svn:mime-type", mimeType, relativePath);
+          SvnRepository.runSvnCommand(
+              ImmutableList.of("propset", "svn:mime-type", mimeType, relativeFilename),
+              rootDirectory.getAbsolutePath());
         } catch (CommandRunner.CommandException e) {
           // If the mime type setting fails, it's not really a big deal.
           // Just log it and keep going.
           Injector.INSTANCE.ui().info(
-              String.format("Error setting mime-type for %s", relativePath));
+              String.format("Error setting mime-type for %s", relativeFilename));
         }
       }
 
       if (destExecutable != srcExecutable) {
         if (srcExecutable) {
-          util.runSvnCommandWithWorkingDirectory(
-              rootDirectory.getAbsolutePath(), "propset", "svn:executable", "*", relativePath);
+          SvnRepository.runSvnCommand(
+              ImmutableList.of("propset", "svn:executable", "*", relativeFilename),
+              rootDirectory.getAbsolutePath());
         } else {
-          util.runSvnCommandWithWorkingDirectory(
-              rootDirectory.getAbsolutePath(), "propdel", "svn:executable", relativePath);
+          SvnRepository.runSvnCommand(
+              ImmutableList.of("propdel", "svn:executable", relativeFilename),
+              rootDirectory.getAbsolutePath());
         }
       }
     } catch (CommandRunner.CommandException e) {

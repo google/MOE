@@ -2,6 +2,7 @@
 
 package com.google.devtools.moe.client.dvcs.git;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.devtools.moe.client.CommandRunner;
@@ -9,33 +10,28 @@ import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.Lifetimes;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.RepositoryConfig;
+import com.google.devtools.moe.client.project.RepositoryType;
 import com.google.devtools.moe.client.repositories.Repository;
 
 import java.util.List;
 
-import javax.inject.Inject;
-
 /**
- * Creates a Git implementation of {@link Repository}.
+ * A helper class of static methods to create a Repository for Git.
  */
-public class GitRepositoryFactory implements Repository.Factory {
+public class GitRepository {
 
-  // TODO(cgruber) remove static reference to Injector
-  @Inject GitRepositoryFactory() {}
-
-  @Override
-  public String type() {
-    return "git";
-  }
+  // Do not instantiate.
+  private GitRepository() {}
 
   /**
    * Create a Repository from a RepositoryConfig indicating an Git repo ("type" == "git").
    *
    * @throws InvalidProject if RepositoryConfig is missing a repo URL.
    */
-  @Override public Repository create(final String name, final RepositoryConfig config)
+  public static Repository makeGitRepositoryFromConfig(
+      final String name, final RepositoryConfig config)
       throws InvalidProject {
-    config.checkType(this);
+    Preconditions.checkArgument(config.getType() == RepositoryType.git);
 
     final String url = config.getUrl();
     if (url == null || url.isEmpty()) {

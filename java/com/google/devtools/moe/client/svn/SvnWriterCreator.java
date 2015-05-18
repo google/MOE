@@ -23,13 +23,10 @@ public class SvnWriterCreator implements WriterCreator {
 
   private final RepositoryConfig config;
   private final SvnRevisionHistory revisionHistory;
-  private final SvnUtil util;
 
-  public SvnWriterCreator(
-      RepositoryConfig config, SvnRevisionHistory revisionHistory, SvnUtil util) {
+  public SvnWriterCreator(RepositoryConfig config, SvnRevisionHistory revisionHistory) {
     this.config = config;
     this.revisionHistory = revisionHistory;
-    this.util = util;
   }
 
   @Override
@@ -40,7 +37,7 @@ public class SvnWriterCreator implements WriterCreator {
     File tempDir =
         Injector.INSTANCE.fileSystem().getTemporaryDirectory(
         String.format("svn_writer_%s_", r.revId));
-    SvnWriter writer = new SvnWriter(config, r, tempDir, util);
+    SvnWriter writer = new SvnWriter(config, r, tempDir);
     writer.checkOut();
     return writer;
   }

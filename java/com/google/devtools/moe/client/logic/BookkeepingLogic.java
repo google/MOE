@@ -165,7 +165,8 @@ public class BookkeepingLogic {
    */
   private static TranslatorConfig getTranslatorConfig(
       String fromRepo, String toRepo, ProjectContext context) {
-    String fromProjectSpace = context.config.getRepositoryConfig(fromRepo).getProjectSpace();
+    String fromProjectSpace =
+        context.config.getRepositoryConfig(fromRepo).getProjectSpace();
     String toProjectSpace = context.config.getRepositoryConfig(toRepo).getProjectSpace();
     List<TranslatorConfig> transConfigs = context.config.getTranslators();
     for (TranslatorConfig transConfig : transConfigs) {

@@ -87,7 +87,7 @@ public class GitClonedRepository implements LocalClone {
       if (branchName.isPresent()) {
         cloneArgs.add("--branch", branchName.get());
       }
-      GitRepositoryFactory.runGitCommand(cloneArgs.build(), "" /*workingDirectory*/);
+      GitRepository.runGitCommand(cloneArgs.build(), "" /*workingDirectory*/);
       clonedLocally = true;
       this.revId = "HEAD";
     } catch (CommandException e) {

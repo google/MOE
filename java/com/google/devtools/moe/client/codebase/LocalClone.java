@@ -17,8 +17,7 @@ import javax.annotation.Nullable;
 public interface LocalClone {
 
   /**
-   * Returns the name of the cloned
-   * {@link com.google.devtools.moe.client.repositories.Repository}.
+   * Returns the name of the cloned {@link com.google.devtools.moe.client.repositories.Repository}.
    */
   String getRepositoryName();
 

@@ -36,7 +36,7 @@ public class CheckConfigDirective extends Directive {
   @Override
   public int perform() {
     try {
-      contextFactory.create(options.configFilename);
+      contextFactory.makeProjectContext(options.configFilename);
       return 0;
     } catch (InvalidProject e) {
       ui.error(e, "Invalid project");
