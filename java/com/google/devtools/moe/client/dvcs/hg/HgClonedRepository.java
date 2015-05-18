@@ -86,9 +86,9 @@ public class HgClonedRepository implements LocalClone {
         cloneArgs.add("--rev=" + branchName.get());
       }
 
-      HgRepository.runHgCommand(cloneArgs.build(), "" /*workingDirectory*/);
+      HgRepositoryFactory.runHgCommand(cloneArgs.build(), "" /*workingDirectory*/);
       clonedLocally = true;
-      branch = HgRepository.runHgCommand(
+      branch = HgRepositoryFactory.runHgCommand(
           ImmutableList.of("branch"), localCloneTempDir.getAbsolutePath()).trim();
     } catch (CommandException e) {
       throw new MoeProblem(
@@ -121,7 +121,8 @@ public class HgClonedRepository implements LocalClone {
       if (!Strings.isNullOrEmpty(revId)) {
         archiveArgs.add("--rev=" + revId);
       }
-      HgRepository.runHgCommand(archiveArgs.build(), localCloneTempDir.getAbsolutePath());
+      HgRepositoryFactory.runHgCommand(
+          archiveArgs.build(), localCloneTempDir.getAbsolutePath());
       Injector.INSTANCE.fileSystem().deleteRecursively(
           new File(archiveLocation, ".hg_archival.txt"));
     } catch (CommandException e) {

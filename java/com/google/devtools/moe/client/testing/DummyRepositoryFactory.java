@@ -17,12 +17,20 @@ import com.google.devtools.moe.client.writer.WriterCreator;
 
 import org.joda.time.DateTime;
 
-/**
- *
- * @author dbentley@google.com (Daniel Bentley)
- */
-public class DummyRepository {
+import javax.inject.Inject;
 
+/**
+ * Creates a simple {@link Repository} for testing.
+ */
+public class DummyRepositoryFactory implements Repository.Factory {
+
+  @Inject public DummyRepositoryFactory() {}
+
+  @Override public String type() {
+    return "dummy";
+  }
+
+  /** A fake implementation of {@link RevisionHistory} for testing. */
   public static class DummyRevisionHistory implements RevisionHistory {
     private final String name;
 
@@ -45,10 +53,12 @@ public class DummyRepository {
             String.format("Could not get metadata: Revision %s is in repository %s instead of %s",
                           revision.revId, revision.repositoryName, name));
       }
-      return new RevisionMetadata(revision.revId, "author", new DateTime(1L),
-                                  revision.revId.equals("migrated_to") ?
-                                  "MOE_MIGRATED_REVID=migrated_from" : "description",
-                                  ImmutableList.of(new Revision("parent", name)));
+      return new RevisionMetadata(
+          revision.revId,
+          "author",
+          new DateTime(1L),
+          revision.revId.equals("migrated_to") ? "MOE_MIGRATED_REVID=migrated_from" : "description",
+          ImmutableList.of(new Revision("parent", name)));
     }
 
     @Override
@@ -64,7 +74,7 @@ public class DummyRepository {
     }
   }
 
-  public static Repository makeDummyRepository(String repositoryName, RepositoryConfig config) {
+  @Override public Repository create(String repositoryName, RepositoryConfig config) {
     String projectSpace = null;
     if (config != null) {
       projectSpace = config.getProjectSpace();
@@ -72,14 +82,11 @@ public class DummyRepository {
     if (projectSpace == null) {
       projectSpace = "public";
     }
-
     RevisionHistory revisionHistory = new DummyRevisionHistory(repositoryName);
-
     CodebaseCreator codebaseCreator = new DummyCodebaseCreator(repositoryName, projectSpace);
-
     WriterCreator writerCreator = new DummyWriterCreator(repositoryName);
-
-    return Repository.create(repositoryName, revisionHistory, codebaseCreator, writerCreator);
+    return Repository.create(
+        repositoryName, revisionHistory, codebaseCreator, writerCreator);
   }
 
 }

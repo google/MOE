@@ -18,7 +18,7 @@ public class SvnDraftRevision implements DraftRevision {
     this.checkOut = checkOut;
   }
 
-  public String getLocation() {
+  @Override public String getLocation() {
     return checkOut.getAbsolutePath();
   }
 
