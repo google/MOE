@@ -27,6 +27,7 @@ import com.google.devtools.moe.client.editors.TranslatorPath;
 import com.google.devtools.moe.client.editors.TranslatorStep;
 import com.google.devtools.moe.client.migrations.MigrationConfig;
 import com.google.devtools.moe.client.repositories.Repository;
+import com.google.devtools.moe.client.repositories.noop.NoopRepositoryFactory;
 import com.google.devtools.moe.client.svn.SvnRepository;
 import com.google.devtools.moe.client.testing.DummyRepository;
 
@@ -122,6 +123,8 @@ public class ProjectContext {
         return HgRepository.makeHgRepositoryFromConfig(repositoryName, config);
       case git:
         return GitRepository.makeGitRepositoryFromConfig(repositoryName, config);
+      case none:
+        return NoopRepositoryFactory.create(repositoryName);
       case dummy:
         return DummyRepository.makeDummyRepository(repositoryName, config);
       default:

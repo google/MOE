@@ -14,6 +14,7 @@ public enum RepositoryType {
   svn,
   hg,
   git,
+  none,
   dummy,
   nil;
 
