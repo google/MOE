@@ -6,6 +6,8 @@ import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.codebase.CodebaseCreator;
+import com.google.devtools.moe.client.project.InvalidProject;
+import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.Repository;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
@@ -22,11 +24,17 @@ import javax.inject.Inject;
 /**
  * Creates a simple {@link Repository} for testing.
  */
-public class NoopRepositoryFactory  {
+public class NoopRepositoryFactory implements Repository.Factory  {
   private static final String NOOP_NOT_VALID = "No-op repository \"none\" invalid for directives "
       + "that expect to interact with a real repository";
 
+
   @Inject public NoopRepositoryFactory() {}
+
+  @Override
+  public String type() {
+    return "none";
+  }
 
   /** A fake implementation of {@link RevisionHistory} for testing. */
   static class NoOpRevisionHistory implements RevisionHistory {
@@ -47,9 +55,11 @@ public class NoopRepositoryFactory  {
     }
   }
 
-  public static Repository create(String repositoryName) {
+
+  @Override
+  public Repository create(String name, RepositoryConfig config) throws InvalidProject {
     return Repository.create(
-        repositoryName,
+        name,
         new NoOpRevisionHistory(),
         new CodebaseCreator() {
           @Override

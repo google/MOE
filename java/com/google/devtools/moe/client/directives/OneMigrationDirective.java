@@ -51,7 +51,7 @@ public class OneMigrationDirective extends Directive {
     String toProjectSpace;
     RepositoryExpression toRepoEx, fromRepoEx;
     try {
-      context = contextFactory.makeProjectContext(options.configFilename);
+      context = contextFactory.create(options.configFilename);
       toRepoEx = Parser.parseRepositoryExpression(options.toRepository);
       fromRepoEx = Parser.parseRepositoryExpression(options.fromRepository);
       toProjectSpace = context.config.getRepositoryConfig(toRepoEx.getRepositoryName())

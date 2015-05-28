@@ -2,14 +2,11 @@
 
 package com.google.devtools.moe.client.project;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.devtools.moe.client.MoeProblem;
-import com.google.devtools.moe.client.dvcs.git.GitRepository;
-import com.google.devtools.moe.client.dvcs.hg.HgRepository;
 import com.google.devtools.moe.client.editors.Editor;
 import com.google.devtools.moe.client.editors.ForwardTranslator;
 import com.google.devtools.moe.client.editors.IdentityEditor;
@@ -27,19 +24,14 @@ import com.google.devtools.moe.client.editors.TranslatorPath;
 import com.google.devtools.moe.client.editors.TranslatorStep;
 import com.google.devtools.moe.client.migrations.MigrationConfig;
 import com.google.devtools.moe.client.repositories.Repository;
-import com.google.devtools.moe.client.repositories.noop.NoopRepositoryFactory;
-import com.google.devtools.moe.client.svn.SvnRepository;
-import com.google.devtools.moe.client.testing.DummyRepository;
 
 import java.util.List;
-import java.util.Map;
 
 /**
- *
- * @author dbentley@google.com (Daniel Bentley)
+ * Represents the fully interpreted project, its textual configurations realized into
+ * relevant data structures.
  */
 public class ProjectContext {
-
   public final ProjectConfig config;
   private final ImmutableMap<String, Repository> repositories;
   public final ImmutableMap<String, Editor> editors;
@@ -72,68 +64,7 @@ public class ProjectContext {
     return repositories.get(repositoryName);
   }
 
-  public static ProjectContext makeProjectContextFromConfigText(String configText)
-      throws InvalidProject {
-    ProjectConfig config =
-        ProjectConfig.makeProjectConfigFromConfigText(configText);
-
-    ImmutableMap.Builder<String, Repository> b = ImmutableMap.builder();
-    for (Map.Entry<String, RepositoryConfig> e :
-             config.getRepositoryConfigs().entrySet()) {
-      b.put(e.getKey(), makeRepositoryFromConfig(e.getKey(), e.getValue()));
-    }
-    ImmutableMap<String, Repository> repositories = b.build();
-
-    ImmutableMap.Builder<String, Editor> editorsBuilder = ImmutableMap.builder();
-    for (Map.Entry<String, EditorConfig> entry :
-             config.getEditorConfigs().entrySet()) {
-      editorsBuilder.put(entry.getKey(), makeEditorFromConfig(entry.getKey(), entry.getValue()));
-    }
-    ImmutableMap<String, Editor> editors = editorsBuilder.build();
-
-    ImmutableMap.Builder<TranslatorPath, Translator> translatorsBuilder = ImmutableMap.builder();
-    for (TranslatorConfig tc : config.getTranslators()) {
-      Translator t = makeTranslatorFromConfig(tc, config);
-      TranslatorPath tPath = new TranslatorPath(tc.getFromProjectSpace(), tc.getToProjectSpace());
-      translatorsBuilder.put(tPath, t);
-    }
-    ImmutableMap<TranslatorPath, Translator> translators = translatorsBuilder.build();
-
-    ImmutableMap.Builder<String, MigrationConfig> migrationConfigsBuilder = ImmutableMap.builder();
-    for (MigrationConfig mc : config.getMigrationConfigs()) {
-      migrationConfigsBuilder.put(mc.getName(), mc);
-    }
-    ImmutableMap<String, MigrationConfig> migrationConfigs = migrationConfigsBuilder.build();
-
-    return new ProjectContext(config, repositories, editors, translators, migrationConfigs);
-  }
-
-  @VisibleForTesting static Repository makeRepositoryFromConfig(
-      String repositoryName, RepositoryConfig config) throws InvalidProject {
-    if (repositoryName.equals("file")) {
-      throw new InvalidProject(
-          "Invalid repository name (reserved keyword): \"" + repositoryName + "\"");
-    }
-
-    switch (config.getType()) {
-      case svn:
-        return SvnRepository.makeSvnRepositoryFromConfig(
-            repositoryName, config);
-      case hg:
-        return HgRepository.makeHgRepositoryFromConfig(repositoryName, config);
-      case git:
-        return GitRepository.makeGitRepositoryFromConfig(repositoryName, config);
-      case none:
-        return NoopRepositoryFactory.create(repositoryName);
-      case dummy:
-        return DummyRepository.makeDummyRepository(repositoryName, config);
-      default:
-        throw new InvalidProject(
-            "Invalid repository type: \"" + config.getType() + "\"");
-    }
-  }
-
-  private static Editor makeEditorFromConfig(String editorName,
+  static Editor makeEditorFromConfig(String editorName,
       EditorConfig config) throws InvalidProject {
     switch (config.getType()) {
       case identity:
@@ -152,7 +83,7 @@ public class ProjectContext {
     }
   }
 
-  private static Translator makeTranslatorFromConfig(
+  static Translator makeTranslatorFromConfig(
       TranslatorConfig transConfig, ProjectConfig projConfig) throws InvalidProject {
     if (transConfig.isInverse()) {
       TranslatorConfig otherTrans = findInverseTranslatorConfig(transConfig, projConfig);
