@@ -13,7 +13,6 @@ import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.noop.NoopRepositoryFactory;
 import com.google.devtools.moe.client.svn.SvnRepositoryFactory;
-import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
 
 import dagger.Provides;
 
@@ -81,12 +80,6 @@ public class Repositories implements Repository.Factory {
 
     @Provides(type = SET)
     static Repository.Factory noop(NoopRepositoryFactory concrete) {
-      return concrete;
-    }
-
-    // TODO(cgruber) Remove when offending configs use noop.
-    @Provides(type = SET)
-    static Repository.Factory dummy(DummyRepositoryFactory concrete) {
       return concrete;
     }
   }
