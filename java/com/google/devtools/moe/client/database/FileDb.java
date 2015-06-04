@@ -63,7 +63,7 @@ public class FileDb implements Db {
 
   @VisibleForTesting
   public String toJsonString() {
-    return FILE_DB_GSON.toJson(dbStorage);
+    return FILE_DB_GSON.toJson(dbStorage) + "\n";
   }
 
   @Override

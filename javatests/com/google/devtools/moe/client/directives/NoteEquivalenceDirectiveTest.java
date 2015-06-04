@@ -84,7 +84,8 @@ public class NoteEquivalenceDirectiveTest extends TestCase {
         "    }",
         "  ],",
         "  'migrations': []",
-        "}").replace('\'', '"'),
+        "}",
+        "").replace('\'', '"'),
         new File("/foo/db.txt"));
 
     control.replay();
@@ -113,7 +114,8 @@ public class NoteEquivalenceDirectiveTest extends TestCase {
         "    }",
         "  ],",
         "  'migrations': []",
-        "}").replace('\'', '"');
+        "}",
+        "").replace('\'', '"');
 
     expect(mockFs.exists(new File("/foo/db.txt"))).andReturn(true);
     expect(mockFs.fileToString(new File("/foo/db.txt"))).andReturn(dbString);
@@ -145,7 +147,8 @@ public class NoteEquivalenceDirectiveTest extends TestCase {
         "    }%s",  // New equivalence is added here.
         "  ],",
         "  'migrations': []",
-        "}").replace('\'', '"');
+        "}",
+        "").replace('\'', '"');
 
     String oldDbString = String.format(baseDbString, "");
     String newDbString = String.format(baseDbString, Joiner.on('\n').join(

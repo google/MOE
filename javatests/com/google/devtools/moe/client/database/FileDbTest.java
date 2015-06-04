@@ -49,7 +49,8 @@ public class FileDbTest extends TestCase {
         "      }",
         "    }",
         "  ]",
-        "}");
+        "}",
+        "");
     FileDb db = FileDb.makeDbFromDbText(dbText);
     assertEquals(db.getEquivalences(), ImmutableSet.of(
         new Equivalence(new Revision("r1", "name1"), new Revision("r2", "name2"))));
@@ -101,7 +102,8 @@ public class FileDbTest extends TestCase {
         "      }",
         "    }",
         "  ]",
-        "}");
+        "}",
+        "");
 
     FileDb db = FileDb.makeDbFromDbText(dbText);
     assertEquals(db.findEquivalences(new Revision("r1", "name1"), "name2"),
@@ -128,7 +130,8 @@ public class FileDbTest extends TestCase {
         "      }",
         "    }",
         "  ]",
-        "}");
+        "}",
+        "");
 
     expect(fileSystem.fileToString(dbFile)).andReturn(dbText);
 
@@ -160,7 +163,8 @@ public class FileDbTest extends TestCase {
         "    }",
         "  ],",
         "  'migrations': []",
-        "}");
+        "}",
+        "");
 
     fileSystem.write(dbText.replace('\'', '"'), dbFile);
 
