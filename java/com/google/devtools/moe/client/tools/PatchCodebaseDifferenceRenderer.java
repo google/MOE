@@ -26,22 +26,21 @@ public class PatchCodebaseDifferenceRenderer implements CodebaseDifferenceRender
   /* package */ void renderFileDifferenceToStringBuilder(
       CodebaseDifference d, FileDifference fd, StringBuilder r) {
 
-    r.append(String.format(
-        "diff --moe %s %s\n",
-        new File(d.codebase1.toString(), fd.relativeFilename).getPath(),
-        new File(d.codebase2.toString(), fd.relativeFilename).getPath()));
+    r.append(
+        String.format(
+            "diff --moe %s %s\n",
+            new File(d.codebase1.toString(), fd.relativeFilename).getPath(),
+            new File(d.codebase2.toString(), fd.relativeFilename).getPath()));
 
     if (fd.executability == FileDifference.Comparison.ONLY1) {
       r.append("-mode:executable\n");
-    } if (fd.executability == FileDifference.Comparison.ONLY2) {
-        r.append("+mode:executable\n");
+    }
+    if (fd.executability == FileDifference.Comparison.ONLY2) {
+      r.append("+mode:executable\n");
     }
 
-    r.append(String.format(
-        "<<< %s/%s\n", d.codebase1.toString(), fd.relativeFilename));
-    r.append(String.format(
-        ">>> %s/%s\n", d.codebase2.toString(), fd.relativeFilename));
-
+    r.append(String.format("<<< %s/%s\n", d.codebase1.toString(), fd.relativeFilename));
+    r.append(String.format(">>> %s/%s\n", d.codebase2.toString(), fd.relativeFilename));
 
     // NB(dbentley): For generating a patch, we don't care if the existence of files
     // differs. Why? Because files whose existence differs will almost certainly differ
@@ -53,7 +52,5 @@ public class PatchCodebaseDifferenceRenderer implements CodebaseDifferenceRender
       r.append(fd.contentDiff);
       r.append("\n");
     }
-
   }
-
 }

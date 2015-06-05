@@ -20,6 +20,7 @@ public class EquivalenceMatcher
 
   /** The name of the Repository _other_ than that of Revisions checked in matches(). */
   private final String repositoryName;
+
   private final Db db;
 
   public EquivalenceMatcher(String repositoryName, Db db) {
@@ -59,8 +60,7 @@ public class EquivalenceMatcher
     private final List<Equivalence> equivalences;
 
     EquivalenceMatchResult(
-        RevisionGraph revisionsSinceEquivalence,
-        List<Equivalence> equivalences) {
+        RevisionGraph revisionsSinceEquivalence, List<Equivalence> equivalences) {
       this.revisionsSinceEquivalence = revisionsSinceEquivalence;
       this.equivalences = ImmutableList.copyOf(equivalences);
     }

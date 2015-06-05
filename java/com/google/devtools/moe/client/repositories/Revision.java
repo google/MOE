@@ -18,6 +18,7 @@ import java.util.Objects;
  *
  * @author dbentley@google.com (Daniel Bentley)
  */
+// TODO(cgruber) Autofactory.
 public class Revision {
 
   public final String revId;
@@ -42,8 +43,8 @@ public class Revision {
   public boolean equals(Object obj) {
     if (obj instanceof Revision) {
       Revision revisionObj = (Revision) obj;
-      return (Objects.equals(repositoryName, revisionObj.repositoryName) &&
-              Objects.equals(revId, revisionObj.revId));
+      return Objects.equals(repositoryName, revisionObj.repositoryName)
+          && Objects.equals(revId, revisionObj.revId);
     }
     return false;
   }

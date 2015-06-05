@@ -89,8 +89,8 @@ public class LastEquivalenceDirective extends Directive {
 
     Revision rev = rh.findHighestRevision(repoEx.getOption("revision"));
 
-    List<Equivalence> lastEquivs = LastEquivalenceLogic.lastEquivalence(
-        options.withRepository, rev, db, rh);
+    List<Equivalence> lastEquivs =
+        LastEquivalenceLogic.lastEquivalence(options.withRepository, rev, db, rh);
 
     if (lastEquivs.isEmpty()) {
       ui.info(
@@ -112,18 +112,23 @@ public class LastEquivalenceDirective extends Directive {
   }
 
   static class LastEquivalenceOptions extends MoeOptions {
-    @Option(name = "--config_file", required = true,
-            usage = "Location of MOE config file")
+
+    @Option(name = "--config_file", required = true, usage = "Location of MOE config file")
     String configFilename = "";
-    @Option(name = "--db", required = true,
-            usage = "Location of MOE database")
+
+    @Option(name = "--db", required = true, usage = "Location of MOE database")
     String dbLocation = "";
-    @Option(name = "--from_repository", required = true,
+
+    @Option(
+        name = "--from_repository",
+        required = true,
         usage = "Expression for the from-repository to check for Equivalences in")
     String fromRepository = "";
-    @Option(name = "--with_repository", required = true,
-            usage = "Name of the to-repository to check for Equivalences in")
+
+    @Option(
+        name = "--with_repository",
+        required = true,
+        usage = "Name of the to-repository to check for Equivalences in")
     String withRepository = "";
   }
-
 }

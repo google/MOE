@@ -30,8 +30,9 @@ public class SystemFileSystemTest extends TestCase {
     Files.createParentDirs(baz);
     Files.touch(baz);
 
-    assertEquals(ImmutableSet.of("foo", "bar/baz"),
-                 Utils.makeFilenamesRelative(fs.findFiles(tempDir), tempDir));
+    assertEquals(
+        ImmutableSet.of("foo", "bar/baz"),
+        Utils.makeFilenamesRelative(fs.findFiles(tempDir), tempDir));
   }
 
   public void testListFiles() throws Exception {
@@ -176,10 +177,10 @@ public class SystemFileSystemTest extends TestCase {
   }
 
   // TODO(cgruber): Rework these when statics aren't inherent in the design.
-  @dagger.Component(modules = {
-      TestingModule.class,
-      SystemCommandRunner.Module.class,
-      SystemFileSystem.Module.class})
+  @dagger.Component(
+      modules = {
+        TestingModule.class, SystemCommandRunner.Module.class, SystemFileSystem.Module.class
+      })
   @Singleton
   interface Component {
     Injector context(); // TODO (b/19676630) Remove when bug is fixed.

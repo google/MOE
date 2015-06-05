@@ -11,6 +11,7 @@ import java.util.List;
  * Configuration for a MOE metadata scrubber.
  */
 public class MetadataScrubberConfig {
+
   @SerializedName("usernames_to_scrub")
   private List<String> usernamesToScrub;
 

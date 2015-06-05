@@ -19,7 +19,8 @@ public class RepositoriesTest extends TestCase {
   private final Repositories repositories = new Repositories(ImmutableSet.of(dummyService));
   private final RepositoryConfig config = EasyMock.createNiceMock(RepositoryConfig.class);
 
-  @Override public void setUp() {
+  @Override
+  public void setUp() {
     expect(config.getType()).andReturn("dummy");
     EasyMock.replay(config);
   }
@@ -41,11 +42,13 @@ public class RepositoriesTest extends TestCase {
     for (String keyword : ImmutableList.of("file")) {
       try {
         repositories.create(keyword, config);
-        fail(Repositories.class.getSimpleName()
-            + ".create does not check for the reserved keyword '"
-            + keyword
-            + "' in the repository name.");
-      } catch (InvalidProject expected) {}
+        fail(
+            Repositories.class.getSimpleName()
+                + ".create does not check for the reserved keyword '"
+                + keyword
+                + "' in the repository name.");
+      } catch (InvalidProject expected) {
+      }
     }
   }
 }

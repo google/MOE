@@ -79,8 +79,9 @@ public class MagicDirective extends Directive {
       }
     }
 
-    List<String> migrationNames = ImmutableList.copyOf(
-        options.migrations.isEmpty() ? context.migrationConfigs.keySet() : options.migrations);
+    List<String> migrationNames =
+        ImmutableList.copyOf(
+            options.migrations.isEmpty() ? context.migrationConfigs.keySet() : options.migrations);
 
     if (BookkeepingLogic.bookkeep(migrationNames, db, options.dbLocation, context) != 0) {
       // Bookkeeping has failed, so fail here as well.
@@ -92,8 +93,7 @@ public class MagicDirective extends Directive {
     for (String migrationName : migrationNames) {
       Ui.Task migrationTask =
           ui.pushTask(
-          "perform_migration",
-          String.format("Performing migration '%s'", migrationName));
+              "perform_migration", String.format("Performing migration '%s'", migrationName));
 
       MigrationConfig migrationConfig = context.migrationConfigs.get(migrationName);
       if (migrationConfig == null) {
@@ -113,8 +113,9 @@ public class MagicDirective extends Directive {
       // toRe represents toRepo at the revision of last equivalence with fromRepo.
       RepositoryExpression toRe = new RepositoryExpression(migrationConfig.getToRepository());
       if (lastEq != null) {
-        toRe = toRe.atRevision(
-            lastEq.getRevisionForRepository(migrationConfig.getToRepository()).revId);
+        toRe =
+            toRe.atRevision(
+                lastEq.getRevisionForRepository(migrationConfig.getToRepository()).revId);
       }
 
       Writer toWriter;
@@ -133,21 +134,23 @@ public class MagicDirective extends Directive {
       for (Migration m : migrations) {
         // For each migration, the reference to-codebase for inverse translation is the Writer,
         // since it contains the latest changes (i.e. previous migrations) to the to-repository.
-        Expression referenceToCodebase = new RepositoryExpression(migrationConfig.getToRepository())
-              .withOption("localroot", toWriter.getRoot().getAbsolutePath());
+        Expression referenceToCodebase =
+            new RepositoryExpression(migrationConfig.getToRepository())
+                .withOption("localroot", toWriter.getRoot().getAbsolutePath());
 
         Ui.Task oneMigrationTask =
             ui.pushTask(
                 "perform_individual_migration",
-            String.format("Performing individual migration '%s'", m.toString()));
+                String.format("Performing individual migration '%s'", m.toString()));
         dr = OneMigrationLogic.migrate(m, context, toWriter, referenceToCodebase);
         lastMigratedRevision = m.fromRevisions.get(m.fromRevisions.size() - 1);
         ui.popTask(oneMigrationTask, "");
       }
 
       // TODO(user): Add properly formatted one-DraftRevison-per-Migration message for svn.
-      migrationsMadeBuilder.add(String.format(
-          "%s in repository %s", dr.getLocation(), migrationConfig.getToRepository()));
+      migrationsMadeBuilder.add(
+          String.format(
+              "%s in repository %s", dr.getLocation(), migrationConfig.getToRepository()));
       toWriter.printPushMessage();
       ui.popTaskAndPersist(migrationTask, toWriter.getRoot());
     }
@@ -168,14 +171,17 @@ public class MagicDirective extends Directive {
   }
 
   static class MagicOptions extends MoeOptions {
-    @Option(name = "--config_file", required = true,
-            usage = "Location of MOE config file")
+
+    @Option(name = "--config_file", required = true, usage = "Location of MOE config file")
     String configFilename = "";
-    @Option(name = "--db", required = true,
-            usage = "Location of MOE database")
+
+    @Option(name = "--db", required = true, usage = "Location of MOE database")
     String dbLocation = "";
-    @Option(name = "--migration", required = false,
-            usage = "Migrations to perform; can include multiple --migration options")
+
+    @Option(
+        name = "--migration",
+        required = false,
+        usage = "Migrations to perform; can include multiple --migration options")
     List<String> migrations = Lists.newArrayList();
   }
 }

@@ -10,9 +10,9 @@ import com.google.gson.annotations.SerializedName;
  * @author dbentley@google.com (Dan Bentley)
  */
 public class StepConfig {
-  
+
   private String name;
-  
+
   @SerializedName("editor")
   private EditorConfig editorConfig;
 

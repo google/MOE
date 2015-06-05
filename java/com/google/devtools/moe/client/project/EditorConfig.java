@@ -24,6 +24,7 @@ public class EditorConfig {
 
   //only used for renaming editors
   private JsonObject mappings;
+
   @SerializedName("use_regex")
   private boolean useRegex = false;
 

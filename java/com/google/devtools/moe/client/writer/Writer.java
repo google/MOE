@@ -42,7 +42,7 @@ public interface Writer {
    * Returns a conceptual root for the writer.
    */
   File getRoot();
-  
+
   /**
    * Print out (to Ui) instructions for pushing any changes in this Writer to the remote source.
    */

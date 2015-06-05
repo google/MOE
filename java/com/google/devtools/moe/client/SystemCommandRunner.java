@@ -20,6 +20,7 @@ import javax.inject.Singleton;
  *
  * @author dbentley@google.com (Daniel Bentley)
  */
+@Singleton
 public class SystemCommandRunner implements CommandRunner {
   private final Ui ui;
 
@@ -31,8 +32,8 @@ public class SystemCommandRunner implements CommandRunner {
   @Override
   public CommandOutput runCommandWithFullOutput(
       String cmd, List<String> args, String workingDirectory) throws CommandException {
-    ImmutableList<String> cmdArgs = (new ImmutableList.Builder<String>()).add(cmd).addAll(args)
-        .build();
+    ImmutableList<String> cmdArgs =
+        new ImmutableList.Builder<String>().add(cmd).addAll(args).build();
 
     ui.debug(workingDirectory + "$ " + Joiner.on(" ").join(cmdArgs));
 
@@ -60,7 +61,7 @@ public class SystemCommandRunner implements CommandRunner {
       // Sleep in longer increments when it's not generating output.
       // When it is, reset this value.
       int timeToSleep = 1;
-      while(true) {
+      while (true) {
         while (stdoutSink.isAvailable()) {
           if (stdoutSink.consumeByte()) {
             timeToSleep = 1;
@@ -78,7 +79,8 @@ public class SystemCommandRunner implements CommandRunner {
         try {
           returnStatus = p.exitValue();
           break;
-        } catch (IllegalThreadStateException e) {}
+        } catch (IllegalThreadStateException expected) {
+        }
         timeToSleep++;
         // Never sleep more than half a second.
         if (timeToSleep > 500) {
@@ -133,7 +135,7 @@ public class SystemCommandRunner implements CommandRunner {
       if (data == -1) {
         return false;
       } else {
-        bytes.add((byte)data);
+        bytes.add((byte) data);
         return true;
       }
     }
@@ -149,8 +151,10 @@ public class SystemCommandRunner implements CommandRunner {
   }
 
   /** A Dagger module for binding this implementation of {@link CommandRunner}. */
-  @dagger.Module public static class Module {
-    @Provides @Singleton public CommandRunner runner(SystemCommandRunner impl) {
+  @dagger.Module
+  public static class Module {
+    @Provides
+    public CommandRunner runner(SystemCommandRunner impl) {
       return impl;
     }
   }

@@ -16,5 +16,4 @@ public class TranslatorStep {
     this.name = name;
     this.editor = editor;
   }
-
 }

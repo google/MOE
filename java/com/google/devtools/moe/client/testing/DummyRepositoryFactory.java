@@ -24,9 +24,11 @@ import javax.inject.Inject;
  */
 public class DummyRepositoryFactory implements Repository.Factory {
 
-  @Inject public DummyRepositoryFactory() {}
+  @Inject
+  public DummyRepositoryFactory() {}
 
-  @Override public String type() {
+  @Override
+  public String type() {
     return "dummy";
   }
 
@@ -49,9 +51,12 @@ public class DummyRepositoryFactory implements Repository.Factory {
     @Override
     public RevisionMetadata getMetadata(Revision revision) throws MoeProblem {
       if (!name.equals(revision.repositoryName)) {
-        throw new MoeProblem (
-            String.format("Could not get metadata: Revision %s is in repository %s instead of %s",
-                          revision.revId, revision.repositoryName, name));
+        throw new MoeProblem(
+            String.format(
+                "Could not get metadata: Revision %s is in repository %s instead of %s",
+                revision.revId,
+                revision.repositoryName,
+                name));
       }
       return new RevisionMetadata(
           revision.revId,
@@ -67,14 +72,16 @@ public class DummyRepositoryFactory implements Repository.Factory {
       if (revision == null) {
         revision = new Revision("migrated_to", name);
       }
-      RevisionGraph revTree = RevisionGraph.builder(ImmutableList.of(revision))
-          .addRevision(revision, getMetadata(revision))
-          .build();
+      RevisionGraph revTree =
+          RevisionGraph.builder(ImmutableList.of(revision))
+              .addRevision(revision, getMetadata(revision))
+              .build();
       return matcher.makeResult(revTree, ImmutableList.of(new Revision("1", name)));
     }
   }
 
-  @Override public Repository create(String repositoryName, RepositoryConfig config) {
+  @Override
+  public Repository create(String repositoryName, RepositoryConfig config) {
     String projectSpace = null;
     if (config != null) {
       projectSpace = config.getProjectSpace();
@@ -85,8 +92,6 @@ public class DummyRepositoryFactory implements Repository.Factory {
     RevisionHistory revisionHistory = new DummyRevisionHistory(repositoryName);
     CodebaseCreator codebaseCreator = new DummyCodebaseCreator(repositoryName, projectSpace);
     WriterCreator writerCreator = new DummyWriterCreator(repositoryName);
-    return Repository.create(
-        repositoryName, revisionHistory, codebaseCreator, writerCreator);
+    return Repository.create(repositoryName, revisionHistory, codebaseCreator, writerCreator);
   }
-
 }

@@ -31,12 +31,15 @@ public class InverseScrubbingEditor implements InverseEditor {
     return new InverseScrubbingEditor();
   }
 
-
   private InverseScrubbingEditor() {}
 
   @Override
-  public Codebase inverseEdit(Codebase input, Codebase referenceFrom, Codebase referenceTo,
-      ProjectContext context, Map<String, String> options) {
+  public Codebase inverseEdit(
+      Codebase input,
+      Codebase referenceFrom,
+      Codebase referenceTo,
+      ProjectContext context,
+      Map<String, String> options) {
     CodebaseMerger merger = new CodebaseMerger(referenceFrom, input, referenceTo);
     return merger.merge();
   }

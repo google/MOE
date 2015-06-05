@@ -57,11 +57,10 @@ public class MergeCodebasesLogic {
    * @return the Codebase that results from combining modifiedCodebase's modifications to
    * the originalCodebase into a copy of the destinationCodebase
    */
-  public static Codebase merge(Codebase originalCodebase, Codebase modifiedCodebase,
-      Codebase destinationCodebase) {
-    CodebaseMerger merger = new CodebaseMerger(originalCodebase, modifiedCodebase,
-        destinationCodebase);
+  public static Codebase merge(
+      Codebase originalCodebase, Codebase modifiedCodebase, Codebase destinationCodebase) {
+    CodebaseMerger merger =
+        new CodebaseMerger(originalCodebase, modifiedCodebase, destinationCodebase);
     return merger.merge();
   }
-
 }

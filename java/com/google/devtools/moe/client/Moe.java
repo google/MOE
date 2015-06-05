@@ -85,40 +85,40 @@ public class Moe {
     // Exit early since we're postponing Task usage until post-dagger2.
 
     /*
-    // Tasks are a work in progress, which are only currently used to implement a
-    // HelloWorld style trivial task.  For now, leave them be until we get directive/task
-    // scopes hooked up in dagger.  Then this can be re-examined.
+     // Tasks are a work in progress, which are only currently used to implement a
+     // HelloWorld style trivial task.  For now, leave them be until we get directive/task
+     // scopes hooked up in dagger.  Then this can be re-examined.
 
-    TaskType t = TaskType.TASK_MAP.get(args[0]);
-    if (t == null) {
-      // We did not find a task for this name. We should print help and quit.
-      // But because we are in the process of converting from the old Directive framework to
-      // the new Task framework, we may instead have to run oldMain. Therefore, don't
-      // System.exit; just return.
-      // TODO(dbentley): kill all Directives, print the relevant help, and exit instead
-      // of calling directiveMain().
-      try {
-        directiveMain(args);
-      } catch (IOException e) {
-        System.exit(1);
-        return;
-      }
-      return;
-    }
+     TaskType t = TaskType.TASK_MAP.get(args[0]);
+     if (t == null) {
+     // We did not find a task for this name. We should print help and quit.
+     // But because we are in the process of converting from the old Directive framework to
+     // the new Task framework, we may instead have to run oldMain. Therefore, don't
+     // System.exit; just return.
+     // TODO(dbentley): kill all Directives, print the relevant help, and exit instead
+     // of calling directiveMain().
+     try {
+     directiveMain(args);
+     } catch (IOException e) {
+     System.exit(1);
+     return;
+     }
+     return;
+     }
 
-    // Strip off the task name
-    // This mutates t.getOptions, and so has to be called before we create the graph.
-    Flags.parseOptions(t.getOptions(), ImmutableList.copyOf(args).subList(1, args.length));
-    ObjectGraph injector = ObjectGraph.create(t, new MoeModule());
-    Task task = injector.get(Task.class);
+     // Strip off the task name
+     // This mutates t.getOptions, and so has to be called before we create the graph.
+     Flags.parseOptions(t.getOptions(), ImmutableList.copyOf(args).subList(1, args.length));
+     ObjectGraph injector = ObjectGraph.create(t, new MoeModule());
+     Task task = injector.get(Task.class);
 
-    Task.Explanation result = task.executeAtTopLevel();
-    if (!Strings.isNullOrEmpty(result.message)) {
-      logger.info(result.message);
-      System.out.println(result.message);
-    }
-    System.exit(result.exitCode);
-    */
+     Task.Explanation result = task.executeAtTopLevel();
+     if (!Strings.isNullOrEmpty(result.message)) {
+     logger.info(result.message);
+     System.out.println(result.message);
+     }
+     System.exit(result.exitCode);
+     */
   }
 
   private Moe() {}

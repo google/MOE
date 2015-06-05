@@ -20,25 +20,32 @@ public class ScrubberConfigTest extends TestCase {
 
 
   public void testShouldScrubAuthor_doesntScrubAuthors() throws Exception {
-    ScrubberConfig scrubberConfig = ProjectConfig.makeGson().fromJson(
-        "{\"scrub_authors\":false,\"usernames_file\":null}", ScrubberConfig.class);
+    ScrubberConfig scrubberConfig =
+        ProjectConfig.makeGson()
+            .fromJson("{\"scrub_authors\":false,\"usernames_file\":null}", ScrubberConfig.class);
     assertFalse(scrubberConfig.shouldScrubAuthor(UNKNOWN_AUTHOR));
   }
 
   public void testShouldScrubAuthor_scrubsUnknownAuthors() throws Exception {
-    ScrubberConfig scrubberConfig = ProjectConfig.makeGson().fromJson(
-        "{\"scrub_unknown_users\":true,\"usernames_file\":null}", ScrubberConfig.class);
+    ScrubberConfig scrubberConfig =
+        ProjectConfig.makeGson()
+            .fromJson(
+                "{\"scrub_unknown_users\":true,\"usernames_file\":null}", ScrubberConfig.class);
     assertTrue(scrubberConfig.shouldScrubAuthor(UNKNOWN_AUTHOR));
   }
 
   public void testShouldScrubAuthor_scrubsAuthors() throws Exception {
-    ScrubberConfig scrubberConfig = ProjectConfig.makeGson().fromJson(
-        "{\"usernames_to_scrub\":" + SCRUBBABLE_USERS
-            + ",\"usernames_to_publish\":" + PUBLISHABLE_USERS + ",\"usernames_file\":null}",
-        ScrubberConfig.class);
+    ScrubberConfig scrubberConfig =
+        ProjectConfig.makeGson()
+            .fromJson(
+                "{\"usernames_to_scrub\":"
+                    + SCRUBBABLE_USERS
+                    + ",\"usernames_to_publish\":"
+                    + PUBLISHABLE_USERS
+                    + ",\"usernames_file\":null}",
+                ScrubberConfig.class);
     assertTrue(scrubberConfig.shouldScrubAuthor(SCRUBBABLE_AUTHOR));
     assertFalse(scrubberConfig.shouldScrubAuthor(PUBLISHABLE_AUTHOR));
     assertFalse(scrubberConfig.shouldScrubAuthor(UNKNOWN_AUTHOR));
   }
-
 }

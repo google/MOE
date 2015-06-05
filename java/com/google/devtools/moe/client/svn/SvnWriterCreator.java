@@ -38,8 +38,9 @@ public class SvnWriterCreator implements WriterCreator {
     String revId = options.get("revision");
     Revision r = revisionHistory.findHighestRevision(options.get("revision"));
     File tempDir =
-        Injector.INSTANCE.fileSystem().getTemporaryDirectory(
-        String.format("svn_writer_%s_", r.revId));
+        Injector.INSTANCE
+            .fileSystem()
+            .getTemporaryDirectory(String.format("svn_writer_%s_", r.revId));
     SvnWriter writer = new SvnWriter(config, r, tempDir, util);
     writer.checkOut();
     return writer;

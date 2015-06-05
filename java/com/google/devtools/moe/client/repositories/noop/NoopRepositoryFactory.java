@@ -24,12 +24,13 @@ import javax.inject.Inject;
 /**
  * Creates a simple {@link Repository} for testing.
  */
-public class NoopRepositoryFactory implements Repository.Factory  {
-  private static final String NOOP_NOT_VALID = "No-op repository \"none\" invalid for directives "
-      + "that expect to interact with a real repository";
+public class NoopRepositoryFactory implements Repository.Factory {
+  private static final String NOOP_NOT_VALID =
+      "No-op repository \"none\" invalid for directives "
+          + "that expect to interact with a real repository";
 
-
-  @Inject public NoopRepositoryFactory() {}
+  @Inject
+  public NoopRepositoryFactory() {}
 
   @Override
   public String type() {
@@ -54,7 +55,6 @@ public class NoopRepositoryFactory implements Repository.Factory  {
       throw new MoeProblem(NOOP_NOT_VALID);
     }
   }
-
 
   @Override
   public Repository create(String name, RepositoryConfig config) throws InvalidProject {

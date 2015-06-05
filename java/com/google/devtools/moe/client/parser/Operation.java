@@ -9,6 +9,7 @@ package com.google.devtools.moe.client.parser;
  *
  * @author dbentley@google.com (Daniel Bentley)
  */
+// TODO(cgruber): Convert this to an autovalue or at least fix the hashcode/equals issue.
 public class Operation {
 
   public final Operator operator;
@@ -19,15 +20,16 @@ public class Operation {
     this.term = term;
   }
 
+  @Override
   public String toString() {
     return operator.toString() + term.toString();
   }
 
+  @Override
   public boolean equals(Object o) {
     if (!(o instanceof Operation)) {
       return false;
     }
     return toString().equals(o.toString());
   }
-
 }

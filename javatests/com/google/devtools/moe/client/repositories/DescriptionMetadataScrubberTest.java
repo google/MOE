@@ -15,20 +15,22 @@ import org.joda.time.DateTime;
 public class DescriptionMetadataScrubberTest extends TestCase {
 
   public void testScrub() {
-    RevisionMetadata rm = new RevisionMetadata(
-        "commit_number",
-        "author@google.com",
-        new DateTime(1L),
-        "some changes",
-        ImmutableList.of(new Revision("parentId1", "repo"), new Revision("parentId2", "repo")));
+    RevisionMetadata rm =
+        new RevisionMetadata(
+            "commit_number",
+            "author@google.com",
+            new DateTime(1L),
+            "some changes",
+            ImmutableList.of(new Revision("parentId1", "repo"), new Revision("parentId2", "repo")));
 
     // Test that fields besides description are unaffected.
-    RevisionMetadata rmExpected = new RevisionMetadata(
-        "commit_number",
-        "author@google.com",
-        new DateTime(1L),
-        "some changes!!!",
-        ImmutableList.of(new Revision("parentId1", "repo"), new Revision("parentId2", "repo")));
+    RevisionMetadata rmExpected =
+        new RevisionMetadata(
+            "commit_number",
+            "author@google.com",
+            new DateTime(1L),
+            "some changes!!!",
+            ImmutableList.of(new Revision("parentId1", "repo"), new Revision("parentId2", "repo")));
     assertEquals(rmExpected, new DescriptionMetadataScrubber("{description}!!!").scrub(rm));
 
     // Test various formats.

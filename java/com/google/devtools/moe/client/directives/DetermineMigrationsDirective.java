@@ -71,8 +71,7 @@ public class DetermineMigrationsDirective extends Directive {
       return 1;
     }
 
-    List<Migration> migrations =
-        DetermineMigrationsLogic.determineMigrations(context, config, db);
+    List<Migration> migrations = DetermineMigrationsLogic.determineMigrations(context, config, db);
     for (Migration migration : migrations) {
       ui.info("Pending migration: " + migration);
     }
@@ -86,14 +85,17 @@ public class DetermineMigrationsDirective extends Directive {
   }
 
   static class DetermineMigrationsOptions extends MoeOptions {
-    @Option(name = "--config_file", required = true,
-            usage = "Location of MOE config file")
+
+    @Option(name = "--config_file", required = true, usage = "Location of MOE config file")
     String configFilename = "";
-    @Option(name = "--migration_name", required = true,
+
+    @Option(
+        name = "--migration_name",
+        required = true,
         usage = "Name of migration, as found in config file")
     String migrationName = "";
-    @Option(name = "--db", required = true,
-            usage = "Location of MOE database")
+
+    @Option(name = "--db", required = true, usage = "Location of MOE database")
     String dbLocation = "";
   }
 }

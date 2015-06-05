@@ -101,16 +101,22 @@ public class NoteEquivalenceDirective extends Directive {
   }
 
   static class NoteEquivalenceOptions extends MoeOptions {
-    @Option(name = "--config_file", required = true,
-            usage = "Location of MOE config file")
+
+    @Option(name = "--config_file", required = true, usage = "Location of MOE config file")
     String configFilename = "";
-    @Option(name = "--db", required = true,
-            usage = "Path of MOE database file to update or create")
+
+    @Option(name = "--db", required = true, usage = "Path of MOE database file to update or create")
     String dbLocation = "";
-    @Option(name = "--repo1", required = true,
+
+    @Option(
+        name = "--repo1",
+        required = true,
         usage = "First repo expression in equivalence, e.g. 'internal(revision=3)'")
     String repo1 = "";
-    @Option(name = "--repo2", required = true,
+
+    @Option(
+        name = "--repo2",
+        required = true,
         usage = "Second repo in equivalence, e.g. 'public(revision=7)'")
     String repo2 = "";
   }

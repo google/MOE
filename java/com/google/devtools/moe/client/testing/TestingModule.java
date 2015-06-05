@@ -19,15 +19,20 @@ import javax.inject.Singleton;
  */
 @Module
 public class TestingModule {
-  @Provides @Singleton public Ui ui(RecordingUi recordingUi) {
+  @Provides
+  @Singleton
+  public Ui ui(RecordingUi recordingUi) {
     return recordingUi;
   }
 
-  @Provides @Singleton public ProjectContextFactory factory(InMemoryProjectContextFactory factory) {
+  @Provides
+  @Singleton
+  public ProjectContextFactory factory(InMemoryProjectContextFactory factory) {
     return factory;
   }
 
-  @Provides(type = SET) Repository.Factory dummyRepository(DummyRepositoryFactory implementation) {
+  @Provides(type = SET)
+  Repository.Factory dummyRepository(DummyRepositoryFactory implementation) {
     return implementation;
   }
 }

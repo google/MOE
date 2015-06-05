@@ -56,7 +56,6 @@ public class InverseRenamingEditor implements InverseEditor {
     return new InverseRenamingEditor(RenamingEditor.makeRenamingEditor(editorName, config));
   }
 
-
   private final RenamingEditor renamer;
 
   @VisibleForTesting
@@ -66,8 +65,12 @@ public class InverseRenamingEditor implements InverseEditor {
   }
 
   @Override
-  public Codebase inverseEdit(Codebase input, Codebase referenceFrom, Codebase referenceTo,
-      ProjectContext context, Map<String, String> options) {
+  public Codebase inverseEdit(
+      Codebase input,
+      Codebase referenceFrom,
+      Codebase referenceTo,
+      ProjectContext context,
+      Map<String, String> options) {
     File tempDir = Injector.INSTANCE.fileSystem().getTemporaryDirectory("inverse_rename_run_");
     inverseRenameAndCopy(input, tempDir, referenceTo);
     return new Codebase(tempDir, referenceTo.getProjectSpace(), referenceTo.getExpression());

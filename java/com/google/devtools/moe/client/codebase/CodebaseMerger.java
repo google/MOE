@@ -29,15 +29,15 @@ public class CodebaseMerger {
   private final Codebase originalCodebase, destinationCodebase, modifiedCodebase, mergedCodebase;
   private final Set<String> mergedFiles, failedToMergeFiles;
 
-  public CodebaseMerger(Codebase originalCodebase, Codebase modifiedCodebase,
-      Codebase destinationCodebase) {
+  public CodebaseMerger(
+      Codebase originalCodebase, Codebase modifiedCodebase, Codebase destinationCodebase) {
     this.originalCodebase = originalCodebase;
     this.modifiedCodebase = modifiedCodebase;
     this.destinationCodebase = destinationCodebase;
 
     File mergedDir = Injector.INSTANCE.fileSystem().getTemporaryDirectory("merged_codebase_");
-    RepositoryExpression mergedExpression = new RepositoryExpression(
-        new Term("merged", ImmutableMap.<String, String>of()));
+    RepositoryExpression mergedExpression =
+        new RepositoryExpression(new Term("merged", ImmutableMap.<String, String>of()));
     this.mergedCodebase = new Codebase(mergedDir, "merged", mergedExpression);
 
     mergedFiles = Sets.newHashSet();
@@ -59,8 +59,9 @@ public class CodebaseMerger {
    * @return the merged Codebase
    */
   public Codebase merge() {
-    Set<String>  filesToMerge = Sets.union(destinationCodebase.getRelativeFilenames(),
-        modifiedCodebase.getRelativeFilenames());
+    Set<String> filesToMerge =
+        Sets.union(
+            destinationCodebase.getRelativeFilenames(), modifiedCodebase.getRelativeFilenames());
     for (String filename : filesToMerge) {
       this.generateMergedFile(filename);
     }
@@ -72,14 +73,20 @@ public class CodebaseMerger {
    * Print the results of a merge to the UI.
    */
   public void report() {
-    Injector.INSTANCE.ui().info(
-        String.format(
-            "Merged codebase generated at: %s", mergedCodebase.getPath().getAbsolutePath()));
-    Injector.INSTANCE.ui().info(
-        String.format(
-            "%d files merged successfully\n%d files have merge "
-        + "conflicts. Edit the following files to resolve conflicts:\n%s", mergedFiles.size(),
-        failedToMergeFiles.size(), failedToMergeFiles.toString()));
+    Injector.INSTANCE
+        .ui()
+        .info(
+            String.format(
+                "Merged codebase generated at: %s", mergedCodebase.getPath().getAbsolutePath()));
+    Injector.INSTANCE
+        .ui()
+        .info(
+            String.format(
+                "%d files merged successfully\n%d files have merge "
+                    + "conflicts. Edit the following files to resolve conflicts:\n%s",
+                mergedFiles.size(),
+                failedToMergeFiles.size(),
+                failedToMergeFiles.toString()));
   }
 
   private static boolean areDifferent(String filename, File x, File y) {
@@ -131,8 +138,11 @@ public class CodebaseMerger {
       // This should never be thrown since generateMergedFile(...) is only called on filesToMerge
       // from merge() which is the union of the files in the destination and modified codebases.
       throw new MoeProblem(
-          String.format("%s doesn't exist in either %s nor %s. This should not be possible.",
-          filename, destinationCodebase, modifiedCodebase));
+          String.format(
+              "%s doesn't exist in either %s nor %s. This should not be possible.",
+              filename,
+              destinationCodebase,
+              modifiedCodebase));
 
     } else if (origExists && modExists && !destExists) {
       if (areDifferent(filename, origFile, modFile)) {
@@ -166,11 +176,15 @@ public class CodebaseMerger {
       // Merges the changes that lead from origFile to modFile into mergedFile (which is a copy
       // of destFile). After, mergedFile will have the combined changes of modFile and destFile.
       mergeOutput =
-          Injector.INSTANCE.cmd().runCommand(
-              "merge",
-              ImmutableList.of(
-          mergedFile.getAbsolutePath(), origFile.getAbsolutePath(), modFile.getAbsolutePath()),
-          this.mergedCodebase.getPath().getAbsolutePath());
+          Injector.INSTANCE
+              .cmd()
+              .runCommand(
+                  "merge",
+                  ImmutableList.of(
+                      mergedFile.getAbsolutePath(),
+                      origFile.getAbsolutePath(),
+                      modFile.getAbsolutePath()),
+                  this.mergedCodebase.getPath().getAbsolutePath());
       // Return status was 0 and the merge was successful. Note it.
       mergedFiles.add(mergedFile.getAbsolutePath().toString());
     } catch (CommandException e) {

@@ -38,9 +38,11 @@ public class EditExpression extends AbstractExpression {
     }
 
     Ui.Task editTask =
-        Injector.INSTANCE.ui().pushTask(
-        "edit",
-        "Editing " + codebaseToEdit.getPath() + " with editor " + editor.getDescription());
+        Injector.INSTANCE
+            .ui()
+            .pushTask(
+                "edit",
+                "Editing " + codebaseToEdit.getPath() + " with editor " + editor.getDescription());
 
     Codebase editedCodebase = editor.edit(codebaseToEdit, context, editOp.term.options);
 

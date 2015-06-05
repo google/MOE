@@ -39,9 +39,9 @@ public class CreateCodebaseDirectiveTest extends TestCase {
   public void testCreateCodebaseWithEditors() throws Exception {
     contextFactory.projectConfigs.put(
         "moe_config.txt",
-        "{\"name\": \"foo\", \"repositories\": {" +
-        "\"internal\": {\"type\": \"dummy\"}}, \"editors\": {" +
-        "\"identity\": {\"type\":\"identity\"}}}");
+        "{\"name\": \"foo\", \"repositories\": {"
+            + "\"internal\": {\"type\": \"dummy\"}}, \"editors\": {"
+            + "\"identity\": {\"type\":\"identity\"}}}");
     CreateCodebaseDirective d = new CreateCodebaseDirective(cmd, contextFactory, ui);
     d.getFlags().configFilename = "moe_config.txt";
     d.getFlags().codebase = "internal|identity";

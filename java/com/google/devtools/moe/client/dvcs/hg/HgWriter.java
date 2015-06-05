@@ -50,9 +50,13 @@ public class HgWriter extends AbstractDvcsWriter<HgClonedRepository> {
 
   @Override
   protected void commitChanges(RevisionMetadata rm) throws CommandException {
-    List<String> args = Lists.newArrayList("commit",
-        "--message", rm.description,
-        "--date", rm.date.getMillis() / 1000 + " " + -rm.date.getZone().getOffset(rm.date) / 1000);
+    List<String> args =
+        Lists.newArrayList(
+            "commit",
+            "--message",
+            rm.description,
+            "--date",
+            rm.date.getMillis() / 1000 + " " + -rm.date.getZone().getOffset(rm.date) / 1000);
     if (rm.author != null) {
       args.add("--user");
       args.add(rm.author);

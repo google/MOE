@@ -6,7 +6,6 @@ import com.google.common.collect.ImmutableMap;
 
 import java.util.Map;
 
-
 /**
  * A skeletal implementation of the {@link Expression} interface.
  *

@@ -48,8 +48,8 @@ public class SvnWriter implements Writer {
 
   public void checkOut() {
     try {
-      util.runSvnCommand("co",
-          "-r", revision.revId, config.getUrl(), rootDirectory.getAbsolutePath());
+      util.runSvnCommand(
+          "co", "-r", revision.revId, config.getUrl(), rootDirectory.getAbsolutePath());
     } catch (CommandRunner.CommandException e) {
       throw new MoeProblem("Could not check out from svn: " + e.stderr);
     }
@@ -62,16 +62,18 @@ public class SvnWriter implements Writer {
 
     // Filter out files that either start with .svn or have .svn after a slash, plus the repo
     // config's ignore_file_res.
-    List<String> ignoreFilePatterns = ImmutableList.<String>builder()
-        .addAll(config.getIgnoreFileRes())
-        .add("(^|.*/)\\.svn(/.*|$)")
-        .build();
+    List<String> ignoreFilePatterns =
+        ImmutableList.<String>builder()
+            .addAll(config.getIgnoreFileRes())
+            .add("(^|.*/)\\.svn(/.*|$)")
+            .build();
 
     Set<String> codebaseFiles = c.getRelativeFilenames();
-    Set<String> writerFiles = Utils.filterByRegEx(
+    Set<String> writerFiles =
+        Utils.filterByRegEx(
             Utils.makeFilenamesRelative(
                 Injector.INSTANCE.fileSystem().findFiles(rootDirectory), rootDirectory),
-        ignoreFilePatterns);
+            ignoreFilePatterns);
     Set<String> union = Sets.union(codebaseFiles, writerFiles);
 
     for (String filename : union) {
@@ -85,15 +87,21 @@ public class SvnWriter implements Writer {
   public DraftRevision putCodebase(Codebase c, RevisionMetadata rm) throws WritingError {
     DraftRevision dr = putCodebase(c);
     // Generate a shell script to commit repo with author and description
-    String script = String.format("svn update%n" +
-                                  "svn commit -m \"%s\"%n" +
-                                  "svn propset -r HEAD svn:author \"%s\" --revprop",
-                                  rm.description, rm.author);
+    String script =
+        String.format(
+            "svn update%n"
+                + "svn commit -m \"%s\"%n"
+                + "svn propset -r HEAD svn:author \"%s\" --revprop",
+            rm.description,
+            rm.author);
     Utils.makeShellScript(script, rootDirectory.getAbsolutePath() + "/svn_commit.sh");
 
-    Injector.INSTANCE.ui().info(
-        String.format(
-            "To submit, run: cd %s && ./svn_commit.sh && cd -", rootDirectory.getAbsolutePath()));
+    Injector.INSTANCE
+        .ui()
+        .info(
+            String.format(
+                "To submit, run: cd %s && ./svn_commit.sh && cd -",
+                rootDirectory.getAbsolutePath()));
     return dr;
   }
 
@@ -116,8 +124,11 @@ public class SvnWriter implements Writer {
 
       if (!srcExists && !destExists) {
         throw new MoeProblem(
-            String.format("Neither src nor dests exists. Unreachable code:%n%s%n%s%n%s",
-                          relativePath, src, dest));
+            String.format(
+                "Neither src nor dests exists. Unreachable code:%n%s%n%s%n%s",
+                relativePath,
+                src,
+                dest));
       }
 
       if (!srcExists) {
@@ -146,8 +157,9 @@ public class SvnWriter implements Writer {
         } catch (CommandRunner.CommandException e) {
           // If the mime type setting fails, it's not really a big deal.
           // Just log it and keep going.
-          Injector.INSTANCE.ui().info(
-              String.format("Error setting mime-type for %s", relativePath));
+          Injector.INSTANCE
+              .ui()
+              .info(String.format("Error setting mime-type for %s", relativePath));
         }
       }
 

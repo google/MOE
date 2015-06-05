@@ -28,9 +28,8 @@ public class DetermineMetadataLogic {
    *                      describing the Revision in the from repository, otherwise null
    * @return RevisionMetadata concatenating the metadata of the given revs
    */
-  public static RevisionMetadata determine(ProjectContext context,
-                                           List<Revision> revs,
-                                           @Nullable Revision fromRevision) {
+  public static RevisionMetadata determine(
+      ProjectContext context, List<Revision> revs, @Nullable Revision fromRevision) {
     return determine(context, revs, null /*MetadataScrubberConfig sc*/, fromRevision);
   }
 
@@ -38,10 +37,11 @@ public class DetermineMetadataLogic {
    * Get and scrub RevisionMetadata based on the given MetadataScrubberConfig.
    */
   // TODO(user): Simplify DetermineMetadata to a single interface devoid of @Nullable args.
-  public static RevisionMetadata determine(ProjectContext context,
-                                           List<Revision> revs,
-                                           @Nullable MetadataScrubberConfig sc,
-                                           @Nullable Revision fromRevision) {
+  public static RevisionMetadata determine(
+      ProjectContext context,
+      List<Revision> revs,
+      @Nullable MetadataScrubberConfig sc,
+      @Nullable Revision fromRevision) {
     ImmutableList.Builder<RevisionMetadata> rmBuilder = ImmutableList.builder();
     List<MetadataScrubber> scrubbers =
         (sc == null) ? ImmutableList.<MetadataScrubber>of() : sc.getScrubbers();

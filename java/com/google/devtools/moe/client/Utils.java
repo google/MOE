@@ -45,7 +45,8 @@ public class Utils {
       throw new MoeProblem(
           String.format(
               "Options contains invalid keys:%nOptions: %s%nAllowed keys: %s",
-              options, allowedOptions));
+              options,
+              allowedOptions));
     }
   }
 
@@ -71,18 +72,21 @@ public class Utils {
   /** Delete files under baseDir whose paths relative to baseDir don't match the given Predicate. */
   public static void filterFiles(File baseDir, final Predicate<CharSequence> positiveFilter) {
     final URI baseUri = baseDir.toURI();
-    Utils.doToFiles(baseDir, new Function<File, Void>() {
-      @Override public Void apply(File file) {
-        if (!positiveFilter.apply(baseUri.relativize(file.toURI()).getPath())) {
-          try {
+    Utils.doToFiles(
+        baseDir,
+        new Function<File, Void>() {
+          @Override
+          public Void apply(File file) {
+            if (!positiveFilter.apply(baseUri.relativize(file.toURI()).getPath())) {
+              try {
                 Injector.INSTANCE.fileSystem().deleteRecursively(file);
-          } catch (IOException e) {
-            throw new MoeProblem("Error deleting file: " + file);
+              } catch (IOException e) {
+                throw new MoeProblem("Error deleting file: " + file);
+              }
+            }
+            return null;
           }
-        }
-        return null;
-      }
-    });
+        });
   }
 
   /**
@@ -113,10 +117,10 @@ public class Utils {
     File expandedDir = Injector.INSTANCE.fileSystem().getTemporaryDirectory("expanded_tar_");
     Injector.INSTANCE.fileSystem().makeDirs(expandedDir);
     try {
-      Injector.INSTANCE.cmd().runCommand(
-          "tar",
-          ImmutableList.of("-xf", tar.getAbsolutePath()),
-          expandedDir.getAbsolutePath());
+      Injector.INSTANCE
+          .cmd()
+          .runCommand(
+              "tar", ImmutableList.of("-xf", tar.getAbsolutePath()), expandedDir.getAbsolutePath());
     } catch (CommandRunner.CommandException e) {
       Injector.INSTANCE.fileSystem().deleteRecursively(expandedDir);
       throw e;
@@ -124,8 +128,7 @@ public class Utils {
     return expandedDir;
   }
 
-  public static void copyDirectory(File src, File dest)
-      throws IOException, CommandException {
+  public static void copyDirectory(File src, File dest) throws IOException, CommandException {
     if (src == null) {
       return;
     }

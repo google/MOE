@@ -71,15 +71,14 @@ public class DiffCodebasesDirective extends Directive {
   }
 
   static class DiffCodebasesOptions extends MoeOptions {
-    @Option(name = "--config_file", required = true,
-            usage = "Location of MOE config file")
+
+    @Option(name = "--config_file", required = true, usage = "Location of MOE config file")
     String configFilename = "";
-    @Option(name = "--codebase1", required = true,
-            usage = "Codebase1 expression")
+
+    @Option(name = "--codebase1", required = true, usage = "Codebase1 expression")
     String codebase1 = "";
-    @Option(name = "--codebase2", required = true,
-            usage = "Codebase2 expression")
+
+    @Option(name = "--codebase2", required = true, usage = "Codebase2 expression")
     String codebase2 = "";
   }
-
 }

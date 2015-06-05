@@ -21,7 +21,7 @@ import java.util.Map;
  * Creates a codebase based upon a local existing directory. Primarily used for testing purposes.
  * Works with single files and directories.
  */
-public class FileCodebaseCreator implements CodebaseCreator  {
+public class FileCodebaseCreator implements CodebaseCreator {
   private static final String PATH_OPTION = "path";
   private static final String PROJECT_SPACE_OPTION = "projectspace";
 
@@ -34,15 +34,14 @@ public class FileCodebaseCreator implements CodebaseCreator  {
     String source = options.get(PATH_OPTION);
     if (Strings.isNullOrEmpty(source)) {
       throw new CodebaseCreationError(
-        String.format("Please specify the mandatory '%s' option for the FileCodebaseCreator",
-                      PATH_OPTION));
+          String.format(
+              "Please specify the mandatory '%s' option for the FileCodebaseCreator", PATH_OPTION));
     }
 
     // Create the codebase instance.
     File codebasePath = getCodebasePath(new File(source));
-    String projectSpace = options.containsKey(PROJECT_SPACE_OPTION)
-                          ? options.get(PROJECT_SPACE_OPTION)
-                          : "public";
+    String projectSpace =
+        options.containsKey(PROJECT_SPACE_OPTION) ? options.get(PROJECT_SPACE_OPTION) : "public";
     RepositoryExpression expression = new RepositoryExpression(new Term("file", options));
     return new Codebase(codebasePath, projectSpace, expression);
   }
@@ -58,7 +57,7 @@ public class FileCodebaseCreator implements CodebaseCreator  {
     // Check whether the specified path is valid.
     if (!Injector.INSTANCE.fileSystem().exists(sourceFile)) {
       throw new CodebaseCreationError(
-            String.format("The specified codebase path \"%s\" does not exist.", sourceFile));
+          String.format("The specified codebase path \"%s\" does not exist.", sourceFile));
     }
 
     try {
@@ -77,15 +76,17 @@ public class FileCodebaseCreator implements CodebaseCreator  {
       }
     } catch (CommandException exception) {
       throw new CodebaseCreationError(
-        String.format("Could not extract archive: '%s' %s", sourceFile, exception.getMessage()));
+          String.format("Could not extract archive: '%s' %s", sourceFile, exception.getMessage()));
     } catch (IOException exception) {
       throw new CodebaseCreationError(
-        String.format("Could not extract archive '%s': %s", sourceFile, exception.getMessage()));
+          String.format("Could not extract archive '%s': %s", sourceFile, exception.getMessage()));
     }
 
     // If we did not return a codebase-path by now, we have no way of handling it.
     throw new CodebaseCreationError(
-        String.format("The '%s'-option of a FileCodebaseCreator must specify either a directory " +
-                    "or a .tar/.tar.gz-archive", PATH_OPTION));
+        String.format(
+            "The '%s'-option of a FileCodebaseCreator must specify either a directory "
+                + "or a .tar/.tar.gz-archive",
+            PATH_OPTION));
   }
 }

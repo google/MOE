@@ -22,25 +22,26 @@ import javax.inject.Singleton;
  */
 public class InMemoryFileSystemTest extends TestCase {
   // TODO(cgruber): Rework these when statics aren't inherent in the design.
-  @dagger.Component(modules = {
-      TestingModule.class,
-      SystemCommandRunner.Module.class,
-      NullFileSystemModule.class})
+  @dagger.Component(
+      modules = {TestingModule.class, SystemCommandRunner.Module.class, NullFileSystemModule.class})
   @Singleton
   interface Component {
     Injector context(); // TODO (b/19676630) Remove when bug is fixed.
   }
 
-  @Override protected void setUp() throws Exception {
+  @Override
+  protected void setUp() throws Exception {
     super.setUp();
     Injector.INSTANCE = DaggerInMemoryFileSystemTest_Component.create().context();
   }
 
-  private static final Lifetime TRANSIENT = new Lifetime() {
-    @Override public boolean shouldCleanUp() {
-      return true;
-    }
-  };
+  private static final Lifetime TRANSIENT =
+      new Lifetime() {
+        @Override
+        public boolean shouldCleanUp() {
+          return true;
+        }
+      };
 
   // Class under test
   private final InMemoryFileSystem fs = new InMemoryFileSystem();
@@ -81,12 +82,13 @@ public class InMemoryFileSystemTest extends TestCase {
   }
 
   public void testFindFiles() throws Exception {
-    InMemoryFileSystem fs = new InMemoryFileSystem(ImmutableMap.of(
-        "/dir/1", "1 contents",
-        "/dir/2", "2 contents",
-        "/dir/subdir/1", "subdir/1 contents",
-        "/otherdir/1", "/otherdir/1 contents"
-        ));
+    InMemoryFileSystem fs =
+        new InMemoryFileSystem(
+            ImmutableMap.of(
+                "/dir/1", "1 contents",
+                "/dir/2", "2 contents",
+                "/dir/subdir/1", "subdir/1 contents",
+                "/otherdir/1", "/otherdir/1 contents"));
 
     assertEquals(
         ImmutableSet.of(new File("/dir/1"), new File("/dir/2"), new File("/dir/subdir/1")),
@@ -94,12 +96,13 @@ public class InMemoryFileSystemTest extends TestCase {
   }
 
   public void testListFiles() throws Exception {
-    InMemoryFileSystem fs = new InMemoryFileSystem(ImmutableMap.of(
-        "/dir/1", "1 contents",
-        "/dir/2", "2 contents",
-        "/dir/subdir/1", "subdir/1 contents",
-        "/otherdir/1", "/otherdir/1 contents"
-        ));
+    InMemoryFileSystem fs =
+        new InMemoryFileSystem(
+            ImmutableMap.of(
+                "/dir/1", "1 contents",
+                "/dir/2", "2 contents",
+                "/dir/subdir/1", "subdir/1 contents",
+                "/otherdir/1", "/otherdir/1 contents"));
 
     assertEquals(
         ImmutableSet.of(new File("/dir/1"), new File("/dir/2"), new File("/dir/subdir")),
@@ -107,11 +110,12 @@ public class InMemoryFileSystemTest extends TestCase {
   }
 
   public void testExists() throws Exception {
-    InMemoryFileSystem fs = new InMemoryFileSystem(ImmutableMap.of(
-        "/dir/1", "1 contents",
-        "/dir/subdir/1", "subdir/1 contents",
-        "/otherdir/1", "/otherdir/1 contents"
-        ));
+    InMemoryFileSystem fs =
+        new InMemoryFileSystem(
+            ImmutableMap.of(
+                "/dir/1", "1 contents",
+                "/dir/subdir/1", "subdir/1 contents",
+                "/otherdir/1", "/otherdir/1 contents"));
 
     assertTrue(fs.exists(new File("/dir")));
     assertTrue(fs.exists(new File("/dir/1")));
@@ -124,10 +128,11 @@ public class InMemoryFileSystemTest extends TestCase {
   }
 
   public void testIsFile() throws Exception {
-    InMemoryFileSystem fs = new InMemoryFileSystem(ImmutableMap.of(
-        "/dir/1", "1 contents",
-        "/dir/subdir/1", "subdir/1 contents"
-        ));
+    InMemoryFileSystem fs =
+        new InMemoryFileSystem(
+            ImmutableMap.of(
+                "/dir/1", "1 contents",
+                "/dir/subdir/1", "subdir/1 contents"));
 
     assertFalse(fs.isFile(new File("/dir")));
     assertTrue(fs.isFile(new File("/dir/1")));
@@ -137,10 +142,11 @@ public class InMemoryFileSystemTest extends TestCase {
   }
 
   public void testIsDirectory() throws Exception {
-    InMemoryFileSystem fs = new InMemoryFileSystem(ImmutableMap.of(
-        "/dir/1", "1 contents",
-        "/dir/subdir/1", "subdir/1 contents"
-        ));
+    InMemoryFileSystem fs =
+        new InMemoryFileSystem(
+            ImmutableMap.of(
+                "/dir/1", "1 contents",
+                "/dir/subdir/1", "subdir/1 contents"));
 
     assertTrue(fs.isDirectory(new File("/dir")));
     assertFalse(fs.isDirectory(new File("/dir/1")));

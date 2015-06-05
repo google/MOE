@@ -16,8 +16,11 @@ import com.google.devtools.moe.client.writer.WriterCreator;
 @AutoValue
 public abstract class Repository {
   public abstract String name();
+
   public abstract RevisionHistory revisionHistory();
+
   public abstract CodebaseCreator codebaseCreator();
+
   public abstract WriterCreator writerCreator();
 
   public static Repository create(

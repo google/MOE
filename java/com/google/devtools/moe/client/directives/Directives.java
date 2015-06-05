@@ -126,8 +126,9 @@ public abstract class Directives {
 
       for (Map.Entry<String, Provider<Directive>> entry : directives().entrySet()) {
         // TODO(cgruber): make this a table map so this isn't needed.
-        Injector.INSTANCE.ui().info(
-            "* " + entry.getKey() + ": " + entry.getValue().get().getDescription());
+        Injector.INSTANCE
+            .ui()
+            .info("* " + entry.getKey() + ": " + entry.getValue().get().getDescription());
       }
       return null;
     }

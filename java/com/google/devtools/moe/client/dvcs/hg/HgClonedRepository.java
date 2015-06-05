@@ -2,6 +2,8 @@
 
 package com.google.devtools.moe.client.dvcs.hg;
 
+import static java.util.Arrays.asList;
+
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -31,6 +33,7 @@ public class HgClonedRepository implements LocalClone {
    * be the same as repositoryConfig.getUrl(). Otherwise, it will.
    */
   private final String repositoryUrl;
+
   private File localCloneTempDir;
   private boolean clonedLocally;
   private boolean updatedToRev = false;
@@ -88,11 +91,11 @@ public class HgClonedRepository implements LocalClone {
 
       HgRepositoryFactory.runHgCommand(cloneArgs.build(), "" /*workingDirectory*/);
       clonedLocally = true;
-      branch = HgRepositoryFactory.runHgCommand(
-          ImmutableList.of("branch"), localCloneTempDir.getAbsolutePath()).trim();
+      branch =
+          HgRepositoryFactory.runHgCommand(asList("branch"), localCloneTempDir.getAbsolutePath())
+              .trim();
     } catch (CommandException e) {
-      throw new MoeProblem(
-          "Could not clone from hg repo at " + repositoryUrl + ": " + e.stderr);
+      throw new MoeProblem("Could not clone from hg repo at " + repositoryUrl + ": " + e.stderr);
     }
   }
 
@@ -113,25 +116,31 @@ public class HgClonedRepository implements LocalClone {
   public File archiveAtRevision(String revId) {
     Preconditions.checkState(clonedLocally);
     File archiveLocation =
-        Injector.INSTANCE.fileSystem().getTemporaryDirectory(
-        String.format("hg_archive_%s_%s_", repositoryName, revId), Lifetimes.currentTask());
+        Injector.INSTANCE
+            .fileSystem()
+            .getTemporaryDirectory(
+                String.format("hg_archive_%s_%s_", repositoryName, revId), Lifetimes.currentTask());
     try {
       ImmutableList.Builder<String> archiveArgs = ImmutableList.<String>builder();
       archiveArgs.add("archive", archiveLocation.getAbsolutePath());
       if (!Strings.isNullOrEmpty(revId)) {
         archiveArgs.add("--rev=" + revId);
       }
-      HgRepositoryFactory.runHgCommand(
-          archiveArgs.build(), localCloneTempDir.getAbsolutePath());
-      Injector.INSTANCE.fileSystem().deleteRecursively(
-          new File(archiveLocation, ".hg_archival.txt"));
+      HgRepositoryFactory.runHgCommand(archiveArgs.build(), localCloneTempDir.getAbsolutePath());
+      Injector.INSTANCE
+          .fileSystem()
+          .deleteRecursively(new File(archiveLocation, ".hg_archival.txt"));
     } catch (CommandException e) {
       throw new MoeProblem(
           "Could not archive hg clone at " + localCloneTempDir.getAbsolutePath() + ": " + e.stderr);
     } catch (IOException e) {
       throw new MoeProblem(
-          "IOException archiving clone at " + localCloneTempDir.getAbsolutePath() +
-          " to revision " + revId + ": " + e);
+          "IOException archiving clone at "
+              + localCloneTempDir.getAbsolutePath()
+              + " to revision "
+              + revId
+              + ": "
+              + e);
     }
     return archiveLocation;
   }
@@ -143,7 +152,11 @@ public class HgClonedRepository implements LocalClone {
    * @return the stdout output of the command
    */
   String runHgCommand(String... args) throws CommandException {
-    return Injector.INSTANCE.cmd().runCommand(
-        "hg", ImmutableList.copyOf(args), getLocalTempDir().getAbsolutePath() /*workingDirectory*/);
+    return Injector.INSTANCE
+        .cmd()
+        .runCommand(
+            "hg",
+            ImmutableList.copyOf(args),
+            getLocalTempDir().getAbsolutePath() /*workingDirectory*/);
   }
 }

@@ -10,7 +10,9 @@ import org.kohsuke.args4j.Option;
  * @author nicksantos@google.com (Nick Santos)
  */
 public class MoeOptions {
-  @Option(name = "--help",
+
+  @Option(
+      name = "--help",
       handler = BooleanOptionHandler.class,
       usage = "Prints available flags for this directive.")
   private boolean help = false;

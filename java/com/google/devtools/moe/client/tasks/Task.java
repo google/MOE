@@ -47,6 +47,7 @@ public abstract class Task<Result> {
   public static class Explanation {
     public final String message;
     public final int exitCode;
+
     public Explanation(String message, int exitCode) {
       this.message = message;
       this.exitCode = exitCode;

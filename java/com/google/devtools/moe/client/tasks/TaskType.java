@@ -30,7 +30,8 @@ public class TaskType {
     return options;
   }
 
-  @Provides Task.TaskCreator provideTaskCreator() {
+  @Provides
+  Task.TaskCreator provideTaskCreator() {
     try {
       return taskCreatorClass.newInstance();
     } catch (InstantiationException | IllegalAccessException e) {
@@ -43,16 +44,18 @@ public class TaskType {
     return tc.createTaskFromCommandLine(options);
   }
 
-  public TaskType(String desc, MoeOptions options,
-                  Class<? extends Task.TaskCreator> taskCreatorClass) {
+  public TaskType(
+      String desc, MoeOptions options, Class<? extends Task.TaskCreator> taskCreatorClass) {
     this.desc = desc;
     this.options = options;
     this.taskCreatorClass = taskCreatorClass;
   }
 
-  public static final Map<String, TaskType> TASK_MAP = ImmutableMap.of(
-      HelloTask.commandLineName, new TaskType(
-          "Prints welcome message",
-          new HelloTask.HelloOptions(),
-          HelloTask.HelloTaskCreator.class));
+  public static final Map<String, TaskType> TASK_MAP =
+      ImmutableMap.of(
+          HelloTask.commandLineName,
+          new TaskType(
+              "Prints welcome message",
+              new HelloTask.HelloOptions(),
+              HelloTask.HelloTaskCreator.class));
 }

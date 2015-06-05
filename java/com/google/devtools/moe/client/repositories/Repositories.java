@@ -31,18 +31,23 @@ public class Repositories implements Repository.Factory {
 
   private final ImmutableMap<String, Repository.Factory> serviceFactories;
 
-  @Inject public Repositories(Set<Repository.Factory> services) {
+  @Inject
+  public Repositories(Set<Repository.Factory> services) {
     // A Set of services is expected, and indexed by this class, so that a more dynamic set
     // of Repositories can be dynamically detected, as opposed to using a static map binder
-    this.serviceFactories = FluentIterable.from(services)
-        .uniqueIndex(new Function<Repository.Factory, String>() {
-          @Override public String apply(Repository.Factory input) {
-            return input.type();
-          }
-        });
+    this.serviceFactories =
+        FluentIterable.from(services)
+            .uniqueIndex(
+                new Function<Repository.Factory, String>() {
+                  @Override
+                  public String apply(Repository.Factory input) {
+                    return input.type();
+                  }
+                });
   }
 
-  @Override public String type() {
+  @Override
+  public String type() {
     return "aggregate";
   }
 
@@ -62,7 +67,8 @@ public class Repositories implements Repository.Factory {
    * A dagger module which provides the {@link Repository.Factory} implementations for
    * the repository types which are supported by default.
    */
-  @dagger.Module public static class Defaults {
+  @dagger.Module
+  public static class Defaults {
     @Provides(type = SET)
     static Repository.Factory svn(SvnRepositoryFactory concrete) {
       return concrete;

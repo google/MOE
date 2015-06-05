@@ -22,12 +22,12 @@ public class OneMigrationDirectiveTest extends TestCase {
     super.setUp();
     contextFactory.projectConfigs.put(
         "moe_config.txt",
-        "{\"name\":\"foo\",\"repositories\":{" +
-        "\"int\":{\"type\":\"dummy\",\"project_space\":\"internal\"}," +
-        "\"pub\":{\"type\":\"dummy\"}}," +
-        "\"translators\":[{\"from_project_space\":\"internal\"," +
-        "\"to_project_space\":\"public\",\"steps\":[{\"name\":\"id_step\"," +
-        "\"editor\":{\"type\":\"identity\"}}]}]}");
+        "{\"name\":\"foo\",\"repositories\":{"
+            + "\"int\":{\"type\":\"dummy\",\"project_space\":\"internal\"},"
+            + "\"pub\":{\"type\":\"dummy\"}},"
+            + "\"translators\":[{\"from_project_space\":\"internal\","
+            + "\"to_project_space\":\"public\",\"steps\":[{\"name\":\"id_step\","
+            + "\"editor\":{\"type\":\"identity\"}}]}]}");
     Injector.INSTANCE = new Injector(null, cmd, contextFactory, ui);
   }
 
@@ -52,8 +52,7 @@ public class OneMigrationDirectiveTest extends TestCase {
       fail("OneMigrationDirective didn't fail on invalid repository 'x'.");
     } catch (MoeProblem expected) {
       assertEquals(
-          "No such repository 'x' in the config. Found: [int, pub]",
-          expected.getMessage());
+          "No such repository 'x' in the config. Found: [int, pub]", expected.getMessage());
     }
   }
 
@@ -67,8 +66,7 @@ public class OneMigrationDirectiveTest extends TestCase {
       fail("OneMigrationDirective didn't fail on invalid repository 'x'.");
     } catch (MoeProblem expected) {
       assertEquals(
-          "No such repository 'x' in the config. Found: [int, pub]",
-          expected.getMessage());
+          "No such repository 'x' in the config. Found: [int, pub]", expected.getMessage());
     }
   }
 }

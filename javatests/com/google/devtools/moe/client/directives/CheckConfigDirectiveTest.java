@@ -20,9 +20,11 @@ import junit.framework.TestCase;
 public class CheckConfigDirectiveTest extends TestCase {
   private final RecordingUi ui = new RecordingUi();
   private final SystemCommandRunner cmd = new SystemCommandRunner(ui);
-  private final Repositories repositories = new Repositories(ImmutableSet.of(
-      new DummyRepositoryFactory(),
-      new SvnRepositoryFactory(null)));
+  private final Repositories repositories =
+      new Repositories(
+          ImmutableSet.of(
+              new DummyRepositoryFactory(),
+              new SvnRepositoryFactory(null)));
   private final InMemoryProjectContextFactory contextFactory =
       new InMemoryProjectContextFactory(repositories);
 
@@ -53,5 +55,4 @@ public class CheckConfigDirectiveTest extends TestCase {
     d.getFlags().configFilename = "moe_config.txt";
     assertEquals(0, d.perform());
   }
-
 }

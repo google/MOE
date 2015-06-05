@@ -36,7 +36,8 @@ public class LastEquivalenceDirectiveTest extends TestCase {
     options.fromRepository = "internal(revision=1)";
     options.withRepository = "public";
     assertEquals(0, d.perform());
-    assertEquals("Last equivalence: internal{1} == public{1}",
+    assertEquals(
+        "Last equivalence: internal{1} == public{1}",
         ((RecordingUi) Injector.INSTANCE.ui()).lastInfo);
   }
 }

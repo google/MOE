@@ -37,12 +37,16 @@ public class OneMigrationLogic {
    *
    * @return  a DraftRevision on success, or null on failure
    */
-  public static DraftRevision migrate(Codebase c, Writer destination,
-                                      List<Revision> revisionsToMigrate,
-                                      ProjectContext context, Revision fromRevision,
-                                      String fromRepository, String toRepository) {
-    RevisionMetadata metadata = DetermineMetadataLogic.determine(
-        context, revisionsToMigrate, fromRevision);
+  public static DraftRevision migrate(
+      Codebase c,
+      Writer destination,
+      List<Revision> revisionsToMigrate,
+      ProjectContext context,
+      Revision fromRevision,
+      String fromRepository,
+      String toRepository) {
+    RevisionMetadata metadata =
+        DetermineMetadataLogic.determine(context, revisionsToMigrate, fromRevision);
     metadata = scrubAuthors(metadata, context, fromRepository, toRepository);
     return ChangeLogic.change(c, destination, metadata);
   }
@@ -61,10 +65,11 @@ public class OneMigrationLogic {
    *
    * @return  a DraftRevision on success, or null on failure
    */
-  public static DraftRevision migrate(Migration migration,
-                                      ProjectContext context,
-                                      Writer destination,
-                                      Expression referenceToCodebase) {
+  public static DraftRevision migrate(
+      Migration migration,
+      ProjectContext context,
+      Writer destination,
+      Expression referenceToCodebase) {
 
     Revision mostRecentFromRev = migration.fromRevisions.get(migration.fromRevisions.size() - 1);
 
@@ -73,29 +78,39 @@ public class OneMigrationLogic {
       String toProjectSpace =
           context.config.getRepositoryConfig(migration.config.getToRepository()).getProjectSpace();
 
-      fromCodebase = new RepositoryExpression(migration.config.getFromRepository())
-          .atRevision(mostRecentFromRev.revId)
-          .translateTo(toProjectSpace)
-          .withReferenceToCodebase(referenceToCodebase)
-          .createCodebase(context);
+      fromCodebase =
+          new RepositoryExpression(migration.config.getFromRepository())
+              .atRevision(mostRecentFromRev.revId)
+              .translateTo(toProjectSpace)
+              .withReferenceToCodebase(referenceToCodebase)
+              .createCodebase(context);
 
     } catch (CodebaseCreationError e) {
       throw new MoeProblem(e.getMessage());
     }
 
     MetadataScrubberConfig sc = migration.config.getMetadataScrubberConfig();
-    RevisionMetadata metadata = (sc == null)
-        ? DetermineMetadataLogic.determine(context, migration.fromRevisions, mostRecentFromRev)
-        : DetermineMetadataLogic.determine(context, migration.fromRevisions, sc, mostRecentFromRev);
+    RevisionMetadata metadata =
+        (sc == null)
+            ? DetermineMetadataLogic.determine(context, migration.fromRevisions, mostRecentFromRev)
+            : DetermineMetadataLogic.determine(
+                context, migration.fromRevisions, sc, mostRecentFromRev);
 
-    metadata = scrubAuthors(metadata, context, migration.config.getFromRepository(),
-        migration.config.getToRepository());
+    metadata =
+        scrubAuthors(
+            metadata,
+            context,
+            migration.config.getFromRepository(),
+            migration.config.getToRepository());
 
     return ChangeLogic.change(fromCodebase, destination, metadata);
   }
 
-  private static RevisionMetadata scrubAuthors(RevisionMetadata metadata, ProjectContext context,
-      String fromRepository, String toRepository) {
+  private static RevisionMetadata scrubAuthors(
+      RevisionMetadata metadata,
+      ProjectContext context,
+      String fromRepository,
+      String toRepository) {
     try {
       ScrubberConfig scrubber = context.config.findScrubberConfig(fromRepository, toRepository);
       if (scrubber != null && scrubber.shouldScrubAuthor(metadata.author)) {

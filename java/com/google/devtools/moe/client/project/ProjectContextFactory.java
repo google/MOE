@@ -66,8 +66,8 @@ public abstract class ProjectContextFactory {
   private ImmutableMap<String, Editor> buildEditors(ProjectConfig config) throws InvalidProject {
     ImmutableMap.Builder<String, Editor> builder = ImmutableMap.builder();
     for (Map.Entry<String, EditorConfig> entry : config.getEditorConfigs().entrySet()) {
-      builder.put(entry.getKey(),
-          ProjectContext.makeEditorFromConfig(entry.getKey(), entry.getValue()));
+      builder.put(
+          entry.getKey(), ProjectContext.makeEditorFromConfig(entry.getKey(), entry.getValue()));
     }
     return builder.build();
   }
@@ -77,8 +77,9 @@ public abstract class ProjectContextFactory {
     ImmutableMap.Builder<TranslatorPath, Translator> builder = ImmutableMap.builder();
     for (TranslatorConfig translatorConfig : config.getTranslators()) {
       Translator t = ProjectContext.makeTranslatorFromConfig(translatorConfig, config);
-      TranslatorPath tPath = new TranslatorPath(
-          translatorConfig.getFromProjectSpace(), translatorConfig.getToProjectSpace());
+      TranslatorPath tPath =
+          new TranslatorPath(
+              translatorConfig.getFromProjectSpace(), translatorConfig.getToProjectSpace());
       builder.put(tPath, t);
     }
     return builder.build();

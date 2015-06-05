@@ -12,7 +12,9 @@ import javax.annotation.Nullable;
  */
 @Module
 public class NullFileSystemModule {
-  @Provides @Nullable public FileSystem filesystem() {
+  @Provides
+  @Nullable
+  public FileSystem filesystem() {
     return null;
   }
 }

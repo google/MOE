@@ -37,9 +37,10 @@ public class PublicSectionMetadataScrubber extends MetadataScrubber {
       ++currentLine;
     }
 
-    String newDesc = (startPublicSection >= 0)
-        ? Joiner.on("\n").join(lines.subList(startPublicSection + 1, endPublicSection))
-        : rm.description;
+    String newDesc =
+        (startPublicSection >= 0)
+            ? Joiner.on("\n").join(lines.subList(startPublicSection + 1, endPublicSection))
+            : rm.description;
     return new RevisionMetadata(rm.id, rm.author, rm.date, newDesc, rm.parents);
   }
 }

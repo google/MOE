@@ -39,30 +39,37 @@ public class DetermineMigrationsLogic {
     // TODO(user): Decide whether to migrate linear or graph history here. Once DVCS Writers
     // support writing a graph of Revisions, we'll need to opt for linear or graph history based
     // on the MigrationConfig (e.g. whether or not the destination repo is linear-only).
-    EquivalenceMatchResult equivMatch = fromRepo.revisionHistory().findRevisions(
-        null,  // Start at head.
-        new EquivalenceMatcher(migrationConfig.getToRepository(), db),
-        SearchType.LINEAR);
+    EquivalenceMatchResult equivMatch =
+        fromRepo.revisionHistory()
+            .findRevisions(
+                null, // Start at head.
+                new EquivalenceMatcher(migrationConfig.getToRepository(), db),
+                SearchType.LINEAR);
 
     List<Revision> revisionsSinceEquivalence =
         Lists.reverse(equivMatch.getRevisionsSinceEquivalence().getBreadthFirstHistory());
 
     if (revisionsSinceEquivalence.isEmpty()) {
-      Injector.INSTANCE.ui().info(
-          "No revisions found since last equivalence for migration '" + migrationConfig.getName()
-              + "'");
+      Injector.INSTANCE
+          .ui()
+          .info(
+              "No revisions found since last equivalence for migration '"
+                  + migrationConfig.getName()
+                  + "'");
       return ImmutableList.of();
     }
 
     // TODO(user): Figure out how to report all equivalences.
     Equivalence lastEq = equivMatch.getEquivalences().get(0);
-    Injector.INSTANCE.ui().info(
-        String.format(
-            "Found %d revisions in %s since equivalence (%s): %s",
-        revisionsSinceEquivalence.size(),
-        migrationConfig.getFromRepository(),
-        lastEq,
-        Joiner.on(", ").join(revisionsSinceEquivalence)));
+    Injector.INSTANCE
+        .ui()
+        .info(
+            String.format(
+                "Found %d revisions in %s since equivalence (%s): %s",
+                revisionsSinceEquivalence.size(),
+                migrationConfig.getFromRepository(),
+                lastEq,
+                Joiner.on(", ").join(revisionsSinceEquivalence)));
 
     if (migrationConfig.getSeparateRevisions()) {
       ImmutableList.Builder<Migration> migrations = ImmutableList.builder();

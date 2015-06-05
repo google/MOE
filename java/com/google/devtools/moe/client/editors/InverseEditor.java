@@ -29,9 +29,10 @@ import java.util.Map;
  */
 public interface InverseEditor {
 
-  Codebase inverseEdit(Codebase input,
-                       Codebase referenceFrom,
-                       Codebase referenceTo,
-                       ProjectContext context,
-                       Map<String, String> options);
+  Codebase inverseEdit(
+      Codebase input,
+      Codebase referenceFrom,
+      Codebase referenceTo,
+      ProjectContext context,
+      Map<String, String> options);
 }

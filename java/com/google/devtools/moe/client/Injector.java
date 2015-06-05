@@ -25,6 +25,7 @@ public class Injector {
   public static Injector INSTANCE;
 
   @Nullable private final FileSystem fileSystem;
+
   private final CommandRunner cmd;
   private final ProjectContextFactory contextFactory;
   private final Ui ui;

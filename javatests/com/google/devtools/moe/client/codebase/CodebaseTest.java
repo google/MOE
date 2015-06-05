@@ -16,18 +16,21 @@ import junit.framework.TestCase;
 public class CodebaseTest extends TestCase {
 
   public void testCheckProjectSpace() throws Exception {
-    Codebase c = new Codebase(
+    Codebase c =
+        new Codebase(
             new File("/foo"),
             "internal",
             new RepositoryExpression(new Term("foo", ImmutableMap.<String, String>of())));
     c.checkProjectSpace("internal");
     try {
-      c = new Codebase(
+      c =
+          new Codebase(
               new File("/foo"),
               "internal",
               new RepositoryExpression(new Term("foo", ImmutableMap.<String, String>of())));
       c.checkProjectSpace("public");
       fail();
-    } catch (MoeProblem p) {}
+    } catch (MoeProblem p) {
+    }
   }
 }

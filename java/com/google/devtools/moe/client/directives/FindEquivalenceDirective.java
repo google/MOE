@@ -87,18 +87,25 @@ public class FindEquivalenceDirective extends Directive {
   }
 
   static class FindEquivalenceOptions extends MoeOptions {
-    @Option(name = "--config_file", required = true,
-      usage = "Location of MOE config file")
+
+    @Option(name = "--config_file", required = true, usage = "Location of MOE config file")
     String configFilename = "";
-    @Option(name = "--db", required = true,
-            usage = "Location of MOE database")
+
+    @Option(name = "--db", required = true, usage = "Location of MOE database")
     String dbLocation = "";
-    @Option(name = "--from_repository", required = true,
-        usage = "A Repository expression to find equivalences for (in in_repository), e.g. " +
-                "'internal(revision=3,4,5)'")
+
+    @Option(
+        name = "--from_repository",
+        required = true,
+        usage =
+            "A Repository expression to find equivalences for (in in_repository), e.g. "
+                + "'internal(revision=3,4,5)'")
     String fromRepository = "";
-    @Option(name = "--in_repository", required = true,
-            usage = "Which repository to find equivalences in")
+
+    @Option(
+        name = "--in_repository",
+        required = true,
+        usage = "Which repository to find equivalences in")
     String inRepository = "";
   }
 }

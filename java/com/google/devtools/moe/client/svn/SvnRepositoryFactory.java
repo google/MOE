@@ -20,12 +20,13 @@ public class SvnRepositoryFactory implements Repository.Factory {
     this.util = util;
   }
 
-  @Override public String type() {
+  @Override
+  public String type() {
     return "svn";
   }
 
-  @Override public Repository create(String name, RepositoryConfig config)
-      throws InvalidProject {
+  @Override
+  public Repository create(String name, RepositoryConfig config) throws InvalidProject {
     config.checkType(this);
 
     String url = config.getUrl();
@@ -34,7 +35,9 @@ public class SvnRepositoryFactory implements Repository.Factory {
     }
 
     SvnRevisionHistory rh = new SvnRevisionHistory(name, url, util);
-    return Repository.create(name, rh,
+    return Repository.create(
+        name,
+        rh,
         new SvnCodebaseCreator(name, config, rh, util),
         new SvnWriterCreator(config, rh, util));
   }

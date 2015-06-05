@@ -19,6 +19,7 @@ import javax.inject.Singleton;
  *
  * @author dbentley@google.com (Daniel Bentley)
  */
+@Singleton
 public class SystemUi extends Ui {
   private final Logger logger = Logger.getLogger(SystemUi.class.getName());
 
@@ -64,12 +65,14 @@ public class SystemUi extends Ui {
     logger.log(Level.INFO, msg);
   }
 
-  @Override public void error(String msg) {
+  @Override
+  public void error(String msg) {
     clearOutput();
     logger.log(Level.SEVERE, msg);
   }
 
-  @Override public void error(Throwable e, String msg) {
+  @Override
+  public void error(Throwable e, String msg) {
     clearOutput();
 
     // Do not expose the stack trace to the user. Just send it to the INFO logs.
@@ -100,15 +103,16 @@ public class SystemUi extends Ui {
       logHelper(result);
     } else {
       // We need to print the description again
-      logHelper(
-          indent("DONE: " + task.description + ": " + result));
+      logHelper(indent("DONE: " + task.description + ": " + result));
     }
     currentOutput = null;
   }
 
   /** A Dagger module for binding this implementation of {@link Ui}. */
-  @dagger.Module public static class Module {
-    @Provides @Singleton public Ui ui(SystemUi impl) {
+  @dagger.Module
+  public static class Module {
+    @Provides
+    public Ui ui(SystemUi impl) {
       return impl;
     }
   }

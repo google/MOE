@@ -74,11 +74,11 @@ public class BookkeepingDirective extends Directive {
   }
 
   static class BookkeepingOptions extends MoeOptions {
-    @Option(name = "--config_file", required = true,
-            usage = "Location of MOE config file")
+
+    @Option(name = "--config_file", required = true, usage = "Location of MOE config file")
     String configFilename = "";
-    @Option(name = "--db", required = true,
-            usage = "Location of MOE database")
+
+    @Option(name = "--db", required = true, usage = "Location of MOE database")
     String dbLocation = "";
   }
 }

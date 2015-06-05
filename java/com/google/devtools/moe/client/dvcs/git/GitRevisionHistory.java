@@ -56,11 +56,7 @@ public class GitRevisionHistory extends AbstractRevisionHistory {
       hashID = headClone.runGitCommand("log", "--max-count=1", "--format=%H", revId);
     } catch (CommandException e) {
       throw new MoeProblem(
-          String.format(
-              "Failed git log run: %d %s %s",
-              e.returnStatus,
-              e.stdout,
-              e.stderr));
+          String.format("Failed git log run: %d %s %s", e.returnStatus, e.stdout, e.stderr));
     }
     // Clean up output.
     hashID = hashID.replaceAll("\\W", "");
@@ -78,8 +74,11 @@ public class GitRevisionHistory extends AbstractRevisionHistory {
     GitClonedRepository headClone = headCloneSupplier.get();
     if (!headClone.getRepositoryName().equals(revision.repositoryName)) {
       throw new MoeProblem(
-          String.format("Could not get metadata: Revision %s is in repository %s instead of %s",
-                        revision.revId, revision.repositoryName, headClone.getRepositoryName()));
+          String.format(
+              "Could not get metadata: Revision %s is in repository %s instead of %s",
+              revision.revId,
+              revision.repositoryName,
+              headClone.getRepositoryName()));
     }
 
     // Format: hash, author, ISO date, parents, full commit message (subject and body)
@@ -87,12 +86,13 @@ public class GitRevisionHistory extends AbstractRevisionHistory {
 
     String log;
     try {
-      log = headClone.runGitCommand(
-          "log",
-          // Ensure one revision only, to be safe.
-          "--max-count=1",
-          "--format=" + format,
-          revision.revId);
+      log =
+          headClone.runGitCommand(
+              "log",
+              // Ensure one revision only, to be safe.
+              "--max-count=1",
+              "--format=" + format,
+              revision.revId);
     } catch (CommandException e) {
       throw new MoeProblem(
           String.format("Failed git run: %d %s %s", e.returnStatus, e.stdout, e.stderr));
@@ -106,7 +106,8 @@ public class GitRevisionHistory extends AbstractRevisionHistory {
    *
    * @param log  the output of getMetadata to parse
    */
-  @VisibleForTesting RevisionMetadata parseMetadata(String log) {
+  @VisibleForTesting
+  RevisionMetadata parseMetadata(String log) {
     // Split on the log delimiter. Limit to 5 so that it will act correctly
     // even if the log delimiter happens to be in the commit message.
     List<String> split = ImmutableList.copyOf(Splitter.on(LOG_DELIMITER).limit(5).split(log));
@@ -119,11 +120,11 @@ public class GitRevisionHistory extends AbstractRevisionHistory {
 
     DateTime date = GIT_DATE_FMT.parseDateTime(split.get(2));
     return new RevisionMetadata(
-        split.get(0),  // id
-        split.get(1),  // author
+        split.get(0), // id
+        split.get(1), // author
         date,
-        split.get(4),  // description
-        parentBuilder.build());  // parents
+        split.get(4), // description
+        parentBuilder.build()); // parents
   }
 
   @Override

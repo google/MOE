@@ -81,12 +81,16 @@ public class HighestRevisionDirective extends Directive {
   }
 
   static class HighestRevisionOptions extends MoeOptions {
-    @Option(name = "--config_file", required = true,
-            usage = "Location of MOE config file")
+
+    @Option(name = "--config_file", required = true, usage = "Location of MOE config file")
     String configFilename = "";
-    @Option(name = "--repository", required = true,
-            usage = "Which repository expression to find the head revision for, e.g. 'internal' " +
-                    "or 'internal(revision=2)'")
+
+    @Option(
+        name = "--repository",
+        required = true,
+        usage =
+            "Which repository expression to find the head revision for, e.g. 'internal' "
+                + "or 'internal(revision=2)'")
     String repository = "";
   }
 }

@@ -19,6 +19,7 @@ public class RepositoryConfig {
   private String type;
 
   private String url;
+
   @SerializedName("project_space")
   private String projectSpace = "public";
 
@@ -70,8 +71,7 @@ public class RepositoryConfig {
   }
 
   public List<String> getPaths() {
-    List<String> result = paths == null ? Lists.<String>newArrayList() :
-        Lists.newArrayList(paths);
+    List<String> result = paths == null ? Lists.<String>newArrayList() : Lists.newArrayList(paths);
     return result;
   }
 

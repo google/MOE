@@ -63,12 +63,14 @@ public class FileCodebaseCreatorTest extends TestCase {
     try {
       cc.create(ImmutableMap.<String, String>of());
       fail("Method does not check for required options.");
-    } catch (CodebaseCreationError expected) {}
+    } catch (CodebaseCreationError expected) {
+    }
 
     try {
       cc.create(ImmutableMap.<String, String>of("path", "FooBar", "unknown", "123"));
       fail("Method does not check for unsupported options.");
-    } catch (MoeProblem expected) {}
+    } catch (MoeProblem expected) {
+    }
   }
 
   /**
@@ -100,8 +102,8 @@ public class FileCodebaseCreatorTest extends TestCase {
 
     control.replay();
     FileCodebaseCreator cc = new FileCodebaseCreator();
-    Codebase codebase = cc.create(ImmutableMap.<String, String>of("path", folder,
-                                                                 "projectspace", "internal"));
+    Codebase codebase =
+        cc.create(ImmutableMap.<String, String>of("path", folder, "projectspace", "internal"));
     control.verify();
 
     assertNotNull(codebase);
@@ -143,7 +145,8 @@ public class FileCodebaseCreatorTest extends TestCase {
     try {
       FileCodebaseCreator.getCodebasePath(fileFolder);
       fail("getCodebasePath() did not throw an exception for an unsupported file type.");
-    } catch (CodebaseCreationError expected) {}
+    } catch (CodebaseCreationError expected) {
+    }
     control.verify();
   }
 
@@ -163,9 +166,11 @@ public class FileCodebaseCreatorTest extends TestCase {
     EasyMock.expectLastCall().atLeastOnce();
 
     CommandRunner mockcmd = EasyMock.createMock(CommandRunner.class);
-    expect(mockcmd.runCommand(EasyMock.<String>anyObject(),
-                              EasyMock.<List<String>>anyObject(),
-                              EasyMock.<String>anyObject())).andReturn(null);
+    expect(mockcmd.runCommand(
+            EasyMock.<String>anyObject(),
+            EasyMock.<List<String>>anyObject(),
+            EasyMock.<String>anyObject()))
+        .andReturn(null);
     EasyMock.replay(mockcmd);
     Injector.INSTANCE = new Injector(mockfs, mockcmd, contextFactory, ui);
 

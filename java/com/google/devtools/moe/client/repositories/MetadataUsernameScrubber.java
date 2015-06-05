@@ -2,7 +2,6 @@
 
 package com.google.devtools.moe.client.repositories;
 
-
 import java.util.List;
 
 /**

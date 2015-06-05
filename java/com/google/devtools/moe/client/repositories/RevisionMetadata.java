@@ -31,8 +31,8 @@ public class RevisionMetadata {
   public final String description;
   public final List<Revision> parents;
 
-  public RevisionMetadata(String id, String author, DateTime date,
-                          String description, List<Revision> parents) {
+  public RevisionMetadata(
+      String id, String author, DateTime date, String description, List<Revision> parents) {
     this.id = id;
     this.author = author;
     this.date = Preconditions.checkNotNull(date);
@@ -49,19 +49,24 @@ public class RevisionMetadata {
   public boolean equals(Object obj) {
     if (obj instanceof RevisionMetadata) {
       RevisionMetadata revisionMetadataObj = (RevisionMetadata) obj;
-      return (Objects.equals(id, revisionMetadataObj.id) &&
-              Objects.equals(author, revisionMetadataObj.author) &&
-              date.isEqual(revisionMetadataObj.date) &&
-              Objects.equals(description, revisionMetadataObj.description) &&
-              Objects.equals(parents, revisionMetadataObj.parents));
+      return (Objects.equals(id, revisionMetadataObj.id)
+          && Objects.equals(author, revisionMetadataObj.author)
+          && date.isEqual(revisionMetadataObj.date)
+          && Objects.equals(description, revisionMetadataObj.description)
+          && Objects.equals(parents, revisionMetadataObj.parents));
     }
     return false;
   }
 
   @Override
   public String toString() {
-    return String.format("id: %s\nauthor: %s\ndate: %s\ndescription: %s\nparents: %s",
-        id, author, date, description, Joiner.on(",").join(parents));
+    return String.format(
+        "id: %s\nauthor: %s\ndate: %s\ndescription: %s\nparents: %s",
+        id,
+        author,
+        date,
+        description,
+        Joiner.on(",").join(parents));
   }
 
   /**
@@ -88,8 +93,10 @@ public class RevisionMetadata {
     }
 
     if (migrationFromRev != null) {
-      descBuilder.add("Created by MOE: http://code.google.com/p/moe-java\n" +
-                      "MOE_MIGRATED_REVID=" + migrationFromRev.revId);
+      descBuilder.add(
+          "Created by MOE: http://code.google.com/p/moe-java\n"
+              + "MOE_MIGRATED_REVID="
+              + migrationFromRev.revId);
     }
 
     String newId = Joiner.on(", ").join(idBuilder.build());

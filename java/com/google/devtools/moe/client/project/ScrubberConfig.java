@@ -18,53 +18,103 @@ import java.util.regex.Pattern;
 public class ScrubberConfig {
 
   // General options
-  @SerializedName("ignore_files_re") private String ignoreFilesRe;
-  @SerializedName("do_not_scrub_files_re") private String doNotScrubFilesRe;
-  @SerializedName("extension_map") private JsonArray extensionMap;
-  @SerializedName("sensitive_string_file") private String sensitiveStringFile;
-  @SerializedName("sensitive_words") private List<String> sensitiveWords;
-  @SerializedName("sensitive_res") private List<String> sensitiveRes;
+  @SerializedName("ignore_files_re")
+  private String ignoreFilesRe;
+
+  @SerializedName("do_not_scrub_files_re")
+  private String doNotScrubFilesRe;
+
+  @SerializedName("extension_map")
+  private JsonArray extensionMap;
+
+  @SerializedName("sensitive_string_file")
+  private String sensitiveStringFile;
+
+  @SerializedName("sensitive_words")
+  private List<String> sensitiveWords;
+
+  @SerializedName("sensitive_res")
+  private List<String> sensitiveRes;
+
   private List<JsonObject> whitelist;
-  @SerializedName("scrub_sensitive_comments") private final boolean scrubSensitiveComments = true;
-  @SerializedName("rearranging_config") private JsonObject rearrangingConfig;
-  @SerializedName("string_replacements") private List<Map<String, String>> stringReplacements;
-  @SerializedName("regex_replacements") private List<Map<String, String>> regexReplacements;
-  @SerializedName("scrub_non_documentation_comments") private boolean scrubNonDocumentationComments;
-  @SerializedName("scrub_all_comments") private boolean scrubAllComments;
+
+  @SerializedName("scrub_sensitive_comments")
+  private final boolean scrubSensitiveComments = true;
+
+  @SerializedName("rearranging_config")
+  private JsonObject rearrangingConfig;
+
+  @SerializedName("string_replacements")
+  private List<Map<String, String>> stringReplacements;
+
+  @SerializedName("regex_replacements")
+  private List<Map<String, String>> regexReplacements;
+
+  @SerializedName("scrub_non_documentation_comments")
+  private boolean scrubNonDocumentationComments;
+
+  @SerializedName("scrub_all_comments")
+  private boolean scrubAllComments;
 
   // User options
   @SerializedName("usernames_to_scrub")
   private final List<String> usernamesToScrub = new ArrayList<>();
+
   @SerializedName("usernames_to_publish")
   private final List<String> usernamesToPublish = new ArrayList<>();
-  @SerializedName("usernames_file") private String usernamesFile;
-  @SerializedName("scrub_unknown_users") private boolean scrubUnknownUsers;
-  @SerializedName("scrub_authors") private final boolean scrubAuthors = true;
+
+  @SerializedName("usernames_file")
+  private String usernamesFile;
+
+  @SerializedName("scrub_unknown_users")
+  private boolean scrubUnknownUsers;
+
+  @SerializedName("scrub_authors")
+  private final boolean scrubAuthors = true;
 
   // C/C++ options
-  @SerializedName("c_includes_config_file") private String cIncludesConfigFile;
-  @SerializedName("c_includes_config") private JsonObject cIncludesConfig;
+  @SerializedName("c_includes_config_file")
+  private String cIncludesConfigFile;
+
+  @SerializedName("c_includes_config")
+  private JsonObject cIncludesConfig;
 
   // Java options
-  @SerializedName("empty_java_file_action") private String emptyJavaFileAction;
-  @SerializedName("maximum_blank_lines") private int maximumBlankLines;
-  @SerializedName("scrub_java_testsize_annotations") private boolean scrubJavaTestsizeAnnotations;
-  @SerializedName("java_renames") private List<Map<String, String>> javaRenames;
+  @SerializedName("empty_java_file_action")
+  private String emptyJavaFileAction;
+
+  @SerializedName("maximum_blank_lines")
+  private int maximumBlankLines;
+  @SerializedName("scrub_java_testsize_annotations")
+  private boolean scrubJavaTestsizeAnnotations;
+
+  @SerializedName("java_renames")
+  private List<Map<String, String>> javaRenames;
 
   // JavaScript options
-  @SerializedName("js_directory_rename") private Map<String, String> jsDirectoryRename;
-  @SerializedName("js_directory_renames") private List<Map<String, String>> jsDirectoryRenames;
+  @SerializedName("js_directory_rename")
+  private Map<String, String> jsDirectoryRename;
+
+  @SerializedName("js_directory_renames")
+  private List<Map<String, String>> jsDirectoryRenames;
 
   // Python options
-  @SerializedName("python_module_renames") private List<JsonObject> pythonModuleRenames;
-  @SerializedName("python_module_removes") private List<JsonObject> pythonModuleRemoves;
-  @SerializedName("python_shebang_replace") private JsonObject pythonShebangReplace;
+  @SerializedName("python_module_renames")
+  private List<JsonObject> pythonModuleRenames;
+
+  @SerializedName("python_module_removes")
+  private List<JsonObject> pythonModuleRemoves;
+
+  @SerializedName("python_shebang_replace")
+  private JsonObject pythonShebangReplace;
 
   // GWT options
-  @SerializedName("scrub_gwt_inherits") private List<String> scrubGwtInherits;
+  @SerializedName("scrub_gwt_inherits")
+  private List<String> scrubGwtInherits;
 
   // proto options
-  @SerializedName("scrub_proto_comments") private boolean scrubProtoComments;
+  @SerializedName("scrub_proto_comments")
+  private boolean scrubProtoComments;
 
   private ScrubberConfig() { // Instantiated by GSON.
   }
@@ -80,9 +130,10 @@ public class ScrubberConfig {
     if (usernamesFile != null) {
       try {
         UsernamesConfig usernamesConfig =
-            ProjectConfig.makeGson().fromJson(
-                Injector.INSTANCE.fileSystem().fileToString(new File(usernamesFile)),
-                UsernamesConfig.class);
+            ProjectConfig.makeGson()
+                .fromJson(
+                    Injector.INSTANCE.fileSystem().fileToString(new File(usernamesFile)),
+                    UsernamesConfig.class);
         addUsernames(usernamesToScrub, usernamesConfig.getScrubbableUsernames());
         addUsernames(usernamesToPublish, usernamesConfig.getPublishableUsernames());
       } catch (IOException exception) {

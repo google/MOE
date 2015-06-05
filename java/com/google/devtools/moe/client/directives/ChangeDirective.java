@@ -55,9 +55,11 @@ public class ChangeDirective extends Directive {
 
     Task changeTask =
         ui.pushTask(
-        "create_change",
-        String.format("Creating a change in \"%s\" with contents \"%s\"",
-                      options.destination, options.codebase));
+            "create_change",
+            String.format(
+                "Creating a change in \"%s\" with contents \"%s\"",
+                options.destination,
+                options.codebase));
 
     Codebase c;
     try {
@@ -96,14 +98,14 @@ public class ChangeDirective extends Directive {
   }
 
   static class ChangeOptions extends MoeOptions {
-    @Option(name = "--config_file", required = true,
-            usage = "Location of MOE config file")
+
+    @Option(name = "--config_file", required = true, usage = "Location of MOE config file")
     String configFilename = "";
-    @Option(name = "--codebase", required = true,
-            usage = "Codebase expression to evaluate")
+
+    @Option(name = "--codebase", required = true, usage = "Codebase expression to evaluate")
     String codebase = "";
-    @Option(name = "--destination", required = true,
-            usage = "Expression of destination writer")
+
+    @Option(name = "--destination", required = true, usage = "Expression of destination writer")
     String destination = "";
   }
 }

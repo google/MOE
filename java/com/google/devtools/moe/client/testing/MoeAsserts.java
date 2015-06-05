@@ -12,7 +12,6 @@ public class MoeAsserts {
 
   public static void assertSameDate(DateTime expected, DateTime actual) {
     Assert.assertTrue(
-        String.format("Expected %s, Actual %s", expected, actual),
-        expected.isEqual(actual));
+        String.format("Expected %s, Actual %s", expected, actual), expected.isEqual(actual));
   }
 }

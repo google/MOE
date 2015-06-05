@@ -58,14 +58,16 @@ public class ProjectContext {
    */
   public Repository getRepository(String repositoryName) {
     if (!repositories.containsKey(repositoryName)) {
-      throw new MoeProblem("No such repository '" + repositoryName + "' in the config. Found: "
-          + ImmutableSortedSet.copyOf(repositories.keySet()));
+      throw new MoeProblem(
+          "No such repository '"
+              + repositoryName
+              + "' in the config. Found: "
+              + ImmutableSortedSet.copyOf(repositories.keySet()));
     }
     return repositories.get(repositoryName);
   }
 
-  static Editor makeEditorFromConfig(String editorName,
-      EditorConfig config) throws InvalidProject {
+  static Editor makeEditorFromConfig(String editorName, EditorConfig config) throws InvalidProject {
     switch (config.getType()) {
       case identity:
         return IdentityEditor.makeIdentityEditor(editorName, config);
@@ -78,17 +80,17 @@ public class ProjectContext {
       case renamer:
         return RenamingEditor.makeRenamingEditor(editorName, config);
       default:
-        throw new InvalidProject(
-            String.format("Invalid editor type: \"%s\"", config.getType()));
+        throw new InvalidProject(String.format("Invalid editor type: \"%s\"", config.getType()));
     }
   }
 
-  static Translator makeTranslatorFromConfig(
-      TranslatorConfig transConfig, ProjectConfig projConfig) throws InvalidProject {
+  static Translator makeTranslatorFromConfig(TranslatorConfig transConfig, ProjectConfig projConfig)
+      throws InvalidProject {
     if (transConfig.isInverse()) {
       TranslatorConfig otherTrans = findInverseTranslatorConfig(transConfig, projConfig);
-      return new InverseTranslator(makeStepsFromConfigs(otherTrans.getSteps()),
-                                   makeInverseStepsFromConfigs(otherTrans.getSteps()));
+      return new InverseTranslator(
+          makeStepsFromConfigs(otherTrans.getSteps()),
+          makeInverseStepsFromConfigs(otherTrans.getSteps()));
     } else {
       return new ForwardTranslator(makeStepsFromConfigs(transConfig.getSteps()));
     }
@@ -98,8 +100,9 @@ public class ProjectContext {
       throws InvalidProject {
     ImmutableList.Builder<TranslatorStep> steps = ImmutableList.builder();
     for (StepConfig sc : stepConfigs) {
-      steps.add(new TranslatorStep(
-          sc.getName(), makeEditorFromConfig(sc.getName(), sc.getEditorConfig())));
+      steps.add(
+          new TranslatorStep(
+              sc.getName(), makeEditorFromConfig(sc.getName(), sc.getEditorConfig())));
     }
     return steps.build();
   }
@@ -128,8 +131,11 @@ public class ProjectContext {
         return otherTrans;
       }
     }
-    throw new InvalidProject("Couldn't find translator whose path is inverse of " +
-        transConfig.getFromProjectSpace() + " -> " + transConfig.getToProjectSpace());
+    throw new InvalidProject(
+        "Couldn't find translator whose path is inverse of "
+            + transConfig.getFromProjectSpace()
+            + " -> "
+            + transConfig.getToProjectSpace());
   }
 
   private static InverseEditor makeInverseEditorFromConfig(

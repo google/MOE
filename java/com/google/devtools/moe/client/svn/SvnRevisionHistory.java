@@ -64,8 +64,10 @@ public class SvnRevisionHistory extends AbstractRevisionHistory {
    */
   public static List<Revision> parseRevisions(String log, String repositoryName) {
     try {
-      Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(
-          new InputSource(new StringReader(log)));
+      Document doc =
+          DocumentBuilderFactory.newInstance()
+              .newDocumentBuilder()
+              .parse(new InputSource(new StringReader(log)));
       NodeList nl = doc.getElementsByTagName("logentry");
       ImmutableList.Builder<Revision> resultBuilder = ImmutableList.builder();
       for (int i = 0; i < nl.getLength(); i++) {
@@ -87,8 +89,11 @@ public class SvnRevisionHistory extends AbstractRevisionHistory {
   public RevisionMetadata getMetadata(Revision revision) throws MoeProblem {
     if (!name.equals(revision.repositoryName)) {
       throw new MoeProblem(
-          String.format("Could not get metadata: Revision %s is in repository %s instead of %s",
-                        revision.revId, revision.repositoryName, name));
+          String.format(
+              "Could not get metadata: Revision %s is in repository %s instead of %s",
+              revision.revId,
+              revision.repositoryName,
+              name));
     }
     String log;
     try {
@@ -107,8 +112,10 @@ public class SvnRevisionHistory extends AbstractRevisionHistory {
    */
   public List<RevisionMetadata> parseMetadata(String log) {
     try {
-      Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(
-          new InputSource(new StringReader(log)));
+      Document doc =
+          DocumentBuilderFactory.newInstance()
+              .newDocumentBuilder()
+              .parse(new InputSource(new StringReader(log)));
       NodeList nl = doc.getElementsByTagName("logentry");
       ImmutableList.Builder<RevisionMetadata> resultBuilder = ImmutableList.builder();
       for (int i = 0; i < nl.getLength(); i++) {
@@ -117,9 +124,11 @@ public class SvnRevisionHistory extends AbstractRevisionHistory {
         if (i + 1 >= nl.getLength()) {
           resultBuilder.add(parseMetadataNodeList(revId, nlEntries, ImmutableList.<Revision>of()));
         } else {
-          String parentId = nl.item(i + 1).getAttributes().getNamedItem("revision").getNodeValue();
-          resultBuilder.add(parseMetadataNodeList(revId, nlEntries,
-              ImmutableList.of(new Revision(parentId, name))));
+          String parentId =
+              nl.item(i + 1).getAttributes().getNamedItem("revision").getNodeValue();
+          resultBuilder.add(
+              parseMetadataNodeList(
+                  revId, nlEntries, ImmutableList.of(new Revision(parentId, name))));
         }
       }
       return resultBuilder.build();
@@ -131,8 +140,8 @@ public class SvnRevisionHistory extends AbstractRevisionHistory {
   /**
    * Helper function for parseMetadata
    */
-  public RevisionMetadata parseMetadataNodeList(String revId, NodeList nlEntries,
-                                                 ImmutableList<Revision> parents) {
+  public RevisionMetadata parseMetadataNodeList(
+      String revId, NodeList nlEntries, ImmutableList<Revision> parents) {
     String author = "None";
     DateTime date = new DateTime(0L); // Unix epoch
     String description = "None";

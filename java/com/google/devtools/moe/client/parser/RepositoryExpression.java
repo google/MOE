@@ -87,9 +87,9 @@ public class RepositoryExpression extends AbstractExpression {
     WriterCreator wc = r.writerCreator();
 
     Ui.Task t =
-        Injector.INSTANCE.ui().pushTask(
-        "create_writer",
-        String.format("Creating Writer \"%s\"", term));
+        Injector.INSTANCE
+            .ui()
+            .pushTask("create_writer", String.format("Creating Writer \"%s\"", term));
     try {
       Writer writer = wc.create(term.options);
       Injector.INSTANCE.ui().popTaskAndPersist(t, writer.getRoot());

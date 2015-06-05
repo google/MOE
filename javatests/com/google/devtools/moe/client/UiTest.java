@@ -13,10 +13,18 @@ public class UiTest extends TestCase {
     NoOpUi() {
       this.fileSystem = new SystemFileSystem();
     }
-    @Override public void info(String msg) {}
-    @Override public void error(String msg) {}
-    @Override public void error(Throwable e, String msg) {}
-    @Override public void debug(String msg) {}
+
+    @Override
+    public void info(String msg) {}
+
+    @Override
+    public void error(String msg) {}
+
+    @Override
+    public void error(Throwable e, String msg) {}
+
+    @Override
+    public void debug(String msg) {}
   }
 
   public void testStackHelpers() throws Exception {

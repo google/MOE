@@ -95,8 +95,11 @@ public class InverseTranslator implements Translator {
         refFrom =
             Parser.parseExpression(options.get("referenceFromCodebase")).createCodebase(context);
       } catch (ParseError e) {
-        throw new CodebaseCreationError("Couldn't parse referenceFromCodebase '"
-            + options.get("referenceFromCodebase") + "': " + e);
+        throw new CodebaseCreationError(
+            "Couldn't parse referenceFromCodebase '"
+                + options.get("referenceFromCodebase")
+                + "': "
+                + e);
       }
       // Discard the "default" reference from-codebase, i.e. the top of the forward-trans stack.
       forwardTranslationStack.pop();
@@ -109,14 +112,20 @@ public class InverseTranslator implements Translator {
 
     for (InverseTranslatorStep inverseStep : inverseSteps) {
       Task task =
-          Injector.INSTANCE.ui().pushTask(
-              "inverseEdit",
-              String.format(
-          "Inverse-translating step %s by merging codebase %s onto %s",
-          inverseStep.getName(), refTo, refFrom));
+          Injector.INSTANCE
+              .ui()
+              .pushTask(
+                  "inverseEdit",
+                  String.format(
+                      "Inverse-translating step %s by merging codebase %s onto %s",
+                      inverseStep.getName(),
+                      refTo,
+                      refFrom));
 
-      inverseTranslated = inverseStep.getInverseEditor().inverseEdit(
-          inverseTranslated, refFrom, refTo, context, options);
+      inverseTranslated =
+          inverseStep
+              .getInverseEditor()
+              .inverseEdit(inverseTranslated, refFrom, refTo, context, options);
 
       Injector.INSTANCE.ui().popTaskAndPersist(task, inverseTranslated.getPath());
       refFrom = forwardTranslationStack.pop();
@@ -133,8 +142,11 @@ public class InverseTranslator implements Translator {
     Codebase refTo;
     try {
       Task task =
-          Injector.INSTANCE.ui().pushTask(
-          "refTo", "Pushing to forward-translation stack: " + options.get("referenceToCodebase"));
+          Injector.INSTANCE
+              .ui()
+              .pushTask(
+                  "refTo",
+                  "Pushing to forward-translation stack: " + options.get("referenceToCodebase"));
       refTo = Parser.parseExpression(options.get("referenceToCodebase")).createCodebase(context);
       forwardTransStack.push(refTo);
       Injector.INSTANCE.ui().popTaskAndPersist(task, refTo.getPath());
@@ -147,8 +159,9 @@ public class InverseTranslator implements Translator {
     for (TranslatorStep forwardStep : forwardSteps) {
       forwardEditExp = forwardEditExp.editWith(forwardStep.name, ImmutableMap.<String, String>of());
       Task task =
-          Injector.INSTANCE.ui().pushTask(
-              "edit", "Pushing to forward-translation stack: " + forwardEditExp);
+          Injector.INSTANCE
+              .ui()
+              .pushTask("edit", "Pushing to forward-translation stack: " + forwardEditExp);
       refTo = forwardStep.editor.edit(refTo, context, options).copyWithExpression(forwardEditExp);
       forwardTransStack.push(refTo);
       Injector.INSTANCE.ui().popTaskAndPersist(task, refTo.getPath());

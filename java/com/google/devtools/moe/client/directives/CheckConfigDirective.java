@@ -50,8 +50,8 @@ public class CheckConfigDirective extends Directive {
   }
 
   static class CheckConfigOptions extends MoeOptions {
-    @Option(name = "--config_file", required = true,
-        usage = "Location of MOE config file")
+
+    @Option(name = "--config_file", required = true, usage = "Location of MOE config file")
     String configFilename = "";
   }
 }

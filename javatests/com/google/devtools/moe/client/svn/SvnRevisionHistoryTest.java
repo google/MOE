@@ -60,37 +60,56 @@ public class SvnRevisionHistoryTest extends TestCase {
 
   @dagger.Module
   class Module {
-    @Provides public CommandRunner commandRunner() {
+    @Provides
+    public CommandRunner commandRunner() {
       return cmd;
     }
   }
 
-  @Override protected void setUp() throws Exception {
+  @Override
+  protected void setUp() throws Exception {
     super.setUp();
-    Injector.INSTANCE = DaggerSvnRevisionHistoryTest_Component.builder().module(new Module())
-        .build().context();
+    Injector.INSTANCE =
+        DaggerSvnRevisionHistoryTest_Component.builder().module(new Module()).build().context();
   }
 
   public void testParseRevisions() {
-    List<Revision> rs = SvnRevisionHistory.parseRevisions(
-        "<log><logentry revision=\"1\"/></log>",
-        "name");
+    List<Revision> rs =
+        SvnRevisionHistory.parseRevisions("<log><logentry revision=\"1\"/></log>", "name");
     assertEquals(1, rs.size());
     assertEquals("1", rs.get(0).revId);
   }
 
   public void testGetHighestRevision() {
     try {
-      expect(cmd.runCommand(
-          "svn",
-          ImmutableList.of("--no-auth-cache", "log", "--xml", "-l", "1", "-r", "HEAD:1",
-                           "http://foo/svn/trunk/"),
-          "")).andReturn("<log><logentry revision=\"3\" /></log>");
-      expect(cmd.runCommand(
-          "svn",
-          ImmutableList.of("--no-auth-cache", "log", "--xml", "-l", "1", "-r", "2:1",
-                           "http://foo/svn/trunk/"),
-          "")).andReturn("<log><logentry revision=\"2\" /></log>");
+      expect(
+              cmd.runCommand(
+                  "svn",
+                  ImmutableList.of(
+                      "--no-auth-cache",
+                      "log",
+                      "--xml",
+                      "-l",
+                      "1",
+                      "-r",
+                      "HEAD:1",
+                      "http://foo/svn/trunk/"),
+                  ""))
+          .andReturn("<log><logentry revision=\"3\" /></log>");
+      expect(
+              cmd.runCommand(
+                  "svn",
+                  ImmutableList.of(
+                      "--no-auth-cache",
+                      "log",
+                      "--xml",
+                      "-l",
+                      "1",
+                      "-r",
+                      "2:1",
+                      "http://foo/svn/trunk/"),
+                  ""))
+          .andReturn("<log><logentry revision=\"2\" /></log>");
     } catch (CommandException e) {
       throw new RuntimeException(e);
     }
@@ -108,11 +127,16 @@ public class SvnRevisionHistoryTest extends TestCase {
   public void testParseMetadata() {
     SvnRevisionHistory history =
         new SvnRevisionHistory("internal_svn", "http://foo/svn/trunk/", null);
-    List<RevisionMetadata> rs = history.parseMetadata(
-        "<log><logentry revision=\"2\"><author>uid@google.com</author>" +
-        "<date>" + SVN_COMMIT_DATE + "</date><msg>description</msg></logentry>" +
-        "<logentry revision = \"1\"><author>user@google.com</author>" +
-        "<date>" + SVN_COMMIT_DATE + "</date><msg>message</msg></logentry></log>");
+    List<RevisionMetadata> rs =
+        history.parseMetadata(
+            "<log><logentry revision=\"2\"><author>uid@google.com</author>"
+                + "<date>"
+                + SVN_COMMIT_DATE
+                + "</date><msg>description</msg></logentry>"
+                + "<logentry revision = \"1\"><author>user@google.com</author>"
+                + "<date>"
+                + SVN_COMMIT_DATE
+                + "</date><msg>message</msg></logentry></log>");
     assertEquals(2, rs.size());
     assertEquals("2", rs.get(0).id);
     assertEquals("uid@google.com", rs.get(0).author);
@@ -128,18 +152,32 @@ public class SvnRevisionHistoryTest extends TestCase {
 
   public void testGetMetadata() {
     try {
-      expect(cmd.runCommand(
-          "svn",
-          ImmutableList.of("--no-auth-cache", "log", "--xml", "-l", "2", "-r", "3:1",
-                           "http://foo/svn/trunk/"),
-          "")).andReturn("<log><logentry revision=\"3\">" +
-                             "<author>uid@google.com</author>" +
-                             "<date>" + SVN_COMMIT_DATE + "</date>" +
-                             "<msg>message</msg></logentry>" +
-                             "<logentry revision =\"2\">" +
-                             "<author>user@google.com</author>" +
-                             "<date>" + SVN_COMMIT_DATE + "</date>" +
-                             "<msg>description</msg></logentry></log>");
+      expect(
+              cmd.runCommand(
+                  "svn",
+                  ImmutableList.of(
+                      "--no-auth-cache",
+                      "log",
+                      "--xml",
+                      "-l",
+                      "2",
+                      "-r",
+                      "3:1",
+                      "http://foo/svn/trunk/"),
+                  ""))
+          .andReturn(
+              "<log><logentry revision=\"3\">"
+                  + "<author>uid@google.com</author>"
+                  + "<date>"
+                  + SVN_COMMIT_DATE
+                  + "</date>"
+                  + "<msg>message</msg></logentry>"
+                  + "<logentry revision =\"2\">"
+                  + "<author>user@google.com</author>"
+                  + "<date>"
+                  + SVN_COMMIT_DATE
+                  + "</date>"
+                  + "<msg>description</msg></logentry></log>");
     } catch (CommandException e) {
       throw new RuntimeException(e);
     }
@@ -190,14 +228,15 @@ public class SvnRevisionHistoryTest extends TestCase {
 
     SvnRevisionHistory history =
         new SvnRevisionHistory("internal_svn", "http://foo/svn/trunk/", null);
-    RevisionMetadata result = history.parseMetadataNodeList(
-        "7",
-        doc.getElementsByTagName("logentry").item(0).getChildNodes(),
-        ImmutableList.of(new Revision("6", "internal")));
+    RevisionMetadata result =
+        history.parseMetadataNodeList(
+            "7",
+            doc.getElementsByTagName("logentry").item(0).getChildNodes(),
+            ImmutableList.of(new Revision("6", "internal")));
 
-    RevisionMetadata expected = new RevisionMetadata("7", "user",
-        DATE, "description",
-        ImmutableList.of(new Revision("6", "internal")));
+    RevisionMetadata expected =
+        new RevisionMetadata(
+            "7", "user", DATE, "description", ImmutableList.of(new Revision("6", "internal")));
 
     assertEquals(expected, result);
   }
@@ -207,47 +246,84 @@ public class SvnRevisionHistoryTest extends TestCase {
 
     // Mock call for findHighestRevision
     try {
-      expect(cmd.runCommand(
-          "svn",
-          ImmutableList.of("--no-auth-cache", "log", "--xml", "-l", "1", "-r", "HEAD:1",
-                           "http://foo/svn/trunk/"),
-          "")).andReturn("<log><logentry revision=\"3\">" +
-                             "<author>uid@google.com</author>" +
-                             "<date>" + SVN_COMMIT_DATE + "</date>" +
-                             "<msg>description</msg></logentry></log>");
+      expect(
+              cmd.runCommand(
+                  "svn",
+                  ImmutableList.of(
+                      "--no-auth-cache",
+                      "log",
+                      "--xml",
+                      "-l",
+                      "1",
+                      "-r",
+                      "HEAD:1",
+                      "http://foo/svn/trunk/"),
+                  ""))
+          .andReturn(
+              "<log><logentry revision=\"3\">"
+                  + "<author>uid@google.com</author>"
+                  + "<date>"
+                  + SVN_COMMIT_DATE
+                  + "</date>"
+                  + "<msg>description</msg></logentry></log>");
     } catch (CommandException e) {
       throw new RuntimeException(e);
     }
 
     // revision 3 metadata
     try {
-      expect(cmd.runCommand(
-          "svn",
-          ImmutableList.of("--no-auth-cache", "log", "--xml", "-l", "2", "-r", "3:1",
-                           "http://foo/svn/trunk/"),
-          "")).andReturn("<log><logentry revision=\"3\">" +
-                             "<author>uid@google.com</author>" +
-                             "<date>" + SVN_COMMIT_DATE + "</date>" +
-                             "<msg>message</msg></logentry>" +
-                             "<logentry revision =\"2\">" +
-                             "<author>user@google.com</author>" +
-                             "<date>" + SVN_COMMIT_DATE + "</date>" +
-                             "<msg>description</msg></logentry></log>");
+      expect(
+              cmd.runCommand(
+                  "svn",
+                  ImmutableList.of(
+                      "--no-auth-cache",
+                      "log",
+                      "--xml",
+                      "-l",
+                      "2",
+                      "-r",
+                      "3:1",
+                      "http://foo/svn/trunk/"),
+                  ""))
+          .andReturn(
+              "<log><logentry revision=\"3\">"
+                  + "<author>uid@google.com</author>"
+                  + "<date>"
+                  + SVN_COMMIT_DATE
+                  + "</date>"
+                  + "<msg>message</msg></logentry>"
+                  + "<logentry revision =\"2\">"
+                  + "<author>user@google.com</author>"
+                  + "<date>"
+                  + SVN_COMMIT_DATE
+                  + "</date>"
+                  + "<msg>description</msg></logentry></log>");
     } catch (CommandException e) {
       throw new RuntimeException(e);
     }
 
-
     // revision 2 metadata
     try {
-      expect(cmd.runCommand(
-          "svn",
-          ImmutableList.of("--no-auth-cache", "log", "--xml", "-l", "2", "-r", "2:1",
-                           "http://foo/svn/trunk/"),
-          "")).andReturn("<log><logentry revision=\"2\">" +
-                             "<author>uid@google.com</author>" +
-                             "<date>" + SVN_COMMIT_DATE + "</date>" +
-                             "<msg>description</msg></logentry></log>");
+      expect(
+              cmd.runCommand(
+                  "svn",
+                  ImmutableList.of(
+                      "--no-auth-cache",
+                      "log",
+                      "--xml",
+                      "-l",
+                      "2",
+                      "-r",
+                      "2:1",
+                      "http://foo/svn/trunk/"),
+                  ""))
+          .andReturn(
+              "<log><logentry revision=\"2\">"
+                  + "<author>uid@google.com</author>"
+                  + "<date>"
+                  + SVN_COMMIT_DATE
+                  + "</date>"
+                  + "<msg>description</msg></logentry></log>");
     } catch (CommandException e) {
       throw new RuntimeException(e);
     }
@@ -256,8 +332,10 @@ public class SvnRevisionHistoryTest extends TestCase {
     SvnRevisionHistory history =
         new SvnRevisionHistory("internal_svn", "http://foo/svn/trunk/", util);
     List<Revision> newRevisions =
-        history.findRevisions(null, new EquivalenceMatcher("public", db), SearchType.LINEAR)
-        .getRevisionsSinceEquivalence().getBreadthFirstHistory();
+        history
+            .findRevisions(null, new EquivalenceMatcher("public", db), SearchType.LINEAR)
+            .getRevisionsSinceEquivalence()
+            .getBreadthFirstHistory();
     assertEquals(2, newRevisions.size());
     assertEquals("internal_svn", newRevisions.get(0).repositoryName);
     assertEquals("3", newRevisions.get(0).revId);
@@ -270,9 +348,10 @@ public class SvnRevisionHistoryTest extends TestCase {
    * A database that holds the following equivalences:
    * repo1{1002} == repo2{2}
    */
-  private final String testDb1 = "{\"equivalences\":["
-      + "{\"rev1\": {\"revId\":\"1002\",\"repositoryName\":\"repo1\"},"
-      + " \"rev2\": {\"revId\":\"2\",\"repositoryName\":\"repo2\"}}]}";
+  private final String testDb1 =
+      "{\"equivalences\":["
+          + "{\"rev1\": {\"revId\":\"1002\",\"repositoryName\":\"repo1\"},"
+          + " \"rev2\": {\"revId\":\"2\",\"repositoryName\":\"repo2\"}}]}";
 
   /**
    * A test for finding the last equivalence for the following history starting
@@ -302,40 +381,75 @@ public class SvnRevisionHistoryTest extends TestCase {
    * @throws Exception
    */
   public void testFindLastEquivalence() throws Exception {
-    expect(cmd.runCommand("svn", ImmutableList.of("--no-auth-cache", "log", "--xml", "-l", "2",
-        "-r", "4:1", "http://foo/svn/trunk/"), ""))
-        .andReturn("<log><logentry revision=\"4\">" +
-                   "<author>uid@google.com</author>" +
-                   "<date>" + SVN_COMMIT_DATE + "</date>" +
-                   "<msg>message</msg></logentry>" +
-                   "<logentry revision =\"3\">" +
-                   "<author>user@google.com</author>" +
-                   "<date>" + SVN_COMMIT_DATE + "</date>" +
-                   "<msg>description</msg></logentry></log>");
+    expect(
+            cmd.runCommand(
+                "svn",
+                ImmutableList.of(
+                    "--no-auth-cache",
+                    "log",
+                    "--xml",
+                    "-l",
+                    "2",
+                    "-r",
+                    "4:1",
+                    "http://foo/svn/trunk/"),
+                ""))
+        .andReturn(
+            "<log><logentry revision=\"4\">"
+                + "<author>uid@google.com</author>"
+                + "<date>"
+                + SVN_COMMIT_DATE
+                + "</date>"
+                + "<msg>message</msg></logentry>"
+                + "<logentry revision =\"3\">"
+                + "<author>user@google.com</author>"
+                + "<date>"
+                + SVN_COMMIT_DATE
+                + "</date>"
+                + "<msg>description</msg></logentry></log>");
 
-    expect(cmd.runCommand("svn", ImmutableList.of("--no-auth-cache", "log", "--xml", "-l", "2",
-        "-r", "3:1", "http://foo/svn/trunk/"), ""))
-        .andReturn("<log><logentry revision=\"3\">" +
-                   "<author>uid@google.com</author>" +
-                   "<date>" + SVN_COMMIT_DATE + "</date>" +
-                   "<msg>message</msg></logentry>" +
-                   "<logentry revision =\"2\">" +
-                   "<author>user@google.com</author>" +
-                   "<date>" + SVN_COMMIT_DATE + "</date>" +
-                   "<msg>description</msg></logentry></log>");
+    expect(
+            cmd.runCommand(
+                "svn",
+                ImmutableList.of(
+                    "--no-auth-cache",
+                    "log",
+                    "--xml",
+                    "-l",
+                    "2",
+                    "-r",
+                    "3:1",
+                    "http://foo/svn/trunk/"),
+                ""))
+        .andReturn(
+            "<log><logentry revision=\"3\">"
+                + "<author>uid@google.com</author>"
+                + "<date>"
+                + SVN_COMMIT_DATE
+                + "</date>"
+                + "<msg>message</msg></logentry>"
+                + "<logentry revision =\"2\">"
+                + "<author>user@google.com</author>"
+                + "<date>"
+                + SVN_COMMIT_DATE
+                + "</date>"
+                + "<msg>description</msg></logentry></log>");
 
     control.replay();
 
     FileDb database = FileDb.makeDbFromDbText(testDb1);
     SvnRevisionHistory history = new SvnRevisionHistory("repo2", "http://foo/svn/trunk/", util);
 
-    EquivalenceMatchResult result = history.findRevisions(
-        new Revision("4", "repo2"), new EquivalenceMatcher("repo1", database), SearchType.LINEAR);
+    EquivalenceMatchResult result =
+        history.findRevisions(
+            new Revision("4", "repo2"),
+            new EquivalenceMatcher("repo1", database),
+            SearchType.LINEAR);
 
     control.verify();
 
-    Equivalence expectedEq = new Equivalence(new Revision("1002", "repo1"),
-                                             new Revision("2", "repo2"));
+    Equivalence expectedEq =
+        new Equivalence(new Revision("1002", "repo1"), new Revision("2", "repo2"));
 
     assertEquals(1, result.getEquivalences().size());
     assertEquals(expectedEq, result.getEquivalences().get(0));
@@ -345,9 +459,10 @@ public class SvnRevisionHistoryTest extends TestCase {
    * A database that holds the following equivalences:
    * repo1{1003} == repo2{3}
    */
-  private final String testDb2 = "{\"equivalences\":["
-      + "{\"rev1\": {\"revId\":\"1003\",\"repositoryName\":\"repo1\"},"
-      + " \"rev2\": {\"revId\":\"3\",\"repositoryName\":\"repo2\"}}]}";
+  private final String testDb2 =
+      "{\"equivalences\":["
+          + "{\"rev1\": {\"revId\":\"1003\",\"repositoryName\":\"repo1\"},"
+          + " \"rev2\": {\"revId\":\"3\",\"repositoryName\":\"repo2\"}}]}";
 
   /**
    * A test for finding the last equivalence for the following history starting
@@ -376,31 +491,64 @@ public class SvnRevisionHistoryTest extends TestCase {
    * @throws Exception
    */
   public void testFindLastEquivalenceNull() throws Exception {
-    expect(cmd.runCommand("svn", ImmutableList.of("--no-auth-cache", "log", "--xml", "-l", "2",
-        "-r", "2:1", "http://foo/svn/trunk/"), ""))
-        .andReturn("<log><logentry revision=\"2\">" +
-                   "<author>uid@google.com</author>" +
-                   "<date>" + SVN_COMMIT_DATE + "</date>" +
-                   "<msg>message</msg></logentry>" +
-                   "<logentry revision =\"1\">" +
-                   "<author>user@google.com</author>" +
-                   "<date>" + SVN_COMMIT_DATE + "</date>" +
-                   "<msg>description</msg></logentry></log>");
+    expect(
+            cmd.runCommand(
+                "svn",
+                ImmutableList.of(
+                    "--no-auth-cache",
+                    "log",
+                    "--xml",
+                    "-l",
+                    "2",
+                    "-r",
+                    "2:1",
+                    "http://foo/svn/trunk/"),
+                ""))
+        .andReturn(
+            "<log><logentry revision=\"2\">"
+                + "<author>uid@google.com</author>"
+                + "<date>"
+                + SVN_COMMIT_DATE
+                + "</date>"
+                + "<msg>message</msg></logentry>"
+                + "<logentry revision =\"1\">"
+                + "<author>user@google.com</author>"
+                + "<date>"
+                + SVN_COMMIT_DATE
+                + "</date>"
+                + "<msg>description</msg></logentry></log>");
 
-    expect(cmd.runCommand("svn", ImmutableList.of("--no-auth-cache", "log", "--xml", "-l", "2",
-        "-r", "1:1", "http://foo/svn/trunk/"), ""))
-        .andReturn("<log><logentry revision=\"1\">" +
-                   "<author>uid@google.com</author>" +
-                   "<date>" + SVN_COMMIT_DATE + "</date>" +
-                   "<msg>message</msg></logentry></log>");
+    expect(
+            cmd.runCommand(
+                "svn",
+                ImmutableList.of(
+                    "--no-auth-cache",
+                    "log",
+                    "--xml",
+                    "-l",
+                    "2",
+                    "-r",
+                    "1:1",
+                    "http://foo/svn/trunk/"),
+                ""))
+        .andReturn(
+            "<log><logentry revision=\"1\">"
+                + "<author>uid@google.com</author>"
+                + "<date>"
+                + SVN_COMMIT_DATE
+                + "</date>"
+                + "<msg>message</msg></logentry></log>");
 
     control.replay();
 
     FileDb database = FileDb.makeDbFromDbText(testDb2);
     SvnRevisionHistory history = new SvnRevisionHistory("repo2", "http://foo/svn/trunk/", util);
 
-    EquivalenceMatchResult result = history.findRevisions(
-        new Revision("2", "repo2"), new EquivalenceMatcher("repo1", database), SearchType.LINEAR);
+    EquivalenceMatchResult result =
+        history.findRevisions(
+            new Revision("2", "repo2"),
+            new EquivalenceMatcher("repo1", database),
+            SearchType.LINEAR);
 
     control.verify();
 

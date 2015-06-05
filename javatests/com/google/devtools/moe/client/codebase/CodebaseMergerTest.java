@@ -86,8 +86,11 @@ public class CodebaseMergerTest extends TestCase {
     expect(fileSystem.isExecutable(origFile)).andReturn(false);
     expect(fileSystem.isExecutable(modFile)).andReturn(false);
 
-    expect(cmd.runCommand("diff", ImmutableList.of("-N", origFile.getAbsolutePath(),
-      modFile.getAbsolutePath()), "")).andReturn(null);
+    expect(cmd.runCommand(
+            "diff",
+            ImmutableList.of("-N", origFile.getAbsolutePath(), modFile.getAbsolutePath()),
+            ""))
+        .andReturn(null);
 
     control.replay();
 
@@ -191,11 +194,12 @@ public class CodebaseMergerTest extends TestCase {
     fileSystem.makeDirsForFile(mergedFile);
     fileSystem.copyFile(destFile, mergedFile);
 
-    List<String> mergeArgs = ImmutableList.of(mergedFile.getAbsolutePath(),
-        origFile.getAbsolutePath(), modFile.getAbsolutePath());
+    List<String> mergeArgs =
+        ImmutableList.of(
+            mergedFile.getAbsolutePath(), origFile.getAbsolutePath(), modFile.getAbsolutePath());
 
-    expect(cmd.runCommand("merge", mergeArgs,
-        mergedCodebaseLocation.getAbsolutePath())).andReturn("");
+    expect(cmd.runCommand("merge", mergeArgs, mergedCodebaseLocation.getAbsolutePath()))
+        .andReturn("");
 
     control.replay();
 
@@ -232,12 +236,12 @@ public class CodebaseMergerTest extends TestCase {
     fileSystem.makeDirsForFile(mergedFile);
     fileSystem.copyFile(destFile, mergedFile);
 
-    List<String> mergeArgs = ImmutableList.of(mergedFile.getAbsolutePath(),
-        origFile.getAbsolutePath(), modFile.getAbsolutePath());
+    List<String> mergeArgs =
+        ImmutableList.of(
+            mergedFile.getAbsolutePath(), origFile.getAbsolutePath(), modFile.getAbsolutePath());
 
-    expect(cmd.runCommand("merge", mergeArgs,
-        mergedCodebaseLocation.getAbsolutePath())).andThrow(
-        new CommandRunner.CommandException("merge", mergeArgs, "", "", 1));
+    expect(cmd.runCommand("merge", mergeArgs, mergedCodebaseLocation.getAbsolutePath()))
+        .andThrow(new CommandRunner.CommandException("merge", mergeArgs, "", "", 1));
 
     control.replay();
 
@@ -247,7 +251,7 @@ public class CodebaseMergerTest extends TestCase {
     control.verify();
 
     assertEquals(0, merger.getMergedFiles().size());
-    assert(merger.getFailedToMergeFiles().contains(mergedFile.getAbsolutePath().toString()));
+    assertTrue(merger.getFailedToMergeFiles().contains(mergedFile.getAbsolutePath().toString()));
   }
 
   /**
@@ -311,11 +315,12 @@ public class CodebaseMergerTest extends TestCase {
     fileSystem.makeDirsForFile(mergedFile);
     fileSystem.copyFile(destFile, mergedFile);
 
-    List<String> mergeArgs = ImmutableList.of(mergedFile.getAbsolutePath(),
-        origFile.getAbsolutePath(), modFile.getAbsolutePath());
+    List<String> mergeArgs =
+        ImmutableList.of(
+            mergedFile.getAbsolutePath(), origFile.getAbsolutePath(), modFile.getAbsolutePath());
 
-    expect(cmd.runCommand("merge", mergeArgs,
-        mergedCodebaseLocation.getAbsolutePath())).andReturn("");
+    expect(cmd.runCommand("merge", mergeArgs, mergedCodebaseLocation.getAbsolutePath()))
+        .andReturn("");
 
     control.replay();
 
@@ -354,12 +359,12 @@ public class CodebaseMergerTest extends TestCase {
     fileSystem.makeDirsForFile(mergedFile);
     fileSystem.copyFile(destFile, mergedFile);
 
-    List<String> mergeArgs = ImmutableList.of(mergedFile.getAbsolutePath(),
-        origFile.getAbsolutePath(), modFile.getAbsolutePath());
+    List<String> mergeArgs =
+        ImmutableList.of(
+            mergedFile.getAbsolutePath(), origFile.getAbsolutePath(), modFile.getAbsolutePath());
 
-    expect(cmd.runCommand("merge", mergeArgs,
-        mergedCodebaseLocation.getAbsolutePath())).andThrow(
-        new CommandRunner.CommandException("merge", mergeArgs, "", "", 1));
+    expect(cmd.runCommand("merge", mergeArgs, mergedCodebaseLocation.getAbsolutePath()))
+        .andThrow(new CommandRunner.CommandException("merge", mergeArgs, "", "", 1));
 
     control.replay();
 
@@ -402,12 +407,12 @@ public class CodebaseMergerTest extends TestCase {
     fileSystem.makeDirsForFile(mergedFile);
     fileSystem.copyFile(destFile, mergedFile);
 
-    List<String> mergeArgs = ImmutableList.of(mergedFile.getAbsolutePath(),
-        origFile.getAbsolutePath(), modFile.getAbsolutePath());
+    List<String> mergeArgs =
+        ImmutableList.of(
+            mergedFile.getAbsolutePath(), origFile.getAbsolutePath(), modFile.getAbsolutePath());
 
-    expect(cmd.runCommand("merge", mergeArgs,
-        mergedCodebaseLocation.getAbsolutePath())).andReturn("");
-
+    expect(cmd.runCommand("merge", mergeArgs, mergedCodebaseLocation.getAbsolutePath()))
+        .andReturn("");
 
     // generateMergedFile(...) on bar
     origFile = new File("orig/bar");
@@ -425,13 +430,16 @@ public class CodebaseMergerTest extends TestCase {
     // No merging of bar, just follow deletion of origFile by not copying destFile to merged
     // codebase.
 
-
     // Expect in call to report()
     ui.info("Merged codebase generated at: " + mergedCodebaseLocation.getAbsolutePath());
-    ui.info(String.format(
-        "%d files merged successfully%n" +
-        "%d files have merge conflicts. Edit the following files to resolve conflicts:%n%s",
-        1, 0, ImmutableSet.of()));
+    ui.info(
+        String.format(
+            "%d files merged successfully%n"
+                + "%d files have merge conflicts. "
+                + "Edit the following files to resolve conflicts:%n%s",
+            1,
+            0,
+            ImmutableSet.of()));
 
     control.replay();
 

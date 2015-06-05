@@ -41,9 +41,12 @@ public class DetermineMetadataDirectiveTest extends TestCase {
     d.getFlags().configFilename = "moe_config.txt";
     d.getFlags().repositoryExpression = "internal(revision=\"1,2\")";
     assertEquals(0, d.perform());
-    RevisionMetadata rm = new RevisionMetadata("1, 2", "author, author",
-        new DateTime(1L),
-        "description\n-------------\ndescription",
+    RevisionMetadata rm =
+        new RevisionMetadata(
+            "1, 2",
+            "author, author",
+            new DateTime(1L),
+            "description\n-------------\ndescription",
             ImmutableList.of(
                 new Revision("parent", "internal"), new Revision("parent", "internal")));
     assertEquals(rm.toString(), ui.lastInfo);

@@ -54,8 +54,8 @@ public class OneMigrationDirective extends Directive {
       context = contextFactory.create(options.configFilename);
       toRepoEx = Parser.parseRepositoryExpression(options.toRepository);
       fromRepoEx = Parser.parseRepositoryExpression(options.fromRepository);
-      toProjectSpace = context.config.getRepositoryConfig(toRepoEx.getRepositoryName())
-          .getProjectSpace();
+      toProjectSpace =
+          context.config.getRepositoryConfig(toRepoEx.getRepositoryName()).getProjectSpace();
     } catch (ParseError e) {
       ui.error(e, "Couldn't parse expression");
       return 1;
@@ -87,8 +87,15 @@ public class OneMigrationDirective extends Directive {
 
     ui.info(String.format("Migrating '%s' to '%s'", fromRepoEx, toRepoEx));
 
-    DraftRevision r = OneMigrationLogic.migrate(c, destination, revs, context, revs.get(0),
-        fromRepoEx.getRepositoryName(), toRepoEx.getRepositoryName());
+    DraftRevision r =
+        OneMigrationLogic.migrate(
+            c,
+            destination,
+            revs,
+            context,
+            revs.get(0),
+            fromRepoEx.getRepositoryName(),
+            toRepoEx.getRepositoryName());
     if (r == null) {
       return 1;
     }
@@ -103,14 +110,20 @@ public class OneMigrationDirective extends Directive {
   }
 
   static class OneMigrationOptions extends MoeOptions {
-    @Option(name = "--config_file", required = true,
-            usage = "Location of MOE config file")
+
+    @Option(name = "--config_file", required = true, usage = "Location of MOE config file")
     String configFilename = "";
-    @Option(name = "--from_repository", required = true,
-            usage = "Repository expression to migrate from, e.g. 'internal(revision=3,4,5)'")
+
+    @Option(
+        name = "--from_repository",
+        required = true,
+        usage = "Repository expression to migrate from, e.g. 'internal(revision=3,4,5)'")
     String fromRepository = "";
-    @Option(name = "--to_repository", required = true,
-            usage = "Repository expression to migrate to, e.g. 'public(revision=7)'")
+
+    @Option(
+        name = "--to_repository",
+        required = true,
+        usage = "Repository expression to migrate to, e.g. 'public(revision=7)'")
     String toRepository = "";
   }
 }

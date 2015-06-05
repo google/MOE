@@ -139,7 +139,6 @@ public interface FileSystem {
    */
   public String fileToString(File f) throws IOException;
 
-
   /**
    * A specification of whether a temporary directory should be cleaned up on a call to
    * {@link FileSystem#cleanUpTempDirs()}. On clean-up, each temporary directory's {@code Lifetime}

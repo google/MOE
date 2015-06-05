@@ -63,8 +63,8 @@ public class MergeCodebasesDirective extends Directive {
       ui.error(e, "Error creating codebase");
       return 1;
     }
-    Codebase mergedCodebase = MergeCodebasesLogic.merge(originalCodebase, destinationCodebase,
-        modifiedCodebase);
+    Codebase mergedCodebase =
+        MergeCodebasesLogic.merge(originalCodebase, destinationCodebase, modifiedCodebase);
 
     return 0;
   }
@@ -75,18 +75,26 @@ public class MergeCodebasesDirective extends Directive {
   }
 
   static class MergeCodebasesOptions extends MoeOptions {
-    @Option(name = "--config_file", required = true,
-            usage = "Location of MOE config file")
+
+    @Option(name = "--config_file", required = true, usage = "Location of MOE config file")
     String configFilename = "";
-    @Option(name = "--original_codebase", required = true,
-            usage = "Codebase expression for the original repository")
+
+    @Option(
+        name = "--original_codebase",
+        required = true,
+        usage = "Codebase expression for the original repository")
     String originalCodebase = "";
-    @Option(name = "--modified_codebase", required = true,
-      usage = "Codebase expression for the modified repository")
+
+    @Option(
+        name = "--modified_codebase",
+        required = true,
+        usage = "Codebase expression for the modified repository")
     String modifiedCodebase = "";
-    @Option(name = "--destination_codebase", required = true,
-            usage = "Codebase expression for the destination repository")
+
+    @Option(
+        name = "--destination_codebase",
+        required = true,
+        usage = "Codebase expression for the destination repository")
     String destinationCodebase = "";
   }
-
 }

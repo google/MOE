@@ -41,8 +41,8 @@ public class DummyDb implements Db {
     if (!returnEquivalences) {
       return ImmutableSet.of();
     } else {
-      return ImmutableSet.of(new Revision("1", otherRepository),
-                             new Revision("2", otherRepository));
+      return ImmutableSet.of(
+          new Revision("1", otherRepository), new Revision("2", otherRepository));
     }
   }
 
@@ -53,12 +53,13 @@ public class DummyDb implements Db {
 
   @Override
   public void writeToLocation(String dbLocation) {
-    String b = new StringBuilder()
-        .append("Equivalences:\n")
-        .append(JOINER.join(equivalences))
-        .append("\nMigrations:\n")
-        .append(JOINER.join(migrations))
-        .toString();
+    String b =
+        new StringBuilder()
+            .append("Equivalences:\n")
+            .append(JOINER.join(equivalences))
+            .append("\nMigrations:\n")
+            .append(JOINER.join(migrations))
+            .toString();
     Injector.INSTANCE.ui().info(b);
   }
 }

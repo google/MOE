@@ -46,30 +46,28 @@ public class BookkeepingDirectiveTest extends TestCase {
     super.setUp();
     contextFactory.projectConfigs.put(
         "moe_config.txt",
-        "{\"name\":\"foo\",\"repositories\":{" +
-        "\"int\":{\"type\":\"dummy\",\"project_space\":\"internal\"}," +
-        "\"pub\":{\"type\":\"dummy\"}}," +
-        "\"translators\":[{\"from_project_space\":\"internal\"," +
-        "\"to_project_space\":\"public\",\"steps\":[{\"name\":\"id_step\"," +
-        "\"editor\":{\"type\":\"identity\"}}]}]," +
-        "\"migrations\":[{\"name\":\"test\",\"from_repository\":\"int\"," +
-        "\"to_repository\":\"pub\"}]}");
+        "{\"name\":\"foo\",\"repositories\":{"
+            + "\"int\":{\"type\":\"dummy\",\"project_space\":\"internal\"},"
+            + "\"pub\":{\"type\":\"dummy\"}},"
+            + "\"translators\":[{\"from_project_space\":\"internal\","
+            + "\"to_project_space\":\"public\",\"steps\":[{\"name\":\"id_step\","
+            + "\"editor\":{\"type\":\"identity\"}}]}],"
+            + "\"migrations\":[{\"name\":\"test\",\"from_repository\":\"int\","
+            + "\"to_repository\":\"pub\"}]}");
   }
 
   private void expectDiffs() throws Exception {
     // updateCompletedMigrations
-    expect(cmd.runCommand(
-        "diff",
+    ImmutableList<String> args =
         ImmutableList.of(
             "-N",
-            "/dummy/codebase/int/migrated_from/file", "/dummy/codebase/pub/migrated_to/file"),
-        "")).andReturn("unused");
+            "/dummy/codebase/int/migrated_from/file",
+            "/dummy/codebase/pub/migrated_to/file");
+    expect(cmd.runCommand("diff", args, "")).andReturn("unused");
 
     // updateHeadEquivalence
-    expect(cmd.runCommand(
-        "diff",
-        ImmutableList.of("-N", "/dummy/codebase/int/1/file", "/dummy/codebase/pub/1/file"),
-        "")).andReturn("unused");
+    args = ImmutableList.of("-N", "/dummy/codebase/int/1/file", "/dummy/codebase/pub/1/file");
+    expect(cmd.runCommand("diff", args, "")).andReturn("unused");
   }
 
   /**
@@ -97,8 +95,9 @@ public class BookkeepingDirectiveTest extends TestCase {
     // expected db at end of call to bookkeep
     DbStorage dbStorage = new DbStorage();
     dbStorage.addEquivalence(new Equivalence(new Revision("1", "int"), new Revision("1", "pub")));
-    dbStorage.addMigration(new SubmittedMigration(
-        new Revision("migrated_from", "int"), new Revision("migrated_to", "pub")));
+    dbStorage.addMigration(
+        new SubmittedMigration(
+            new Revision("migrated_from", "int"), new Revision("migrated_to", "pub")));
     FileDb expectedDb = new FileDb(dbStorage);
 
     assertEquals(expectedDb.toJsonString(), Injector.INSTANCE.fileSystem().fileToString(DB_FILE));
@@ -128,8 +127,9 @@ public class BookkeepingDirectiveTest extends TestCase {
 
     // expected db at end of call to bookkeep
     DbStorage dbStorage = new DbStorage();
-    dbStorage.addMigration(new SubmittedMigration(
-        new Revision("migrated_from", "int"), new Revision("migrated_to", "pub")));
+    dbStorage.addMigration(
+        new SubmittedMigration(
+            new Revision("migrated_from", "int"), new Revision("migrated_to", "pub")));
     FileDb expectedDb = new FileDb(dbStorage);
 
     assertEquals(expectedDb.toJsonString(), Injector.INSTANCE.fileSystem().fileToString(DB_FILE));

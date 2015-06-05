@@ -25,15 +25,13 @@ public class Term {
     this.identifier = identifier;
     this.options = Collections.unmodifiableMap(options);
   }
-  
+
   /**
    * Add an option name-value pair to the Term, e.g. "myRepo" -> "myRepo(revision=4)".
    */
   public Term withOption(String optionName, String optionValue) {
-    Map<String, String> newOptions = ImmutableMap.<String, String>builder()
-        .putAll(options)
-        .put(optionName, optionValue)
-        .build();
+    Map<String, String> newOptions =
+        ImmutableMap.<String, String>builder().putAll(options).put(optionName, optionValue).build();
     return new Term(identifier, newOptions);
   }
 
@@ -58,7 +56,7 @@ public class Term {
         result.append(",");
       }
       // strip off last comma
-      result.deleteCharAt(result.length()-1);
+      result.deleteCharAt(result.length() - 1);
       result.append(")");
     }
     return result.toString();

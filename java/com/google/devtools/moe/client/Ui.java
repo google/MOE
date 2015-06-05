@@ -82,8 +82,8 @@ public abstract class Ui implements Messenger {
 
     if (top != task) {
       throw new MoeProblem(
-          String.format("Tried to end task %s, but stack contains: %s", task.taskName,
-                        stack.toString()));
+          String.format(
+              "Tried to end task %s, but stack contains: %s", task.taskName, stack.toString()));
     }
 
     if (fileSystem != null) {
@@ -142,7 +142,8 @@ public abstract class Ui implements Messenger {
       this.task = task;
     }
 
-    @Override public boolean shouldCleanUp() {
+    @Override
+    public boolean shouldCleanUp() {
       return !stack.contains(task);
     }
   }
@@ -152,7 +153,8 @@ public abstract class Ui implements Messenger {
    */
   private class MoeExecutionLifetime implements Lifetime {
 
-    @Override public boolean shouldCleanUp() {
+    @Override
+    public boolean shouldCleanUp() {
       return !stack.isEmpty() && stack.peek().taskName.equals(MOE_TERMINATION_TASK_NAME);
     }
   }

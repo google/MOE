@@ -35,25 +35,28 @@ public class FileDbTest extends TestCase {
   }
 
   public void testValidDb() throws Exception {
-    String dbText = Joiner.on("\n").join(
-        "{",
-        "  'equivalences': [",
-        "    {",
-        "      'rev1': {",
-        "        'revId': 'r1',",
-        "        'repositoryName': 'name1'",
-        "      },",
-        "      'rev2': {",
-        "        'revId': 'r2',",
-        "        'repositoryName': 'name2'",
-        "      }",
-        "    }",
-        "  ]",
-        "}",
-        "");
+    String dbText =
+        Joiner.on("\n")
+            .join(
+                "{",
+                "  'equivalences': [",
+                "    {",
+                "      'rev1': {",
+                "        'revId': 'r1',",
+                "        'repositoryName': 'name1'",
+                "      },",
+                "      'rev2': {",
+                "        'revId': 'r2',",
+                "        'repositoryName': 'name2'",
+                "      }",
+                "    }",
+                "  ]",
+                "}",
+                "");
     FileDb db = FileDb.makeDbFromDbText(dbText);
-    assertEquals(db.getEquivalences(), ImmutableSet.of(
-        new Equivalence(new Revision("r1", "name1"), new Revision("r2", "name2"))));
+    assertEquals(
+        db.getEquivalences(),
+        ImmutableSet.of(new Equivalence(new Revision("r1", "name1"), new Revision("r2", "name2"))));
   }
 
   public void testEmptyDb() throws Exception {
@@ -70,44 +73,47 @@ public class FileDbTest extends TestCase {
 
   public void testNoteMigration() throws Exception {
     FileDb db = FileDb.makeDbFromDbText("{}");
-    SubmittedMigration migration = new SubmittedMigration(
-        new Revision("r1", "name1"), new Revision("r2", "name2"));
+    SubmittedMigration migration =
+        new SubmittedMigration(new Revision("r1", "name1"), new Revision("r2", "name2"));
     assertTrue(db.noteMigration(migration));
     // The migration has already been added, so noting it again should return false.
     assertFalse(db.noteMigration(migration));
   }
 
   public void testFindEquivalences() throws Exception {
-    String dbText = Joiner.on("\n").join(
-        "{",
-        "  'equivalences': [",
-        "    {",
-        "      'rev1': {",
-        "        'revId': 'r1',",
-        "        'repositoryName': 'name1'",
-        "      },",
-        "      'rev2': {",
-        "        'revId': 'r2',",
-        "        'repositoryName': 'name2'",
-        "      }",
-        "    },",
-        "    {",
-        "      'rev1': {",
-        "        'revId': 'r3',",
-        "        'repositoryName': 'name2'",
-        "      },",
-        "      'rev2': {",
-        "        'revId': 'r1',",
-        "        'repositoryName': 'name1'",
-        "      }",
-        "    }",
-        "  ]",
-        "}",
-        "");
+    String dbText =
+        Joiner.on("\n")
+            .join(
+                "{",
+                "  'equivalences': [",
+                "    {",
+                "      'rev1': {",
+                "        'revId': 'r1',",
+                "        'repositoryName': 'name1'",
+                "      },",
+                "      'rev2': {",
+                "        'revId': 'r2',",
+                "        'repositoryName': 'name2'",
+                "      }",
+                "    },",
+                "    {",
+                "      'rev1': {",
+                "        'revId': 'r3',",
+                "        'repositoryName': 'name2'",
+                "      },",
+                "      'rev2': {",
+                "        'revId': 'r1',",
+                "        'repositoryName': 'name1'",
+                "      }",
+                "    }",
+                "  ]",
+                "}",
+                "");
 
     FileDb db = FileDb.makeDbFromDbText(dbText);
-    assertEquals(db.findEquivalences(new Revision("r1", "name1"), "name2"),
-                 ImmutableSet.of(new Revision("r2", "name2"), new Revision("r3", "name2")));
+    assertEquals(
+        db.findEquivalences(new Revision("r1", "name1"), "name2"),
+        ImmutableSet.of(new Revision("r2", "name2"), new Revision("r3", "name2")));
   }
 
   public void testMakeDbFromFile() throws Exception {
@@ -116,22 +122,24 @@ public class FileDbTest extends TestCase {
     Injector.INSTANCE = new Injector(fileSystem, cmd, contextFactory, ui);
 
     File dbFile = new File("/path/to/db");
-    String dbText = Joiner.on("\n").join(
-        "{",
-        "  'equivalences': [",
-        "    {",
-        "      'rev1': {",
-        "        'revId': 'r1',",
-        "        'repositoryName': 'name1'",
-        "      },",
-        "      'rev2': {",
-        "        'revId': 'r2',",
-        "        'repositoryName': 'name2'",
-        "      }",
-        "    }",
-        "  ]",
-        "}",
-        "");
+    String dbText =
+        Joiner.on("\n")
+            .join(
+                "{",
+                "  'equivalences': [",
+                "    {",
+                "      'rev1': {",
+                "        'revId': 'r1',",
+                "        'repositoryName': 'name1'",
+                "      },",
+                "      'rev2': {",
+                "        'revId': 'r2',",
+                "        'repositoryName': 'name2'",
+                "      }",
+                "    }",
+                "  ]",
+                "}",
+                "");
 
     expect(fileSystem.fileToString(dbFile)).andReturn(dbText);
 
@@ -148,23 +156,25 @@ public class FileDbTest extends TestCase {
     Injector.INSTANCE = new Injector(fileSystem, cmd, contextFactory, ui);
 
     File dbFile = new File("/path/to/db");
-    String dbText = Joiner.on("\n").join(
-        "{",
-        "  'equivalences': [",
-        "    {",
-        "      'rev1': {",
-        "        'revId': 'r1',",
-        "        'repositoryName': 'name1'",
-        "      },",
-        "      'rev2': {",
-        "        'revId': 'r2',",
-        "        'repositoryName': 'name2'",
-        "      }",
-        "    }",
-        "  ],",
-        "  'migrations': []",
-        "}",
-        "");
+    String dbText =
+        Joiner.on("\n")
+            .join(
+                "{",
+                "  'equivalences': [",
+                "    {",
+                "      'rev1': {",
+                "        'revId': 'r1',",
+                "        'repositoryName': 'name1'",
+                "      },",
+                "      'rev2': {",
+                "        'revId': 'r2',",
+                "        'repositoryName': 'name2'",
+                "      }",
+                "    }",
+                "  ],",
+                "  'migrations': []",
+                "}",
+                "");
 
     fileSystem.write(dbText.replace('\'', '"'), dbFile);
 

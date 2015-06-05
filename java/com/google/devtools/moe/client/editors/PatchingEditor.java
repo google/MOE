@@ -48,23 +48,22 @@ public class PatchingEditor implements Editor {
     } else {
       File patchFile = new File(patchFilePath);
       if (!Injector.INSTANCE.fileSystem().isReadable(patchFile)) {
-        throw new MoeProblem(String.format(
-            "cannot read file %s", patchFilePath));
+        throw new MoeProblem(String.format("cannot read file %s", patchFilePath));
       }
       try {
-       Utils.copyDirectory(input.getPath(), tempDir);
+        Utils.copyDirectory(input.getPath(), tempDir);
       } catch (IOException e) {
         throw new MoeProblem(e.getMessage());
       } catch (CommandRunner.CommandException e) {
         throw new MoeProblem(e.getMessage());
       }
       try {
-        Injector.INSTANCE.cmd().runCommand(
-            "patch",
-            ImmutableList.of(
-                "-p0",
-                "--input=" + patchFilePath),
-            tempDir.getAbsolutePath());
+        Injector.INSTANCE
+            .cmd()
+            .runCommand(
+                "patch",
+                ImmutableList.of("-p0", "--input=" + patchFilePath),
+                tempDir.getAbsolutePath());
       } catch (CommandRunner.CommandException e) {
         throw new MoeProblem(e.getMessage());
       }

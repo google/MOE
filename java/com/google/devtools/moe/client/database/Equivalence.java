@@ -80,8 +80,7 @@ public class Equivalence {
   public boolean equals(Object obj) {
     if (obj instanceof Equivalence) {
       Equivalence equivalenceObj = (Equivalence) obj;
-      return (equivalenceObj.hasRevision(rev1) &&
-              equivalenceObj.hasRevision(rev2));
+      return (equivalenceObj.hasRevision(rev1) && equivalenceObj.hasRevision(rev2));
     }
     return false;
   }

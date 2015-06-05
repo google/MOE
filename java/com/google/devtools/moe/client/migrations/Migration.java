@@ -22,9 +22,8 @@ public class Migration {
   /** The changes in fromRepository encapsulated by this Migration */
   public final List<Revision> fromRevisions;
 
-  public Migration(MigrationConfig config,
-                   List<Revision> fromRevisions,
-                   Equivalence sinceEquivalence) {
+  public Migration(
+      MigrationConfig config, List<Revision> fromRevisions, Equivalence sinceEquivalence) {
     this.config = config;
     this.sinceEquivalence = sinceEquivalence;
     this.fromRevisions = fromRevisions;
@@ -34,6 +33,8 @@ public class Migration {
   public String toString() {
     return String.format(
         "Migration %s since equivalence (%s) of revisions {%s}",
-        config.getName(), sinceEquivalence, Joiner.on(", ").join(fromRevisions));
+        config.getName(),
+        sinceEquivalence,
+        Joiner.on(", ").join(fromRevisions));
   }
 }

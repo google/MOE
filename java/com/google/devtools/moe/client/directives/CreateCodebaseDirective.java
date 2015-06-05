@@ -85,8 +85,7 @@ public class CreateCodebaseDirective extends Directive {
    * If the user specified --tarfile, then tar up the codebase at the specified location.
    * @throws CommandException
    */
-  private void maybeWriteTar(Codebase codebase)
-      throws CommandException {
+  private void maybeWriteTar(Codebase codebase) throws CommandException {
     Preconditions.checkNotNull(codebase);
     String tarfilePath = options.tarfile;
     if (Strings.isNullOrEmpty(tarfilePath)) {
@@ -108,15 +107,17 @@ public class CreateCodebaseDirective extends Directive {
   }
 
   static class CreateCodebaseOptions extends MoeOptions {
-    @Option(name = "--config_file", required = true,
-            usage = "Location of MOE config file")
+
+    @Option(name = "--config_file", required = true, usage = "Location of MOE config file")
     String configFilename = "";
-    @Option(name = "--codebase", required = true,
-            usage = "Codebase expression to evaluate")
+
+    @Option(name = "--codebase", required = true, usage = "Codebase expression to evaluate")
     String codebase = "";
-    @Option(name = "--tarfile", required = false,
-            usage = "Path where tarfile of the resulting codebase should be written")
+
+    @Option(
+        name = "--tarfile",
+        required = false,
+        usage = "Path where tarfile of the resulting codebase should be written")
     String tarfile = null;
   }
-
 }

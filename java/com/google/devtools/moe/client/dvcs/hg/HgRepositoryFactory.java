@@ -21,9 +21,11 @@ import javax.inject.Inject;
 public class HgRepositoryFactory implements Repository.Factory {
 
   // TODO(cgruber) remove static reference to Injector
-  @Inject HgRepositoryFactory() {}
+  @Inject
+  HgRepositoryFactory() {}
 
-  @Override public String type() {
+  @Override
+  public String type() {
     return "hg";
   }
 
@@ -32,8 +34,8 @@ public class HgRepositoryFactory implements Repository.Factory {
    *
    * @throws InvalidProject if RepositoryConfig is missing a repo URL.
    */
-  @Override public Repository create(final String name, final RepositoryConfig config)
-      throws InvalidProject {
+  @Override
+  public Repository create(final String name, final RepositoryConfig config) throws InvalidProject {
     config.checkType(this);
 
     final String url = config.getUrl();
@@ -41,24 +43,28 @@ public class HgRepositoryFactory implements Repository.Factory {
       throw new InvalidProject("Hg repository config missing \"url\".");
     }
 
-    Supplier<HgClonedRepository> freshSupplier = new Supplier<HgClonedRepository>() {
-      @Override public HgClonedRepository get() {
-        HgClonedRepository tipClone = new HgClonedRepository(name, config);
-        tipClone.cloneLocallyAtHead(Lifetimes.currentTask());
-        return tipClone;
-      }
-    };
+    Supplier<HgClonedRepository> freshSupplier =
+        new Supplier<HgClonedRepository>() {
+          @Override
+          public HgClonedRepository get() {
+            HgClonedRepository tipClone = new HgClonedRepository(name, config);
+            tipClone.cloneLocallyAtHead(Lifetimes.currentTask());
+            return tipClone;
+          }
+        };
 
     // RevisionHistory and CodebaseCreator don't modify their clones, so they can use a shared,
     // memoized supplier.
-    Supplier<HgClonedRepository> memoizedSupplier = Suppliers.memoize(
-        new Supplier<HgClonedRepository>() {
-          @Override public HgClonedRepository get() {
-            HgClonedRepository tipClone = new HgClonedRepository(name, config);
-            tipClone.cloneLocallyAtHead(Lifetimes.moeExecution());
-            return tipClone;
-          }
-        });
+    Supplier<HgClonedRepository> memoizedSupplier =
+        Suppliers.memoize(
+            new Supplier<HgClonedRepository>() {
+              @Override
+              public HgClonedRepository get() {
+                HgClonedRepository tipClone = new HgClonedRepository(name, config);
+                tipClone.cloneLocallyAtHead(Lifetimes.moeExecution());
+                return tipClone;
+              }
+            });
 
     HgRevisionHistory rh = new HgRevisionHistory(memoizedSupplier);
 
@@ -74,8 +80,7 @@ public class HgRepositoryFactory implements Repository.Factory {
     return Repository.create(name, rh, cc, wc);
   }
 
-  static String runHgCommand(List<String> args, String workingDirectory)
-      throws CommandException {
+  static String runHgCommand(List<String> args, String workingDirectory) throws CommandException {
     return Injector.INSTANCE.cmd().runCommand("hg", args, workingDirectory);
   }
 }

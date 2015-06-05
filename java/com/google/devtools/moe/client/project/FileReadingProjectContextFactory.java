@@ -19,27 +19,26 @@ import javax.inject.Inject;
 public class FileReadingProjectContextFactory extends ProjectContextFactory {
   private final Ui ui;
 
-  @Inject public FileReadingProjectContextFactory(Ui ui, Repositories repositories) {
+  @Inject
+  public FileReadingProjectContextFactory(Ui ui, Repositories repositories) {
     super(repositories);
     this.ui = ui;
   }
 
-  @Override public ProjectConfig loadConfiguration(String configFilename) throws InvalidProject {
+  @Override
+  public ProjectConfig loadConfiguration(String configFilename) throws InvalidProject {
     String configText;
-    Ui.Task task = ui.pushTask(
-        "read_config",
-        String.format("Reading config file from %s", configFilename));
+    Ui.Task task =
+        ui.pushTask("read_config", String.format("Reading config file from %s", configFilename));
     try {
       try {
         configText = Files.toString(new File(configFilename), UTF_8);
       } catch (IOException e) {
-        throw new InvalidProject(
-            "Config File \"" + configFilename + "\" not accessible.");
+        throw new InvalidProject("Config File \"" + configFilename + "\" not accessible.");
       }
       return ProjectConfig.makeProjectConfigFromConfigText(configText);
     } finally {
       ui.popTask(task, "");
     }
   }
-
 }

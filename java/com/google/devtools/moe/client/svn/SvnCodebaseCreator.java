@@ -42,7 +42,7 @@ public class SvnCodebaseCreator implements CodebaseCreator {
   }
 
   @Override
-  public Codebase create(Map<String, String> options) throws CodebaseCreationError{
+  public Codebase create(Map<String, String> options) throws CodebaseCreationError {
     String revId = options.get("revision");
     if (revId == null) {
       revId = "HEAD";
@@ -51,8 +51,9 @@ public class SvnCodebaseCreator implements CodebaseCreator {
     Revision rev = revisionHistory.findHighestRevision(revId);
 
     File exportPath =
-        Injector.INSTANCE.fileSystem().getTemporaryDirectory(
-        String.format("svn_export_%s_%s_", name, rev.revId));
+        Injector.INSTANCE
+            .fileSystem()
+            .getTemporaryDirectory(String.format("svn_export_%s_%s_", name, rev.revId));
 
     try {
       util.runSvnCommand("export", config.getUrl(), "-r", rev.revId, exportPath.getAbsolutePath());

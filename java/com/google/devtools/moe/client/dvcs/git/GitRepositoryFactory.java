@@ -21,7 +21,8 @@ import javax.inject.Inject;
 public class GitRepositoryFactory implements Repository.Factory {
 
   // TODO(cgruber) remove static reference to Injector
-  @Inject GitRepositoryFactory() {}
+  @Inject
+  GitRepositoryFactory() {}
 
   @Override
   public String type() {
@@ -33,8 +34,8 @@ public class GitRepositoryFactory implements Repository.Factory {
    *
    * @throws InvalidProject if RepositoryConfig is missing a repo URL.
    */
-  @Override public Repository create(final String name, final RepositoryConfig config)
-      throws InvalidProject {
+  @Override
+  public Repository create(final String name, final RepositoryConfig config) throws InvalidProject {
     config.checkType(this);
 
     final String url = config.getUrl();
@@ -42,24 +43,28 @@ public class GitRepositoryFactory implements Repository.Factory {
       throw new InvalidProject("Git repository config missing \"url\".");
     }
 
-    Supplier<GitClonedRepository> freshSupplier = new Supplier<GitClonedRepository>() {
-      @Override public GitClonedRepository get() {
-        GitClonedRepository headClone = new GitClonedRepository(name, config);
-        headClone.cloneLocallyAtHead(Lifetimes.currentTask());
-        return headClone;
-      }
-    };
+    Supplier<GitClonedRepository> freshSupplier =
+        new Supplier<GitClonedRepository>() {
+          @Override
+          public GitClonedRepository get() {
+            GitClonedRepository headClone = new GitClonedRepository(name, config);
+            headClone.cloneLocallyAtHead(Lifetimes.currentTask());
+            return headClone;
+          }
+        };
 
     // RevisionHistory and CodebaseCreator don't modify their clones, so they can use a shared,
     // memoized supplier.
-    Supplier<GitClonedRepository> memoizedSupplier = Suppliers.memoize(
-        new Supplier<GitClonedRepository>() {
-          @Override public GitClonedRepository get() {
-            GitClonedRepository tipClone = new GitClonedRepository(name, config);
-            tipClone.cloneLocallyAtHead(Lifetimes.moeExecution());
-            return tipClone;
-          }
-        });
+    Supplier<GitClonedRepository> memoizedSupplier =
+        Suppliers.memoize(
+            new Supplier<GitClonedRepository>() {
+              @Override
+              public GitClonedRepository get() {
+                GitClonedRepository tipClone = new GitClonedRepository(name, config);
+                tipClone.cloneLocallyAtHead(Lifetimes.moeExecution());
+                return tipClone;
+              }
+            });
 
     GitRevisionHistory rh = new GitRevisionHistory(memoizedSupplier);
 
@@ -68,8 +73,8 @@ public class GitRepositoryFactory implements Repository.Factory {
       projectSpace = "public";
     }
 
-    GitCodebaseCreator cc = new GitCodebaseCreator(
-        memoizedSupplier, rh, projectSpace, name, config);
+    GitCodebaseCreator cc =
+        new GitCodebaseCreator(memoizedSupplier, rh, projectSpace, name, config);
 
     GitWriterCreator wc = new GitWriterCreator(freshSupplier, rh);
 

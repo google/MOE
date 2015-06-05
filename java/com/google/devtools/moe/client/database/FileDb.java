@@ -26,7 +26,7 @@ public class FileDb implements Db {
 
   private final DbStorage dbStorage;
 
-  public FileDb (DbStorage dbStorage) {
+  public FileDb(DbStorage dbStorage) {
     this.dbStorage = dbStorage;
   }
 

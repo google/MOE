@@ -73,11 +73,14 @@ public class DetermineMetadataDirective extends Directive {
   }
 
   static class DetermineMetadataOptions extends MoeOptions {
-    @Option(name = "--config_file", required = true,
-            usage = "Location of MOE config file")
+
+    @Option(name = "--config_file", required = true, usage = "Location of MOE config file")
     String configFilename = "";
-    @Option(name = "--revisions", required = true,
-            usage = "Repository expression to get metadata for, e.g. 'internal(revision=3,4)'")
+
+    @Option(
+        name = "--revisions",
+        required = true,
+        usage = "Repository expression to get metadata for, e.g. 'internal(revision=3,4)'")
     String repositoryExpression = "";
   }
 }

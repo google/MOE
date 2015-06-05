@@ -26,9 +26,9 @@ public abstract class AbstractRevisionHistory implements RevisionHistory {
         (revision == null) ? findHeadRevisions() : ImmutableList.of(revision);
 
     if (startingRevisions.size() > 1 && searchType == SearchType.LINEAR) {
-      throw new MoeProblem(String.format(
+      throw new MoeProblem(
           "MOE found a repository (%s) with multiple heads while trying to search linear history.",
-          startingRevisions.get(0).repositoryName));
+          startingRevisions.get(0).repositoryName);
     }
 
     RevisionGraph.Builder nonMatchingBuilder = RevisionGraph.builder(startingRevisions);
@@ -59,11 +59,12 @@ public abstract class AbstractRevisionHistory implements RevisionHistory {
         }
 
         if (visited.size() > MAX_REVISIONS_TO_SEARCH) {
-          throw new MoeProblem(String.format(
-              "Couldn't find a matching revision for matcher (%s) from %s within %d revisions.",
-              matcher,
-              (revision == null) ? "head" : revision,
-              MAX_REVISIONS_TO_SEARCH));
+          throw new MoeProblem(
+              String.format(
+                  "Couldn't find a matching revision for matcher (%s) from %s within %d revisions.",
+                  matcher,
+                  (revision == null) ? "head" : revision,
+                  MAX_REVISIONS_TO_SEARCH));
         }
       } else {
         // Don't search past matching revisions.

@@ -36,8 +36,8 @@ public class SubmittedMigration {
   public boolean equals(Object obj) {
     if (obj instanceof SubmittedMigration) {
       SubmittedMigration migrationObj = (SubmittedMigration) obj;
-      return (migrationObj.fromRevision.equals(fromRevision) &&
-              migrationObj.toRevision.equals(toRevision));
+      return migrationObj.fromRevision.equals(fromRevision)
+          && migrationObj.toRevision.equals(toRevision);
     }
     return false;
   }

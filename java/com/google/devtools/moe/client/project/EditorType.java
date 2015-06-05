@@ -16,4 +16,3 @@ public enum EditorType {
   shell,
   renamer;
 }
-

@@ -30,7 +30,6 @@ public enum Operator {
     if (c == '>') {
       return TRANSLATE;
     }
-    throw new IllegalArgumentException(
-        String.format("Invalid operator: %c", c));
+    throw new IllegalArgumentException(String.format("Invalid operator: %c", c));
   }
 }

@@ -45,7 +45,6 @@ public class InMemoryFileSystem implements FileSystem {
 
   private final Map<File, Lifetime> tempDirLifetimes = Maps.newHashMap();
 
-
   /**
    * Constructs an {@code InMemoryFileSystem} that is initially empty.
    */
@@ -66,7 +65,6 @@ public class InMemoryFileSystem implements FileSystem {
       }
     }
   }
-
 
   /**
    * Returns mappings for the dir parts of a path. Examples:
@@ -242,9 +240,10 @@ public class InMemoryFileSystem implements FileSystem {
 
   @Override
   public File getResourceAsFile(String resource) {
-    File outFile = new File(
-        getTemporaryDirectory("resource_extraction_", Lifetimes.moeExecution()),
-        new File(resource).getName());
+    File outFile =
+        new File(
+            getTemporaryDirectory("resource_extraction_", Lifetimes.moeExecution()),
+            new File(resource).getName());
     files.put(outFile.getAbsolutePath(), resource);
     return outFile;
   }
@@ -255,11 +254,9 @@ public class InMemoryFileSystem implements FileSystem {
     return files.get(f.getAbsolutePath());
   }
 
-
   private static void checkAbsolute(File file) {
     Preconditions.checkArgument(
-        file.isAbsolute(),
-        "An absolute path was expected: " + file.getAbsolutePath());
+        file.isAbsolute(), "An absolute path was expected: " + file.getAbsolutePath());
   }
 
   private void checkNotAnExistentDirectory(File file) {
@@ -287,8 +284,11 @@ public class InMemoryFileSystem implements FileSystem {
   }
 
   /** A Dagger module for binding this implementation of {@link FileSystem}. */
-  @dagger.Module public static class Module {
-    @Provides @Singleton public FileSystem fileSystem(InMemoryFileSystem impl) {
+  @dagger.Module
+  public static class Module {
+    @Provides
+    @Singleton
+    public FileSystem fileSystem(InMemoryFileSystem impl) {
       return impl;
     }
   }

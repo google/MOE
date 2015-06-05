@@ -29,23 +29,27 @@ public class InMemoryProjectContextFactory extends ProjectContextFactory {
   // TODO(cgruber): Stop with the visible non-final property.
   @VisibleForTesting public Map<String, String> projectConfigs;
 
-  @Inject public InMemoryProjectContextFactory(Repositories repositories) {
+  @Inject
+  public InMemoryProjectContextFactory(Repositories repositories) {
     super(repositories);
     projectConfigs = new HashMap<String, String>();
   }
 
   public InMemoryProjectContextFactory() {
-    this(new Repositories(ImmutableSet.<Repository.Factory>of(
-        new DummyRepositoryFactory())));
+    this(new Repositories(ImmutableSet.<Repository.Factory>of(new DummyRepositoryFactory())));
   }
 
-  @Override public ProjectConfig loadConfiguration(String configFilename) throws InvalidProject {
+  @Override
+  public ProjectConfig loadConfiguration(String configFilename) throws InvalidProject {
     return makeProjectConfigFromConfigText(projectConfigs.get(configFilename));
   }
 
   /** A Dagger module for binding this implementation of {@link ProjectContextFactory}. */
-  @dagger.Module public static class Module {
-    @Provides @Singleton public ProjectContextFactory factory(InMemoryProjectContextFactory impl) {
+  @dagger.Module
+  public static class Module {
+    @Provides
+    @Singleton
+    public ProjectContextFactory factory(InMemoryProjectContextFactory impl) {
       return impl;
     }
   }

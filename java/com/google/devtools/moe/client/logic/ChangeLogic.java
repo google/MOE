@@ -44,9 +44,9 @@ public class ChangeLogic {
     DraftRevision r;
     try {
       Ui.Task t =
-          Injector.INSTANCE.ui().pushTask(
-          "push_codebase",
-          "Putting files from Codebase into Writer");
+          Injector.INSTANCE
+              .ui()
+              .pushTask("push_codebase", "Putting files from Codebase into Writer");
       r = (rm == null) ? destination.putCodebase(c) : destination.putCodebase(c, rm);
       Injector.INSTANCE.ui().popTask(t, "");
       return r;

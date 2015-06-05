@@ -23,15 +23,14 @@ public class SvnUtil {
     this.cmd = cmd;
   }
 
-  String runSvnCommandWithWorkingDirectory(String workingDirectory, String command, String ... args)
+  String runSvnCommandWithWorkingDirectory(String workingDirectory, String command, String... args)
       throws CommandRunner.CommandException {
     ImmutableList.Builder<String> withAuthArgs = ImmutableList.builder();
     withAuthArgs.add("--no-auth-cache").add(command).addAll(Arrays.asList(args));
     return cmd.runCommand("svn", withAuthArgs.build(), workingDirectory);
   }
 
-  String runSvnCommand(String command, String ... args)
-      throws CommandRunner.CommandException {
+  String runSvnCommand(String command, String... args) throws CommandRunner.CommandException {
     return runSvnCommandWithWorkingDirectory("", command, args);
   }
 }

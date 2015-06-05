@@ -41,8 +41,8 @@ public class HgWriterTest extends TestCase {
   private static final File CODEBASE_ROOT = new File("/codebase");
   private static final File WRITER_ROOT = new File("/writer");
   private static final String PROJECT_SPACE = "public";
-  private static final RepositoryExpression CODEBASE_EXPR = new RepositoryExpression(
-      new Term(PROJECT_SPACE, ImmutableMap.<String, String>of()));
+  private static final RepositoryExpression CODEBASE_EXPR =
+      new RepositoryExpression(new Term(PROJECT_SPACE, ImmutableMap.<String, String>of()));
 
   private final IMocksControl control = EasyMock.createControl();
   private final FileSystem mockFs = control.createMock(FileSystem.class);
@@ -66,16 +66,21 @@ public class HgWriterTest extends TestCase {
     Injector context(); // TODO (b/19676630) Remove when bug is fixed.
   }
 
-  @dagger.Module class Module {
-    @Provides public CommandRunner cmd() {
+  @dagger.Module
+  class Module {
+    @Provides
+    public CommandRunner cmd() {
       return mockCmd;
     }
-    @Provides public FileSystem filesystem() {
+
+    @Provides
+    public FileSystem filesystem() {
       return mockFs;
     }
   }
 
-  @Override protected void setUp() throws Exception {
+  @Override
+  protected void setUp() throws Exception {
     super.setUp();
     Injector.INSTANCE =
         DaggerHgWriterTest_Component.builder().module(new Module()).build().context();
@@ -90,11 +95,13 @@ public class HgWriterTest extends TestCase {
 
     // Define the files in the codebase and in the writer (hg repo).
     expect(mockFs.findFiles(CODEBASE_ROOT)).andReturn(ImmutableSet.<File>of());
-    expect(mockFs.findFiles(WRITER_ROOT)).andReturn(ImmutableSet.<File>of(
-        new File(WRITER_ROOT, ".hg"),
-        new File(WRITER_ROOT, ".hgignore"),
-        new File(WRITER_ROOT, ".hg/branch"),
-        new File(WRITER_ROOT, ".hg/cache/tags")));
+    expect(mockFs.findFiles(WRITER_ROOT))
+        .andReturn(
+            ImmutableSet.<File>of(
+                new File(WRITER_ROOT, ".hg"),
+                new File(WRITER_ROOT, ".hgignore"),
+                new File(WRITER_ROOT, ".hg/branch"),
+                new File(WRITER_ROOT, ".hg/cache/tags")));
 
     // Expect no other mockFs calls from HgWriter.putFile().
 
@@ -110,8 +117,8 @@ public class HgWriterTest extends TestCase {
 
   public void testPutCodebase_addFile() throws Exception {
 
-    expect(mockFs.findFiles(CODEBASE_ROOT)).andReturn(
-        ImmutableSet.<File>of(new File(CODEBASE_ROOT, "file1")));
+    expect(mockFs.findFiles(CODEBASE_ROOT))
+        .andReturn(ImmutableSet.<File>of(new File(CODEBASE_ROOT, "file1")));
     expect(mockFs.findFiles(WRITER_ROOT)).andReturn(ImmutableSet.<File>of());
 
     expect(mockFs.exists(new File(CODEBASE_ROOT, "file1"))).andReturn(true);
@@ -133,8 +140,8 @@ public class HgWriterTest extends TestCase {
 
   public void testPutCodebase_editFile() throws Exception {
 
-    expect(mockFs.findFiles(CODEBASE_ROOT)).andReturn(
-        ImmutableSet.<File>of(new File(CODEBASE_ROOT, "file1")));
+    expect(mockFs.findFiles(CODEBASE_ROOT))
+        .andReturn(ImmutableSet.<File>of(new File(CODEBASE_ROOT, "file1")));
     expect(mockFs.findFiles(WRITER_ROOT))
         .andReturn(ImmutableSet.<File>of(new File(WRITER_ROOT, "file1")));
 
@@ -176,8 +183,8 @@ public class HgWriterTest extends TestCase {
   }
 
   public void testPutCodebase_editFileWithMetadata() throws Exception {
-    expect(mockFs.findFiles(CODEBASE_ROOT)).andReturn(
-        ImmutableSet.<File>of(new File(CODEBASE_ROOT, "file1")));
+    expect(mockFs.findFiles(CODEBASE_ROOT))
+        .andReturn(ImmutableSet.<File>of(new File(CODEBASE_ROOT, "file1")));
     expect(mockFs.findFiles(WRITER_ROOT))
         .andReturn(ImmutableSet.<File>of(new File(WRITER_ROOT, "file1")));
 
@@ -193,8 +200,8 @@ public class HgWriterTest extends TestCase {
 
     HgWriter writer = new HgWriter(mockRevClone);
     RevisionMetadata revisionMetadata =
-        new RevisionMetadata("rev1", "author", new DateTime(1L),
-            "desc", ImmutableList.<Revision>of());
+        new RevisionMetadata(
+            "rev1", "author", new DateTime(1L), "desc", ImmutableList.<Revision>of());
     DraftRevision draftRevision = writer.putCodebase(codebase, revisionMetadata);
 
     control.verify();

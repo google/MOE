@@ -26,11 +26,12 @@ public class EquivalenceMatcherTest extends TestCase {
    * repo1{1001} == repo2{1}
    * repo1{1002} == repo2{2}
    */
-  private final String testDb1 = "{\"equivalences\":["
-      + "{\"rev1\": {\"revId\":\"1001\",\"repositoryName\":\"repo1\"},"
-      + " \"rev2\": {\"revId\":\"1\",\"repositoryName\":\"repo2\"}},"
-      + "{\"rev1\": {\"revId\":\"1002\",\"repositoryName\":\"repo1\"},"
-      + " \"rev2\": {\"revId\":\"2\",\"repositoryName\":\"repo2\"}}]}";
+  private final String testDb1 =
+      "{\"equivalences\":["
+          + "{\"rev1\": {\"revId\":\"1001\",\"repositoryName\":\"repo1\"},"
+          + " \"rev2\": {\"revId\":\"1\",\"repositoryName\":\"repo2\"}},"
+          + "{\"rev1\": {\"revId\":\"1002\",\"repositoryName\":\"repo1\"},"
+          + " \"rev2\": {\"revId\":\"2\",\"repositoryName\":\"repo2\"}}]}";
 
   private FileDb database;
   private EquivalenceMatcher equivalenceMatcher;
@@ -54,11 +55,11 @@ public class EquivalenceMatcherTest extends TestCase {
   public void testMakeResult() throws Exception {
     Revision startingRev = new Revision("1003", "repo1");
     List<Revision> matching = ImmutableList.of(new Revision("1002", "repo1"));
-    RevisionGraph nonMatching = RevisionGraph.builder(matching)
-        .addRevision(
-            startingRev,
-            new RevisionMetadata("id", "author", DateTime.now(), "desc", matching))
-        .build();
+    RevisionGraph nonMatching =
+        RevisionGraph.builder(matching)
+            .addRevision(
+                startingRev, new RevisionMetadata("id", "author", DateTime.now(), "desc", matching))
+            .build();
 
     EquivalenceMatchResult result = equivalenceMatcher.makeResult(nonMatching, matching);
     assertEquals(nonMatching, result.getRevisionsSinceEquivalence());

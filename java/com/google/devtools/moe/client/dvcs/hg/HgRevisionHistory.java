@@ -46,13 +46,14 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
    */
   @Override
   public Revision findHighestRevision(@Nullable String revId) {
-    ImmutableList.Builder<String> argsBuilder = ImmutableList.<String>builder()
-        .add("log")
-        .add("--branch=" + tipCloneSupplier.get().getBranch())
-        // Ensure one revision only, to be safe.
-        .add("--limit=1")
-        // Format output as "changesetID" alone.
-        .add("--template={node}");
+    ImmutableList.Builder<String> argsBuilder =
+        ImmutableList.<String>builder()
+            .add("log")
+            .add("--branch=" + tipCloneSupplier.get().getBranch())
+            // Ensure one revision only, to be safe.
+            .add("--limit=1")
+            // Format output as "changesetID" alone.
+            .add("--template={node}");
     if (!Strings.isNullOrEmpty(revId)) {
       argsBuilder.add("--rev=" + revId);
     }
@@ -61,16 +62,12 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
     String changesetID;
     HgClonedRepository tipClone = tipCloneSupplier.get();
     try {
-      changesetID = HgRepositoryFactory.runHgCommand(
-          args, tipClone.getLocalTempDir().getAbsolutePath());
+      changesetID =
+          HgRepositoryFactory.runHgCommand(args, tipClone.getLocalTempDir().getAbsolutePath());
     } catch (CommandException e) {
       throw new MoeProblem(
           String.format(
-              "Failed hg run: %s %d %s %s",
-              args.toString(),
-              e.returnStatus,
-              e.stdout,
-              e.stderr));
+              "Failed hg run: %s %d %s %s", args.toString(), e.returnStatus, e.stdout, e.stderr));
     }
 
     return new Revision(changesetID, tipClone.getRepositoryName());
@@ -86,30 +83,31 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
     HgClonedRepository tipClone = tipCloneSupplier.get();
     if (!tipClone.getRepositoryName().equals(revision.repositoryName)) {
       throw new MoeProblem(
-          String.format("Could not get metadata: Revision %s is in repository %s instead of %s",
-                        revision.revId, revision.repositoryName, tipClone.getRepositoryName()));
+          String.format(
+              "Could not get metadata: Revision %s is in repository %s instead of %s",
+              revision.revId,
+              revision.repositoryName,
+              tipClone.getRepositoryName()));
     }
-    ImmutableList<String> args = ImmutableList.of(
-        "log",
-        "--rev=" + revision.revId,
-        // Ensure one revision only, to be safe.
-        "--limit=1",
-        // Format output as "changesetID < author < date < description < parents".
-        // Since parents is a list, need to use stringify before applying another filter.
-        "--template={node|escape} < {author|escape} < {date|isodate|escape} < " +
-                    "{desc|escape} < {parents|stringify|escape}",
-        // Use the debug option to get all parents
-        "--debug");
+    ImmutableList<String> args =
+        ImmutableList.of(
+            "log",
+            "--rev=" + revision.revId,
+            // Ensure one revision only, to be safe.
+            "--limit=1",
+            // Format output as "changesetID < author < date < description < parents".
+            // Since parents is a list, need to use stringify before applying another filter.
+            "--template={node|escape} < {author|escape} < {date|isodate|escape} < "
+                + "{desc|escape} < {parents|stringify|escape}",
+            // Use the debug option to get all parents
+            "--debug");
     String log;
     try {
       log = HgRepositoryFactory.runHgCommand(args, tipClone.getLocalTempDir().getAbsolutePath());
     } catch (CommandException e) {
       throw new MoeProblem(
-          String.format("Failed hg run: %s %d %s %s",
-                        args.toString(),
-                        e.returnStatus,
-                        e.stdout,
-                        e.stderr));
+          String.format(
+              "Failed hg run: %s %d %s %s", args.toString(), e.returnStatus, e.stdout, e.stderr));
     }
 
     return parseMetadata(log);
@@ -132,7 +130,8 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
    * @param log  a single log entry to parse. This is expected to be in the format given by
    *             the output of a call to getMetadata().
    */
-  @VisibleForTesting RevisionMetadata parseMetadata(String log) {
+  @VisibleForTesting
+  RevisionMetadata parseMetadata(String log) {
     Matcher m = BEGIN_LOG_RE.matcher(log);
     if (!m.matches()) {
       throw new IllegalArgumentException("Tried to parse unexpected Hg log entry: " + log);
@@ -153,11 +152,11 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
 
     DateTime date = HG_DATE_FMT.parseDateTime(unescape(m.group(3)));
     return new RevisionMetadata(
-        unescape(m.group(1)),  // id
-        unescape(m.group(2)),  // author
+        unescape(m.group(1)), // id
+        unescape(m.group(2)), // author
         date,
-        unescape(m.group(4)),  // description
-        parentBuilder.build());  // parents
+        unescape(m.group(4)), // description
+        parentBuilder.build()); // parents
   }
 
   @Override
@@ -166,17 +165,15 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
 
     String heads;
     try {
-      heads = HgRepositoryFactory.runHgCommand(
-          // Format output as "changesetID branch".
-          ImmutableList.of("heads", tipClone.getBranch(), "--template={node} {branch}\n"),
-          tipClone.getLocalTempDir().getAbsolutePath());
+      heads =
+          HgRepositoryFactory.runHgCommand(
+              // Format output as "changesetID branch".
+              ImmutableList.of("heads", tipClone.getBranch(), "--template={node} {branch}\n"),
+              tipClone.getLocalTempDir().getAbsolutePath());
     } catch (CommandException e) {
       throw new MoeProblem(
-          String.format("Failed hg run: %s %d %s %s",
-                        e.args.toString(),
-                        e.returnStatus,
-                        e.stdout,
-                        e.stderr));
+          String.format(
+              "Failed hg run: %s %d %s %s", e.args.toString(), e.returnStatus, e.stdout, e.stderr));
     }
 
     ImmutableList.Builder<Revision> result = ImmutableList.<Revision>builder();
