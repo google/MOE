@@ -3,10 +3,10 @@
 package com.google.devtools.moe.client.repositories;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.devtools.moe.client.MoeProblem;
 
+import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
 import java.util.Set;
@@ -34,7 +34,7 @@ public abstract class AbstractRevisionHistory implements RevisionHistory {
     RevisionGraph.Builder nonMatchingBuilder = RevisionGraph.builder(startingRevisions);
     ImmutableList.Builder<Revision> matchingBuilder = ImmutableList.builder();
 
-    Deque<Revision> workList = Lists.newLinkedList();
+    Deque<Revision> workList = new ArrayDeque<>();
     workList.addAll(startingRevisions);
 
     // Keep a visited list to make sure we don't visit the same change twice.

@@ -2,7 +2,6 @@
 
 package com.google.devtools.moe.client.directives;
 
-import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.MoeOptions;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
@@ -64,7 +63,7 @@ public class BookkeepingDirective extends Directive {
       }
     }
 
-    List<String> names = ImmutableList.copyOf(context.migrationConfigs.keySet());
+    List<String> names = context.migrationConfigs.keySet().asList();
     return BookkeepingLogic.bookkeep(names, db, options.dbLocation, context);
   }
 

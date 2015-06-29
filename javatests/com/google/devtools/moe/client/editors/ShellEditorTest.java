@@ -19,7 +19,8 @@ import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
 
 import java.io.File;
-import java.util.Vector;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.inject.Singleton;
 
@@ -70,7 +71,7 @@ public class ShellEditorTest extends TestCase {
     expect(fileSystem.isFile(codebaseFile)).andReturn(false);
     expect(fileSystem.listFiles(codebaseFile)).andReturn(new File[] {});
 
-    Vector<String> argsList = new Vector<String>();
+    List<String> argsList = new ArrayList<String>();
     argsList.add("-c");
     argsList.add("touch test.txt");
 

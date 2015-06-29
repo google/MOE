@@ -110,7 +110,7 @@ public class GitRevisionHistory extends AbstractRevisionHistory {
   RevisionMetadata parseMetadata(String log) {
     // Split on the log delimiter. Limit to 5 so that it will act correctly
     // even if the log delimiter happens to be in the commit message.
-    List<String> split = ImmutableList.copyOf(Splitter.on(LOG_DELIMITER).limit(5).split(log));
+    List<String> split = Splitter.on(LOG_DELIMITER).limit(5).splitToList(log);
 
     // The fourth item contains all of the parents, each separated by a space.
     ImmutableList.Builder<Revision> parentBuilder = ImmutableList.<Revision>builder();

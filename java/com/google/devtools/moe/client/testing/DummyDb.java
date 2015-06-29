@@ -54,12 +54,7 @@ public class DummyDb implements Db {
   @Override
   public void writeToLocation(String dbLocation) {
     String b =
-        new StringBuilder()
-            .append("Equivalences:\n")
-            .append(JOINER.join(equivalences))
-            .append("\nMigrations:\n")
-            .append(JOINER.join(migrations))
-            .toString();
+        "Equivalences:\n" + JOINER.join(equivalences) + "\nMigrations:\n" + JOINER.join(migrations);
     Injector.INSTANCE.ui().info(b);
   }
 }
