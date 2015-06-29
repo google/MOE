@@ -325,7 +325,7 @@ public class GitRevisionHistoryTest extends TestCase {
             SearchType.BRANCHED);
 
     Equivalence expectedEq =
-        new Equivalence(new Revision("1002", "repo1"), new Revision("2", "repo2"));
+        Equivalence.create(new Revision("1002", "repo1"), new Revision("2", "repo2"));
 
     assertEquals(1, result.getEquivalences().size());
     assertEquals(expectedEq, result.getEquivalences().get(0));
@@ -459,7 +459,7 @@ public class GitRevisionHistoryTest extends TestCase {
             SearchType.LINEAR);
 
     Equivalence expectedEq =
-        new Equivalence(new Revision("1002", "repo1"), new Revision("2", "repo2"));
+        Equivalence.create(new Revision("1002", "repo1"), new Revision("2", "repo2"));
 
     assertEquals(
         ImmutableList.of(new Revision("4", "repo2"), new Revision("3a", "repo2")),

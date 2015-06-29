@@ -22,7 +22,11 @@ import java.util.Set;
  */
 public class FileDb implements Db {
 
-  private static final Gson FILE_DB_GSON = new GsonBuilder().setPrettyPrinting().create();
+  private static final Gson FILE_DB_GSON =
+      new GsonBuilder()
+          .registerTypeAdapter(Equivalence.class, new Equivalence.EquivalenceSerializer())
+          .setPrettyPrinting()
+          .create();
 
   private final DbStorage dbStorage;
 

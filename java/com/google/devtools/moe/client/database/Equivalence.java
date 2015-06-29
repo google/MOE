@@ -2,7 +2,21 @@
 
 package com.google.devtools.moe.client.database;
 
+import com.google.auto.value.AutoValue;
+import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.devtools.moe.client.repositories.Revision;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
+
+import java.lang.reflect.Type;
+import java.util.Iterator;
 
 /**
  * An Equivalence holds two Revisions which represent the same files as they appear
@@ -11,23 +25,18 @@ import com.google.devtools.moe.client.repositories.Revision;
  * Two Revisions are equivalent when an Equivalence contains both in any order
  *
  */
-public class Equivalence {
-
-  private final Revision rev1;
-  private final Revision rev2;
-
-  public Equivalence() {
-    this.rev1 = new Revision();
-    this.rev2 = new Revision();
-  } // For gson
-
-  /*
-   * Parameters rev1 and rev2 may be passed in either order. The resulting Equivalences are equal.
+@AutoValue
+public abstract class Equivalence {
+  /**
+   * Creates an {@link Equivalence} from two revisions, which can be supplied in any order.
    */
-  public Equivalence(Revision rev1, Revision rev2) {
-    this.rev1 = rev1;
-    this.rev2 = rev2;
+  public static Equivalence create(Revision rev1, Revision rev2) {
+    Preconditions.checkArgument(!rev1.equals(rev2), "Identical revisions are already equivalent.");
+    return new AutoValue_Equivalence(
+        ImmutableMap.of(rev1.repositoryName, rev1, rev2.repositoryName, rev2));
   }
+
+  abstract ImmutableMap<String, Revision> revisions();
 
   /**
    * @param revision  the Revision to look for in this Equivalence
@@ -35,19 +44,16 @@ public class Equivalence {
    * @return  true if this Equivalence has revision as one of its Revisions
    */
   public boolean hasRevision(Revision revision) {
-    return rev1.equals(revision) || rev2.equals(revision);
+    return revisions().values().contains(revision);
   }
 
   /** @return the Revision in this Equivalence for the given repository name */
   public Revision getRevisionForRepository(String repositoryName) {
-    if (rev1.repositoryName.equals(repositoryName)) {
-      return rev1;
-    } else if (rev2.repositoryName.equals(repositoryName)) {
-      return rev2;
-    } else {
+    if (!revisions().containsKey(repositoryName)) {
       throw new IllegalArgumentException(
-          "Equivalence " + this + " doesn't have revision for " + repositoryName);
+          "Equivalence {" + this + "} doesn't have revision for " + repositoryName);
     }
+    return revisions().get(repositoryName);
   }
 
   /**
@@ -58,35 +64,41 @@ public class Equivalence {
    */
   public Revision getOtherRevision(Revision revision) {
     if (hasRevision(revision)) {
-      return rev1.equals(revision) ? rev2 : rev1;
+      for (Revision possibleRevision : revisions().values()) {
+        if (!possibleRevision.equals(revision)) {
+          return possibleRevision;
+        }
+      }
     }
     return null;
   }
 
-  /**
-   * We override hashCode() so that it is commutative such that two Equivalences with the same
-   * Revisions but switched in order will still have the same hash since those two Equivalences are
-   * considered equal by the override of equals(...).
-   */
-  @Override
-  public int hashCode() {
-    return rev1.hashCode() + rev2.hashCode();
-  }
-
-  /**
-   * The order of the Revisions does not matter when checking for equality between Equivalences.
-   */
-  @Override
-  public boolean equals(Object obj) {
-    if (obj instanceof Equivalence) {
-      Equivalence equivalenceObj = (Equivalence) obj;
-      return (equivalenceObj.hasRevision(rev1) && equivalenceObj.hasRevision(rev2));
-    }
-    return false;
-  }
-
   @Override
   public String toString() {
-    return (rev1.toString() + " == " + rev2.toString());
+    return Joiner.on(" == ").join(revisions().values());
+  }
+
+  /**
+   * Provides JSON serialization/deserialization for {@link Equivalence}.
+   */
+  public static class EquivalenceSerializer
+      implements JsonSerializer<Equivalence>, JsonDeserializer<Equivalence> {
+    @Override
+    public Equivalence deserialize(JsonElement json, Type type, JsonDeserializationContext context)
+        throws JsonParseException {
+      JsonObject obj = json.getAsJsonObject();
+      return Equivalence.create(
+          (Revision) context.deserialize(obj.get("rev1"), Revision.class),
+          (Revision) context.deserialize(obj.get("rev2"), Revision.class));
+    }
+
+    @Override
+    public JsonElement serialize(Equivalence src, Type type, JsonSerializationContext context) {
+      JsonObject object = new JsonObject();
+      Iterator<Revision> revisions = src.revisions().values().iterator();
+      object.add("rev1", context.serialize(revisions.next()));
+      object.add("rev2", context.serialize(revisions.next()));
+      return object;
+    }
   }
 }

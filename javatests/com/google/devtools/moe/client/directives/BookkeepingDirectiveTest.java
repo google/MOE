@@ -94,9 +94,10 @@ public class BookkeepingDirectiveTest extends TestCase {
 
     // expected db at end of call to bookkeep
     DbStorage dbStorage = new DbStorage();
-    dbStorage.addEquivalence(new Equivalence(new Revision("1", "int"), new Revision("1", "pub")));
+    dbStorage.addEquivalence(
+        Equivalence.create(new Revision("1", "int"), new Revision("1", "pub")));
     dbStorage.addMigration(
-        new SubmittedMigration(
+        SubmittedMigration.create(
             new Revision("migrated_from", "int"), new Revision("migrated_to", "pub")));
     FileDb expectedDb = new FileDb(dbStorage);
 
@@ -128,7 +129,7 @@ public class BookkeepingDirectiveTest extends TestCase {
     // expected db at end of call to bookkeep
     DbStorage dbStorage = new DbStorage();
     dbStorage.addMigration(
-        new SubmittedMigration(
+        SubmittedMigration.create(
             new Revision("migrated_from", "int"), new Revision("migrated_to", "pub")));
     FileDb expectedDb = new FileDb(dbStorage);
 
@@ -160,9 +161,10 @@ public class BookkeepingDirectiveTest extends TestCase {
     // expected db at end of call to bookkeep
     DbStorage dbStorage = new DbStorage();
     dbStorage.addEquivalence(
-        new Equivalence(new Revision("migrated_from", "int"), new Revision("migrated_to", "pub")));
+        Equivalence.create(
+            new Revision("migrated_from", "int"), new Revision("migrated_to", "pub")));
     dbStorage.addMigration(
-        new SubmittedMigration(
+        SubmittedMigration.create(
             new Revision("migrated_from", "int"), new Revision("migrated_to", "pub")));
     FileDb expectedDb = new FileDb(dbStorage);
 

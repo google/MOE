@@ -132,7 +132,7 @@ public class HgRevisionHistoryTest extends TestCase {
 
     try {
       HgRevisionHistory revHistory = new HgRevisionHistory(Suppliers.ofInstance(mockRepo));
-      Revision rev = revHistory.findHighestRevision("bogusChangeset");
+      revHistory.findHighestRevision("bogusChangeset");
       fail("'hg log' didn't fail on bogus changeset ID");
     } catch (MoeProblem expected) {
     }
@@ -396,7 +396,7 @@ public class HgRevisionHistoryTest extends TestCase {
         history.findRevisions(null, new EquivalenceMatcher("repo1", database), SearchType.BRANCHED);
 
     Equivalence expectedEq =
-        new Equivalence(new Revision("1002", "repo1"), new Revision("2", "repo2"));
+        Equivalence.create(new Revision("1002", "repo1"), new Revision("2", "repo2"));
     assertEquals(ImmutableList.of(expectedEq), result.getEquivalences());
 
     control.verify();

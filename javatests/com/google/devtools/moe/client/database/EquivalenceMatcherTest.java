@@ -65,7 +65,7 @@ public class EquivalenceMatcherTest extends TestCase {
     assertEquals(nonMatching, result.getRevisionsSinceEquivalence());
 
     Equivalence expectedEquiv =
-        new Equivalence(new Revision("2", "repo2"), new Revision("1002", "repo1"));
+        Equivalence.create(new Revision("2", "repo2"), new Revision("1002", "repo1"));
     assertEquals(expectedEquiv, result.getEquivalences().get(0));
   }
 }

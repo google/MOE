@@ -56,7 +56,8 @@ public class FileDbTest extends TestCase {
     FileDb db = FileDb.makeDbFromDbText(dbText);
     assertEquals(
         db.getEquivalences(),
-        ImmutableSet.of(new Equivalence(new Revision("r1", "name1"), new Revision("r2", "name2"))));
+        ImmutableSet.of(
+            Equivalence.create(new Revision("r1", "name1"), new Revision("r2", "name2"))));
   }
 
   public void testEmptyDb() throws Exception {
@@ -66,7 +67,7 @@ public class FileDbTest extends TestCase {
 
   public void testNoteEquivalence() throws Exception {
     FileDb db = FileDb.makeDbFromDbText("{\"equivalences\":[]}");
-    Equivalence e = new Equivalence(new Revision("r1", "name1"), new Revision("r2", "name2"));
+    Equivalence e = Equivalence.create(new Revision("r1", "name1"), new Revision("r2", "name2"));
     db.noteEquivalence(e);
     assertEquals(db.getEquivalences(), ImmutableSet.of(e));
   }
@@ -74,7 +75,7 @@ public class FileDbTest extends TestCase {
   public void testNoteMigration() throws Exception {
     FileDb db = FileDb.makeDbFromDbText("{}");
     SubmittedMigration migration =
-        new SubmittedMigration(new Revision("r1", "name1"), new Revision("r2", "name2"));
+        SubmittedMigration.create(new Revision("r1", "name1"), new Revision("r2", "name2"));
     assertTrue(db.noteMigration(migration));
     // The migration has already been added, so noting it again should return false.
     assertFalse(db.noteMigration(migration));

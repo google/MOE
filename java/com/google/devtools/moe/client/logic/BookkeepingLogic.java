@@ -70,7 +70,7 @@ public class BookkeepingLogic {
                 "diff_codebases",
                 String.format("Diff codebases '%s' and '%s'", from.toString(), to.toString()));
     if (!CodebaseDifference.diffCodebases(from, to).areDifferent()) {
-      db.noteEquivalence(new Equivalence(fromHead, toHead));
+      db.noteEquivalence(Equivalence.create(fromHead, toHead));
     }
     Injector.INSTANCE.ui().popTask(t, "");
   }
@@ -119,7 +119,7 @@ public class BookkeepingLogic {
    */
   private static void processMigration(
       Revision fromRev, Revision toRev, Db db, ProjectContext context, boolean inverse) {
-    SubmittedMigration migration = new SubmittedMigration(fromRev, toRev);
+    SubmittedMigration migration = SubmittedMigration.create(fromRev, toRev);
     if (!db.noteMigration(migration)) {
       Injector.INSTANCE
           .ui()
@@ -161,7 +161,7 @@ public class BookkeepingLogic {
                 "diff_codebases",
                 String.format("Diff codebases '%s' and '%s'", from.toString(), to.toString()));
     if (!CodebaseDifference.diffCodebases(from, to).areDifferent()) {
-      Equivalence newEquiv = new Equivalence(fromRev, toRev);
+      Equivalence newEquiv = Equivalence.create(fromRev, toRev);
       db.noteEquivalence(newEquiv);
       Injector.INSTANCE.ui().info("Codebases are identical, noted new equivalence: " + newEquiv);
     }

@@ -86,7 +86,7 @@ public class NoteEquivalenceDirective extends Directive {
     Revision realRev1 = repo1.revisionHistory().findHighestRevision(repoEx1.getOption("revision"));
     Revision realRev2 = repo2.revisionHistory().findHighestRevision(repoEx2.getOption("revision"));
 
-    Equivalence newEq = new Equivalence(realRev1, realRev2);
+    Equivalence newEq = Equivalence.create(realRev1, realRev2);
     db.noteEquivalence(newEq);
     db.writeToLocation(options.dbLocation);
 

@@ -39,7 +39,7 @@ public class EquivalenceMatcher
     for (Revision matchRev : matching) {
       Set<Revision> equivRevs = db.findEquivalences(matchRev, repositoryName);
       if (!equivRevs.isEmpty()) {
-        equivsBuilder.add(new Equivalence(matchRev, equivRevs.iterator().next()));
+        equivsBuilder.add(Equivalence.create(matchRev, equivRevs.iterator().next()));
       }
     }
     return new EquivalenceMatchResult(nonMatching, equivsBuilder.build());
