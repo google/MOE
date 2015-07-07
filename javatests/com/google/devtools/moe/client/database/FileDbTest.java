@@ -57,7 +57,8 @@ public class FileDbTest extends TestCase {
     assertEquals(
         db.getEquivalences(),
         ImmutableSet.of(
-            Equivalence.create(new Revision("r1", "name1"), new Revision("r2", "name2"))));
+            RepositoryEquivalence.create(
+                new Revision("r1", "name1"), new Revision("r2", "name2"))));
   }
 
   public void testEmptyDb() throws Exception {
@@ -67,7 +68,8 @@ public class FileDbTest extends TestCase {
 
   public void testNoteEquivalence() throws Exception {
     FileDb db = FileDb.makeDbFromDbText("{\"equivalences\":[]}");
-    Equivalence e = Equivalence.create(new Revision("r1", "name1"), new Revision("r2", "name2"));
+    RepositoryEquivalence e =
+        RepositoryEquivalence.create(new Revision("r1", "name1"), new Revision("r2", "name2"));
     db.noteEquivalence(e);
     assertEquals(db.getEquivalences(), ImmutableSet.of(e));
   }

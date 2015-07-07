@@ -11,10 +11,10 @@ import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.NullFileSystemModule;
-import com.google.devtools.moe.client.database.Equivalence;
-import com.google.devtools.moe.client.database.EquivalenceMatcher;
-import com.google.devtools.moe.client.database.EquivalenceMatcher.EquivalenceMatchResult;
 import com.google.devtools.moe.client.database.FileDb;
+import com.google.devtools.moe.client.database.RepositoryEquivalence;
+import com.google.devtools.moe.client.database.RepositoryEquivalenceMatcher;
+import com.google.devtools.moe.client.database.RepositoryEquivalenceMatcher.Result;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory.SearchType;
@@ -289,7 +289,7 @@ public class HgRevisionHistoryTest extends TestCase {
     HgRevisionHistory rh = new HgRevisionHistory(Suppliers.ofInstance(mockRepo));
     List<Revision> newRevisions =
         rh
-            .findRevisions(null, new EquivalenceMatcher("public", db), SearchType.LINEAR)
+            .findRevisions(null, new RepositoryEquivalenceMatcher("public", db), SearchType.LINEAR)
             .getRevisionsSinceEquivalence()
             .getBreadthFirstHistory();
     assertEquals(2, newRevisions.size());
@@ -392,11 +392,12 @@ public class HgRevisionHistoryTest extends TestCase {
 
     HgRevisionHistory history = new HgRevisionHistory(Suppliers.ofInstance(mockRepo));
 
-    EquivalenceMatchResult result =
-        history.findRevisions(null, new EquivalenceMatcher("repo1", database), SearchType.BRANCHED);
+    Result result =
+        history.findRevisions(
+            null, new RepositoryEquivalenceMatcher("repo1", database), SearchType.BRANCHED);
 
-    Equivalence expectedEq =
-        Equivalence.create(new Revision("1002", "repo1"), new Revision("2", "repo2"));
+    RepositoryEquivalence expectedEq =
+        RepositoryEquivalence.create(new Revision("1002", "repo1"), new Revision("2", "repo2"));
     assertEquals(ImmutableList.of(expectedEq), result.getEquivalences());
 
     control.verify();
@@ -506,10 +507,10 @@ public class HgRevisionHistoryTest extends TestCase {
     FileDb database = FileDb.makeDbFromDbText(testDb2);
 
     HgRevisionHistory history = new HgRevisionHistory(Suppliers.ofInstance(mockRepo));
-    EquivalenceMatchResult result =
+    Result result =
         history.findRevisions(
             new Revision("4", "repo2"),
-            new EquivalenceMatcher("repo1", database),
+            new RepositoryEquivalenceMatcher("repo1", database),
             SearchType.BRANCHED);
 
     assertEquals(0, result.getEquivalences().size());

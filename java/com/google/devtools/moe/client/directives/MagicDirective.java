@@ -9,8 +9,8 @@ import com.google.devtools.moe.client.MoeOptions;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.database.Db;
-import com.google.devtools.moe.client.database.Equivalence;
 import com.google.devtools.moe.client.database.FileDb;
+import com.google.devtools.moe.client.database.RepositoryEquivalence;
 import com.google.devtools.moe.client.logic.BookkeepingLogic;
 import com.google.devtools.moe.client.logic.DetermineMigrationsLogic;
 import com.google.devtools.moe.client.logic.OneMigrationLogic;
@@ -109,7 +109,7 @@ public class MagicDirective extends Directive {
         continue;
       }
 
-      Equivalence lastEq = migrations.get(0).sinceEquivalence;
+      RepositoryEquivalence lastEq = migrations.get(0).sinceEquivalence;
       // toRe represents toRepo at the revision of last equivalence with fromRepo.
       RepositoryExpression toRe = new RepositoryExpression(migrationConfig.getToRepository());
       if (lastEq != null) {

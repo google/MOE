@@ -25,9 +25,9 @@ public interface RevisionMatcher<T> {
    * non-matching Revisions (i.e. those where {@link #matches(Revision)} returned {@code false}),
    * and second, the matching Revisions in the order they were encountered.
    *
-   * <p>For example, {@link com.google.devtools.moe.client.database.EquivalenceMatcher} returns a
-   * result encapsulating the non-matching Revisions (those since equivalence) and the Equivalences
-   * corresponding to matching Revisions.
+   * <p>For example, {@link com.google.devtools.moe.client.database.RepositoryEquivalenceMatcher}
+   * returns a result encapsulating the non-matching Revisions (those since equivalence) and the
+   * Equivalences corresponding to matching Revisions.
    *
    * @see RevisionHistory#findRevisions(Revision, RevisionMatcher,
    * com.google.devtools.moe.client.repositories.RevisionHistory.SearchType)

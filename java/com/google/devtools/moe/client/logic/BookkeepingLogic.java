@@ -9,9 +9,8 @@ import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.database.Db;
-import com.google.devtools.moe.client.database.Equivalence;
-import com.google.devtools.moe.client.database.EquivalenceMatcher;
-import com.google.devtools.moe.client.database.EquivalenceMatcher.EquivalenceMatchResult;
+import com.google.devtools.moe.client.database.RepositoryEquivalence;
+import com.google.devtools.moe.client.database.RepositoryEquivalenceMatcher;
 import com.google.devtools.moe.client.database.SubmittedMigration;
 import com.google.devtools.moe.client.migrations.MigrationConfig;
 import com.google.devtools.moe.client.parser.Expression;
@@ -70,7 +69,7 @@ public class BookkeepingLogic {
                 "diff_codebases",
                 String.format("Diff codebases '%s' and '%s'", from.toString(), to.toString()));
     if (!CodebaseDifference.diffCodebases(from, to).areDifferent()) {
-      db.noteEquivalence(Equivalence.create(fromHead, toHead));
+      db.noteEquivalence(RepositoryEquivalence.create(fromHead, toHead));
     }
     Injector.INSTANCE.ui().popTask(t, "");
   }
@@ -83,9 +82,11 @@ public class BookkeepingLogic {
       String fromRepository, String toRepository, Db db, ProjectContext context, boolean inverse) {
 
     RevisionHistory toHistory = context.getRepository(toRepository).revisionHistory();
-    EquivalenceMatchResult equivMatch =
+    RepositoryEquivalenceMatcher.Result equivMatch =
         toHistory.findRevisions(
-            null /*revision*/, new EquivalenceMatcher(fromRepository, db), SearchType.LINEAR);
+            null /*revision*/,
+            new RepositoryEquivalenceMatcher(fromRepository, db),
+            SearchType.LINEAR);
 
     List<Revision> linearToRevs =
         equivMatch.getRevisionsSinceEquivalence().getBreadthFirstHistory();
@@ -161,7 +162,7 @@ public class BookkeepingLogic {
                 "diff_codebases",
                 String.format("Diff codebases '%s' and '%s'", from.toString(), to.toString()));
     if (!CodebaseDifference.diffCodebases(from, to).areDifferent()) {
-      Equivalence newEquiv = Equivalence.create(fromRev, toRev);
+      RepositoryEquivalence newEquiv = RepositoryEquivalence.create(fromRev, toRev);
       db.noteEquivalence(newEquiv);
       Injector.INSTANCE.ui().info("Codebases are identical, noted new equivalence: " + newEquiv);
     }
@@ -191,7 +192,7 @@ public class BookkeepingLogic {
    * considers Equivalences between repositories which are part of a migration listed both in
    * migrationNames and context.
    *
-   * Bookkeep should be run before performing any directive which reads from the db, since it is
+   * <p>Bookkeep should be run before performing any directive which reads from the db, since it is
    * MOE's way of keeping the db up-to-date.
    *
    * @param migrationNames the names of all migrations

@@ -9,8 +9,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.database.DbStorage;
-import com.google.devtools.moe.client.database.Equivalence;
 import com.google.devtools.moe.client.database.FileDb;
+import com.google.devtools.moe.client.database.RepositoryEquivalence;
 import com.google.devtools.moe.client.database.SubmittedMigration;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.testing.InMemoryFileSystem;
@@ -95,7 +95,7 @@ public class BookkeepingDirectiveTest extends TestCase {
     // expected db at end of call to bookkeep
     DbStorage dbStorage = new DbStorage();
     dbStorage.addEquivalence(
-        Equivalence.create(new Revision("1", "int"), new Revision("1", "pub")));
+        RepositoryEquivalence.create(new Revision("1", "int"), new Revision("1", "pub")));
     dbStorage.addMigration(
         SubmittedMigration.create(
             new Revision("migrated_from", "int"), new Revision("migrated_to", "pub")));
@@ -161,7 +161,7 @@ public class BookkeepingDirectiveTest extends TestCase {
     // expected db at end of call to bookkeep
     DbStorage dbStorage = new DbStorage();
     dbStorage.addEquivalence(
-        Equivalence.create(
+        RepositoryEquivalence.create(
             new Revision("migrated_from", "int"), new Revision("migrated_to", "pub")));
     dbStorage.addMigration(
         SubmittedMigration.create(

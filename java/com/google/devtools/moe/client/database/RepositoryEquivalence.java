@@ -22,17 +22,17 @@ import java.util.Iterator;
  * An Equivalence holds two Revisions which represent the same files as they appear
  * in different repositories
  *
- * Two Revisions are equivalent when an Equivalence contains both in any order
+ * <p>Two Revisions are equivalent when an Equivalence contains both in any order
  *
  */
 @AutoValue
-public abstract class Equivalence {
+public abstract class RepositoryEquivalence {
   /**
-   * Creates an {@link Equivalence} from two revisions, which can be supplied in any order.
+   * Creates a {@link RepositoryEquivalence} from two revisions, which can be supplied in any order.
    */
-  public static Equivalence create(Revision rev1, Revision rev2) {
+  public static RepositoryEquivalence create(Revision rev1, Revision rev2) {
     Preconditions.checkArgument(!rev1.equals(rev2), "Identical revisions are already equivalent.");
-    return new AutoValue_Equivalence(
+    return new AutoValue_RepositoryEquivalence(
         ImmutableMap.of(rev1.repositoryName, rev1, rev2.repositoryName, rev2));
   }
 
@@ -79,21 +79,22 @@ public abstract class Equivalence {
   }
 
   /**
-   * Provides JSON serialization/deserialization for {@link Equivalence}.
+   * Provides JSON serialization/deserialization for {@link RepositoryEquivalence}.
    */
-  public static class EquivalenceSerializer
-      implements JsonSerializer<Equivalence>, JsonDeserializer<Equivalence> {
+  public static class Serializer
+      implements JsonSerializer<RepositoryEquivalence>, JsonDeserializer<RepositoryEquivalence> {
     @Override
-    public Equivalence deserialize(JsonElement json, Type type, JsonDeserializationContext context)
-        throws JsonParseException {
+    public RepositoryEquivalence deserialize(
+        JsonElement json, Type type, JsonDeserializationContext context) throws JsonParseException {
       JsonObject obj = json.getAsJsonObject();
-      return Equivalence.create(
+      return RepositoryEquivalence.create(
           (Revision) context.deserialize(obj.get("rev1"), Revision.class),
           (Revision) context.deserialize(obj.get("rev2"), Revision.class));
     }
 
     @Override
-    public JsonElement serialize(Equivalence src, Type type, JsonSerializationContext context) {
+    public JsonElement serialize(
+        RepositoryEquivalence src, Type type, JsonSerializationContext context) {
       JsonObject object = new JsonObject();
       Iterator<Revision> revisions = src.revisions().values().iterator();
       object.add("rev1", context.serialize(revisions.next()));

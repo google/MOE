@@ -7,8 +7,8 @@ import com.google.devtools.moe.client.MoeOptions;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.database.Db;
-import com.google.devtools.moe.client.database.Equivalence;
 import com.google.devtools.moe.client.database.FileDb;
+import com.google.devtools.moe.client.database.RepositoryEquivalence;
 import com.google.devtools.moe.client.logic.LastEquivalenceLogic;
 import com.google.devtools.moe.client.parser.Parser;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
@@ -89,7 +89,7 @@ public class LastEquivalenceDirective extends Directive {
 
     Revision rev = rh.findHighestRevision(repoEx.getOption("revision"));
 
-    List<Equivalence> lastEquivs =
+    List<RepositoryEquivalence> lastEquivs =
         LastEquivalenceLogic.lastEquivalence(options.withRepository, rev, db, rh);
 
     if (lastEquivs.isEmpty()) {

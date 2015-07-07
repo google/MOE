@@ -24,7 +24,7 @@ public class FileDb implements Db {
 
   private static final Gson FILE_DB_GSON =
       new GsonBuilder()
-          .registerTypeAdapter(Equivalence.class, new Equivalence.EquivalenceSerializer())
+          .registerTypeAdapter(RepositoryEquivalence.class, new RepositoryEquivalence.Serializer())
           .setPrettyPrinting()
           .create();
 
@@ -37,19 +37,19 @@ public class FileDb implements Db {
   /**
    * @return all Equivalences stored in the database
    */
-  public Set<Equivalence> getEquivalences() {
+  public Set<RepositoryEquivalence> getEquivalences() {
     return ImmutableSet.copyOf(dbStorage.getEquivalences());
   }
 
   @Override
-  public void noteEquivalence(Equivalence equivalence) {
+  public void noteEquivalence(RepositoryEquivalence equivalence) {
     dbStorage.addEquivalence(equivalence);
   }
 
   @Override
   public Set<Revision> findEquivalences(Revision revision, String otherRepository) {
     ImmutableSet.Builder<Revision> equivalentToRevision = ImmutableSet.builder();
-    for (Equivalence e : dbStorage.getEquivalences()) {
+    for (RepositoryEquivalence e : dbStorage.getEquivalences()) {
       if (e.hasRevision(revision)) {
         Revision otherRevision = e.getOtherRevision(revision);
         if (otherRevision.repositoryName.equals(otherRepository)) {

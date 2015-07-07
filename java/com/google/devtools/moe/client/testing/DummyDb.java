@@ -6,7 +6,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.database.Db;
-import com.google.devtools.moe.client.database.Equivalence;
+import com.google.devtools.moe.client.database.RepositoryEquivalence;
 import com.google.devtools.moe.client.database.SubmittedMigration;
 import com.google.devtools.moe.client.repositories.Revision;
 
@@ -22,17 +22,17 @@ public class DummyDb implements Db {
   private static final Joiner JOINER = Joiner.on("\n");
 
   public boolean returnEquivalences;
-  public ArrayList<Equivalence> equivalences;
+  public ArrayList<RepositoryEquivalence> equivalences;
   public ArrayList<SubmittedMigration> migrations;
 
   public DummyDb(boolean returnEquivalences) {
     this.returnEquivalences = returnEquivalences;
-    equivalences = new ArrayList<Equivalence>();
+    equivalences = new ArrayList<RepositoryEquivalence>();
     migrations = new ArrayList<SubmittedMigration>();
   }
 
   @Override
-  public void noteEquivalence(Equivalence equivalence) {
+  public void noteEquivalence(RepositoryEquivalence equivalence) {
     equivalences.add(equivalence);
   }
 

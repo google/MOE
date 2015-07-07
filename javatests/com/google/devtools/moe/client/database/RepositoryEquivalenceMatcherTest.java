@@ -3,7 +3,6 @@
 package com.google.devtools.moe.client.database;
 
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.moe.client.database.EquivalenceMatcher.EquivalenceMatchResult;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionGraph;
@@ -19,7 +18,7 @@ import java.util.List;
  * Unit tests for EquivalenceMatcher.
  *
  */
-public class EquivalenceMatcherTest extends TestCase {
+public class RepositoryEquivalenceMatcherTest extends TestCase {
 
   /*
    * A database that holds the following equivalences:
@@ -34,7 +33,7 @@ public class EquivalenceMatcherTest extends TestCase {
           + " \"rev2\": {\"revId\":\"2\",\"repositoryName\":\"repo2\"}}]}";
 
   private FileDb database;
-  private EquivalenceMatcher equivalenceMatcher;
+  private RepositoryEquivalenceMatcher matcher;
 
   @Override
   public void setUp() {
@@ -43,13 +42,13 @@ public class EquivalenceMatcherTest extends TestCase {
     } catch (InvalidProject e) {
       e.printStackTrace();
     }
-    equivalenceMatcher = new EquivalenceMatcher("repo2", database);
+    matcher = new RepositoryEquivalenceMatcher("repo2", database);
   }
 
   public void testMatches() throws Exception {
-    assertTrue(equivalenceMatcher.matches(new Revision("1001", "repo1")));
-    assertTrue(equivalenceMatcher.matches(new Revision("1002", "repo1")));
-    assertFalse(equivalenceMatcher.matches(new Revision("1003", "repo1")));
+    assertTrue(matcher.matches(new Revision("1001", "repo1")));
+    assertTrue(matcher.matches(new Revision("1002", "repo1")));
+    assertFalse(matcher.matches(new Revision("1003", "repo1")));
   }
 
   public void testMakeResult() throws Exception {
@@ -61,11 +60,11 @@ public class EquivalenceMatcherTest extends TestCase {
                 startingRev, new RevisionMetadata("id", "author", DateTime.now(), "desc", matching))
             .build();
 
-    EquivalenceMatchResult result = equivalenceMatcher.makeResult(nonMatching, matching);
+    RepositoryEquivalenceMatcher.Result result = matcher.makeResult(nonMatching, matching);
     assertEquals(nonMatching, result.getRevisionsSinceEquivalence());
 
-    Equivalence expectedEquiv =
-        Equivalence.create(new Revision("2", "repo2"), new Revision("1002", "repo1"));
+    RepositoryEquivalence expectedEquiv =
+        RepositoryEquivalence.create(new Revision("2", "repo2"), new Revision("1002", "repo1"));
     assertEquals(expectedEquiv, result.getEquivalences().get(0));
   }
 }

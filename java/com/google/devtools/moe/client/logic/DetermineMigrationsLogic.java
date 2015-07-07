@@ -7,9 +7,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.database.Db;
-import com.google.devtools.moe.client.database.Equivalence;
-import com.google.devtools.moe.client.database.EquivalenceMatcher;
-import com.google.devtools.moe.client.database.EquivalenceMatcher.EquivalenceMatchResult;
+import com.google.devtools.moe.client.database.RepositoryEquivalence;
+import com.google.devtools.moe.client.database.RepositoryEquivalenceMatcher;
+import com.google.devtools.moe.client.database.RepositoryEquivalenceMatcher.Result;
 import com.google.devtools.moe.client.migrations.Migration;
 import com.google.devtools.moe.client.migrations.MigrationConfig;
 import com.google.devtools.moe.client.project.ProjectContext;
@@ -22,7 +22,7 @@ import java.util.List;
 /**
  * Given a {@link MigrationConfig} from Repo A to Repo B, return a List of {@link Migration}s
  * encapsulating all the changes from A that haven't been ported to B yet since their last
- * {@link Equivalence}.
+ * {@link RepositoryEquivalence}.
  *
  */
 public class DetermineMigrationsLogic {
@@ -30,7 +30,8 @@ public class DetermineMigrationsLogic {
   /**
    * @param migrationConfig  the migration specification
    * @param db  the MOE db which will be used to find the last equivalence
-   * @return a list of pending Migrations since last {@link Equivalence} per migrationConfig
+   * @return a list of pending Migrations since last {@link RepositoryEquivalence} per
+   *     migrationConfig
    */
   public static List<Migration> determineMigrations(
       ProjectContext context, MigrationConfig migrationConfig, Db db) {
@@ -39,11 +40,12 @@ public class DetermineMigrationsLogic {
     // TODO(user): Decide whether to migrate linear or graph history here. Once DVCS Writers
     // support writing a graph of Revisions, we'll need to opt for linear or graph history based
     // on the MigrationConfig (e.g. whether or not the destination repo is linear-only).
-    EquivalenceMatchResult equivMatch =
-        fromRepo.revisionHistory()
+    Result equivMatch =
+        fromRepo
+            .revisionHistory()
             .findRevisions(
                 null, // Start at head.
-                new EquivalenceMatcher(migrationConfig.getToRepository(), db),
+                new RepositoryEquivalenceMatcher(migrationConfig.getToRepository(), db),
                 SearchType.LINEAR);
 
     List<Revision> revisionsSinceEquivalence =
@@ -60,7 +62,7 @@ public class DetermineMigrationsLogic {
     }
 
     // TODO(user): Figure out how to report all equivalences.
-    Equivalence lastEq = equivMatch.getEquivalences().get(0);
+    RepositoryEquivalence lastEq = equivMatch.getEquivalences().get(0);
     Injector.INSTANCE
         .ui()
         .info(

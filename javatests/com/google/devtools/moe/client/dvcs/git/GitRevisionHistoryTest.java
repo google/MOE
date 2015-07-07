@@ -2,6 +2,7 @@
 
 package com.google.devtools.moe.client.dvcs.git;
 
+import static com.google.devtools.moe.client.repositories.RevisionHistory.SearchType.BRANCHED;
 import static org.easymock.EasyMock.expect;
 
 import com.google.common.base.Joiner;
@@ -13,10 +14,10 @@ import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.NullFileSystemModule;
 import com.google.devtools.moe.client.SystemCommandRunner;
-import com.google.devtools.moe.client.database.Equivalence;
-import com.google.devtools.moe.client.database.EquivalenceMatcher;
-import com.google.devtools.moe.client.database.EquivalenceMatcher.EquivalenceMatchResult;
 import com.google.devtools.moe.client.database.FileDb;
+import com.google.devtools.moe.client.database.RepositoryEquivalence;
+import com.google.devtools.moe.client.database.RepositoryEquivalenceMatcher;
+import com.google.devtools.moe.client.database.RepositoryEquivalenceMatcher.Result;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory.SearchType;
@@ -206,7 +207,7 @@ public class GitRevisionHistoryTest extends TestCase {
 
     GitRevisionHistory rh = new GitRevisionHistory(Suppliers.ofInstance(mockRepo));
     List<Revision> newRevisions =
-        rh.findRevisions(null, new EquivalenceMatcher("mockRepo", db), SearchType.BRANCHED)
+        rh.findRevisions(null, new RepositoryEquivalenceMatcher("mockRepo", db), BRANCHED)
             .getRevisionsSinceEquivalence()
             .getBreadthFirstHistory();
 
@@ -253,7 +254,7 @@ public class GitRevisionHistoryTest extends TestCase {
 
     GitRevisionHistory rh = new GitRevisionHistory(Suppliers.ofInstance(mockRepo));
     List<Revision> newRevisions =
-        rh.findRevisions(null, new EquivalenceMatcher("mockRepo", db), SearchType.BRANCHED)
+        rh.findRevisions(null, new RepositoryEquivalenceMatcher("mockRepo", db), BRANCHED)
             .getRevisionsSinceEquivalence()
             .getBreadthFirstHistory();
 
@@ -318,14 +319,14 @@ public class GitRevisionHistoryTest extends TestCase {
 
     GitRevisionHistory history = new GitRevisionHistory(Suppliers.ofInstance(mockRepo));
 
-    EquivalenceMatchResult result =
+    Result result =
         history.findRevisions(
             new Revision("4", "repo2"),
-            new EquivalenceMatcher("repo1", database),
+            new RepositoryEquivalenceMatcher("repo1", database),
             SearchType.BRANCHED);
 
-    Equivalence expectedEq =
-        Equivalence.create(new Revision("1002", "repo1"), new Revision("2", "repo2"));
+    RepositoryEquivalence expectedEq =
+        RepositoryEquivalence.create(new Revision("1002", "repo1"), new Revision("2", "repo2"));
 
     assertEquals(1, result.getEquivalences().size());
     assertEquals(expectedEq, result.getEquivalences().get(0));
@@ -396,10 +397,10 @@ public class GitRevisionHistoryTest extends TestCase {
     FileDb database = FileDb.makeDbFromDbText(testDb2);
     GitRevisionHistory history = new GitRevisionHistory(Suppliers.ofInstance(mockRepo));
 
-    EquivalenceMatchResult result =
+    Result result =
         history.findRevisions(
             new Revision("4", "repo2"),
-            new EquivalenceMatcher("repo1", database),
+            new RepositoryEquivalenceMatcher("repo1", database),
             SearchType.BRANCHED);
 
     assertEquals(0, result.getEquivalences().size());
@@ -452,14 +453,14 @@ public class GitRevisionHistoryTest extends TestCase {
 
     GitRevisionHistory history = new GitRevisionHistory(Suppliers.ofInstance(mockRepo));
 
-    EquivalenceMatchResult result =
+    Result result =
         history.findRevisions(
             new Revision("4", "repo2"),
-            new EquivalenceMatcher("repo1", database),
+            new RepositoryEquivalenceMatcher("repo1", database),
             SearchType.LINEAR);
 
-    Equivalence expectedEq =
-        Equivalence.create(new Revision("1002", "repo1"), new Revision("2", "repo2"));
+    RepositoryEquivalence expectedEq =
+        RepositoryEquivalence.create(new Revision("1002", "repo1"), new Revision("2", "repo2"));
 
     assertEquals(
         ImmutableList.of(new Revision("4", "repo2"), new Revision("3a", "repo2")),
