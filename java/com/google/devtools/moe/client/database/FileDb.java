@@ -25,11 +25,13 @@ public class FileDb implements Db {
   private static final Gson FILE_DB_GSON =
       new GsonBuilder()
           .registerTypeAdapter(RepositoryEquivalence.class, new RepositoryEquivalence.Serializer())
+          .registerTypeAdapter(SubmittedMigration.class, new SubmittedMigration.Serializer())
           .setPrettyPrinting()
           .create();
 
   private final DbStorage dbStorage;
 
+  // TODO(cgruber): Rationalize DbStorage.
   public FileDb(DbStorage dbStorage) {
     this.dbStorage = dbStorage;
   }
@@ -58,6 +60,13 @@ public class FileDb implements Db {
       }
     }
     return equivalentToRevision.build();
+  }
+
+  /**
+   * @return all {@link SubmittedMigration} objects stored in the database
+   */
+  public Set<SubmittedMigration> getMigrations() {
+    return ImmutableSet.copyOf(dbStorage.getMigrations());
   }
 
   @Override

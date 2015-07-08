@@ -6,10 +6,12 @@ import static org.easymock.EasyMock.expect;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.SystemFileSystem;
+import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
 import com.google.devtools.moe.client.testing.RecordingUi;
@@ -184,5 +186,48 @@ public class FileDbTest extends TestCase {
     control.replay();
     FileDb.makeDbFromDbText(dbText).writeToLocation(dbFile.getPath());
     control.verify();
+  }
+
+
+  public void testSerialization() throws InvalidProject {
+    String dbText =
+        Joiner.on("\n")
+            .join(
+                "{",
+                "  'equivalences': [",
+                "    {",
+                "      'rev1': {",
+                "        'revId': 'r1',",
+                "        'repositoryName': 'name1'",
+                "      },",
+                "      'rev2': {",
+                "        'revId': 'r2',",
+                "        'repositoryName': 'name2'",
+                "      }",
+                "    }",
+                "  ],",
+                "  'migrations': [",
+                "    {",
+                "      'fromRevision': {",
+                "        'revId': 'r1',",
+                "        'repositoryName': 'name1'",
+                "      },",
+                "      'toRevision': {",
+                "        'revId': 'r2',",
+                "        'repositoryName': 'name2'",
+                "      }",
+                "    }",
+                "  ]",
+                "}",
+                "");
+    FileDb db = FileDb.makeDbFromDbText(dbText.replace('\'', '"'));
+    RepositoryEquivalence equivalence = Iterables.getOnlyElement(db.getEquivalences());
+    assertEquals("r1", equivalence.getRevisionForRepository("name1").revId);
+    assertEquals("r2", equivalence.getRevisionForRepository("name2").revId);
+    SubmittedMigration migration = Iterables.getOnlyElement(db.getMigrations());
+    assertEquals("name1", migration.fromRevision().repositoryName);
+    assertEquals("r1", migration.fromRevision().revId);
+    assertEquals("name2", migration.toRevision().repositoryName);
+    assertEquals("r2", migration.toRevision().revId);
   }
 }
