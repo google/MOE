@@ -39,7 +39,7 @@ public class ScrubberConfig {
   private List<JsonObject> whitelist;
 
   @SerializedName("scrub_sensitive_comments")
-  private final boolean scrubSensitiveComments = true;
+  private boolean scrubSensitiveComments = true;
 
   @SerializedName("rearranging_config")
   private JsonObject rearrangingConfig;
@@ -70,7 +70,7 @@ public class ScrubberConfig {
   private boolean scrubUnknownUsers;
 
   @SerializedName("scrub_authors")
-  private final boolean scrubAuthors = true;
+  private boolean scrubAuthors = true;
 
   // C/C++ options
   @SerializedName("c_includes_config_file")
