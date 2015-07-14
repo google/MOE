@@ -104,7 +104,7 @@ public abstract class Directives {
     }
 
     @Provides(type = MAP)
-    @Key("change")
+    @Key("bookkeep")
     Directive bookkeep(BookkeepingDirective directive) {
       return directive;
     }
