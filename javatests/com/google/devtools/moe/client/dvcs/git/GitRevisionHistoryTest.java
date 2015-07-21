@@ -96,8 +96,8 @@ public class GitRevisionHistoryTest extends TestCase {
 
     GitRevisionHistory rh = new GitRevisionHistory(Suppliers.ofInstance(mockRepo));
     Revision rev = rh.findHighestRevision(null);
-    assertEquals(repositoryName, rev.repositoryName);
-    assertEquals("mockHashID", rev.revId);
+    assertEquals(repositoryName, rev.repositoryName());
+    assertEquals("mockHashID", rev.revId());
 
     control.verify();
   }
@@ -129,22 +129,22 @@ public class GitRevisionHistoryTest extends TestCase {
   public void testGetMetadata() throws Exception {
     GitClonedRepository mockRepo = mockClonedRepo(repositoryName);
 
-    expectLogCommand(mockRepo, LOG_FORMAT_ALL_METADATA, "f00d")
+    expectLogCommand(mockRepo, LOG_FORMAT_ALL_METADATA, "1")
         .andReturn(
             METADATA_JOINER.join(
-                "f00d", "foo@google.com", GIT_COMMIT_DATE, "d34d b33f", "description\n"));
+                "1", "foo@google.com", GIT_COMMIT_DATE, "2 3", "description\n"));
 
     control.replay();
 
     GitRevisionHistory rh = new GitRevisionHistory(Suppliers.ofInstance(mockRepo));
-    RevisionMetadata result = rh.getMetadata(new Revision("f00d", "mockrepo"));
-    assertEquals("f00d", result.id);
+    RevisionMetadata result = rh.getMetadata(Revision.create(1, "mockrepo"));
+    assertEquals("1", result.id);
     assertEquals("foo@google.com", result.author);
     MoeAsserts.assertSameDate(DATE, result.date);
     assertEquals("description\n", result.description);
     assertEquals(
         ImmutableList.of(
-            new Revision("d34d", repositoryName), new Revision("b33f", repositoryName)),
+            Revision.create(2, repositoryName), Revision.create(3, repositoryName)),
         result.parents);
 
     control.verify();
@@ -158,20 +158,20 @@ public class GitRevisionHistoryTest extends TestCase {
     RevisionMetadata rm =
         rh.parseMetadata(
             METADATA_JOINER.join(
-                "f00d",
+                "1",
                 "foo@google.com",
                 GIT_COMMIT_DATE,
-                "d34d b33f",
+                "2 3",
                 "desc with \n\nmultiple lines\n"));
     control.verify();
 
-    assertEquals("f00d", rm.id);
+    assertEquals("1", rm.id);
     assertEquals("foo@google.com", rm.author);
     MoeAsserts.assertSameDate(DATE, rm.date);
     assertEquals("desc with \n\nmultiple lines\n", rm.description);
     assertEquals(
         ImmutableList.of(
-            new Revision("d34d", repositoryName), new Revision("b33f", repositoryName)),
+            Revision.create(2, repositoryName), Revision.create(3, repositoryName)),
         rm.parents);
   }
 
@@ -212,12 +212,12 @@ public class GitRevisionHistoryTest extends TestCase {
             .getBreadthFirstHistory();
 
     assertEquals(3, newRevisions.size());
-    assertEquals(repositoryName, newRevisions.get(0).repositoryName);
-    assertEquals("head", newRevisions.get(0).revId);
-    assertEquals(repositoryName, newRevisions.get(1).repositoryName);
-    assertEquals("parent1", newRevisions.get(1).revId);
-    assertEquals(repositoryName, newRevisions.get(2).repositoryName);
-    assertEquals("parent2", newRevisions.get(2).revId);
+    assertEquals(repositoryName, newRevisions.get(0).repositoryName());
+    assertEquals("head", newRevisions.get(0).revId());
+    assertEquals(repositoryName, newRevisions.get(1).repositoryName());
+    assertEquals("parent1", newRevisions.get(1).revId());
+    assertEquals(repositoryName, newRevisions.get(2).repositoryName());
+    assertEquals("parent2", newRevisions.get(2).revId());
 
     control.verify();
   }
@@ -232,7 +232,7 @@ public class GitRevisionHistoryTest extends TestCase {
         new DummyDb(true) {
           @Override
           public Set<Revision> findEquivalences(Revision revision, String otherRepository) {
-            if (revision.revId.equals("parent1")) {
+            if (revision.revId().equals("parent1")) {
               return super.findEquivalences(revision, otherRepository);
             } else {
               return ImmutableSet.of();
@@ -260,8 +260,8 @@ public class GitRevisionHistoryTest extends TestCase {
 
     // parent1 should not be traversed.
     assertEquals(2, newRevisions.size());
-    assertEquals("head", newRevisions.get(0).revId);
-    assertEquals("parent2", newRevisions.get(1).revId);
+    assertEquals("head", newRevisions.get(0).revId());
+    assertEquals("parent2", newRevisions.get(1).revId());
 
     control.verify();
   }
@@ -321,12 +321,13 @@ public class GitRevisionHistoryTest extends TestCase {
 
     Result result =
         history.findRevisions(
-            new Revision("4", "repo2"),
+            Revision.create(4, "repo2"),
             new RepositoryEquivalenceMatcher("repo1", database),
             SearchType.BRANCHED);
 
     RepositoryEquivalence expectedEq =
-        RepositoryEquivalence.create(new Revision("1002", "repo1"), new Revision("2", "repo2"));
+        RepositoryEquivalence.create(
+            Revision.create(1002, "repo1"), Revision.create(2, "repo2"));
 
     assertEquals(1, result.getEquivalences().size());
     assertEquals(expectedEq, result.getEquivalences().get(0));
@@ -399,7 +400,7 @@ public class GitRevisionHistoryTest extends TestCase {
 
     Result result =
         history.findRevisions(
-            new Revision("4", "repo2"),
+            Revision.create(4, "repo2"),
             new RepositoryEquivalenceMatcher("repo1", database),
             SearchType.BRANCHED);
 
@@ -455,15 +456,16 @@ public class GitRevisionHistoryTest extends TestCase {
 
     Result result =
         history.findRevisions(
-            new Revision("4", "repo2"),
+            Revision.create(4, "repo2"),
             new RepositoryEquivalenceMatcher("repo1", database),
             SearchType.LINEAR);
 
     RepositoryEquivalence expectedEq =
-        RepositoryEquivalence.create(new Revision("1002", "repo1"), new Revision("2", "repo2"));
+        RepositoryEquivalence.create(
+            Revision.create(1002, "repo1"), Revision.create(2, "repo2"));
 
     assertEquals(
-        ImmutableList.of(new Revision("4", "repo2"), new Revision("3a", "repo2")),
+        ImmutableList.of(Revision.create(4, "repo2"), Revision.create("3a", "repo2")),
         result.getRevisionsSinceEquivalence().getBreadthFirstHistory());
     assertEquals(ImmutableList.of(expectedEq), result.getEquivalences());
 

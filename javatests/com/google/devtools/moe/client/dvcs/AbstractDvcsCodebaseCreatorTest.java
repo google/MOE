@@ -87,7 +87,7 @@ public class AbstractDvcsCodebaseCreatorTest extends TestCase {
         .andReturn(ImmutableSet.<File>of());
 
     expect(mockRevHistory.findHighestRevision(null))
-        .andReturn(new Revision("mock head changeset ID", MOCK_REPO_NAME));
+        .andReturn(Revision.create("mock head changeset ID", MOCK_REPO_NAME));
     expect(mockRepo.archiveAtRevision("mock head changeset ID"))
         .andReturn(new File(archiveTempDir));
 
@@ -110,7 +110,7 @@ public class AbstractDvcsCodebaseCreatorTest extends TestCase {
         .andReturn(ImmutableSet.<File>of());
 
     expect(mockRevHistory.findHighestRevision(givenRev))
-        .andReturn(new Revision(givenRev, MOCK_REPO_NAME));
+        .andReturn(Revision.create(givenRev, MOCK_REPO_NAME));
     expect(mockRepo.archiveAtRevision(givenRev)).andReturn(new File(archiveTempDir));
 
     control.replay();

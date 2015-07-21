@@ -61,7 +61,7 @@ public class GitRevisionHistory extends AbstractRevisionHistory {
     // Clean up output.
     hashID = hashID.replaceAll("\\W", "");
 
-    return new Revision(hashID, headClone.getRepositoryName());
+    return Revision.create(hashID, headClone.getRepositoryName());
   }
 
   /**
@@ -72,12 +72,12 @@ public class GitRevisionHistory extends AbstractRevisionHistory {
   @Override
   public RevisionMetadata getMetadata(Revision revision) {
     GitClonedRepository headClone = headCloneSupplier.get();
-    if (!headClone.getRepositoryName().equals(revision.repositoryName)) {
+    if (!headClone.getRepositoryName().equals(revision.repositoryName())) {
       throw new MoeProblem(
           String.format(
               "Could not get metadata: Revision %s is in repository %s instead of %s",
-              revision.revId,
-              revision.repositoryName,
+              revision.revId(),
+              revision.repositoryName(),
               headClone.getRepositoryName()));
     }
 
@@ -92,7 +92,7 @@ public class GitRevisionHistory extends AbstractRevisionHistory {
               // Ensure one revision only, to be safe.
               "--max-count=1",
               "--format=" + format,
-              revision.revId);
+              revision.revId());
     } catch (CommandException e) {
       throw new MoeProblem(
           String.format("Failed git run: %d %s %s", e.returnStatus, e.stdout, e.stderr));
@@ -115,7 +115,7 @@ public class GitRevisionHistory extends AbstractRevisionHistory {
     // The fourth item contains all of the parents, each separated by a space.
     ImmutableList.Builder<Revision> parentBuilder = ImmutableList.<Revision>builder();
     for (String parent : Splitter.on(' ').omitEmptyStrings().split(split.get(3))) {
-      parentBuilder.add(new Revision(parent, headCloneSupplier.get().getRepositoryName()));
+      parentBuilder.add(Revision.create(parent, headCloneSupplier.get().getRepositoryName()));
     }
 
     DateTime date = GIT_DATE_FMT.parseDateTime(split.get(2));

@@ -48,7 +48,7 @@ public class DetermineMetadataDirectiveTest extends TestCase {
             new DateTime(1L),
             "description\n-------------\ndescription",
             ImmutableList.of(
-                new Revision("parent", "internal"), new Revision("parent", "internal")));
+                Revision.create("parent", "internal"), Revision.create("parent", "internal")));
     assertEquals(rm.toString(), ui.lastInfo);
   }
 
@@ -70,7 +70,7 @@ public class DetermineMetadataDirectiveTest extends TestCase {
             "author",
             new DateTime(1L),
             "description",
-            ImmutableList.of(new Revision("parent", "internal")));
+            ImmutableList.of(Revision.create("parent", "internal")));
     assertEquals(rm.toString(), ui.lastInfo);
   }
 }

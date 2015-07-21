@@ -65,7 +65,7 @@ public abstract class AbstractDvcsCodebaseCreator implements CodebaseCreator {
     if (Strings.isNullOrEmpty(localRoot)) {
       Revision rev = revisionHistory.findHighestRevision(options.get("revision"));
       headClone = headCloneSupplier.get();
-      archiveLocation = headClone.archiveAtRevision(rev.revId);
+      archiveLocation = headClone.archiveAtRevision(rev.revId());
     } else {
       // TODO(user): Archive only (don't clone) if localroot is set.
       headClone = cloneAtLocalRoot(localRoot);

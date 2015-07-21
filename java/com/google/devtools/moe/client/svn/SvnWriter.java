@@ -49,7 +49,7 @@ public class SvnWriter implements Writer {
   public void checkOut() {
     try {
       util.runSvnCommand(
-          "co", "-r", revision.revId, config.getUrl(), rootDirectory.getAbsolutePath());
+          "co", "-r", revision.revId(), config.getUrl(), rootDirectory.getAbsolutePath());
     } catch (CommandRunner.CommandException e) {
       throw new MoeProblem("Could not check out from svn: " + e.stderr);
     }

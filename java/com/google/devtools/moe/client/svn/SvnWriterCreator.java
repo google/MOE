@@ -40,7 +40,7 @@ public class SvnWriterCreator implements WriterCreator {
     File tempDir =
         Injector.INSTANCE
             .fileSystem()
-            .getTemporaryDirectory(String.format("svn_writer_%s_", r.revId));
+            .getTemporaryDirectory(String.format("svn_writer_%s_", r.revId()));
     SvnWriter writer = new SvnWriter(config, r, tempDir, util);
     writer.checkOut();
     return writer;

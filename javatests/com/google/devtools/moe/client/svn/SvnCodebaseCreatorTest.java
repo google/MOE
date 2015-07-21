@@ -64,7 +64,7 @@ public class SvnCodebaseCreatorTest extends TestCase {
   }
 
   public void testExportExplicitRevision() throws Exception {
-    Revision result = new Revision("45", "");
+    Revision result = Revision.create(45, "");
     SvnRevisionHistory revisionHistory = control.createMock(SvnRevisionHistory.class);
 
     RepositoryConfig mockConfig = control.createMock(RepositoryConfig.class);

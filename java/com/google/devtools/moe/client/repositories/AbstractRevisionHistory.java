@@ -28,7 +28,7 @@ public abstract class AbstractRevisionHistory implements RevisionHistory {
     if (startingRevisions.size() > 1 && searchType == SearchType.LINEAR) {
       throw new MoeProblem(
           "MOE found a repository (%s) with multiple heads while trying to search linear history.",
-          startingRevisions.get(0).repositoryName);
+          startingRevisions.get(0).repositoryName());
     }
 
     RevisionGraph.Builder nonMatchingBuilder = RevisionGraph.builder(startingRevisions);

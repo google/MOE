@@ -46,14 +46,14 @@ public class RepositoryEquivalenceMatcherTest extends TestCase {
   }
 
   public void testMatches() throws Exception {
-    assertTrue(matcher.matches(new Revision("1001", "repo1")));
-    assertTrue(matcher.matches(new Revision("1002", "repo1")));
-    assertFalse(matcher.matches(new Revision("1003", "repo1")));
+    assertTrue(matcher.matches(Revision.create(1001, "repo1")));
+    assertTrue(matcher.matches(Revision.create(1002, "repo1")));
+    assertFalse(matcher.matches(Revision.create(1003, "repo1")));
   }
 
   public void testMakeResult() throws Exception {
-    Revision startingRev = new Revision("1003", "repo1");
-    List<Revision> matching = ImmutableList.of(new Revision("1002", "repo1"));
+    Revision startingRev = Revision.create(1003, "repo1");
+    List<Revision> matching = ImmutableList.of(Revision.create(1002, "repo1"));
     RevisionGraph nonMatching =
         RevisionGraph.builder(matching)
             .addRevision(
@@ -64,7 +64,8 @@ public class RepositoryEquivalenceMatcherTest extends TestCase {
     assertEquals(nonMatching, result.getRevisionsSinceEquivalence());
 
     RepositoryEquivalence expectedEquiv =
-        RepositoryEquivalence.create(new Revision("2", "repo2"), new Revision("1002", "repo1"));
+        RepositoryEquivalence.create(
+            Revision.create(2, "repo2"), Revision.create(1002, "repo1"));
     assertEquals(expectedEquiv, result.getEquivalences().get(0));
   }
 }

@@ -60,7 +60,7 @@ public class FileDbTest extends TestCase {
         db.getEquivalences(),
         ImmutableSet.of(
             RepositoryEquivalence.create(
-                new Revision("r1", "name1"), new Revision("r2", "name2"))));
+                Revision.create("r1", "name1"), Revision.create("r2", "name2"))));
   }
 
   public void testEmptyDb() throws Exception {
@@ -71,7 +71,8 @@ public class FileDbTest extends TestCase {
   public void testNoteEquivalence() throws Exception {
     FileDb db = FileDb.makeDbFromDbText("{\"equivalences\":[]}");
     RepositoryEquivalence e =
-        RepositoryEquivalence.create(new Revision("r1", "name1"), new Revision("r2", "name2"));
+        RepositoryEquivalence.create(
+            Revision.create("r1", "name1"), Revision.create("r2", "name2"));
     db.noteEquivalence(e);
     assertEquals(db.getEquivalences(), ImmutableSet.of(e));
   }
@@ -79,7 +80,7 @@ public class FileDbTest extends TestCase {
   public void testNoteMigration() throws Exception {
     FileDb db = FileDb.makeDbFromDbText("{}");
     SubmittedMigration migration =
-        SubmittedMigration.create(new Revision("r1", "name1"), new Revision("r2", "name2"));
+        SubmittedMigration.create(Revision.create("r1", "name1"), Revision.create("r2", "name2"));
     assertTrue(db.noteMigration(migration));
     // The migration has already been added, so noting it again should return false.
     assertFalse(db.noteMigration(migration));
@@ -117,8 +118,8 @@ public class FileDbTest extends TestCase {
 
     FileDb db = FileDb.makeDbFromDbText(dbText);
     assertEquals(
-        db.findEquivalences(new Revision("r1", "name1"), "name2"),
-        ImmutableSet.of(new Revision("r2", "name2"), new Revision("r3", "name2")));
+        db.findEquivalences(Revision.create("r1", "name1"), "name2"),
+        ImmutableSet.of(Revision.create("r2", "name2"), Revision.create("r3", "name2")));
   }
 
   public void testMakeDbFromFile() throws Exception {
@@ -222,12 +223,12 @@ public class FileDbTest extends TestCase {
                 "");
     FileDb db = FileDb.makeDbFromDbText(dbText.replace('\'', '"'));
     RepositoryEquivalence equivalence = Iterables.getOnlyElement(db.getEquivalences());
-    assertEquals("r1", equivalence.getRevisionForRepository("name1").revId);
-    assertEquals("r2", equivalence.getRevisionForRepository("name2").revId);
+    assertEquals("r1", equivalence.getRevisionForRepository("name1").revId());
+    assertEquals("r2", equivalence.getRevisionForRepository("name2").revId());
     SubmittedMigration migration = Iterables.getOnlyElement(db.getMigrations());
-    assertEquals("name1", migration.fromRevision().repositoryName);
-    assertEquals("r1", migration.fromRevision().revId);
-    assertEquals("name2", migration.toRevision().repositoryName);
-    assertEquals("r2", migration.toRevision().revId);
+    assertEquals("name1", migration.fromRevision().repositoryName());
+    assertEquals("r1", migration.fromRevision().revId());
+    assertEquals("name2", migration.toRevision().repositoryName());
+    assertEquals("r2", migration.toRevision().revId());
   }
 }

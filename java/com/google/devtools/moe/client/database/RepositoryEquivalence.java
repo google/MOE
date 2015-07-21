@@ -33,7 +33,7 @@ public abstract class RepositoryEquivalence {
   public static RepositoryEquivalence create(Revision rev1, Revision rev2) {
     Preconditions.checkArgument(!rev1.equals(rev2), "Identical revisions are already equivalent.");
     return new AutoValue_RepositoryEquivalence(
-        ImmutableMap.of(rev1.repositoryName, rev1, rev2.repositoryName, rev2));
+        ImmutableMap.of(rev1.repositoryName(), rev1, rev2.repositoryName(), rev2));
   }
 
   abstract ImmutableMap<String, Revision> revisions();

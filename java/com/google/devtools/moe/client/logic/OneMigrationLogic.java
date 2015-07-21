@@ -80,7 +80,7 @@ public class OneMigrationLogic {
 
       fromCodebase =
           new RepositoryExpression(migration.config.getFromRepository())
-              .atRevision(mostRecentFromRev.revId)
+              .atRevision(mostRecentFromRev.revId())
               .translateTo(toProjectSpace)
               .withReferenceToCodebase(referenceToCodebase)
               .createCodebase(context);

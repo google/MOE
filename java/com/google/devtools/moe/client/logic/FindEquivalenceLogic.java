@@ -29,17 +29,19 @@ public class FindEquivalenceLogic {
       StringBuilder result = new StringBuilder();
       Iterator<Revision> it = equivalences.iterator();
       while (it.hasNext()) {
-        result.append(it.next().revId);
+        result.append(it.next().revId());
         if (it.hasNext()) {
           result.append(",");
         }
       }
       if (equivalences.isEmpty()) {
-        Injector.INSTANCE.ui().info(noEquivalenceBuilder(rev.repositoryName, rev.revId, inRepo));
+        Injector.INSTANCE
+            .ui()
+            .info(noEquivalenceBuilder(rev.repositoryName(), rev.revId(), inRepo));
       } else {
         Injector.INSTANCE
             .ui()
-            .info(equivalenceBuilder(rev.repositoryName, rev.revId, inRepo, result.toString()));
+            .info(equivalenceBuilder(rev.repositoryName(), rev.revId(), inRepo, result.toString()));
       }
     }
   }

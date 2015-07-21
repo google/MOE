@@ -72,7 +72,7 @@ public class SvnRevisionHistory extends AbstractRevisionHistory {
       ImmutableList.Builder<Revision> resultBuilder = ImmutableList.builder();
       for (int i = 0; i < nl.getLength(); i++) {
         String revId = nl.item(i).getAttributes().getNamedItem("revision").getNodeValue();
-        resultBuilder.add(new Revision(revId, repositoryName));
+        resultBuilder.add(Revision.create(revId, repositoryName));
       }
       return resultBuilder.build();
     } catch (Exception e) {
@@ -87,17 +87,17 @@ public class SvnRevisionHistory extends AbstractRevisionHistory {
    */
   @Override
   public RevisionMetadata getMetadata(Revision revision) throws MoeProblem {
-    if (!name.equals(revision.repositoryName)) {
+    if (!name.equals(revision.repositoryName())) {
       throw new MoeProblem(
           String.format(
               "Could not get metadata: Revision %s is in repository %s instead of %s",
-              revision.revId,
-              revision.repositoryName,
+              revision.revId(),
+              revision.repositoryName(),
               name));
     }
     String log;
     try {
-      log = util.runSvnCommand("log", "--xml", "-l", "2", "-r", revision.revId + ":1", url);
+      log = util.runSvnCommand("log", "--xml", "-l", "2", "-r", revision.revId() + ":1", url);
     } catch (CommandException e) {
       throw new MoeProblem("Failed svn run: %s", e);
     }
@@ -128,7 +128,7 @@ public class SvnRevisionHistory extends AbstractRevisionHistory {
               nl.item(i + 1).getAttributes().getNamedItem("revision").getNodeValue();
           resultBuilder.add(
               parseMetadataNodeList(
-                  revId, nlEntries, ImmutableList.of(new Revision(parentId, name))));
+                  revId, nlEntries, ImmutableList.of(Revision.create(parentId, name))));
         }
       }
       return resultBuilder.build();

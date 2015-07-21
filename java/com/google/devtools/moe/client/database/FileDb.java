@@ -22,12 +22,11 @@ import java.util.Set;
  */
 public class FileDb implements Db {
 
-  private static final Gson FILE_DB_GSON =
-      new GsonBuilder()
-          .registerTypeAdapter(RepositoryEquivalence.class, new RepositoryEquivalence.Serializer())
-          .registerTypeAdapter(SubmittedMigration.class, new SubmittedMigration.Serializer())
-          .setPrettyPrinting()
-          .create();
+  private static final Gson FILE_DB_GSON = new GsonBuilder()
+      .setPrettyPrinting()
+      .registerTypeHierarchyAdapter(
+          RepositoryEquivalence.class, new RepositoryEquivalence.Serializer())
+      .create();
 
   private final DbStorage dbStorage;
 
@@ -54,7 +53,7 @@ public class FileDb implements Db {
     for (RepositoryEquivalence e : dbStorage.getEquivalences()) {
       if (e.hasRevision(revision)) {
         Revision otherRevision = e.getOtherRevision(revision);
-        if (otherRevision.repositoryName.equals(otherRepository)) {
+        if (otherRevision.repositoryName().equals(otherRepository)) {
           equivalentToRevision.add(otherRevision);
         }
       }

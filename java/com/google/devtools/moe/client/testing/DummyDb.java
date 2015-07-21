@@ -42,7 +42,7 @@ public class DummyDb implements Db {
       return ImmutableSet.of();
     } else {
       return ImmutableSet.of(
-          new Revision("1", otherRepository), new Revision("2", otherRepository));
+          Revision.create(1, otherRepository), Revision.create(2, otherRepository));
     }
   }
 

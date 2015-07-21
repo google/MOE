@@ -53,10 +53,11 @@ public class SvnCodebaseCreator implements CodebaseCreator {
     File exportPath =
         Injector.INSTANCE
             .fileSystem()
-            .getTemporaryDirectory(String.format("svn_export_%s_%s_", name, rev.revId));
+            .getTemporaryDirectory(String.format("svn_export_%s_%s_", name, rev.revId()));
 
     try {
-      util.runSvnCommand("export", config.getUrl(), "-r", rev.revId, exportPath.getAbsolutePath());
+      util.runSvnCommand(
+          "export", config.getUrl(), "-r", rev.revId(), exportPath.getAbsolutePath());
     } catch (CommandRunner.CommandException e) {
       throw new MoeProblem("could not export from svn" + e.getMessage());
     }

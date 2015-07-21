@@ -35,7 +35,7 @@ public class DescriptionMetadataScrubber extends MetadataScrubber {
   public RevisionMetadata scrub(RevisionMetadata rm) {
     ImmutableList.Builder<String> parentRevIds = ImmutableList.builder();
     for (Revision parent : rm.parents) {
-      parentRevIds.add(parent.revId);
+      parentRevIds.add(parent.revId());
     }
     String parentsString = Joiner.on(", ").join(parentRevIds.build());
 

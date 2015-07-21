@@ -70,7 +70,7 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
               "Failed hg run: %s %d %s %s", args.toString(), e.returnStatus, e.stdout, e.stderr));
     }
 
-    return new Revision(changesetID, tipClone.getRepositoryName());
+    return Revision.create(changesetID, tipClone.getRepositoryName());
   }
 
   /**
@@ -81,18 +81,18 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
   @Override
   public RevisionMetadata getMetadata(Revision revision) {
     HgClonedRepository tipClone = tipCloneSupplier.get();
-    if (!tipClone.getRepositoryName().equals(revision.repositoryName)) {
+    if (!tipClone.getRepositoryName().equals(revision.repositoryName())) {
       throw new MoeProblem(
           String.format(
               "Could not get metadata: Revision %s is in repository %s instead of %s",
-              revision.revId,
-              revision.repositoryName,
+              revision.revId(),
+              revision.repositoryName(),
               tipClone.getRepositoryName()));
     }
     ImmutableList<String> args =
         ImmutableList.of(
             "log",
-            "--rev=" + revision.revId,
+            "--rev=" + revision.revId(),
             // Ensure one revision only, to be safe.
             "--limit=1",
             // Format output as "changesetID < author < date < description < parents".
@@ -145,7 +145,7 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
         String[] parentParts = parent.split(":");
         if (!parentParts[0].equals("-1")) {
           parent = parentParts[1];
-          parentBuilder.add(new Revision(parent, tipCloneSupplier.get().getRepositoryName()));
+          parentBuilder.add(Revision.create(parent, tipCloneSupplier.get().getRepositoryName()));
         }
       }
     }
@@ -181,7 +181,7 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
       String[] changesetIDAndBranchParts = changesetIDAndBranch.split(" ");
       String changesetID = changesetIDAndBranchParts[0];
       String branch = changesetIDAndBranchParts[1];
-      result.add(new Revision(changesetID, tipClone.getRepositoryName()));
+      result.add(Revision.create(changesetID, tipClone.getRepositoryName()));
     }
     return result.build();
   }

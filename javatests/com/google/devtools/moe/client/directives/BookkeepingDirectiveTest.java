@@ -95,10 +95,10 @@ public class BookkeepingDirectiveTest extends TestCase {
     // expected db at end of call to bookkeep
     DbStorage dbStorage = new DbStorage();
     dbStorage.addEquivalence(
-        RepositoryEquivalence.create(new Revision("1", "int"), new Revision("1", "pub")));
+        RepositoryEquivalence.create(Revision.create(1, "int"), Revision.create(1, "pub")));
     dbStorage.addMigration(
         SubmittedMigration.create(
-            new Revision("migrated_from", "int"), new Revision("migrated_to", "pub")));
+            Revision.create("migrated_from", "int"), Revision.create("migrated_to", "pub")));
     FileDb expectedDb = new FileDb(dbStorage);
 
     assertEquals(expectedDb.toJsonString(), Injector.INSTANCE.fileSystem().fileToString(DB_FILE));
@@ -130,7 +130,7 @@ public class BookkeepingDirectiveTest extends TestCase {
     DbStorage dbStorage = new DbStorage();
     dbStorage.addMigration(
         SubmittedMigration.create(
-            new Revision("migrated_from", "int"), new Revision("migrated_to", "pub")));
+            Revision.create("migrated_from", "int"), Revision.create("migrated_to", "pub")));
     FileDb expectedDb = new FileDb(dbStorage);
 
     assertEquals(expectedDb.toJsonString(), Injector.INSTANCE.fileSystem().fileToString(DB_FILE));
@@ -162,10 +162,10 @@ public class BookkeepingDirectiveTest extends TestCase {
     DbStorage dbStorage = new DbStorage();
     dbStorage.addEquivalence(
         RepositoryEquivalence.create(
-            new Revision("migrated_from", "int"), new Revision("migrated_to", "pub")));
+            Revision.create("migrated_from", "int"), Revision.create("migrated_to", "pub")));
     dbStorage.addMigration(
         SubmittedMigration.create(
-            new Revision("migrated_from", "int"), new Revision("migrated_to", "pub")));
+            Revision.create("migrated_from", "int"), Revision.create("migrated_to", "pub")));
     FileDb expectedDb = new FileDb(dbStorage);
 
     assertEquals(expectedDb.toJsonString(), Injector.INSTANCE.fileSystem().fileToString(DB_FILE));

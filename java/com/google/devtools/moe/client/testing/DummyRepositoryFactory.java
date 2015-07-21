@@ -45,38 +45,40 @@ public class DummyRepositoryFactory implements Repository.Factory {
       if (Strings.isNullOrEmpty(revId)) {
         revId = "1";
       }
-      return new Revision(revId, name);
+      return Revision.create(revId, name);
     }
 
     @Override
     public RevisionMetadata getMetadata(Revision revision) throws MoeProblem {
-      if (!name.equals(revision.repositoryName)) {
+      if (!name.equals(revision.repositoryName())) {
         throw new MoeProblem(
             String.format(
                 "Could not get metadata: Revision %s is in repository %s instead of %s",
-                revision.revId,
-                revision.repositoryName,
+                revision.revId(),
+                revision.repositoryName(),
                 name));
       }
       return new RevisionMetadata(
-          revision.revId,
+          revision.revId(),
           "author",
           new DateTime(1L),
-          revision.revId.equals("migrated_to") ? "MOE_MIGRATED_REVID=migrated_from" : "description",
-          ImmutableList.of(new Revision("parent", name)));
+          revision.revId().equals("migrated_to")
+              ? "MOE_MIGRATED_REVID=migrated_from"
+              : "description",
+          ImmutableList.of(Revision.create("parent", name)));
     }
 
     @Override
     public <T> T findRevisions(
         Revision revision, RevisionMatcher<T> matcher, SearchType searchType) {
       if (revision == null) {
-        revision = new Revision("migrated_to", name);
+        revision = Revision.create("migrated_to", name);
       }
       RevisionGraph revTree =
           RevisionGraph.builder(ImmutableList.of(revision))
               .addRevision(revision, getMetadata(revision))
               .build();
-      return matcher.makeResult(revTree, ImmutableList.of(new Revision("1", name)));
+      return matcher.makeResult(revTree, ImmutableList.of(Revision.create(1, name)));
     }
   }
 

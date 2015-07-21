@@ -96,7 +96,7 @@ public class RevisionMetadata {
       descBuilder.add(
           "Created by MOE: http://code.google.com/p/moe-java\n"
               + "MOE_MIGRATED_REVID="
-              + migrationFromRev.revId);
+              + migrationFromRev.revId());
     }
 
     String newId = Joiner.on(", ").join(idBuilder.build());

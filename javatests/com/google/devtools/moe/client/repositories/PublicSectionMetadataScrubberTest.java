@@ -21,7 +21,8 @@ public class PublicSectionMetadataScrubberTest extends TestCase {
         "author@google.com",
         new DateTime(1L),
         Joiner.on("\n").join(desc),
-        ImmutableList.of(new Revision("parentId1", "repo"), new Revision("parentId2", "repo")));
+        ImmutableList.of(
+            Revision.create("parentId1", "repo"), Revision.create("parentId2", "repo")));
   }
 
   public void testScrub() {

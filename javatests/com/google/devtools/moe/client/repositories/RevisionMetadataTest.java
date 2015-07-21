@@ -21,7 +21,7 @@ public class RevisionMetadataTest extends TestCase {
             "auth",
             new DateTime(1L),
             "description",
-            ImmutableList.of(new Revision("revId", "repo")));
+            ImmutableList.of(Revision.create("revId", "repo")));
 
     assertEquals(rm, RevisionMetadata.concatenate(ImmutableList.of(rm), null));
     assertEquals(
@@ -35,14 +35,14 @@ public class RevisionMetadataTest extends TestCase {
             "auth1",
             new DateTime(1L),
             "description1",
-            ImmutableList.of(new Revision("revId1", "repo")));
+            ImmutableList.of(Revision.create("revId1", "repo")));
     RevisionMetadata rm2 =
         new RevisionMetadata(
             "id2",
             "auth2",
             new DateTime(2L),
             "description2",
-            ImmutableList.of(new Revision("revId2", "repo")));
+            ImmutableList.of(Revision.create("revId2", "repo")));
 
     RevisionMetadata rmExpected =
         new RevisionMetadata(
@@ -50,7 +50,7 @@ public class RevisionMetadataTest extends TestCase {
             "auth1, auth2",
             new DateTime(2L),
             "description1\n-------------\ndescription2",
-            ImmutableList.of(new Revision("revId1", "repo"), new Revision("revId2", "repo")));
+            ImmutableList.of(Revision.create("revId1", "repo"), Revision.create("revId2", "repo")));
 
     assertEquals(rmExpected, RevisionMetadata.concatenate(ImmutableList.of(rm1, rm2), null));
     assertEquals(
@@ -65,15 +65,15 @@ public class RevisionMetadataTest extends TestCase {
             "auth1",
             new DateTime(1L),
             "description1",
-            ImmutableList.of(new Revision("revId1", "repo")));
+            ImmutableList.of(Revision.create("revId1", "repo")));
     RevisionMetadata rm2 =
         new RevisionMetadata(
             "id2",
             "auth2",
             new DateTime(2L),
             "description2",
-            ImmutableList.of(new Revision("revId2", "repo")));
-    Revision migrationFromRev = new Revision("migrationRevId", "repo");
+            ImmutableList.of(Revision.create("revId2", "repo")));
+    Revision migrationFromRev = Revision.create("migrationRevId", "repo");
 
     RevisionMetadata rmExpected =
         new RevisionMetadata(
@@ -83,8 +83,8 @@ public class RevisionMetadataTest extends TestCase {
             "description1\n-------------\ndescription2"
                 + "\n-------------\nCreated by MOE: http://code.google.com/p/moe-java\n"
                 + "MOE_MIGRATED_REVID="
-                + migrationFromRev.revId,
-            ImmutableList.of(new Revision("revId1", "repo"), new Revision("revId2", "repo")));
+                + migrationFromRev.revId(),
+            ImmutableList.of(Revision.create("revId1", "repo"), Revision.create("revId2", "repo")));
 
     assertEquals(
         rmExpected, RevisionMetadata.concatenate(ImmutableList.of(rm1, rm2), migrationFromRev));

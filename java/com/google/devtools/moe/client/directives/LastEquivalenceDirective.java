@@ -96,7 +96,7 @@ public class LastEquivalenceDirective extends Directive {
       ui.info(
           String.format(
               "No equivalence was found between %s and %s starting from %s.",
-              rev.repositoryName,
+              rev.repositoryName(),
               options.withRepository,
               rev));
     } else {

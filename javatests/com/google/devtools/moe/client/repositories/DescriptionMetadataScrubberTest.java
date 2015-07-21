@@ -21,7 +21,8 @@ public class DescriptionMetadataScrubberTest extends TestCase {
             "author@google.com",
             new DateTime(1L),
             "some changes",
-            ImmutableList.of(new Revision("parentId1", "repo"), new Revision("parentId2", "repo")));
+            ImmutableList.of(
+                Revision.create("parentId1", "repo"), Revision.create("parentId2", "repo")));
 
     // Test that fields besides description are unaffected.
     RevisionMetadata rmExpected =
@@ -30,7 +31,8 @@ public class DescriptionMetadataScrubberTest extends TestCase {
             "author@google.com",
             new DateTime(1L),
             "some changes!!!",
-            ImmutableList.of(new Revision("parentId1", "repo"), new Revision("parentId2", "repo")));
+            ImmutableList.of(
+                Revision.create("parentId1", "repo"), Revision.create("parentId2", "repo")));
     assertEquals(rmExpected, new DescriptionMetadataScrubber("{description}!!!").scrub(rm));
 
     // Test various formats.

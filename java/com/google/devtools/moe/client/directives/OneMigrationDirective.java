@@ -68,10 +68,11 @@ public class OneMigrationDirective extends Directive {
 
     Codebase c;
     try {
-      c = new RepositoryExpression(fromRepoEx.getRepositoryName())
-          .atRevision(revs.get(0).revId)
-          .translateTo(toProjectSpace)
-          .createCodebase(context);
+      c =
+          new RepositoryExpression(fromRepoEx.getRepositoryName())
+              .atRevision(revs.get(0).revId())
+              .translateTo(toProjectSpace)
+              .createCodebase(context);
     } catch (CodebaseCreationError e) {
       ui.error(e, "Error creating codebase");
       return 1;

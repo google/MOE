@@ -71,7 +71,7 @@ public class HighestRevisionDirective extends Directive {
       return 1;
     }
 
-    ui.info("Highest revision in repository \"" + r.name() + "\": " + rev.revId);
+    ui.info("Highest revision in repository \"" + r.name() + "\": " + rev.revId());
     return 0;
   }
 

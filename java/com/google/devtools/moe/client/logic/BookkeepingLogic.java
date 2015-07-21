@@ -51,10 +51,11 @@ public class BookkeepingLogic {
     Revision fromHead = fromHistory.findHighestRevision(null);
 
     try {
-      to = new RepositoryExpression(toRepository).atRevision(toHead.revId).createCodebase(context);
+      to =
+          new RepositoryExpression(toRepository).atRevision(toHead.revId()).createCodebase(context);
       from =
           new RepositoryExpression(fromRepository)
-              .atRevision(fromHead.revId)
+              .atRevision(fromHead.revId())
               .translateTo(to.getProjectSpace())
               .createCodebase(context);
     } catch (CodebaseCreationError e) {
@@ -103,7 +104,7 @@ public class BookkeepingLogic {
     for (Revision toRev : linearToRevs) {
       String fromRevId = getMigratedRevId(toHistory.getMetadata(toRev));
       if (fromRevId != null) {
-        processMigration(new Revision(fromRevId, fromRepository), toRev, db, context, inverse);
+        processMigration(Revision.create(fromRevId, fromRepository), toRev, db, context, inverse);
       }
     }
   }
@@ -133,18 +134,18 @@ public class BookkeepingLogic {
 
     Codebase to, from;
     try {
-      Expression toEx = new RepositoryExpression(toRev.repositoryName).atRevision(toRev.revId);
+      Expression toEx = new RepositoryExpression(toRev.repositoryName()).atRevision(toRev.revId());
       Expression fromEx =
-          new RepositoryExpression(fromRev.repositoryName).atRevision(fromRev.revId);
+          new RepositoryExpression(fromRev.repositoryName()).atRevision(fromRev.revId());
 
       // Use the forward-translator to check an inverse-translated migration.
       if (inverse) {
         String fromProjectSpace =
-            context.config.getRepositoryConfig(fromRev.repositoryName).getProjectSpace();
+            context.config.getRepositoryConfig(fromRev.repositoryName()).getProjectSpace();
         toEx = toEx.translateTo(fromProjectSpace);
       } else {
         String toProjectSpace =
-            context.config.getRepositoryConfig(toRev.repositoryName).getProjectSpace();
+            context.config.getRepositoryConfig(toRev.repositoryName()).getProjectSpace();
         fromEx = fromEx.translateTo(toProjectSpace);
       }
 

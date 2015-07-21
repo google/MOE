@@ -115,7 +115,7 @@ public class MagicDirective extends Directive {
       if (lastEq != null) {
         toRe =
             toRe.atRevision(
-                lastEq.getRevisionForRepository(migrationConfig.getToRepository()).revId);
+                lastEq.getRevisionForRepository(migrationConfig.getToRepository()).revId());
       }
 
       Writer toWriter;

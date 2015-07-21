@@ -100,8 +100,8 @@ public class HgRevisionHistoryTest extends TestCase {
 
     HgRevisionHistory revHistory = new HgRevisionHistory(Suppliers.ofInstance(mockRepo));
     Revision rev = revHistory.findHighestRevision(null);
-    assertEquals(MOCK_REPO_NAME, rev.repositoryName);
-    assertEquals("mockChangesetID", rev.revId);
+    assertEquals(MOCK_REPO_NAME, rev.repositoryName());
+    assertEquals("mockChangesetID", rev.revId());
 
     control.verify();
   }
@@ -161,14 +161,14 @@ public class HgRevisionHistoryTest extends TestCase {
     control.replay();
 
     HgRevisionHistory revHistory = new HgRevisionHistory(Suppliers.ofInstance(mockRepo));
-    RevisionMetadata result = revHistory.getMetadata(new Revision("2", "mockrepo"));
+    RevisionMetadata result = revHistory.getMetadata(Revision.create(2, "mockrepo"));
     assertEquals("2", result.id);
     assertEquals("uid@google.com", result.author);
     MoeAsserts.assertSameDate(DATE, result.date);
     assertEquals("description", result.description);
     assertEquals(
         ImmutableList.of(
-            new Revision("parent1", MOCK_REPO_NAME), new Revision("parent2", MOCK_REPO_NAME)),
+            Revision.create("parent1", MOCK_REPO_NAME), Revision.create("parent2", MOCK_REPO_NAME)),
         result.parents);
 
     control.verify();
@@ -195,12 +195,12 @@ public class HgRevisionHistoryTest extends TestCase {
     control.replay();
 
     HgRevisionHistory revHistory = new HgRevisionHistory(Suppliers.ofInstance(mockRepo));
-    RevisionMetadata result = revHistory.getMetadata(new Revision("2", "mockrepo"));
+    RevisionMetadata result = revHistory.getMetadata(Revision.create(2, "mockrepo"));
     assertEquals("2", result.id);
     assertEquals("u<id@google.com", result.author);
     MoeAsserts.assertSameDate(DATE, result.date);
     assertEquals(">description&amp", result.description);
-    assertEquals(ImmutableList.of(new Revision("parent", MOCK_REPO_NAME)), result.parents);
+    assertEquals(ImmutableList.of(Revision.create("parent", MOCK_REPO_NAME)), result.parents);
 
     control.verify();
   }
@@ -217,7 +217,7 @@ public class HgRevisionHistoryTest extends TestCase {
     assertEquals("foo@google.com", rm.author);
     MoeAsserts.assertSameDate(DATE, rm.date);
     assertEquals("foo", rm.description);
-    assertEquals(ImmutableList.of(new Revision("p1", MOCK_REPO_NAME)), rm.parents);
+    assertEquals(ImmutableList.of(Revision.create("p1", MOCK_REPO_NAME)), rm.parents);
 
     control.verify();
   }
@@ -236,10 +236,10 @@ public class HgRevisionHistoryTest extends TestCase {
 
     HgRevisionHistory rh = new HgRevisionHistory(Suppliers.ofInstance(mockRepo));
     ImmutableList<Revision> revs = ImmutableList.copyOf(rh.findHeadRevisions());
-    assertEquals(MOCK_REPO_NAME, revs.get(0).repositoryName);
-    assertEquals("mockChangesetID1", revs.get(0).revId);
-    assertEquals(MOCK_REPO_NAME, revs.get(1).repositoryName);
-    assertEquals("mockChangesetID2", revs.get(1).revId);
+    assertEquals(MOCK_REPO_NAME, revs.get(0).repositoryName());
+    assertEquals("mockChangesetID1", revs.get(0).revId());
+    assertEquals(MOCK_REPO_NAME, revs.get(1).repositoryName());
+    assertEquals("mockChangesetID2", revs.get(1).revId());
 
     control.verify();
   }
@@ -293,10 +293,10 @@ public class HgRevisionHistoryTest extends TestCase {
             .getRevisionsSinceEquivalence()
             .getBreadthFirstHistory();
     assertEquals(2, newRevisions.size());
-    assertEquals(MOCK_REPO_NAME, newRevisions.get(0).repositoryName);
-    assertEquals("mockChangesetID", newRevisions.get(0).revId);
-    assertEquals(MOCK_REPO_NAME, newRevisions.get(1).repositoryName);
-    assertEquals("parent", newRevisions.get(1).revId);
+    assertEquals(MOCK_REPO_NAME, newRevisions.get(0).repositoryName());
+    assertEquals("mockChangesetID", newRevisions.get(0).revId());
+    assertEquals(MOCK_REPO_NAME, newRevisions.get(1).repositoryName());
+    assertEquals("parent", newRevisions.get(1).revId());
 
     control.verify();
   }
@@ -397,7 +397,8 @@ public class HgRevisionHistoryTest extends TestCase {
             null, new RepositoryEquivalenceMatcher("repo1", database), SearchType.BRANCHED);
 
     RepositoryEquivalence expectedEq =
-        RepositoryEquivalence.create(new Revision("1002", "repo1"), new Revision("2", "repo2"));
+        RepositoryEquivalence.create(
+            Revision.create(1002, "repo1"), Revision.create(2, "repo2"));
     assertEquals(ImmutableList.of(expectedEq), result.getEquivalences());
 
     control.verify();
@@ -509,7 +510,7 @@ public class HgRevisionHistoryTest extends TestCase {
     HgRevisionHistory history = new HgRevisionHistory(Suppliers.ofInstance(mockRepo));
     Result result =
         history.findRevisions(
-            new Revision("4", "repo2"),
+            Revision.create(4, "repo2"),
             new RepositoryEquivalenceMatcher("repo1", database),
             SearchType.BRANCHED);
 

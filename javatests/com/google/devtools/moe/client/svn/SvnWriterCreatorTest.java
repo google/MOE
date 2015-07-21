@@ -68,7 +68,7 @@ public class SvnWriterCreatorTest extends TestCase {
     expect(mockConfig.getProjectSpace()).andReturn("internal").anyTimes();
     expect(mockConfig.getIgnoreFileRes()).andReturn(ImmutableList.<String>of()).anyTimes();
 
-    Revision result = new Revision("45", "");
+    Revision result = Revision.create(45, "");
     expect(fileSystem.getTemporaryDirectory("svn_writer_45_"))
         .andReturn(new File("/dummy/path/45"));
     expect(revisionHistory.findHighestRevision("45")).andReturn(result);
@@ -88,7 +88,6 @@ public class SvnWriterCreatorTest extends TestCase {
     try {
       c.create(ImmutableMap.of("revisionmisspelled", "45"));
       fail();
-    } catch (MoeProblem p) {
-    }
+    } catch (MoeProblem expected) {}
   }
 }
