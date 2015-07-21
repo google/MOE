@@ -107,7 +107,8 @@ public class GitClonedRepositoryTest extends TestCase {
     expect(repositoryConfig.getBranch()).andReturn(Optional.of("mybranch")).anyTimes();
 
     expect(mockFS.getTemporaryDirectory(
-              EasyMock.eq("git_clone_" + repositoryName + "_"), EasyMock.<Lifetime>anyObject()))
+              EasyMock.eq("git_clone_" + repositoryName + "_mybranch_"),
+              EasyMock.<Lifetime>anyObject()))
         .andReturn(new File(localCloneTempDir));
 
     expect(cmd.runCommand(

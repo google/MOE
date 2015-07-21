@@ -11,16 +11,16 @@ import com.google.devtools.moe.client.FileSystem.Lifetime;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.Lifetimes;
 import com.google.devtools.moe.client.MoeProblem;
-import com.google.devtools.moe.client.codebase.LocalClone;
+import com.google.devtools.moe.client.codebase.LocalWorkspace;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 
 import java.io.File;
 import java.io.IOException;
 
 /**
- * Git implementation of {@link LocalClone}, i.e. a 'git clone' to local disk.
+ * Git implementation of {@link LocalWorkspace}, i.e. a 'git clone' to local disk.
  */
-public class GitClonedRepository implements LocalClone {
+public class GitClonedRepository implements LocalWorkspace {
 
   /**
    * A prefix for branches MOE creates to write migrated changes. For example, if there have been
@@ -76,10 +76,12 @@ public class GitClonedRepository implements LocalClone {
   public void cloneLocallyAtHead(Lifetime cloneLifetime) {
     Preconditions.checkState(!clonedLocally);
 
-    String tempDirName = "git_clone_" + repositoryName + "_";
+    Optional<String> branchName = repositoryConfig.getBranch();
+    String tempDirName = branchName.isPresent()
+        ? "git_clone_" + repositoryName + "_" + branchName.get() + "_"
+        : "git_clone_" + repositoryName + "_";
     localCloneTempDir =
         Injector.INSTANCE.fileSystem().getTemporaryDirectory(tempDirName, cloneLifetime);
-    Optional<String> branchName = repositoryConfig.getBranch();
 
     try {
       ImmutableList.Builder<String> cloneArgs = ImmutableList.<String>builder();

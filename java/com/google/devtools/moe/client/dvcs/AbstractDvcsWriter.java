@@ -9,7 +9,7 @@ import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Utils;
 import com.google.devtools.moe.client.codebase.Codebase;
-import com.google.devtools.moe.client.codebase.LocalClone;
+import com.google.devtools.moe.client.codebase.LocalWorkspace;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.writer.DraftRevision;
 import com.google.devtools.moe.client.writer.Writer;
@@ -28,7 +28,7 @@ import java.util.Set;
  *
  */
 // TODO(user): Make this usable for SVN as well.
-public abstract class AbstractDvcsWriter<T extends LocalClone> implements Writer {
+public abstract class AbstractDvcsWriter<T extends LocalWorkspace> implements Writer {
 
   /**
    * The LocalClone in which this writer should make and commit changes.

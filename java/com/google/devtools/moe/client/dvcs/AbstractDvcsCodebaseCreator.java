@@ -9,7 +9,7 @@ import com.google.devtools.moe.client.Utils;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.codebase.CodebaseCreator;
-import com.google.devtools.moe.client.codebase.LocalClone;
+import com.google.devtools.moe.client.codebase.LocalWorkspace;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.parser.Term;
 import com.google.devtools.moe.client.repositories.Revision;
@@ -24,7 +24,7 @@ import java.util.Map;
  */
 public abstract class AbstractDvcsCodebaseCreator implements CodebaseCreator {
 
-  private final Supplier<? extends LocalClone> headCloneSupplier;
+  private final Supplier<? extends LocalWorkspace> headCloneSupplier;
   private final RevisionHistory revisionHistory;
   private final String projectSpace;
 
@@ -38,7 +38,7 @@ public abstract class AbstractDvcsCodebaseCreator implements CodebaseCreator {
   // TODO(user): Find a better semantics for when a Supplier provides a new clone every time,
   // or just one clone via memoization, so that the meaning of headCloneSupplier.get() is clearer.
   public AbstractDvcsCodebaseCreator(
-      Supplier<? extends LocalClone> headCloneSupplier,
+      Supplier<? extends LocalWorkspace> headCloneSupplier,
       RevisionHistory revisionHistory,
       String projectSpace) {
     this.headCloneSupplier = headCloneSupplier;
@@ -55,11 +55,11 @@ public abstract class AbstractDvcsCodebaseCreator implements CodebaseCreator {
    * @param localroot  the absolute path of the local clone to re-clone
    * @return a LocalClone of the re-clone
    */
-  protected abstract LocalClone cloneAtLocalRoot(String localroot);
+  protected abstract LocalWorkspace cloneAtLocalRoot(String localroot);
 
   @Override
   public Codebase create(Map<String, String> options) throws CodebaseCreationError {
-    LocalClone headClone;
+    LocalWorkspace headClone;
     File archiveLocation;
     String localRoot = options.get("localroot");
     if (Strings.isNullOrEmpty(localRoot)) {

@@ -83,6 +83,12 @@ public class DirectivesModule {
   }
 
   @Provides(type = MAP)
+  @StringKey("migrate_branch")
+  Directive migrateBranch(MigrateBranchDirective directive) {
+    return directive;
+  }
+
+  @Provides(type = MAP)
   @StringKey("merge_codebases")
   Directive mergeCodebases(MergeCodebasesDirective directive) {
     return directive;

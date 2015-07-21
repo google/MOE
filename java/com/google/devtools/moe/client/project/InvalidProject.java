@@ -8,7 +8,7 @@ import com.google.common.base.Strings;
  *
  * @author dbentley@google.com (Daniel Bentley)
  */
-public class InvalidProject extends Exception {
+public class InvalidProject extends RuntimeException {
   public InvalidProject(String explanationTemplate, Object... args) {
     super(String.format(explanationTemplate, args));
   }

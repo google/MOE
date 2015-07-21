@@ -2,7 +2,7 @@
 
 package com.google.devtools.moe.client.dvcs;
 
-import com.google.devtools.moe.client.codebase.LocalClone;
+import com.google.devtools.moe.client.codebase.LocalWorkspace;
 import com.google.devtools.moe.client.writer.DraftRevision;
 
 /**
@@ -11,9 +11,9 @@ import com.google.devtools.moe.client.writer.DraftRevision;
  */
 public class DvcsDraftRevision implements DraftRevision {
 
-  private final LocalClone revClone;
+  private final LocalWorkspace revClone;
 
-  public DvcsDraftRevision(LocalClone revClone) {
+  public DvcsDraftRevision(LocalWorkspace revClone) {
     this.revClone = revClone;
   }
 

@@ -64,9 +64,9 @@ public class OneMigrationDirective extends Directive {
 
     List<Revision> revs = Revision.fromRepositoryExpression(fromRepoEx, context());
 
-    Codebase c;
+    Codebase sourceCodebase;
     try {
-      c =
+      sourceCodebase =
           new RepositoryExpression(fromRepoEx.getRepositoryName())
               .atRevision(revs.get(0).revId())
               .translateTo(toProjectSpace)
@@ -88,7 +88,7 @@ public class OneMigrationDirective extends Directive {
 
     DraftRevision r =
         OneMigrationLogic.migrate(
-            c,
+            sourceCodebase,
             destination,
             revs,
             context(),

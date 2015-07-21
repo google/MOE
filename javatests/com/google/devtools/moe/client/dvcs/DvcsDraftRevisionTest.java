@@ -4,7 +4,7 @@ package com.google.devtools.moe.client.dvcs;
 
 import static org.easymock.EasyMock.expect;
 
-import com.google.devtools.moe.client.codebase.LocalClone;
+import com.google.devtools.moe.client.codebase.LocalWorkspace;
 
 import junit.framework.TestCase;
 
@@ -21,7 +21,7 @@ public class DvcsDraftRevisionTest extends TestCase {
     final File mockRepoPath = new File("/mockrepo");
 
     IMocksControl control = EasyMock.createControl();
-    LocalClone mockRevClone = control.createMock(LocalClone.class);
+    LocalWorkspace mockRevClone = control.createMock(LocalWorkspace.class);
     expect(mockRevClone.getLocalTempDir()).andReturn(mockRepoPath);
 
     control.replay();
