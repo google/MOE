@@ -49,7 +49,7 @@ public class RenamingEditor implements Editor {
    */
   @Override
   public String getDescription() {
-    return String.format("rename step %s", editorName);
+    return "rename step " + editorName;
   }
 
   /**
@@ -95,10 +95,9 @@ public class RenamingEditor implements Editor {
       }
     }
     throw new MoeProblem(
-        String.format(
-            "Cannot find a rename mapping that covers file %s. "
-                + "Every file needs an applicable renaming rule.",
-            inputFilename));
+        "Cannot find a rename mapping that covers file %s. "
+            + "Every file needs an applicable renaming rule.",
+        inputFilename);
   }
 
   /**
@@ -125,8 +124,7 @@ public class RenamingEditor implements Editor {
 
   public static RenamingEditor makeRenamingEditor(String editorName, EditorConfig config) {
     if (config.getMappings() == null) {
-      throw new MoeProblem(
-          String.format("No mappings object found in the config for editor %s", editorName));
+      throw new MoeProblem("No mappings object found in the config for editor %s", editorName);
     }
     return new RenamingEditor(
         editorName, RenamingEditor.parseJsonMap(config.getMappings()), config.getUseRegex());

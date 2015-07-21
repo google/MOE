@@ -98,10 +98,7 @@ public class SvnWriter implements Writer {
 
     Injector.INSTANCE
         .ui()
-        .info(
-            String.format(
-                "To submit, run: cd %s && ./svn_commit.sh && cd -",
-                rootDirectory.getAbsolutePath()));
+        .info("To submit, run: cd %s && ./svn_commit.sh && cd -", rootDirectory.getAbsolutePath());
     return dr;
   }
 
@@ -124,11 +121,7 @@ public class SvnWriter implements Writer {
 
       if (!srcExists && !destExists) {
         throw new MoeProblem(
-            String.format(
-                "Neither src nor dests exists. Unreachable code:%n%s%n%s%n%s",
-                relativePath,
-                src,
-                dest));
+            "Neither src nor dests exists. Unreachable code:%n%s%n%s%n%s", relativePath, src, dest);
       }
 
       if (!srcExists) {
@@ -157,9 +150,7 @@ public class SvnWriter implements Writer {
         } catch (CommandRunner.CommandException e) {
           // If the mime type setting fails, it's not really a big deal.
           // Just log it and keep going.
-          Injector.INSTANCE
-              .ui()
-              .info(String.format("Error setting mime-type for %s", relativePath));
+          Injector.INSTANCE.ui().info("Error setting mime-type for %s", relativePath);
         }
       }
 

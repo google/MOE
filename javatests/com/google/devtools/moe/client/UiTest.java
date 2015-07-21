@@ -15,16 +15,16 @@ public class UiTest extends TestCase {
     }
 
     @Override
-    public void info(String msg) {}
+    public void info(String msg, Object... args) {}
 
     @Override
-    public void error(String msg) {}
+    public void error(String msg, Object... args) {}
 
     @Override
-    public void error(Throwable e, String msg) {}
+    public void error(Throwable e, String msg, Object... args) {}
 
     @Override
-    public void debug(String msg) {}
+    public void debug(String msg, Object... args) {}
   }
 
   public void testStackHelpers() throws Exception {

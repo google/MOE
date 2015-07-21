@@ -119,10 +119,9 @@ public class RepositoryConfig {
     if (!repositoryFactory.type().equals(getType())) {
       // TODO(cgruber): Make it so this can't happen at runtime, ever, and throw AssertionError.
       throw new InvalidProject(
-          String.format(
-              "Invalid repository type '%s' for %s",
-              getType(),
-              repositoryFactory.getClass().getSimpleName()));
+          "Invalid repository type '%s' for %s",
+          getType(),
+          repositoryFactory.getClass().getSimpleName());
     }
   }
 

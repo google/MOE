@@ -6,6 +6,7 @@ import static com.google.devtools.moe.client.parser.Parser.tokenize;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
+import com.google.devtools.moe.client.testing.MoeAsserts;
 
 import junit.framework.TestCase;
 
@@ -60,7 +61,7 @@ public class ParserTest extends TestCase {
       Map<String, String> actual = Parser.parseOptions(tokenize(s));
       assertEquals(expected, actual);
     } catch (Parser.ParseError e) {
-      fail(String.format("Could not parse %s: %s", s, e));
+      MoeAsserts.fail("Could not parse %s: %s", s, e);
     }
   }
 
@@ -93,12 +94,8 @@ public class ParserTest extends TestCase {
   public void assertParseTermCompletelyFails(String input, String errorMessage) {
     try {
       Term r = Parser.parseTermCompletely(input);
-      fail(
-          String.format(
-              "Successfully parsed invalid string: %s into %s and %s",
-              input,
-              r.identifier,
-              r.options.toString()));
+      MoeAsserts.fail(
+          "Successfully parsed invalid string: %s into %s and %s", input, r.identifier, r.options);
     } catch (Parser.ParseError e) {
       assertEquals("Cannot parse: " + errorMessage, e.getMessage());
     }
@@ -134,12 +131,8 @@ public class ParserTest extends TestCase {
   public void assertParseTermFails(String input, String errorMessage) {
     try {
       Term r = Parser.parseTerm(Parser.tokenize(input));
-      fail(
-          String.format(
-              "Successfully parsed invalid string: %s into %s and %s",
-              input,
-              r.identifier,
-              r.options.toString()));
+      MoeAsserts.fail(
+          "Successfully parsed invalid string: %s into %s and %s", input, r.identifier, r.options);
     } catch (Parser.ParseError e) {
       assertEquals("Cannot parse: " + errorMessage, e.getMessage());
     }

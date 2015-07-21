@@ -64,11 +64,7 @@ public class BookkeepingLogic {
     }
 
     Ui.Task t =
-        Injector.INSTANCE
-            .ui()
-            .pushTask(
-                "diff_codebases",
-                String.format("Diff codebases '%s' and '%s'", from.toString(), to.toString()));
+        Injector.INSTANCE.ui().pushTask("diff_codebases", "Diff codebases '%s' and '%s'", from, to);
     if (!CodebaseDifference.diffCodebases(from, to).areDifferent()) {
       db.noteEquivalence(RepositoryEquivalence.create(fromHead, toHead));
     }
@@ -94,12 +90,11 @@ public class BookkeepingLogic {
     Injector.INSTANCE
         .ui()
         .info(
-            String.format(
-                "Found %d revisions in %s since equivalence (%s): %s",
-                linearToRevs.size(),
-                toRepository,
-                equivMatch.getEquivalences(),
-                Joiner.on(", ").join(linearToRevs)));
+            "Found %d revisions in %s since equivalence (%s): %s",
+            linearToRevs.size(),
+            toRepository,
+            equivMatch.getEquivalences(),
+            Joiner.on(", ").join(linearToRevs));
 
     for (Revision toRev : linearToRevs) {
       String fromRevId = getMigratedRevId(toHistory.getMetadata(toRev));
@@ -157,15 +152,11 @@ public class BookkeepingLogic {
     }
 
     Ui.Task t =
-        Injector.INSTANCE
-            .ui()
-            .pushTask(
-                "diff_codebases",
-                String.format("Diff codebases '%s' and '%s'", from.toString(), to.toString()));
+        Injector.INSTANCE.ui().pushTask("diff_codebases", "Diff codebases '%s' and '%s'", from, to);
     if (!CodebaseDifference.diffCodebases(from, to).areDifferent()) {
       RepositoryEquivalence newEquiv = RepositoryEquivalence.create(fromRev, toRev);
       db.noteEquivalence(newEquiv);
-      Injector.INSTANCE.ui().info("Codebases are identical, noted new equivalence: " + newEquiv);
+      Injector.INSTANCE.ui().info("Codebases are identical, noted new equivalence: %s", newEquiv);
     }
     Injector.INSTANCE.ui().popTask(t, "");
   }
@@ -208,7 +199,7 @@ public class BookkeepingLogic {
     for (String s : migrationNames) {
       MigrationConfig m = context.migrationConfigs.get(s);
       if (m == null) {
-        Injector.INSTANCE.ui().error(String.format("No migration '%s' in MOE config", s));
+        Injector.INSTANCE.ui().error("No migration '%s' in MOE config", s);
         return 1;
       }
 
@@ -217,11 +208,10 @@ public class BookkeepingLogic {
               .ui()
               .pushTask(
                   "bookkeping_one_migration",
-                  String.format(
-                      "Doing bookkeeping between '%s' and '%s' for migration '%s'",
-                      m.getFromRepository(),
-                      m.getToRepository(),
-                      m.getName()));
+                  "Doing bookkeeping between '%s' and '%s' for migration '%s'",
+                  m.getFromRepository(),
+                  m.getToRepository(),
+                  m.getName());
 
       TranslatorConfig migrationTranslator =
           getTranslatorConfig(m.getFromRepository(), m.getToRepository(), context);
@@ -233,10 +223,9 @@ public class BookkeepingLogic {
               .ui()
               .pushTask(
                   "check_migrations",
-                  String.format(
-                      "Checking completed migrations for new equivalence between '%s' and '%s'",
-                      m.getFromRepository(),
-                      m.getToRepository()));
+                  "Checking completed migrations for new equivalence between '%s' and '%s'",
+                  m.getFromRepository(),
+                  m.getToRepository());
       updateCompletedMigrations(
           m.getFromRepository(), m.getToRepository(), db, context, migrationTranslator.isInverse());
       Injector.INSTANCE.ui().popTask(checkMigrationsTask, "");
@@ -249,10 +238,9 @@ public class BookkeepingLogic {
                 .ui()
                 .pushTask(
                     "check_heads",
-                    String.format(
-                        "Checking head equivalence between '%s' and '%s'",
-                        m.getFromRepository(),
-                        m.getToRepository()));
+                    "Checking head equivalence between '%s' and '%s'",
+                    m.getFromRepository(),
+                    m.getToRepository());
         updateHeadEquivalence(m.getFromRepository(), m.getToRepository(), db, context);
         Injector.INSTANCE.ui().popTask(checkHeadsTask, "");
       }

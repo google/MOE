@@ -7,6 +7,7 @@ package com.google.devtools.moe.client.editors;
  *
  * @author dbentley@google.com (Daniel Bentley)
  */
+// TODO(cgruber) @AutoValue
 public class TranslatorPath {
 
   public final String fromProjectSpace;
@@ -17,14 +18,17 @@ public class TranslatorPath {
     this.toProjectSpace = toProjectSpace;
   }
 
+  @Override
   public String toString() {
     return String.format("%s>%s", fromProjectSpace, toProjectSpace);
   }
 
+  @Override
   public int hashCode() {
     return toString().hashCode();
   }
 
+  @Override
   public boolean equals(Object o) {
     if (!(o instanceof TranslatorPath)) {
       return false;

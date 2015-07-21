@@ -68,7 +68,7 @@ public class CreateCodebaseDirective extends Directive {
       ui.error(e, "Error creating codebase");
       return 1;
     }
-    ui.info(String.format("Codebase \"%s\" created at %s", c.toString(), c.getPath()));
+    ui.info("Codebase \"%s\" created at %s", c, c.getPath());
 
     try {
       maybeWriteTar(c);
@@ -97,8 +97,7 @@ public class CreateCodebaseDirective extends Directive {
         ImmutableList.of(
             "--mtime=1980-01-01", "--owner=0", "--group=0", "-c", "-f", tarfilePath, "."),
         codebase.getPath().getAbsolutePath());
-    ui.info(
-        String.format("tar of codebase \"%s\" created at %s", codebase.toString(), tarfilePath));
+    ui.info("tar of codebase \"%s\" created at %s", codebase, tarfilePath);
   }
 
   @Override

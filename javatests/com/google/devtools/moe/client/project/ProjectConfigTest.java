@@ -118,7 +118,7 @@ public class ProjectConfigTest extends TestCase {
       ProjectConfig.makeProjectConfigFromConfigText(text);
       fail("Expected error");
     } catch (InvalidProject e) {
-      assertEquals(error, e.explanation);
+      assertEquals(error, e.getMessage());
     }
   }
 

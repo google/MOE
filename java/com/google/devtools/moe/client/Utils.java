@@ -43,10 +43,7 @@ public class Utils {
   public static void checkKeys(Map<String, String> options, Set<String> allowedOptions) {
     if (!allowedOptions.containsAll(options.keySet())) {
       throw new MoeProblem(
-          String.format(
-              "Options contains invalid keys:%nOptions: %s%nAllowed keys: %s",
-              options,
-              allowedOptions));
+          "Options contains invalid keys:%nOptions: %s%nAllowed keys: %s", options, allowedOptions);
     }
   }
 
@@ -54,8 +51,7 @@ public class Utils {
     Set<String> result = Sets.newLinkedHashSet();
     for (File f : files) {
       if (!f.getAbsolutePath().startsWith(basePath.getAbsolutePath())) {
-        throw new MoeProblem(
-            String.format("File %s is under %s but does not begin with it", f, basePath));
+        throw new MoeProblem("File %s is under %s but does not begin with it", f, basePath);
       }
       result.add(f.getAbsolutePath().substring(basePath.getAbsolutePath().length() + 1));
     }

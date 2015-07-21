@@ -75,18 +75,15 @@ public class CodebaseMerger {
   public void report() {
     Injector.INSTANCE
         .ui()
-        .info(
-            String.format(
-                "Merged codebase generated at: %s", mergedCodebase.getPath().getAbsolutePath()));
+        .info("Merged codebase generated at: %s", mergedCodebase.getPath().getAbsolutePath());
     Injector.INSTANCE
         .ui()
         .info(
-            String.format(
-                "%d files merged successfully\n%d files have merge "
-                    + "conflicts. Edit the following files to resolve conflicts:\n%s",
-                mergedFiles.size(),
-                failedToMergeFiles.size(),
-                failedToMergeFiles.toString()));
+            "%d files merged successfully\n%d files have merge "
+                + "conflicts. Edit the following files to resolve conflicts:\n%s",
+            mergedFiles.size(),
+            failedToMergeFiles.size(),
+            failedToMergeFiles);
   }
 
   private static boolean areDifferent(String filename, File x, File y) {
@@ -138,11 +135,10 @@ public class CodebaseMerger {
       // This should never be thrown since generateMergedFile(...) is only called on filesToMerge
       // from merge() which is the union of the files in the destination and modified codebases.
       throw new MoeProblem(
-          String.format(
-              "%s doesn't exist in either %s nor %s. This should not be possible.",
-              filename,
-              destinationCodebase,
-              modifiedCodebase));
+          "%s doesn't exist in either %s nor %s. This should not be possible.",
+          filename,
+          destinationCodebase,
+          modifiedCodebase);
 
     } else if (origExists && modExists && !destExists) {
       if (areDifferent(filename, origFile, modFile)) {
@@ -186,19 +182,18 @@ public class CodebaseMerger {
                       modFile.getAbsolutePath()),
                   this.mergedCodebase.getPath().getAbsolutePath());
       // Return status was 0 and the merge was successful. Note it.
-      mergedFiles.add(mergedFile.getAbsolutePath().toString());
+      mergedFiles.add(mergedFile.getAbsolutePath());
     } catch (CommandException e) {
       // If merge fails with exit status 1, then a conflict occurred. Make a note of the filepath.
       if (e.returnStatus == 1) {
-        failedToMergeFiles.add(mergedFile.getAbsolutePath().toString());
+        failedToMergeFiles.add(mergedFile.getAbsolutePath());
       } else {
         throw new MoeProblem(
-            String.format(
-                "Merge returned with unexpected status %d when trying to run \"merge -p %s %s %s\"",
-                e.returnStatus,
-                destFile.getAbsolutePath(),
-                origFile.getAbsolutePath(),
-                modFile.getAbsolutePath()));
+            "Merge returned with unexpected status %d when trying to run \"merge -p %s %s %s\"",
+            e.returnStatus,
+            destFile.getAbsolutePath(),
+            origFile.getAbsolutePath(),
+            modFile.getAbsolutePath());
       }
     }
   }

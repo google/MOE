@@ -66,12 +66,11 @@ public class DetermineMigrationsLogic {
     Injector.INSTANCE
         .ui()
         .info(
-            String.format(
-                "Found %d revisions in %s since equivalence (%s): %s",
-                revisionsSinceEquivalence.size(),
-                migrationConfig.getFromRepository(),
-                lastEq,
-                Joiner.on(", ").join(revisionsSinceEquivalence)));
+            "Found %d revisions in %s since equivalence (%s): %s",
+            revisionsSinceEquivalence.size(),
+            migrationConfig.getFromRepository(),
+            lastEq,
+            Joiner.on(", ").join(revisionsSinceEquivalence));
 
     if (migrationConfig.getSeparateRevisions()) {
       ImmutableList.Builder<Migration> migrations = ImmutableList.builder();

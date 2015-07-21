@@ -29,6 +29,6 @@ public abstract class SubmittedMigration {
 
   @Override
   public String toString() {
-    return fromRevision().toString() + " ==> " + toRevision().toString();
+    return fromRevision() + " ==> " + toRevision();
   }
 }

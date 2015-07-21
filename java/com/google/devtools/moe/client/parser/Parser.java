@@ -7,9 +7,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
-import java.io.StringReader;
 import java.io.StreamTokenizer;
-import java.lang.IllegalArgumentException;
+import java.io.StringReader;
 import java.util.List;
 import java.util.Map;
 
@@ -53,8 +52,8 @@ public class Parser {
 
   /** Exception for any parsing error. */
   public static class ParseError extends Exception {
-    public ParseError(String error) {
-      super("Cannot parse: " + error);
+    public ParseError(String error, Object... args) {
+      super("Cannot parse: " + String.format(error, args));
     }
   }
 
@@ -236,7 +235,7 @@ public class Parser {
         Operator result = Operator.getOperator((char) operator);
         return result;
       } catch (IllegalArgumentException e) {
-        throw new ParseError(String.format("Invalid operator \"%s\"", input.toString()));
+        throw new ParseError("Invalid operator \"%s\"", input);
       }
     } catch (IOException e) {
       throw new ParseError(e.getMessage());

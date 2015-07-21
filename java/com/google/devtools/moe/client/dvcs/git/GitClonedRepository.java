@@ -76,7 +76,7 @@ public class GitClonedRepository implements LocalClone {
   public void cloneLocallyAtHead(Lifetime cloneLifetime) {
     Preconditions.checkState(!clonedLocally);
 
-    String tempDirName = String.format("git_clone_%s_", repositoryName);
+    String tempDirName = "git_clone_" + repositoryName + "_";
     localCloneTempDir =
         Injector.INSTANCE.fileSystem().getTemporaryDirectory(tempDirName, cloneLifetime);
     Optional<String> branchName = repositoryConfig.getBranch();

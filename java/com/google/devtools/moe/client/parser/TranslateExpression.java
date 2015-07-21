@@ -37,12 +37,11 @@ public class TranslateExpression extends AbstractExpression {
     Translator translator = context.translators.get(path);
     if (translator == null) {
       throw new CodebaseCreationError(
-          String.format(
-              "Could not find translator from project space \"%s\" to \"%s\".\n"
-                  + "Translators only available for %s",
-              codebaseToTranslate.getProjectSpace(),
-              toProjectSpace,
-              context.translators.keySet()));
+          "Could not find translator from project space \"%s\" to \"%s\".\n"
+              + "Translators only available for %s",
+          codebaseToTranslate.getProjectSpace(),
+          toProjectSpace,
+          context.translators.keySet());
     }
 
     Ui.Task translateTask =
@@ -50,11 +49,10 @@ public class TranslateExpression extends AbstractExpression {
             .ui()
             .pushTask(
                 "translate",
-                String.format(
-                    "Translating %s from project space \"%s\" to \"%s\"",
-                    codebaseToTranslate.getPath(),
-                    codebaseToTranslate.getProjectSpace(),
-                    toProjectSpace));
+                "Translating %s from project space \"%s\" to \"%s\"",
+                codebaseToTranslate.getPath(),
+                codebaseToTranslate.getProjectSpace(),
+                toProjectSpace);
 
     Codebase translatedCodebase =
         translator.translate(codebaseToTranslate, translateOp.term.options, context);

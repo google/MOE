@@ -92,12 +92,11 @@ public class MagicDirective extends Directive {
 
     for (String migrationName : migrationNames) {
       Ui.Task migrationTask =
-          ui.pushTask(
-              "perform_migration", String.format("Performing migration '%s'", migrationName));
+          ui.pushTask("perform_migration", "Performing migration '%s'", migrationName);
 
       MigrationConfig migrationConfig = context.migrationConfigs.get(migrationName);
       if (migrationConfig == null) {
-        ui.error("No migration found with name " + migrationName);
+        ui.error("No migration found with name %s", migrationName);
         continue;
       }
 
@@ -105,7 +104,7 @@ public class MagicDirective extends Directive {
           DetermineMigrationsLogic.determineMigrations(context, migrationConfig, db);
 
       if (migrations.isEmpty()) {
-        ui.info("No pending revisions to migrate for " + migrationName);
+        ui.info("No pending revisions to migrate for %s", migrationName);
         continue;
       }
 
@@ -122,7 +121,7 @@ public class MagicDirective extends Directive {
       try {
         toWriter = toRe.createWriter(context);
       } catch (WritingError e) {
-        throw new MoeProblem("Couldn't create local repo " + toRe + ": " + e);
+        throw new MoeProblem("Couldn't create local repo %s: %s", toRe, e);
       }
 
       DraftRevision dr = null;
@@ -139,9 +138,7 @@ public class MagicDirective extends Directive {
                 .withOption("localroot", toWriter.getRoot().getAbsolutePath());
 
         Ui.Task oneMigrationTask =
-            ui.pushTask(
-                "perform_individual_migration",
-                String.format("Performing individual migration '%s'", m.toString()));
+            ui.pushTask("perform_individual_migration", "Performing individual migration '%s'", m);
         dr = OneMigrationLogic.migrate(m, context, toWriter, referenceToCodebase);
         lastMigratedRevision = m.fromRevisions.get(m.fromRevisions.size() - 1);
         ui.popTask(oneMigrationTask, "");

@@ -37,7 +37,7 @@ public class ShellEditor implements Editor {
    */
   @Override
   public String getDescription() {
-    return String.format("shell step %s", name);
+    return "shell step " + name;
   }
 
   /**

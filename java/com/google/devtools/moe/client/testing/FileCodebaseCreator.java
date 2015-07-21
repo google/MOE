@@ -34,8 +34,7 @@ public class FileCodebaseCreator implements CodebaseCreator {
     String source = options.get(PATH_OPTION);
     if (Strings.isNullOrEmpty(source)) {
       throw new CodebaseCreationError(
-          String.format(
-              "Please specify the mandatory '%s' option for the FileCodebaseCreator", PATH_OPTION));
+          "Please specify the mandatory '%s' option for the FileCodebaseCreator", PATH_OPTION);
     }
 
     // Create the codebase instance.
@@ -57,7 +56,7 @@ public class FileCodebaseCreator implements CodebaseCreator {
     // Check whether the specified path is valid.
     if (!Injector.INSTANCE.fileSystem().exists(sourceFile)) {
       throw new CodebaseCreationError(
-          String.format("The specified codebase path \"%s\" does not exist.", sourceFile));
+          "The specified codebase path \"%s\" does not exist.", sourceFile);
     }
 
     try {

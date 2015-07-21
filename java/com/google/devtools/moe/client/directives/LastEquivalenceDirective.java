@@ -94,13 +94,12 @@ public class LastEquivalenceDirective extends Directive {
 
     if (lastEquivs.isEmpty()) {
       ui.info(
-          String.format(
-              "No equivalence was found between %s and %s starting from %s.",
-              rev.repositoryName(),
-              options.withRepository,
-              rev));
+          "No equivalence was found between %s and %s starting from %s.",
+          rev.repositoryName(),
+          options.withRepository,
+          rev);
     } else {
-      ui.info(String.format("Last equivalence: %s", Joiner.on(", ").join(lastEquivs)));
+      ui.info("Last equivalence: %s", Joiner.on(", ").join(lastEquivs));
     }
 
     return 0;

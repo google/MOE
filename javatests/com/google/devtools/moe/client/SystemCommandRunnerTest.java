@@ -21,7 +21,7 @@ public class SystemCommandRunnerTest extends TestCase {
         new SystemCommandRunner(
             new SystemUi() {
               @Override
-              public void debug(String msg) {}
+              public void debug(String msg, Object... args) {}
             });
   }
 

@@ -2,8 +2,6 @@
 
 package com.google.devtools.moe.client.parser;
 
-import java.lang.IllegalArgumentException;
-
 /**
  * Operators in the MOE Codebase Expression Language.
  *
@@ -19,6 +17,7 @@ public enum Operator {
     this.op = op;
   }
 
+  @Override
   public String toString() {
     return String.valueOf(op);
   }
@@ -30,6 +29,6 @@ public enum Operator {
     if (c == '>') {
       return TRANSLATE;
     }
-    throw new IllegalArgumentException(String.format("Invalid operator: %c", c));
+    throw new IllegalArgumentException("Invalid operator: " + c);
   }
 }

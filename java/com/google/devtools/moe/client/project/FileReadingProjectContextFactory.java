@@ -28,8 +28,7 @@ public class FileReadingProjectContextFactory extends ProjectContextFactory {
   @Override
   public ProjectConfig loadConfiguration(String configFilename) throws InvalidProject {
     String configText;
-    Ui.Task task =
-        ui.pushTask("read_config", String.format("Reading config file from %s", configFilename));
+    Ui.Task task = ui.pushTask("read_config", "Reading config file from %s", configFilename);
     try {
       try {
         configText = Files.toString(new File(configFilename), UTF_8);

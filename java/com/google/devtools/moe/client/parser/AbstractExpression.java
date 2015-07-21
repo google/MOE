@@ -10,6 +10,7 @@ import java.util.Map;
  * A skeletal implementation of the {@link Expression} interface.
  *
  */
+// TODO(cgruber) @Autovalue or at least fix hashcode and equals.
 public abstract class AbstractExpression implements Expression {
 
   @Override

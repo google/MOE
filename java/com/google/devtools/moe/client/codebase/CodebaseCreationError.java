@@ -9,7 +9,7 @@ package com.google.devtools.moe.client.codebase;
  */
 public class CodebaseCreationError extends Exception {
 
-  public CodebaseCreationError(String message) {
-    super(message);
+  public CodebaseCreationError(String message, Object... args) {
+    super(String.format(message, args));
   }
 }

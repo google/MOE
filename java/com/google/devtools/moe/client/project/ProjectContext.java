@@ -80,7 +80,7 @@ public class ProjectContext {
       case renamer:
         return RenamingEditor.makeRenamingEditor(editorName, config);
       default:
-        throw new InvalidProject(String.format("Invalid editor type: \"%s\"", config.getType()));
+        throw new InvalidProject("Invalid editor type: \"%s\"", config.getType());
     }
   }
 

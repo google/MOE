@@ -56,10 +56,9 @@ public class ChangeDirective extends Directive {
     Task changeTask =
         ui.pushTask(
             "create_change",
-            String.format(
-                "Creating a change in \"%s\" with contents \"%s\"",
-                options.destination,
-                options.codebase));
+            "Creating a change in \"%s\" with contents \"%s\"",
+            options.destination,
+            options.codebase);
 
     Codebase c;
     try {

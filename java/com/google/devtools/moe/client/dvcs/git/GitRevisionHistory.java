@@ -55,8 +55,7 @@ public class GitRevisionHistory extends AbstractRevisionHistory {
     try {
       hashID = headClone.runGitCommand("log", "--max-count=1", "--format=%H", revId);
     } catch (CommandException e) {
-      throw new MoeProblem(
-          String.format("Failed git log run: %d %s %s", e.returnStatus, e.stdout, e.stderr));
+      throw new MoeProblem("Failed git log run: %d %s %s", e.returnStatus, e.stdout, e.stderr);
     }
     // Clean up output.
     hashID = hashID.replaceAll("\\W", "");
@@ -74,11 +73,10 @@ public class GitRevisionHistory extends AbstractRevisionHistory {
     GitClonedRepository headClone = headCloneSupplier.get();
     if (!headClone.getRepositoryName().equals(revision.repositoryName())) {
       throw new MoeProblem(
-          String.format(
-              "Could not get metadata: Revision %s is in repository %s instead of %s",
-              revision.revId(),
-              revision.repositoryName(),
-              headClone.getRepositoryName()));
+          "Could not get metadata: Revision %s is in repository %s instead of %s",
+          revision.revId(),
+          revision.repositoryName(),
+          headClone.getRepositoryName());
     }
 
     // Format: hash, author, ISO date, parents, full commit message (subject and body)
@@ -94,8 +92,7 @@ public class GitRevisionHistory extends AbstractRevisionHistory {
               "--format=" + format,
               revision.revId());
     } catch (CommandException e) {
-      throw new MoeProblem(
-          String.format("Failed git run: %d %s %s", e.returnStatus, e.stdout, e.stderr));
+      throw new MoeProblem("Failed git run: %d %s %s", e.returnStatus, e.stdout, e.stderr);
     }
 
     return parseMetadata(log);

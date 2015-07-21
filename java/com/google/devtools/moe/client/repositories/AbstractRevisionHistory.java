@@ -60,11 +60,10 @@ public abstract class AbstractRevisionHistory implements RevisionHistory {
 
         if (visited.size() > MAX_REVISIONS_TO_SEARCH) {
           throw new MoeProblem(
-              String.format(
-                  "Couldn't find a matching revision for matcher (%s) from %s within %d revisions.",
-                  matcher,
-                  (revision == null) ? "head" : revision,
-                  MAX_REVISIONS_TO_SEARCH));
+              "Couldn't find a matching revision for matcher (%s) from %s within %d revisions.",
+              matcher,
+              (revision == null) ? "head" : revision,
+              MAX_REVISIONS_TO_SEARCH);
         }
       } else {
         // Don't search past matching revisions.

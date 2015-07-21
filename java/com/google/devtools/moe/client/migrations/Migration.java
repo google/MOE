@@ -13,6 +13,7 @@ import java.util.List;
  * A Migration represents a change to be ported from one {@link Repository} to another.
  *
  */
+// TODO(cgruber) @AutoValue
 public class Migration {
 
   /** The specification of all Migrations b/w these from and to repos */

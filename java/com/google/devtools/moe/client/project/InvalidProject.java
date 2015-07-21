@@ -9,13 +9,11 @@ import com.google.common.base.Strings;
  * @author dbentley@google.com (Daniel Bentley)
  */
 public class InvalidProject extends Exception {
-  public final String explanation;
-
-  public InvalidProject(String explanation) {
-    super(explanation);
-    this.explanation = explanation;
+  public InvalidProject(String explanationTemplate, Object... args) {
+    super(String.format(explanationTemplate, args));
   }
 
+  // TODO(cgruber) figure out who uses these and delete them.
   public static void assertNotEmpty(String str, String message) throws InvalidProject {
     assertFalse(Strings.isNullOrEmpty(str), message);
   }

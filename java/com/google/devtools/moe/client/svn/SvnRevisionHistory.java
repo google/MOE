@@ -89,11 +89,10 @@ public class SvnRevisionHistory extends AbstractRevisionHistory {
   public RevisionMetadata getMetadata(Revision revision) throws MoeProblem {
     if (!name.equals(revision.repositoryName())) {
       throw new MoeProblem(
-          String.format(
-              "Could not get metadata: Revision %s is in repository %s instead of %s",
-              revision.revId(),
-              revision.repositoryName(),
-              name));
+          "Could not get metadata: Revision %s is in repository %s instead of %s",
+          revision.revId(),
+          revision.repositoryName(),
+          name);
     }
     String log;
     try {

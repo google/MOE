@@ -65,9 +65,7 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
       changesetID =
           HgRepositoryFactory.runHgCommand(args, tipClone.getLocalTempDir().getAbsolutePath());
     } catch (CommandException e) {
-      throw new MoeProblem(
-          String.format(
-              "Failed hg run: %s %d %s %s", args.toString(), e.returnStatus, e.stdout, e.stderr));
+      throw new MoeProblem("Failed hg run: %s %d %s %s", args, e.returnStatus, e.stdout, e.stderr);
     }
 
     return Revision.create(changesetID, tipClone.getRepositoryName());
@@ -83,11 +81,10 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
     HgClonedRepository tipClone = tipCloneSupplier.get();
     if (!tipClone.getRepositoryName().equals(revision.repositoryName())) {
       throw new MoeProblem(
-          String.format(
-              "Could not get metadata: Revision %s is in repository %s instead of %s",
-              revision.revId(),
-              revision.repositoryName(),
-              tipClone.getRepositoryName()));
+          "Could not get metadata: Revision %s is in repository %s instead of %s",
+          revision.revId(),
+          revision.repositoryName(),
+          tipClone.getRepositoryName());
     }
     ImmutableList<String> args =
         ImmutableList.of(
@@ -105,9 +102,7 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
     try {
       log = HgRepositoryFactory.runHgCommand(args, tipClone.getLocalTempDir().getAbsolutePath());
     } catch (CommandException e) {
-      throw new MoeProblem(
-          String.format(
-              "Failed hg run: %s %d %s %s", args.toString(), e.returnStatus, e.stdout, e.stderr));
+      throw new MoeProblem("Failed hg run: %s %d %s %s", args, e.returnStatus, e.stdout, e.stderr);
     }
 
     return parseMetadata(log);
@@ -172,8 +167,7 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
               tipClone.getLocalTempDir().getAbsolutePath());
     } catch (CommandException e) {
       throw new MoeProblem(
-          String.format(
-              "Failed hg run: %s %d %s %s", e.args.toString(), e.returnStatus, e.stdout, e.stderr));
+          "Failed hg run: %s %d %s %s", e.args, e.returnStatus, e.stdout, e.stderr);
     }
 
     ImmutableList.Builder<Revision> result = ImmutableList.<Revision>builder();

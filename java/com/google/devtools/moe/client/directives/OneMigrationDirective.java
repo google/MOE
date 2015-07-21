@@ -86,7 +86,7 @@ public class OneMigrationDirective extends Directive {
       return 1;
     }
 
-    ui.info(String.format("Migrating '%s' to '%s'", fromRepoEx, toRepoEx));
+    ui.info("Migrating '%s' to '%s'", fromRepoEx, toRepoEx);
 
     DraftRevision r =
         OneMigrationLogic.migrate(

@@ -109,11 +109,10 @@ public class Codebase {
   public void checkProjectSpace(String projectSpace) {
     if (!this.getProjectSpace().equals(projectSpace)) {
       throw new MoeProblem(
-          String.format(
-              "Expected project space \"%s\", but Codebase \"%s\" is in project space \"%s\"",
-              projectSpace,
-              toString(),
-              this.projectSpace));
+          "Expected project space \"%s\", but Codebase \"%s\" is in project space \"%s\"",
+          projectSpace,
+          this,
+          this.projectSpace);
     }
   }
 

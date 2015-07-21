@@ -109,11 +109,10 @@ public abstract class AbstractDvcsWriter<T extends LocalClone> implements Writer
 
     if (!srcExists && !destExists) {
       throw new MoeProblem(
-          String.format(
-              "Neither src nor dests exists. Unreachable code:\n%s\n%s\n%s",
-              relativeFilename,
-              src,
-              dest));
+          "Neither src nor dests exists. Unreachable code:\n%s\n%s\n%s",
+          relativeFilename,
+          src,
+          dest);
     }
 
     if (!srcExists) {

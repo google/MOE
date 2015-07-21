@@ -77,7 +77,7 @@ public class HgClonedRepository implements LocalClone {
   public void cloneLocallyAtHead(Lifetime cloneLifetime) {
     Preconditions.checkState(!clonedLocally);
 
-    String tempDirName = String.format("hg_clone_%s_", repositoryName);
+    String tempDirName = "hg_clone_" + repositoryName + "_";
     localCloneTempDir =
         Injector.INSTANCE.fileSystem().getTemporaryDirectory(tempDirName, cloneLifetime);
 

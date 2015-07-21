@@ -24,8 +24,6 @@ public class RevisionMetadataTest extends TestCase {
             ImmutableList.of(Revision.create("revId", "repo")));
 
     assertEquals(rm, RevisionMetadata.concatenate(ImmutableList.of(rm), null));
-    assertEquals(
-        rm.toString(), RevisionMetadata.concatenate(ImmutableList.of(rm), null).toString());
   }
 
   public void testConcatenate_twoMetadata() {
@@ -53,9 +51,6 @@ public class RevisionMetadataTest extends TestCase {
             ImmutableList.of(Revision.create("revId1", "repo"), Revision.create("revId2", "repo")));
 
     assertEquals(rmExpected, RevisionMetadata.concatenate(ImmutableList.of(rm1, rm2), null));
-    assertEquals(
-        rmExpected.toString(),
-        RevisionMetadata.concatenate(ImmutableList.of(rm1, rm2), null).toString());
   }
 
   public void testConcatenate_withMigrationInfo() {
@@ -88,8 +83,5 @@ public class RevisionMetadataTest extends TestCase {
 
     assertEquals(
         rmExpected, RevisionMetadata.concatenate(ImmutableList.of(rm1, rm2), migrationFromRev));
-    assertEquals(
-        rmExpected.toString(),
-        RevisionMetadata.concatenate(ImmutableList.of(rm1, rm2), migrationFromRev).toString());
   }
 }

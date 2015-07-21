@@ -98,9 +98,9 @@ public class SystemCommandRunner implements CommandRunner {
       stdoutData = stdoutSink.getData();
       stderrData = stderrSink.getData();
     } catch (IOException e) {
-      throw new MoeProblem(String.format("Cannot run process: %s", e.getMessage()));
+      throw new MoeProblem("Cannot run process: %s", e.getMessage());
     } catch (InterruptedException e) {
-      throw new MoeProblem(String.format("Interrupted while running process: %s", cmdArgs));
+      throw new MoeProblem("Interrupted while running process: %s", cmdArgs);
     }
     if (returnStatus == 0) {
       return new CommandOutput(stdoutData, stderrData);

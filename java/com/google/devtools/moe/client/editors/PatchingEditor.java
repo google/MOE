@@ -48,7 +48,7 @@ public class PatchingEditor implements Editor {
     } else {
       File patchFile = new File(patchFilePath);
       if (!Injector.INSTANCE.fileSystem().isReadable(patchFile)) {
-        throw new MoeProblem(String.format("cannot read file %s", patchFilePath));
+        throw new MoeProblem("cannot read file %s", patchFilePath);
       }
       try {
         Utils.copyDirectory(input.getPath(), tempDir);

@@ -17,6 +17,7 @@ import javax.annotation.Nullable;
  * Holds the metadata associated with a Revision.
  *
  */
+// TODO(cgruber) @AutoValue
 public class RevisionMetadata {
   public final String id;
 

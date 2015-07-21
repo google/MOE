@@ -116,11 +116,10 @@ public class InverseTranslator implements Translator {
               .ui()
               .pushTask(
                   "inverseEdit",
-                  String.format(
-                      "Inverse-translating step %s by merging codebase %s onto %s",
-                      inverseStep.getName(),
-                      refTo,
-                      refFrom));
+                  "Inverse-translating step %s by merging codebase %s onto %s",
+                  inverseStep.getName(),
+                  refTo,
+                  refFrom);
 
       inverseTranslated =
           inverseStep

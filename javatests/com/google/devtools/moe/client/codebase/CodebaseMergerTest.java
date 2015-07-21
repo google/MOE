@@ -209,7 +209,7 @@ public class CodebaseMergerTest extends TestCase {
     control.verify();
 
     assertEquals(0, merger.getFailedToMergeFiles().size());
-    assertTrue(merger.getMergedFiles().contains(mergedFile.getAbsolutePath().toString()));
+    assertTrue(merger.getMergedFiles().contains(mergedFile.getAbsolutePath()));
   }
 
   /**
@@ -251,7 +251,7 @@ public class CodebaseMergerTest extends TestCase {
     control.verify();
 
     assertEquals(0, merger.getMergedFiles().size());
-    assertTrue(merger.getFailedToMergeFiles().contains(mergedFile.getAbsolutePath().toString()));
+    assertTrue(merger.getFailedToMergeFiles().contains(mergedFile.getAbsolutePath()));
   }
 
   /**
@@ -330,7 +330,7 @@ public class CodebaseMergerTest extends TestCase {
     control.verify();
 
     assertEquals(0, merger.getFailedToMergeFiles().size());
-    assertTrue(merger.getMergedFiles().contains(mergedFile.getAbsolutePath().toString()));
+    assertTrue(merger.getMergedFiles().contains(mergedFile.getAbsolutePath()));
   }
 
   /**
@@ -374,7 +374,7 @@ public class CodebaseMergerTest extends TestCase {
     control.verify();
 
     assertEquals(0, merger.getMergedFiles().size());
-    assertTrue(merger.getFailedToMergeFiles().contains(mergedFile.getAbsolutePath().toString()));
+    assertTrue(merger.getFailedToMergeFiles().contains(mergedFile.getAbsolutePath()));
   }
 
   /**
@@ -431,15 +431,13 @@ public class CodebaseMergerTest extends TestCase {
     // codebase.
 
     // Expect in call to report()
-    ui.info("Merged codebase generated at: " + mergedCodebaseLocation.getAbsolutePath());
+    ui.info("Merged codebase generated at: %s", mergedCodebaseLocation.getAbsolutePath());
     ui.info(
-        String.format(
-            "%d files merged successfully%n"
-                + "%d files have merge conflicts. "
-                + "Edit the following files to resolve conflicts:%n%s",
-            1,
-            0,
-            ImmutableSet.of()));
+        "%d files merged successfully\n"
+            + "%d files have merge conflicts. Edit the following files to resolve conflicts:\n%s",
+        1,
+        0,
+        ImmutableSet.of());
 
     control.replay();
 
@@ -448,7 +446,7 @@ public class CodebaseMergerTest extends TestCase {
 
     control.verify();
 
-    assertTrue(merger.getMergedFiles().contains(mergedFile.getAbsolutePath().toString()));
+    assertTrue(merger.getMergedFiles().contains(mergedFile.getAbsolutePath()));
     assertTrue(merger.getFailedToMergeFiles().isEmpty());
   }
 }
