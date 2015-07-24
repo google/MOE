@@ -2,7 +2,7 @@
 
 package com.google.devtools.moe.client.tasks;
 
-import com.google.devtools.moe.client.MoeOptions;
+import com.google.devtools.moe.client.options.MoeOptions;
 
 import org.kohsuke.args4j.Option;
 
@@ -11,7 +11,7 @@ import org.kohsuke.args4j.Option;
  *
  * @author dbentley@google.com (Daniel Bentley)
  */
-public class HelloTask extends Task<String>{
+public class HelloTask extends Task<String> {
 
   private String message;
 
@@ -28,8 +28,7 @@ public class HelloTask extends Task<String>{
 
   public static class HelloTaskCreator implements Task.TaskCreator<String> {
     // Most TaskCreators are useful. This exists to show the pattern.
-    public HelloTaskCreator() {
-    }
+    public HelloTaskCreator() {}
 
     @Override
     public HelloTask createTaskFromCommandLine(MoeOptions options) {
@@ -43,8 +42,8 @@ public class HelloTask extends Task<String>{
   }
 
   public static class HelloOptions extends MoeOptions {
-    @Option(name = "--hello_message",
-            usage = "Prints this message to stdout.")
+
+    @Option(name = "--hello_message", usage = "Prints this message to stdout.")
     private String message = "Hello MOE.";
   }
 

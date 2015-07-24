@@ -17,20 +17,21 @@ public class SystemCommandRunnerTest extends TestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    c = new SystemCommandRunner(new SystemUi() {
-      @Override public void debug(String msg) {}
-    });
+    c =
+        new SystemCommandRunner(
+            new SystemUi() {
+              @Override
+              public void debug(String msg, Object... args) {}
+            });
   }
 
   public void testLongStdout() throws Exception {
-    String data = c.runCommand(
-        "perl", ImmutableList.of("-e", "print (\"*\" x 17000)"), "");
+    String data = c.runCommand("perl", ImmutableList.of("-e", "print (\"*\" x 17000)"), "");
     assertEquals(17000, data.length());
   }
 
   public void testLongStderr() throws Exception {
-    String data = c.runCommand(
-        "perl", ImmutableList.of("-e", "print STDERR (\"*\" x 17000)"), "");
+    String data = c.runCommand("perl", ImmutableList.of("-e", "print STDERR (\"*\" x 17000)"), "");
     assertEquals(0, data.length());
   }
 
@@ -43,17 +44,12 @@ public class SystemCommandRunnerTest extends TestCase {
     // Sub in the desired output size and exit code for this script with String.format(size, exit).
     String perlScript = "print STDOUT ('*' x %1$d); print STDERR ('*' x %1$d); exit %2$d";
 
-    String stdout = c.runCommand(
-        "perl",
-        ImmutableList.of("-e", String.format(perlScript, bytesOutput, 0)),
-        "");
+    String stdout =
+        c.runCommand("perl", ImmutableList.of("-e", String.format(perlScript, bytesOutput, 0)), "");
     assertEquals(bytesOutput, stdout.length());
 
     try {
-      c.runCommand(
-          "perl",
-          ImmutableList.of("-e", String.format(perlScript, bytesOutput, 1)),
-          "");
+      c.runCommand("perl", ImmutableList.of("-e", String.format(perlScript, bytesOutput, 1)), "");
       fail("Non-zero return code didn't raise CommandException.");
 
     } catch (CommandException expected) {

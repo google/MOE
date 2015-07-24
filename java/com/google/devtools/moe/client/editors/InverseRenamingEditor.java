@@ -5,7 +5,6 @@ package com.google.devtools.moe.client.editors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -56,7 +55,6 @@ public class InverseRenamingEditor implements InverseEditor {
     return new InverseRenamingEditor(RenamingEditor.makeRenamingEditor(editorName, config));
   }
 
-
   private final RenamingEditor renamer;
 
   @VisibleForTesting
@@ -66,8 +64,12 @@ public class InverseRenamingEditor implements InverseEditor {
   }
 
   @Override
-  public Codebase inverseEdit(Codebase input, Codebase referenceFrom, Codebase referenceTo,
-      ProjectContext context, Map<String, String> options) {
+  public Codebase inverseEdit(
+      Codebase input,
+      Codebase referenceFrom,
+      Codebase referenceTo,
+      ProjectContext context,
+      Map<String, String> options) {
     File tempDir = Injector.INSTANCE.fileSystem().getTemporaryDirectory("inverse_rename_run_");
     inverseRenameAndCopy(input, tempDir, referenceTo);
     return new Codebase(tempDir, referenceTo.getProjectSpace(), referenceTo.getExpression());
@@ -89,7 +91,7 @@ public class InverseRenamingEditor implements InverseEditor {
    * renamedToReferenceMap.
    */
   private String inverseRename(String renamedFilename, Map<String, String> renamedToReferenceMap) {
-    List<String> renamedAllParts = ImmutableList.copyOf(FILE_SEP_SPLITTER.split(renamedFilename));
+    List<String> renamedAllParts = FILE_SEP_SPLITTER.splitToList(renamedFilename);
     for (int i = renamedAllParts.size(); i > 0; i--) {
       String renamedParts = FILE_SEP_JOINER.join(renamedAllParts.subList(0, i));
       String partsToSubstitute = renamedToReferenceMap.get(renamedParts);

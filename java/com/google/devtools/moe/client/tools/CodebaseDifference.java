@@ -20,8 +20,7 @@ public class CodebaseDifference {
   public final Codebase codebase2;
   public final Set<FileDifference> fileDiffs;
 
-  public CodebaseDifference(Codebase codebase1, Codebase codebase2,
-                            Set<FileDifference> fileDiffs) {
+  public CodebaseDifference(Codebase codebase1, Codebase codebase2, Set<FileDifference> fileDiffs) {
     this.codebase1 = codebase1;
     this.codebase2 = codebase2;
     this.fileDiffs = Collections.unmodifiableSet(fileDiffs);
@@ -44,17 +43,16 @@ public class CodebaseDifference {
   /**
    * Diff two Codebases with a custom FileDiffer.
    */
-  public static CodebaseDifference diffCodebases(Codebase codebase1, Codebase codebase2,
-                                                 FileDifference.FileDiffer differ) {
-    Set<String> filenames = Sets.union(
-        codebase1.getRelativeFilenames(),
-        codebase2.getRelativeFilenames());
+  public static CodebaseDifference diffCodebases(
+      Codebase codebase1, Codebase codebase2, FileDifference.FileDiffer differ) {
+    Set<String> filenames =
+        Sets.union(codebase1.getRelativeFilenames(), codebase2.getRelativeFilenames());
 
     ImmutableSet.Builder<FileDifference> fileDiffs = ImmutableSet.builder();
 
-    for (String filename: filenames) {
-      FileDifference fileDiff = differ.diffFiles(
-          filename, codebase1.getFile(filename), codebase2.getFile(filename));
+    for (String filename : filenames) {
+      FileDifference fileDiff =
+          differ.diffFiles(filename, codebase1.getFile(filename), codebase2.getFile(filename));
       if (fileDiff.isDifferent()) {
         fileDiffs.add(fileDiff);
       }

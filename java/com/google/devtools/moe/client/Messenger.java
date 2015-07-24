@@ -12,14 +12,14 @@ package com.google.devtools.moe.client;
 public interface Messenger {
 
   /** Sends an informational message to the user. */
-  void info(String msg);
+  void info(String msgfmt, Object... args);
 
   /** Reports an error to the user. */
-  void error(String msg);
+  void error(String msgfmt, Object... args);
 
   /** Reports an error to the user, logging additional information about the error. */
-  void error(Throwable e, String msg);
+  void error(Throwable e, String msgfmt, Object... args);
 
   /** Sends a debug message to the logs. */
-  void debug(String msg);
+  void debug(String msgfmt, Object... args);
 }

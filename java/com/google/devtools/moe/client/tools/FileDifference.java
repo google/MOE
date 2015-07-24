@@ -46,9 +46,13 @@ public class FileDifference {
   public final Comparison executability;
   public final String contentDiff;
 
-  public FileDifference(String relativeFilename, File file1, File file2,
-                        Comparison existence, Comparison executability,
-                        String contentDiff) {
+  public FileDifference(
+      String relativeFilename,
+      File file1,
+      File file2,
+      Comparison existence,
+      Comparison executability,
+      String contentDiff) {
     this.relativeFilename = relativeFilename;
     this.file1 = file1;
     this.file2 = file2;
@@ -100,8 +104,8 @@ public class FileDifference {
       boolean file1Exists = fileSystem.exists(file1);
       boolean file2Exists = fileSystem.exists(file2);
 
-      Preconditions.checkArgument(file1Exists || file2Exists,
-                                  "Neither file exists: %s, %s", file1, file2);
+      Preconditions.checkArgument(
+          file1Exists || file2Exists, "Neither file exists: %s, %s", file1, file2);
 
       Comparison existence = Comparison.diffBools(file1Exists, file2Exists);
 
@@ -113,14 +117,17 @@ public class FileDifference {
       String contentDiff = null;
 
       try {
-        Injector.INSTANCE.cmd().runCommand(
-            "diff",
-            // -N treats absent files as empty.
-            ImmutableList.of("-N", file1.getAbsolutePath(), file2.getAbsolutePath()), "");
+        Injector.INSTANCE
+            .cmd()
+            .runCommand(
+                "diff",
+                // -N treats absent files as empty.
+                ImmutableList.of("-N", file1.getAbsolutePath(), file2.getAbsolutePath()),
+                "");
       } catch (CommandRunner.CommandException e) {
-        if (e.returnStatus != DIFF_ERROR_CODE_FILES_DIFFERENT &&
-            e.returnStatus != DIFF_ERROR_CODE_FILES_BINARY) {
-          throw new MoeProblem(String.format("diff returned unknown status: %d", e.returnStatus));
+        if (e.returnStatus != DIFF_ERROR_CODE_FILES_DIFFERENT
+            && e.returnStatus != DIFF_ERROR_CODE_FILES_BINARY) {
+          throw new MoeProblem("diff returned unknown status: %d", e.returnStatus);
         }
         contentDiff = e.stdout;
       }

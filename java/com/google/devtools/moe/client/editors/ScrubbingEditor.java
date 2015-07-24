@@ -32,21 +32,25 @@ public class ScrubbingEditor implements Editor {
    * instantiate editors without actually editing.) It is memoized because we only need one copy of
    * the scrubber binary across MOE execution.
    */
-  private static final Supplier<File> SCRUBBER_BINARY_SUPPLIER = Suppliers.memoize(
-      new Supplier<File>() {
-        @Override public File get() {
-          try {
-            // TODO(dbentley): what will this resource be under ant?
-            File scrubberBinary = Injector.INSTANCE.fileSystem()
-                .getResourceAsFile("/devtools/moe/scrubber/scrubber.par");
-            Injector.INSTANCE.fileSystem().setExecutable(scrubberBinary);
-            return scrubberBinary;
-          } catch (IOException ioEx) {
-            Injector.INSTANCE.ui().error(ioEx, "Error extracting scrubber");
-            throw new MoeProblem("Error extracting scrubber: " + ioEx.getMessage());
-          }
-        }
-      });
+  private static final Supplier<File> SCRUBBER_BINARY_SUPPLIER =
+      Suppliers.memoize(
+          new Supplier<File>() {
+            @Override
+            public File get() {
+              try {
+                // TODO(dbentley): what will this resource be under ant?
+                File scrubberBinary =
+                    Injector.INSTANCE
+                        .fileSystem()
+                        .getResourceAsFile("/devtools/moe/scrubber/scrubber.par");
+                Injector.INSTANCE.fileSystem().setExecutable(scrubberBinary);
+                return scrubberBinary;
+              } catch (IOException ioEx) {
+                Injector.INSTANCE.ui().error(ioEx, "Error extracting scrubber");
+                throw new MoeProblem("Error extracting scrubber: " + ioEx.getMessage());
+              }
+            }
+          });
 
   private final String name;
   private final ScrubberConfig scrubberConfig;
@@ -72,20 +76,23 @@ public class ScrubbingEditor implements Editor {
   public Codebase edit(Codebase input, ProjectContext context, Map<String, String> options) {
     File tempDir = Injector.INSTANCE.fileSystem().getTemporaryDirectory("scrubber_run_");
     File outputTar = new File(tempDir, "scrubbed.tar");
-
     try {
-      Injector.INSTANCE.cmd().runCommand(
-          // The ./ preceding scrubber.par is sometimes needed.
-          // TODO(user): figure out why
-          "./scrubber.par",
-          ImmutableList.of(
-              "--temp_dir", tempDir.getAbsolutePath(),
-              "--output_tar", outputTar.getAbsolutePath(),
-              // TODO(dbentley): allow configuring the scrubber config
-              "--config_data",
-              (scrubberConfig == null) ? "{}" : ProjectConfig.makeGson().toJson(scrubberConfig),
-              input.getPath().getAbsolutePath()),
-          SCRUBBER_BINARY_SUPPLIER.get().getParentFile().getPath());
+      Injector.INSTANCE
+          .cmd()
+          .runCommand(
+              // The ./ preceding scrubber.par is sometimes needed.
+              // TODO(user): figure out why
+              "./scrubber.par",
+              ImmutableList.of(
+                  "--temp_dir",
+                  tempDir.getAbsolutePath(),
+                  "--output_tar",
+                  outputTar.getAbsolutePath(),
+                  // TODO(dbentley): allow configuring the scrubber config
+                  "--config_data",
+                  (scrubberConfig == null) ? "{}" : ProjectConfig.makeGson().toJson(scrubberConfig),
+                  input.getPath().getAbsolutePath()),
+              SCRUBBER_BINARY_SUPPLIER.get().getParentFile().getPath());
     } catch (CommandRunner.CommandException e) {
       throw new MoeProblem(e.getMessage());
     }

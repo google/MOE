@@ -5,9 +5,9 @@ package com.google.devtools.moe.client.repositories;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
@@ -37,7 +37,7 @@ public class RevisionGraph {
   // doesn't visit the same parent N times via its N children (unless it suits our implementation).
   public List<Revision> getBreadthFirstHistory() {
     ImmutableList.Builder<Revision> historyBuilder = ImmutableList.builder();
-    Deque<Revision> workList = Lists.newLinkedList();
+    Deque<Revision> workList = new ArrayDeque<>();
     workList.addAll(startingRevisions);
     while (!workList.isEmpty()) {
       Revision current = workList.removeFirst();

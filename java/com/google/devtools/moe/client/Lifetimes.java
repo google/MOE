@@ -10,15 +10,15 @@ import com.google.devtools.moe.client.FileSystem.Lifetime;
  */
 public final class Lifetimes {
 
-  private Lifetimes() {}  // Do not instantiate.
+  private Lifetimes() {} // Do not instantiate.
 
-
-  private static final Lifetime PERSISTENT = new Lifetime() {
-    @Override public boolean shouldCleanUp() {
-      return false;
-    }
-  };
-
+  private static final Lifetime PERSISTENT =
+      new Lifetime() {
+        @Override
+        public boolean shouldCleanUp() {
+          return false;
+        }
+      };
 
   /**
    * Returns a {@code Lifetime} for a temp dir that should be cleaned up when the current

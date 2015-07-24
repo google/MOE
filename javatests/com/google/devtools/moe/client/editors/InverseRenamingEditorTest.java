@@ -42,24 +42,28 @@ public class InverseRenamingEditorTest extends TestCase {
     Injector context(); // TODO (b/19676630) Remove when bug is fixed.
   }
 
-  @dagger.Module class Module {
-    @Provides public FileSystem filesystem() {
+  @dagger.Module
+  class Module {
+    @Provides
+    public FileSystem filesystem() {
       return mockFs;
     }
   }
 
-  @Override protected void setUp() throws Exception {
+  @Override
+  protected void setUp() throws Exception {
     super.setUp();
-    Injector.INSTANCE = DaggerInverseRenamingEditorTest_Component.builder().module(new Module())
-        .build().context();
+    Injector.INSTANCE =
+        DaggerInverseRenamingEditorTest_Component.builder().module(new Module()).build().context();
   }
 
   public void testEdit() throws Exception {
     ProjectContext context = ProjectContext.builder().build();
 
-    InverseRenamingEditor inverseRenamey = new InverseRenamingEditor(
-        new RenamingEditor(
-            "renamey", ImmutableMap.of("internal_root", "public_root"), false /*useRegex*/));
+    InverseRenamingEditor inverseRenamey =
+        new InverseRenamingEditor(
+            new RenamingEditor(
+                "renamey", ImmutableMap.of("internal_root", "public_root"), false /*useRegex*/));
 
     Codebase input = new Codebase(new File("/input"), "public", new RepositoryExpression("input"));
     Codebase destination =
@@ -67,24 +71,29 @@ public class InverseRenamingEditorTest extends TestCase {
 
     expect(mockFs.getTemporaryDirectory("inverse_rename_run_")).andReturn(new File("/output"));
 
-    expect(mockFs.findFiles(new File("/input"))).andReturn(ImmutableSet.of(
-        new File("/input/toplevel.txt"),
-        new File("/input/public_root/1.txt"),
-        new File("/input/public_root/new.txt"),
-        new File("/input/public_root/inner1/inner2/innernew.txt")));
+    expect(mockFs.findFiles(new File("/input")))
+        .andReturn(
+            ImmutableSet.of(
+                new File("/input/toplevel.txt"),
+                new File("/input/public_root/1.txt"),
+                new File("/input/public_root/new.txt"),
+                new File("/input/public_root/inner1/inner2/innernew.txt")));
 
-    expect(mockFs.findFiles(new File("/destination"))).andReturn(ImmutableSet.of(
-        new File("/destination/internal_root/1.txt")));
+    expect(mockFs.findFiles(new File("/destination")))
+        .andReturn(ImmutableSet.of(new File("/destination/internal_root/1.txt")));
 
     expectCopy(mockFs, "/input/toplevel.txt", "/output/toplevel.txt");
     expectCopy(mockFs, "/input/public_root/1.txt", "/output/internal_root/1.txt");
     expectCopy(mockFs, "/input/public_root/new.txt", "/output/internal_root/new.txt");
-    expectCopy(mockFs, "/input/public_root/inner1/inner2/innernew.txt",
-                       "/output/internal_root/inner1/inner2/innernew.txt");
+    expectCopy(
+        mockFs,
+        "/input/public_root/inner1/inner2/innernew.txt",
+        "/output/internal_root/inner1/inner2/innernew.txt");
 
     control.replay();
-    Codebase inverseRenamed = inverseRenamey.inverseEdit(
-        input, null /*referenceFrom*/, destination, context, ImmutableMap.<String, String>of());
+    Codebase inverseRenamed =
+        inverseRenamey.inverseEdit(
+            input, null /*referenceFrom*/, destination, context, ImmutableMap.<String, String>of());
     assertEquals(new File("/output"), inverseRenamed.getPath());
     control.verify();
   }

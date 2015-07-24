@@ -34,6 +34,7 @@ public class ProjectConfig {
   private Map<String, RepositoryConfig> repositories;
   private Map<String, EditorConfig> editors;
   private List<TranslatorConfig> translators;
+
   @SerializedName("migrations")
   private List<MigrationConfig> migrationConfigs;
 
@@ -65,8 +66,11 @@ public class ProjectConfig {
    */
   public RepositoryConfig getRepositoryConfig(String repositoryName) {
     if (!repositories.containsKey(repositoryName)) {
-      throw new MoeProblem("No such repository '" + repositoryName + "' in the config. Found: "
-          + ImmutableSortedSet.copyOf(repositories.keySet()));
+      throw new MoeProblem(
+          "No such repository '"
+              + repositoryName
+              + "' in the config. Found: "
+              + ImmutableSortedSet.copyOf(repositories.keySet()));
     }
     return repositories.get(repositoryName);
   }
@@ -97,9 +101,9 @@ public class ProjectConfig {
    */
   static class JsonObjectDeserializer implements JsonDeserializer<JsonObject> {
     @Override
-        public JsonObject deserialize(
-            JsonElement json, Type typeOfT,
-            JsonDeserializationContext context) throws JsonParseException {
+    public JsonObject deserialize(
+        JsonElement json, Type typeOfT, JsonDeserializationContext context)
+        throws JsonParseException {
       return json.getAsJsonObject();
     }
   }
@@ -108,10 +112,8 @@ public class ProjectConfig {
    * Make a GSON object usable to parse MOE configs.
    */
   public static Gson makeGson() {
-    Gson gson = new GsonBuilder()
-        .registerTypeAdapter(JsonObject.class, new JsonObjectDeserializer())
-        .create();
-    return gson;
+    return new GsonBuilder()
+        .registerTypeAdapter(JsonObject.class, new JsonObjectDeserializer()).create();
   }
 
   public ScrubberConfig findScrubberConfig(String fromRepository, String toRepository) {
@@ -157,10 +159,8 @@ public class ProjectConfig {
       publicRepository = null;
     }
 
-    InvalidProject.assertFalse(
-        Strings.isNullOrEmpty(getName()), "Must specify a name");
-    InvalidProject.assertFalse(
-        getRepositoryConfigs().isEmpty(), "Must specify repositories");
+    InvalidProject.assertFalse(Strings.isNullOrEmpty(getName()), "Must specify a name");
+    InvalidProject.assertFalse(getRepositoryConfigs().isEmpty(), "Must specify repositories");
 
     for (RepositoryConfig r : repositories.values()) {
       r.validate();

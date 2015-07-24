@@ -3,8 +3,8 @@
 package com.google.devtools.moe.client.logic;
 
 import com.google.devtools.moe.client.database.Db;
-import com.google.devtools.moe.client.database.Equivalence;
-import com.google.devtools.moe.client.database.EquivalenceMatcher;
+import com.google.devtools.moe.client.database.RepositoryEquivalence;
+import com.google.devtools.moe.client.database.RepositoryEquivalenceMatcher;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
 import com.google.devtools.moe.client.repositories.RevisionHistory.SearchType;
@@ -26,9 +26,9 @@ public class LastEquivalenceLogic {
    * @param rh the RevisionHistory for rev's Repository
    * @return the most recent Equivalence or null if there wasn't one
    */
-  public static List<Equivalence> lastEquivalence(String toRepo, Revision rev,
-                                            Db db, RevisionHistory rh) {
-    EquivalenceMatcher matcher = new EquivalenceMatcher(toRepo, db);
+  public static List<RepositoryEquivalence> lastEquivalence(
+      String toRepo, Revision rev, Db db, RevisionHistory rh) {
+    RepositoryEquivalenceMatcher matcher = new RepositoryEquivalenceMatcher(toRepo, db);
     // TODO(user): Determine whether to do a linear or branched search, probably based on a
     // command-line option or a migration config.
     return rh.findRevisions(rev, matcher, SearchType.BRANCHED).getEquivalences();

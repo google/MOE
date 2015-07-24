@@ -30,7 +30,6 @@ public class GitClonedRepository implements LocalClone {
    */
   static final String MOE_MIGRATIONS_BRANCH_PREFIX = "moe_writing_branch_from_";
 
-
   private final String repositoryName;
   private final RepositoryConfig repositoryConfig;
   /**
@@ -38,6 +37,7 @@ public class GitClonedRepository implements LocalClone {
    * the same as repositoryConfig.getUrl(). Otherwise, it will.
    */
   private final String repositoryUrl;
+
   private File localCloneTempDir;
   private boolean clonedLocally;
   /** The revision of this clone, a Git hash ID */
@@ -76,7 +76,7 @@ public class GitClonedRepository implements LocalClone {
   public void cloneLocallyAtHead(Lifetime cloneLifetime) {
     Preconditions.checkState(!clonedLocally);
 
-    String tempDirName = String.format("git_clone_%s_", repositoryName);
+    String tempDirName = "git_clone_" + repositoryName + "_";
     localCloneTempDir =
         Injector.INSTANCE.fileSystem().getTemporaryDirectory(tempDirName, cloneLifetime);
     Optional<String> branchName = repositoryConfig.getBranch();
@@ -87,12 +87,11 @@ public class GitClonedRepository implements LocalClone {
       if (branchName.isPresent()) {
         cloneArgs.add("--branch", branchName.get());
       }
-      GitRepository.runGitCommand(cloneArgs.build(), "" /*workingDirectory*/);
+      GitRepositoryFactory.runGitCommand(cloneArgs.build(), "" /*workingDirectory*/);
       clonedLocally = true;
       this.revId = "HEAD";
     } catch (CommandException e) {
-      throw new MoeProblem(
-          "Could not clone from git repo at " + repositoryUrl + ": " + e.stderr);
+      throw new MoeProblem("Could not clone from git repo at " + repositoryUrl + ": " + e.stderr);
     }
   }
 
@@ -110,8 +109,7 @@ public class GitClonedRepository implements LocalClone {
       }
       this.revId = revId;
     } catch (CommandException e) {
-      throw new MoeProblem(
-          "Could not update git repo at " + localCloneTempDir + ": " + e.stderr);
+      throw new MoeProblem("Could not update git repo at " + localCloneTempDir + ": " + e.stderr);
     }
   }
 
@@ -122,49 +120,52 @@ public class GitClonedRepository implements LocalClone {
       revId = "HEAD";
     }
     File archiveLocation =
-        Injector.INSTANCE.fileSystem().getTemporaryDirectory(
-        String.format("git_archive_%s_%s_", repositoryName, revId),
-        Lifetimes.currentTask());
+        Injector.INSTANCE
+            .fileSystem()
+            .getTemporaryDirectory(
+                String.format("git_archive_%s_%s_", repositoryName, revId),
+                Lifetimes.currentTask());
     // Using this just to get a filename.
     String tarballPath =
-        Injector.INSTANCE.fileSystem()
+        Injector.INSTANCE
+            .fileSystem()
             .getTemporaryDirectory(
-        String.format("git_tarball_%s_%s.tar.", repositoryName, revId),
-        Lifetimes.currentTask()).getAbsolutePath();
+                String.format("git_tarball_%s_%s.tar.", repositoryName, revId),
+                Lifetimes.currentTask())
+            .getAbsolutePath();
     try {
 
       // Git doesn't support archiving to a directory: it only supports
       // archiving to a tar.  The fastest way to do this would be to pipe the
       // output directly into tar, however, there's no option for that using
       // the classes we have. (michaelpb)
-      runGitCommand(
-          "archive",
-          "--format=tar",
-          "--output=" + tarballPath,
-          revId);
+      runGitCommand("archive", "--format=tar", "--output=" + tarballPath, revId);
 
       // Make the directory to untar into
       Injector.INSTANCE.fileSystem().makeDirs(archiveLocation);
 
       // Untar the tarball we just made
-      Injector.INSTANCE.cmd().runCommand(
-          "tar",
-          ImmutableList.<String>of(
-              "xf",
-              tarballPath,
-              "-C",
-              archiveLocation.getAbsolutePath()),
-          "");
+      Injector.INSTANCE
+          .cmd()
+          .runCommand(
+              "tar",
+              ImmutableList.<String>of("xf", tarballPath, "-C", archiveLocation.getAbsolutePath()),
+              "");
 
     } catch (CommandException e) {
       throw new MoeProblem(
-          "Could not archive git clone at " +
-            localCloneTempDir.getAbsolutePath() + ": " + e.stderr);
+          "Could not archive git clone at "
+              + localCloneTempDir.getAbsolutePath()
+              + ": "
+              + e.stderr);
     } catch (IOException e) {
       throw new MoeProblem(
-          "IOException archiving clone at " +
-              localCloneTempDir.getAbsolutePath() +
-              " to revision " + revId + ": " + e);
+          "IOException archiving clone at "
+              + localCloneTempDir.getAbsolutePath()
+              + " to revision "
+              + revId
+              + ": "
+              + e);
     }
     return archiveLocation;
   }
@@ -176,9 +177,11 @@ public class GitClonedRepository implements LocalClone {
    * @return a string containing the STDOUT result
    */
   String runGitCommand(String... args) throws CommandException {
-    return Injector.INSTANCE.cmd().runCommand(
-        "git",
-        ImmutableList.copyOf(args),
-        getLocalTempDir().getAbsolutePath() /*workingDirectory*/);
+    return Injector.INSTANCE
+        .cmd()
+        .runCommand(
+            "git",
+            ImmutableList.copyOf(args),
+            getLocalTempDir().getAbsolutePath() /*workingDirectory*/);
   }
 }

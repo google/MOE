@@ -27,15 +27,15 @@ public class RecordingUi extends SystemUi {
   }
 
   @Override
-  public void info(String msg) {
-    lastInfo = msg;
-    super.info(msg);
+  public void info(String msg, Object... args) {
+    lastInfo = String.format(msg, args);
+    super.info(msg, args);
   }
 
   @Override
-  public void error(String msg) {
-    lastError = msg;
-    super.error(msg);
+  public void error(String msg, Object... args) {
+    lastError = String.format(msg, args);
+    super.error(msg, args);
   }
 
   @Override
@@ -45,8 +45,11 @@ public class RecordingUi extends SystemUi {
   }
 
   /** A Dagger module for binding this implementation of {@link Ui}. */
-  @dagger.Module public static class Module {
-    @Provides @Singleton public Ui ui(RecordingUi impl) {
+  @dagger.Module
+  public static class Module {
+    @Provides
+    @Singleton
+    public Ui ui(RecordingUi impl) {
       return impl;
     }
   }

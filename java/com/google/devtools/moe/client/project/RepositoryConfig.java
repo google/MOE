@@ -5,6 +5,7 @@ package com.google.devtools.moe.client.project;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.devtools.moe.client.repositories.Repository;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
@@ -15,11 +16,10 @@ import java.util.List;
  * @author nicksantos@google.com (Nick Santos)
  */
 public class RepositoryConfig {
-  // Initializing this to nil allows it to be used in switch
-  // statements without any NPEs.
-  private RepositoryType type = RepositoryType.nil;
+  private String type;
 
   private String url;
+
   @SerializedName("project_space")
   private String projectSpace = "public";
 
@@ -62,7 +62,7 @@ public class RepositoryConfig {
     return url;
   }
 
-  public RepositoryType getType() {
+  public String getType() {
     return type;
   }
 
@@ -71,8 +71,7 @@ public class RepositoryConfig {
   }
 
   public List<String> getPaths() {
-    List<String> result = paths == null ? Lists.<String>newArrayList() :
-        Lists.newArrayList(paths);
+    List<String> result = paths == null ? Lists.<String>newArrayList() : Lists.newArrayList(paths);
     return result;
   }
 
@@ -112,6 +111,20 @@ public class RepositoryConfig {
     return executableFileRes;
   }
 
-  void validate() throws InvalidProject {
+  /**
+   * Validates that the supplied {@link Repository.Factory} targets the correct repo type,
+   * throwing an {@link InvalidProject} exception if it does not.
+   */
+  public void checkType(Repository.Factory repositoryFactory) throws InvalidProject {
+    if (!repositoryFactory.type().equals(getType())) {
+      // TODO(cgruber): Make it so this can't happen at runtime, ever, and throw AssertionError.
+      throw new InvalidProject(
+          "Invalid repository type '%s' for %s",
+          getType(),
+          repositoryFactory.getClass().getSimpleName());
+    }
   }
+
+  @SuppressWarnings("unused")
+  void validate() throws InvalidProject {}
 }

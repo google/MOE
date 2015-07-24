@@ -12,11 +12,15 @@ import java.util.List;
  * @author dbentley@google.com (Daniel Bentley)
  */
 public class TranslatorConfig {
+
   @SerializedName("from_project_space")
   private String fromProjectSpace;
+
   @SerializedName("to_project_space")
   private String toProjectSpace;
+
   private List<StepConfig> steps;
+
   @SerializedName("inverse")
   private boolean isInverse;
 
@@ -39,10 +43,8 @@ public class TranslatorConfig {
   }
 
   void validate() throws InvalidProject {
-    InvalidProject.assertNotEmpty(
-        fromProjectSpace, "Translator requires from_project_space");
-    InvalidProject.assertNotEmpty(
-        toProjectSpace, "Translator requires to_project_space");
+    InvalidProject.assertNotEmpty(fromProjectSpace, "Translator requires from_project_space");
+    InvalidProject.assertNotEmpty(toProjectSpace, "Translator requires to_project_space");
     if (isInverse) {
       InvalidProject.assertTrue(steps == null, "Inverse translator can't have steps");
     } else {

@@ -69,7 +69,7 @@ public class RepositoryExpression extends AbstractExpression {
     }
 
     Ui.Task createTask =
-        Injector.INSTANCE.ui().pushTask("create_codebase", "Creating from '" + toString() + "'");
+        Injector.INSTANCE.ui().pushTask("create_codebase", "Creating from '%s'", this);
     Codebase c = cc.create(term.options);
     Injector.INSTANCE.ui().popTaskAndPersist(createTask, c.getPath());
     return c;
@@ -86,10 +86,7 @@ public class RepositoryExpression extends AbstractExpression {
     Repository r = context.getRepository(term.identifier);
     WriterCreator wc = r.writerCreator();
 
-    Ui.Task t =
-        Injector.INSTANCE.ui().pushTask(
-        "create_writer",
-        String.format("Creating Writer \"%s\"", term));
+    Ui.Task t = Injector.INSTANCE.ui().pushTask("create_writer", "Creating Writer \"%s\"", term);
     try {
       Writer writer = wc.create(term.options);
       Injector.INSTANCE.ui().popTaskAndPersist(t, writer.getRoot());

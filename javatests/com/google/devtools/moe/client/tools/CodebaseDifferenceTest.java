@@ -34,8 +34,8 @@ public class CodebaseDifferenceTest extends TestCase {
     expect(c2.getRelativeFilenames()).andReturn(ImmutableSet.of("foo"));
     expect(c1.getFile("foo")).andReturn(f1);
     expect(c2.getFile("foo")).andReturn(f2);
-    expect(differ.diffFiles("foo", f1, f2)).andReturn(
-        new FileDifference("foo", f1, f2, Comparison.SAME, Comparison.SAME, null));
+    expect(differ.diffFiles("foo", f1, f2))
+        .andReturn(new FileDifference("foo", f1, f2, Comparison.SAME, Comparison.SAME, null));
 
     control.replay();
     CodebaseDifference d = CodebaseDifference.diffCodebases(c1, c2, differ);
@@ -56,8 +56,8 @@ public class CodebaseDifferenceTest extends TestCase {
     expect(c2.getRelativeFilenames()).andReturn(ImmutableSet.of("foo"));
     expect(c1.getFile("foo")).andReturn(f1);
     expect(c2.getFile("foo")).andReturn(f2);
-    expect(differ.diffFiles("foo", f1, f2)).andReturn(
-        new FileDifference("foo", f1, f2, Comparison.ONLY1, Comparison.SAME, null));
+    expect(differ.diffFiles("foo", f1, f2))
+        .andReturn(new FileDifference("foo", f1, f2, Comparison.ONLY1, Comparison.SAME, null));
 
     control.replay();
     CodebaseDifference d = CodebaseDifference.diffCodebases(c1, c2, differ);
@@ -65,5 +65,4 @@ public class CodebaseDifferenceTest extends TestCase {
 
     assertEquals(true, d.areDifferent());
   }
-
 }

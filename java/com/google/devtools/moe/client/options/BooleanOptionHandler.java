@@ -1,6 +1,6 @@
 // Copyright 2011 The MOE Authors All Rights Reserved.
 
-package com.google.devtools.moe.client;
+package com.google.devtools.moe.client.options;
 
 import com.google.common.collect.Sets;
 
@@ -13,24 +13,22 @@ import org.kohsuke.args4j.spi.Setter;
 
 import java.util.Set;
 
-public  class BooleanOptionHandler extends OptionHandler<Boolean> {
-  private static final Set<String> TRUES =
-      Sets.newHashSet("true", "on", "yes", "1");
-  private static final Set<String> FALSES =
-      Sets.newHashSet("false", "off", "no", "0");
+public class BooleanOptionHandler extends OptionHandler<Boolean> {
+  private static final Set<String> TRUES = Sets.newHashSet("true", "on", "yes", "1");
+  private static final Set<String> FALSES = Sets.newHashSet("false", "off", "no", "0");
 
   public BooleanOptionHandler(
-      CmdLineParser parser, OptionDef option,
-      Setter<? super Boolean> setter) {
+      CmdLineParser parser, OptionDef option, Setter<? super Boolean> setter) {
     super(parser, option, setter);
   }
 
   @Override
-      public int parseArguments(Parameters params) throws CmdLineException {
+  public int parseArguments(Parameters params) throws CmdLineException {
     String param = null;
     try {
       param = params.getParameter(0);
-    } catch (CmdLineException e) {}
+    } catch (CmdLineException expected) {
+    }
 
     if (param == null) {
       setter.addValue(true);
@@ -50,7 +48,7 @@ public  class BooleanOptionHandler extends OptionHandler<Boolean> {
   }
 
   @Override
-      public String getDefaultMetaVariable() {
+  public String getDefaultMetaVariable() {
     return null;
   }
 }

@@ -28,6 +28,7 @@ import javax.inject.Singleton;
  *
  * @author dbentley@google.com (Daniel Bentley)
  */
+@Singleton
 public class SystemFileSystem implements FileSystem {
   private final Map<File, Lifetime> tempDirLifetimes = Maps.newHashMap();
 
@@ -68,7 +69,8 @@ public class SystemFileSystem implements FileSystem {
   public void setLifetime(File path, Lifetime lifetime) {
     Preconditions.checkState(
         tempDirLifetimes.containsKey(path),
-        "Trying to set the Lifetime for an unknown path: %s", path);
+        "Trying to set the Lifetime for an unknown path: %s",
+        path);
     tempDirLifetimes.put(path, lifetime);
   }
 
@@ -171,25 +173,25 @@ public class SystemFileSystem implements FileSystem {
       throw new IOException("Invalid resource name: " + resource);
     }
 
-    File extractedFile = new File(
-        getTemporaryDirectory("resource_extraction_", Lifetimes.moeExecution()),
-        name);
+    File extractedFile =
+        new File(getTemporaryDirectory("resource_extraction_", Lifetimes.moeExecution()), name);
     makeDirsForFile(extractedFile);
     OutputStream os = Files.asByteSink(extractedFile).openStream();
-    Resources.copy(
-        SystemFileSystem.class.getResource(resource), os);
+    Resources.copy(SystemFileSystem.class.getResource(resource), os);
     os.close();
     return extractedFile;
   }
 
   @Override
   public String fileToString(File f) throws IOException {
-      return Files.toString(f, UTF_8);
+    return Files.toString(f, UTF_8);
   }
 
   /** A Dagger module for binding this implementation of {@link FileSystem}. */
-  @dagger.Module public static class Module {
-    @Provides @Singleton public FileSystem fileSystem(SystemFileSystem impl) {
+  @dagger.Module
+  public static class Module {
+    @Provides
+    public FileSystem fileSystem(SystemFileSystem impl) {
       return impl;
     }
   }

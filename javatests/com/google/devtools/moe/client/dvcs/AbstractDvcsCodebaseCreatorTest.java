@@ -45,7 +45,8 @@ public class AbstractDvcsCodebaseCreatorTest extends TestCase {
   private final RevisionHistory mockRevHistory = control.createMock(RevisionHistory.class);
   private final AbstractDvcsCodebaseCreator codebaseCreator =
       new AbstractDvcsCodebaseCreator(Suppliers.ofInstance(mockRepo), mockRevHistory, "public") {
-        @Override protected LocalClone cloneAtLocalRoot(String localroot) {
+        @Override
+        protected LocalClone cloneAtLocalRoot(String localroot) {
           throw new UnsupportedOperationException();
         }
       };
@@ -57,16 +58,22 @@ public class AbstractDvcsCodebaseCreatorTest extends TestCase {
     Injector context(); // TODO (b/19676630) Remove when bug is fixed.
   }
 
-  @dagger.Module class Module {
-    @Provides public FileSystem fileSystem() {
+  @dagger.Module
+  class Module {
+    @Provides
+    public FileSystem fileSystem() {
       return mockFS;
     }
   }
 
-  @Override protected void setUp() throws Exception {
+  @Override
+  protected void setUp() throws Exception {
     super.setUp();
-    Injector.INSTANCE = DaggerAbstractDvcsCodebaseCreatorTest_Component.builder()
-        .module(new Module()).build().context();
+    Injector.INSTANCE =
+        DaggerAbstractDvcsCodebaseCreatorTest_Component.builder()
+            .module(new Module())
+            .build()
+            .context();
 
     expect(mockRepo.getConfig()).andReturn(mockRepoConfig).anyTimes();
     expect(mockRepoConfig.getIgnoreFileRes()).andReturn(ImmutableList.<String>of());
@@ -76,11 +83,11 @@ public class AbstractDvcsCodebaseCreatorTest extends TestCase {
   public void testCreate_noGivenRev() throws Exception {
     String archiveTempDir = "/tmp/git_archive_mockrepo_head";
     // Short-circuit Utils.filterFilesByPredicate(ignore_files_re).
-    expect(Injector.INSTANCE.fileSystem().findFiles(new File(archiveTempDir))).andReturn(
-        ImmutableSet.<File>of());
+    expect(Injector.INSTANCE.fileSystem().findFiles(new File(archiveTempDir)))
+        .andReturn(ImmutableSet.<File>of());
 
     expect(mockRevHistory.findHighestRevision(null))
-        .andReturn(new Revision("mock head changeset ID", MOCK_REPO_NAME));
+        .andReturn(Revision.create("mock head changeset ID", MOCK_REPO_NAME));
     expect(mockRepo.archiveAtRevision("mock head changeset ID"))
         .andReturn(new File(archiveTempDir));
 
@@ -99,11 +106,11 @@ public class AbstractDvcsCodebaseCreatorTest extends TestCase {
     String givenRev = "givenrev";
     String archiveTempDir = "/tmp/git_reclone_mockrepo_head_" + givenRev;
     // Short-circuit Utils.filterFilesByPredicate(ignore_files_re).
-    expect(Injector.INSTANCE.fileSystem().findFiles(new File(archiveTempDir))).andReturn(
-        ImmutableSet.<File>of());
+    expect(Injector.INSTANCE.fileSystem().findFiles(new File(archiveTempDir)))
+        .andReturn(ImmutableSet.<File>of());
 
     expect(mockRevHistory.findHighestRevision(givenRev))
-        .andReturn(new Revision(givenRev, MOCK_REPO_NAME));
+        .andReturn(Revision.create(givenRev, MOCK_REPO_NAME));
     expect(mockRepo.archiveAtRevision(givenRev)).andReturn(new File(archiveTempDir));
 
     control.replay();

@@ -16,12 +16,13 @@ public class MoeProblem extends RuntimeException {
   private final Object[] args;
 
   // TODO(cgruber): Check not null and ensure no one is calling it that way.
-  public MoeProblem(String explanation, Object ... args) {
+  public MoeProblem(String explanation, Object... args) {
     this.explanation = explanation;
     this.args = args;
   }
 
   @Override
-  public String getMessage() { return String.format(explanation, args); }
-
+  public String getMessage() {
+    return String.format(explanation, args);
+  }
 }

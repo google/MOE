@@ -3,18 +3,15 @@
 package com.google.devtools.moe.client.directives;
 
 import com.google.common.base.Joiner;
-import com.google.devtools.moe.client.MoeOptions;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.database.Db;
-import com.google.devtools.moe.client.database.Equivalence;
 import com.google.devtools.moe.client.database.FileDb;
+import com.google.devtools.moe.client.database.RepositoryEquivalence;
 import com.google.devtools.moe.client.logic.LastEquivalenceLogic;
 import com.google.devtools.moe.client.parser.Parser;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
-import com.google.devtools.moe.client.project.InvalidProject;
-import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.project.ProjectContextFactory;
 import com.google.devtools.moe.client.repositories.Repository;
 import com.google.devtools.moe.client.repositories.Revision;
@@ -32,39 +29,40 @@ import javax.inject.Inject;
  *
  */
 public class LastEquivalenceDirective extends Directive {
-  private final LastEquivalenceOptions options = new LastEquivalenceOptions();
+  @Option(name = "--db", required = true, usage = "Location of MOE database")
+  String dbLocation = "";
 
-  private final ProjectContextFactory contextFactory;
+  @Option(
+    name = "--from_repository",
+    required = true,
+    usage = "Expression for the from-repository to check for Equivalences in"
+  )
+  String fromRepository = "";
+
+  @Option(
+    name = "--with_repository",
+    required = true,
+    usage = "Name of the to-repository to check for Equivalences in"
+  )
+  String withRepository = "";
+
   private final Ui ui;
 
   @Inject
   LastEquivalenceDirective(ProjectContextFactory contextFactory, Ui ui) {
-    this.contextFactory = contextFactory;
+    super(contextFactory); // TODO(cgruber) Inject project context, not its factory
     this.ui = ui;
   }
 
   @Override
-  public MoeOptions getFlags() {
-    return options;
-  }
-
-  @Override
-  public int perform() {
-    ProjectContext context;
-    try {
-      context = contextFactory.makeProjectContext(options.configFilename);
-    } catch (InvalidProject e) {
-      ui.error(e, "Error creating project");
-      return 1;
-    }
-
+  protected int performDirectiveBehavior() {
     Db db;
-    if (options.dbLocation.equals("dummy")) {
+    if (dbLocation.equals("dummy")) {
       db = new DummyDb(true);
     } else {
       // TODO(user): also allow for url dbLocation types
       try {
-        db = FileDb.makeDbFromFile(options.dbLocation);
+        db = FileDb.makeDbFromFile(dbLocation);
       } catch (MoeProblem e) {
         ui.error(e, "Couldn't create DB");
         return 1;
@@ -73,13 +71,13 @@ public class LastEquivalenceDirective extends Directive {
 
     RepositoryExpression repoEx;
     try {
-      repoEx = Parser.parseRepositoryExpression(options.fromRepository);
+      repoEx = Parser.parseRepositoryExpression(fromRepository);
     } catch (ParseError e) {
-      ui.error(e, "Couldn't parse " + options.fromRepository);
+      ui.error(e, "Couldn't parse " + fromRepository);
       return 1;
     }
 
-    Repository r = context.getRepository(repoEx.getRepositoryName());
+    Repository r = context().getRepository(repoEx.getRepositoryName());
 
     RevisionHistory rh = r.revisionHistory();
     if (rh == null) {
@@ -89,18 +87,17 @@ public class LastEquivalenceDirective extends Directive {
 
     Revision rev = rh.findHighestRevision(repoEx.getOption("revision"));
 
-    List<Equivalence> lastEquivs = LastEquivalenceLogic.lastEquivalence(
-        options.withRepository, rev, db, rh);
+    List<RepositoryEquivalence> lastEquivs =
+        LastEquivalenceLogic.lastEquivalence(withRepository, rev, db, rh);
 
     if (lastEquivs.isEmpty()) {
       ui.info(
-          String.format(
-              "No equivalence was found between %s and %s starting from %s.",
-              rev.repositoryName,
-              options.withRepository,
-              rev));
+          "No equivalence was found between %s and %s starting from %s.",
+          rev.repositoryName(),
+          withRepository,
+          rev);
     } else {
-      ui.info(String.format("Last equivalence: %s", Joiner.on(", ").join(lastEquivs)));
+      ui.info("Last equivalence: %s", Joiner.on(", ").join(lastEquivs));
     }
 
     return 0;
@@ -110,20 +107,4 @@ public class LastEquivalenceDirective extends Directive {
   public String getDescription() {
     return "Finds the last equivalence";
   }
-
-  static class LastEquivalenceOptions extends MoeOptions {
-    @Option(name = "--config_file", required = true,
-            usage = "Location of MOE config file")
-    String configFilename = "";
-    @Option(name = "--db", required = true,
-            usage = "Location of MOE database")
-    String dbLocation = "";
-    @Option(name = "--from_repository", required = true,
-        usage = "Expression for the from-repository to check for Equivalences in")
-    String fromRepository = "";
-    @Option(name = "--with_repository", required = true,
-            usage = "Name of the to-repository to check for Equivalences in")
-    String withRepository = "";
-  }
-
 }

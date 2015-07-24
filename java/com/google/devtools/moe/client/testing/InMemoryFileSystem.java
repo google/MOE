@@ -4,7 +4,6 @@ package com.google.devtools.moe.client.testing;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -45,7 +44,6 @@ public class InMemoryFileSystem implements FileSystem {
 
   private final Map<File, Lifetime> tempDirLifetimes = Maps.newHashMap();
 
-
   /**
    * Constructs an {@code InMemoryFileSystem} that is initially empty.
    */
@@ -66,7 +64,6 @@ public class InMemoryFileSystem implements FileSystem {
       }
     }
   }
-
 
   /**
    * Returns mappings for the dir parts of a path. Examples:
@@ -143,7 +140,7 @@ public class InMemoryFileSystem implements FileSystem {
         continue;
       }
       String subPath = absFilename.substring(dirPrefix.length());
-      List<String> dirParts = ImmutableList.copyOf(SEP_SPLITTER.split(subPath));
+      List<String> dirParts = SEP_SPLITTER.splitToList(subPath);
       if (dirParts.size() == 1) {
         foundFiles.add(new File(absFilename));
       }
@@ -242,9 +239,10 @@ public class InMemoryFileSystem implements FileSystem {
 
   @Override
   public File getResourceAsFile(String resource) {
-    File outFile = new File(
-        getTemporaryDirectory("resource_extraction_", Lifetimes.moeExecution()),
-        new File(resource).getName());
+    File outFile =
+        new File(
+            getTemporaryDirectory("resource_extraction_", Lifetimes.moeExecution()),
+            new File(resource).getName());
     files.put(outFile.getAbsolutePath(), resource);
     return outFile;
   }
@@ -255,40 +253,48 @@ public class InMemoryFileSystem implements FileSystem {
     return files.get(f.getAbsolutePath());
   }
 
-
   private static void checkAbsolute(File file) {
     Preconditions.checkArgument(
-        file.isAbsolute(),
-        "An absolute path was expected: " + file.getAbsolutePath());
+        file.isAbsolute(), "An absolute path was expected: %s", file.getAbsolutePath());
   }
 
   private void checkNotAnExistentDirectory(File file) {
     Preconditions.checkArgument(
         !exists(file) || isFile(file),
-        "A non-existent or file path was expected: " + file.getAbsolutePath());
+        "A non-existent or file path was expected: %s",
+        file.getAbsolutePath());
   }
 
   private void checkExistent(File file) {
     Preconditions.checkArgument(
         exists(file),
-        "An existent path was expected: " + file.getAbsolutePath() + "; current files: " + files);
+        "An existent path was expected: %s; current files: %s",
+        file.getAbsolutePath(),
+        files);
   }
 
   private void checkExistentFile(File file) {
     Preconditions.checkArgument(
         isFile(file),
-        "An existent file was expected: " + file.getAbsolutePath() + "; current files: " + files);
+        "An existent file was expected: %s; current files: %s",
+        file.getAbsolutePath(),
+        files);
   }
 
   private void checkExistentDirectory(File file) {
     Preconditions.checkArgument(
         isDirectory(file),
-        "An existent dir was expected: " + file.getAbsolutePath() + "; current files: " + files);
+        "An existent dir was expected: %s; current files: %s",
+        file.getAbsolutePath(),
+        files);
   }
 
   /** A Dagger module for binding this implementation of {@link FileSystem}. */
-  @dagger.Module public static class Module {
-    @Provides @Singleton public FileSystem fileSystem(InMemoryFileSystem impl) {
+  @dagger.Module
+  public static class Module {
+    @Provides
+    @Singleton
+    public FileSystem fileSystem(InMemoryFileSystem impl) {
       return impl;
     }
   }

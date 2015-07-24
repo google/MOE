@@ -4,7 +4,6 @@ package com.google.devtools.moe.client.repositories;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableList;
 
 import java.util.List;
 import java.util.regex.Pattern;
@@ -23,7 +22,7 @@ public class PublicSectionMetadataScrubber extends MetadataScrubber {
 
   @Override
   public RevisionMetadata scrub(RevisionMetadata rm) {
-    List<String> lines = ImmutableList.copyOf(Splitter.on('\n').split(rm.description));
+    List<String> lines = Splitter.on('\n').splitToList(rm.description);
     int startPublicSection = -1;
     int endPublicSection = -1;
     int currentLine = 0;
@@ -37,9 +36,10 @@ public class PublicSectionMetadataScrubber extends MetadataScrubber {
       ++currentLine;
     }
 
-    String newDesc = (startPublicSection >= 0)
-        ? Joiner.on("\n").join(lines.subList(startPublicSection + 1, endPublicSection))
-        : rm.description;
+    String newDesc =
+        (startPublicSection >= 0)
+            ? Joiner.on("\n").join(lines.subList(startPublicSection + 1, endPublicSection))
+            : rm.description;
     return new RevisionMetadata(rm.id, rm.author, rm.date, newDesc, rm.parents);
   }
 }

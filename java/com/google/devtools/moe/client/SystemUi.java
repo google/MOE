@@ -19,6 +19,7 @@ import javax.inject.Singleton;
  *
  * @author dbentley@google.com (Daniel Bentley)
  */
+@Singleton
 public class SystemUi extends Ui {
   private final Logger logger = Logger.getLogger(SystemUi.class.getName());
 
@@ -49,38 +50,40 @@ public class SystemUi extends Ui {
   }
 
   @Override
-  public void info(String msg) {
+  public void info(String msg, Object... args) {
     clearOutput();
-    logHelper(indent(msg));
+    logHelper(indent(String.format(msg, args)));
   }
 
   @Override
-  public void debug(String msg) {
-    logger.log(Level.INFO, msg);
+  public void debug(String msg, Object... args) {
+    logger.log(Level.INFO, String.format(msg, args));
   }
 
-  private void logHelper(String msg) {
-    System.out.println(msg);
-    logger.log(Level.INFO, msg);
+  private void logHelper(String message) {
+    System.out.println(message);
+    logger.log(Level.INFO, message);
   }
 
-  @Override public void error(String msg) {
+  @Override
+  public void error(String msg, Object... args) {
     clearOutput();
-    logger.log(Level.SEVERE, msg);
+    logger.log(Level.SEVERE, String.format(msg, args));
   }
 
-  @Override public void error(Throwable e, String msg) {
+  @Override
+  public void error(Throwable e, String msg, Object... args) {
     clearOutput();
-
+    String message = String.format(msg, args);
     // Do not expose the stack trace to the user. Just send it to the INFO logs.
-    logger.log(Level.SEVERE, msg + ": " + e.getMessage());
-    logger.log(Level.INFO, msg, e);
+    logger.log(Level.SEVERE, message + ": " + e.getMessage());
+    logger.log(Level.INFO, message, e);
   }
 
   @Override
-  public Ui.Task pushTask(String task, String description) {
+  public Ui.Task pushTask(String task, String descriptionFormat, Object... args) {
     clearOutput();
-
+    String description = String.format(descriptionFormat, args);
     String indented = indent(description + "... ");
     System.out.print(indented);
     logger.log(Level.INFO, indented);
@@ -100,15 +103,16 @@ public class SystemUi extends Ui {
       logHelper(result);
     } else {
       // We need to print the description again
-      logHelper(
-          indent("DONE: " + task.description + ": " + result));
+      logHelper(indent("DONE: " + task.description + ": " + result));
     }
     currentOutput = null;
   }
 
   /** A Dagger module for binding this implementation of {@link Ui}. */
-  @dagger.Module public static class Module {
-    @Provides @Singleton public Ui ui(SystemUi impl) {
+  @dagger.Module
+  public static class Module {
+    @Provides
+    public Ui ui(SystemUi impl) {
       return impl;
     }
   }

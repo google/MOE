@@ -42,6 +42,7 @@ public class SvnWriterTest extends TestCase {
   private final FileSystem fileSystem = control.createMock(FileSystem.class);
   private final CommandRunner cmd = control.createMock(CommandRunner.class);
   private final RepositoryConfig mockConfig = control.createMock(RepositoryConfig.class);
+  private final SvnUtil util = new SvnUtil(cmd);
 
   // TODO(cgruber): Rework these when statics aren't inherent in the design.
   @dagger.Component(modules = {TestingModule.class, Module.class})
@@ -50,18 +51,21 @@ public class SvnWriterTest extends TestCase {
     Injector context(); // TODO (b/19676630) Remove when bug is fixed.
   }
 
-
   @dagger.Module
   class Module {
-    @Provides public CommandRunner commandRunner() {
+    @Provides
+    public CommandRunner commandRunner() {
       return cmd;
     }
-    @Provides public FileSystem fileSystem() {
+
+    @Provides
+    public FileSystem fileSystem() {
       return fileSystem;
     }
   }
 
-  @Override protected void setUp() throws Exception {
+  @Override
+  protected void setUp() throws Exception {
     super.setUp();
     Injector.INSTANCE =
         DaggerSvnWriterTest_Component.builder().module(new Module()).build().context();
@@ -71,47 +75,47 @@ public class SvnWriterTest extends TestCase {
     expect(mockConfig.getIgnoreFileRes()).andReturn(ImmutableList.<String>of()).anyTimes();
   }
 
-  private void expectSvnCommand(List<String> args, String workingDirectory, String result,
-                                CommandRunner cmd) {
+  private void expectSvnCommand(
+      List<String> args, String workingDirectory, String result, CommandRunner cmd) {
     ImmutableList.Builder<String> withAuthArgs = new ImmutableList.Builder<String>();
     withAuthArgs.add("--no-auth-cache").addAll(args);
     try {
       expect(cmd.runCommand("svn", withAuthArgs.build(), workingDirectory)).andReturn(result);
-    } catch (Exception e) {}
+    } catch (Exception e) {
+    }
   }
 
   private File f(String filename) {
     return new File(filename);
   }
 
-  private RepositoryExpression e(String creatorIdentifier,
-                               ImmutableMap<String, String> creatorOptions) {
-    return new RepositoryExpression(
-        new Term(creatorIdentifier, creatorOptions));
+  private RepositoryExpression e(
+      String creatorIdentifier, ImmutableMap<String, String> creatorOptions) {
+    return new RepositoryExpression(new Term(creatorIdentifier, creatorOptions));
   }
 
   public void testPutEmptyCodebase() throws Exception {
     expect(fileSystem.findFiles(f("/codebase"))).andReturn(ImmutableSet.<File>of());
-    expect(fileSystem.findFiles(f("/writer"))).andReturn(
-        ImmutableSet.<File>of(f("/writer/.svn/")));
+    expect(fileSystem.findFiles(f("/writer"))).andReturn(ImmutableSet.<File>of(f("/writer/.svn/")));
 
     control.replay();
-    Codebase c = new Codebase(f("/codebase"), "public",
-                              e("public", ImmutableMap.<String, String>of()));
-    SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"));
+    Codebase c =
+        new Codebase(f("/codebase"), "public", e("public", ImmutableMap.<String, String>of()));
+    SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"), null);
     DraftRevision r = e.putCodebase(c);
     control.verify();
     assertEquals("/writer", r.getLocation());
   }
 
   public void testWrongProjectSpace() throws Exception {
-    Codebase c = new Codebase(f("/codebase"), "internal",
-                              e("internal", ImmutableMap.<String, String>of()));
-    SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"));
+    Codebase c =
+        new Codebase(f("/codebase"), "internal", e("internal", ImmutableMap.<String, String>of()));
+    SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"), null);
     try {
       DraftRevision r = e.putCodebase(c);
       fail();
-    } catch (MoeProblem p) {}
+    } catch (MoeProblem p) {
+    }
   }
 
   public void testDeletedFile() throws Exception {
@@ -122,9 +126,9 @@ public class SvnWriterTest extends TestCase {
     expect(fileSystem.isExecutable(f("/writer/foo"))).andReturn(false);
     expectSvnCommand(ImmutableList.of("rm", "foo"), "/writer", "", cmd);
     control.replay();
-    Codebase c = new Codebase(f("/codebase"), "public",
-                              e("public", ImmutableMap.<String, String>of()));
-    SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"));
+    Codebase c =
+        new Codebase(f("/codebase"), "public", e("public", ImmutableMap.<String, String>of()));
+    SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"), util);
     e.putFile("foo", c);
     control.verify();
   }
@@ -138,9 +142,9 @@ public class SvnWriterTest extends TestCase {
     fileSystem.makeDirsForFile(f("/writer/foo"));
     fileSystem.copyFile(f("/codebase/foo"), f("/writer/foo"));
     control.replay();
-    Codebase c = new Codebase(f("/codebase"), "public",
-                              e("public", ImmutableMap.<String, String>of()));
-    SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"));
+    Codebase c =
+        new Codebase(f("/codebase"), "public", e("public", ImmutableMap.<String, String>of()));
+    SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"), null);
     e.putFile("foo", c);
     control.verify();
   }
@@ -155,9 +159,9 @@ public class SvnWriterTest extends TestCase {
     fileSystem.copyFile(f("/codebase/foo"), f("/writer/foo"));
     expectSvnCommand(ImmutableList.of("add", "--parents", "foo"), "/writer", "", cmd);
     control.replay();
-    Codebase c = new Codebase(f("/codebase"), "public",
-                              e("public", ImmutableMap.<String, String>of()));
-    SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"));
+    Codebase c =
+        new Codebase(f("/codebase"), "public", e("public", ImmutableMap.<String, String>of()));
+    SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"), util);
     e.putFile("foo", c);
     control.verify();
   }
@@ -171,13 +175,13 @@ public class SvnWriterTest extends TestCase {
     fileSystem.makeDirsForFile(f("/writer/test.html"));
     fileSystem.copyFile(f("/codebase/test.html"), f("/writer/test.html"));
     expectSvnCommand(ImmutableList.of("add", "--parents", "test.html"), "/writer", "", cmd);
-    expectSvnCommand(ImmutableList.of("propset", "svn:mime-type", "text/html", "test.html"),
-        "/writer", "", cmd);
+    expectSvnCommand(
+        ImmutableList.of("propset", "svn:mime-type", "text/html", "test.html"), "/writer", "", cmd);
     control.replay();
 
-    Codebase c = new Codebase(f("/codebase"), "public",
-                              e("public", ImmutableMap.<String, String>of()));
-    SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"));
+    Codebase c =
+        new Codebase(f("/codebase"), "public", e("public", ImmutableMap.<String, String>of()));
+    SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"), util);
     e.putFile("test.html", c);
     control.verify();
   }
@@ -192,9 +196,9 @@ public class SvnWriterTest extends TestCase {
     fileSystem.copyFile(f("/codebase/foo"), f("/writer/foo"));
     expectSvnCommand(ImmutableList.of("propset", "svn:executable", "*", "foo"), "/writer", "", cmd);
     control.replay();
-    Codebase c = new Codebase(f("/codebase"), "public",
-                              e("public", ImmutableMap.<String, String>of()));
-    SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"));
+    Codebase c =
+        new Codebase(f("/codebase"), "public", e("public", ImmutableMap.<String, String>of()));
+    SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"), util);
     e.putFile("foo", c);
     control.verify();
   }
@@ -209,34 +213,33 @@ public class SvnWriterTest extends TestCase {
     fileSystem.copyFile(f("/codebase/foo"), f("/writer/foo"));
     expectSvnCommand(ImmutableList.of("propdel", "svn:executable", "foo"), "/writer", "", cmd);
     control.replay();
-    Codebase c = new Codebase(
-        f("/codebase"), "public",
-        e("public", ImmutableMap.<String, String>of()));
-    SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"));
+    Codebase c =
+        new Codebase(f("/codebase"), "public", e("public", ImmutableMap.<String, String>of()));
+    SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"), util);
     e.putFile("foo", c);
     control.verify();
   }
 
   public void testPutEmptyCodebaseWithMetadata() throws Exception {
     expect(fileSystem.findFiles(f("/codebase"))).andReturn(ImmutableSet.<File>of());
-    expect(fileSystem.findFiles(f("/writer"))).andReturn(
-        ImmutableSet.<File>of(f("/writer/.svn/")));
+    expect(fileSystem.findFiles(f("/writer"))).andReturn(ImmutableSet.<File>of(f("/writer/.svn/")));
 
     File script = new File("/writer/svn_commit.sh");
-    fileSystem.write("#!/bin/sh -e\n" +
-                     "svn update\n" +
-                     "svn commit -m \"desc\"\n" +
-                     "svn propset -r HEAD svn:author \"author\" --revprop",
-                     script);
+    fileSystem.write(
+        "#!/bin/sh -e\n"
+            + "svn update\n"
+            + "svn commit -m \"desc\"\n"
+            + "svn propset -r HEAD svn:author \"author\" --revprop",
+        script);
     fileSystem.setExecutable(script);
 
     control.replay();
-    Codebase c = new Codebase(f("/codebase"), "public",
-                              e("public", ImmutableMap.<String, String>of()));
-    RevisionMetadata rm = new RevisionMetadata(
-        "rev1", "author", new DateTime(1L), "desc",
-        ImmutableList.<Revision>of());
-    SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"));
+    Codebase c =
+        new Codebase(f("/codebase"), "public", e("public", ImmutableMap.<String, String>of()));
+    RevisionMetadata rm =
+        new RevisionMetadata(
+            "rev1", "author", new DateTime(1L), "desc", ImmutableList.<Revision>of());
+    SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"), null);
     DraftRevision r = e.putCodebase(c, rm);
     control.verify();
     assertEquals("/writer", r.getLocation());

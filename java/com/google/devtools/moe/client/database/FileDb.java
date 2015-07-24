@@ -22,38 +22,50 @@ import java.util.Set;
  */
 public class FileDb implements Db {
 
-  private static final Gson FILE_DB_GSON = new GsonBuilder().setPrettyPrinting().create();
+  private static final Gson FILE_DB_GSON = new GsonBuilder()
+      .setPrettyPrinting()
+      .registerTypeHierarchyAdapter(
+          RepositoryEquivalence.class, new RepositoryEquivalence.Serializer())
+      .create();
 
   private final DbStorage dbStorage;
 
-  public FileDb (DbStorage dbStorage) {
+  // TODO(cgruber): Rationalize DbStorage.
+  public FileDb(DbStorage dbStorage) {
     this.dbStorage = dbStorage;
   }
 
   /**
    * @return all Equivalences stored in the database
    */
-  public Set<Equivalence> getEquivalences() {
+  public Set<RepositoryEquivalence> getEquivalences() {
     return ImmutableSet.copyOf(dbStorage.getEquivalences());
   }
 
   @Override
-  public void noteEquivalence(Equivalence equivalence) {
+  public void noteEquivalence(RepositoryEquivalence equivalence) {
     dbStorage.addEquivalence(equivalence);
   }
 
   @Override
   public Set<Revision> findEquivalences(Revision revision, String otherRepository) {
     ImmutableSet.Builder<Revision> equivalentToRevision = ImmutableSet.builder();
-    for (Equivalence e : dbStorage.getEquivalences()) {
+    for (RepositoryEquivalence e : dbStorage.getEquivalences()) {
       if (e.hasRevision(revision)) {
         Revision otherRevision = e.getOtherRevision(revision);
-        if (otherRevision.repositoryName.equals(otherRepository)) {
+        if (otherRevision.repositoryName().equals(otherRepository)) {
           equivalentToRevision.add(otherRevision);
         }
       }
     }
     return equivalentToRevision.build();
+  }
+
+  /**
+   * @return all {@link SubmittedMigration} objects stored in the database
+   */
+  public Set<SubmittedMigration> getMigrations() {
+    return ImmutableSet.copyOf(dbStorage.getMigrations());
   }
 
   @Override
@@ -63,7 +75,7 @@ public class FileDb implements Db {
 
   @VisibleForTesting
   public String toJsonString() {
-    return FILE_DB_GSON.toJson(dbStorage);
+    return FILE_DB_GSON.toJson(dbStorage) + "\n";
   }
 
   @Override

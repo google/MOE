@@ -37,11 +37,15 @@ public class UtilsTest extends TestCase {
     Injector context(); // TODO (b/19676630) Remove when bug is fixed.
   }
 
-  @dagger.Module class Module {
-    @Provides public CommandRunner commandRunner() {
+  @dagger.Module
+  class Module {
+    @Provides
+    public CommandRunner commandRunner() {
       return mockcmd;
     }
-    @Provides public FileSystem fileSystem() {
+
+    @Provides
+    public FileSystem fileSystem() {
       return fileSystem;
     }
   }
@@ -55,42 +59,37 @@ public class UtilsTest extends TestCase {
   public void testFilterByRegEx() throws Exception {
     assertEquals(
         ImmutableSet.of("foo", "br"),
-        Utils.filterByRegEx(ImmutableSet.of("foo", "br", "bar", "baar"),
-                            ImmutableList.of("ba+r")));
+        Utils.filterByRegEx(ImmutableSet.of("foo", "br", "bar", "baar"), ImmutableList.of("ba+r")));
   }
 
   public void testCheckKeys() throws Exception {
-    Utils.checkKeys(
-        ImmutableMap.of("foo", "bar"), ImmutableSet.of("foo", "baz"));
+    Utils.checkKeys(ImmutableMap.of("foo", "bar"), ImmutableSet.of("foo", "baz"));
 
     try {
-      Utils.checkKeys(
-          ImmutableMap.of("foo", "bar"), ImmutableSet.of("baz"));
+      Utils.checkKeys(ImmutableMap.of("foo", "bar"), ImmutableSet.of("baz"));
       fail();
-    } catch (MoeProblem expected) {}
+    } catch (MoeProblem expected) {
+    }
 
     Utils.checkKeys(ImmutableMap.<String, String>of(), ImmutableSet.<String>of());
 
     try {
       Utils.checkKeys(ImmutableMap.<String, String>of("foo", "bar"), ImmutableSet.<String>of());
       fail("Non-empty options map didn't fail on key emptiness check.");
-    } catch (MoeProblem expected) {}
+    } catch (MoeProblem expected) {
+    }
   }
 
   public void testMakeFilenamesRelative() throws Exception {
     assertEquals(
         ImmutableSet.of("bar", "baz/quux"),
         Utils.makeFilenamesRelative(
-            ImmutableSet.of(
-                new File("/foo/bar"),
-                new File("/foo/baz/quux")),
-            new File("/foo")));
+            ImmutableSet.of(new File("/foo/bar"), new File("/foo/baz/quux")), new File("/foo")));
     try {
-      Utils.makeFilenamesRelative(
-          ImmutableSet.of(new File("/foo/bar")),
-          new File("/dev/null"));
+      Utils.makeFilenamesRelative(ImmutableSet.of(new File("/foo/bar")), new File("/dev/null"));
       fail();
-    } catch (MoeProblem p) {}
+    } catch (MoeProblem p) {
+    }
   }
 
   /**
@@ -106,9 +105,11 @@ public class UtilsTest extends TestCase {
         .andReturn(new File("/test"));
     fileSystem.makeDirs(EasyMock.<File>anyObject());
     EasyMock.expectLastCall().once();
-    expect(mockcmd.runCommand(EasyMock.<String>anyObject(),
-                              EasyMock.<List<String>>anyObject(),
-                              EasyMock.<String>anyObject())).andReturn(null);
+    expect(mockcmd.runCommand(
+            EasyMock.<String>anyObject(),
+            EasyMock.<List<String>>anyObject(),
+            EasyMock.<String>anyObject()))
+        .andReturn(null);
     control.replay();
     // Run the .expandToDirectory method.
     File directory = Utils.expandToDirectory(file);
@@ -137,9 +138,8 @@ public class UtilsTest extends TestCase {
     expect(fileSystem.getTemporaryDirectory("expanded_tar_"))
         .andReturn(new File("/dummy/path/45.expanded"));
     expect(mockcmd.runCommand(
-        "tar",
-        ImmutableList.of("-xf", "/dummy/path/45.tar"),
-        "/dummy/path/45.expanded")).andReturn("");
+            "tar", ImmutableList.of("-xf", "/dummy/path/45.tar"), "/dummy/path/45.expanded"))
+        .andReturn("");
     control.replay();
     File expanded = Utils.expandTar(new File("/dummy/path/45.tar"));
     assertEquals(new File("/dummy/path/45.expanded"), expanded);
@@ -158,8 +158,8 @@ public class UtilsTest extends TestCase {
     expect(fileSystem.isDirectory(new File("/src/dummy"))).andReturn(true);
     fileSystem.makeDirsForFile(new File("/dest/dummy"));
     expect(fileSystem.isFile(new File("/src/dummy"))).andReturn(false);
-    expect(fileSystem.listFiles(new File("/src/dummy"))).
-        andReturn(new File[] {new File("/src/dummy/file")});
+    expect(fileSystem.listFiles(new File("/src/dummy")))
+        .andReturn(new File[] {new File("/src/dummy/file")});
     expect(fileSystem.getName(new File("/src/dummy/file"))).andReturn("file");
     expect(fileSystem.isDirectory(new File("/src/dummy/file"))).andReturn(false);
     fileSystem.makeDirsForFile(new File("/dest/dummy/file"));

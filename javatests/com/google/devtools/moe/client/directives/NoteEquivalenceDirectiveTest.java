@@ -37,18 +37,19 @@ public class NoteEquivalenceDirectiveTest extends TestCase {
     contextFactory.projectConfigs.put(
         "moe_config.txt",
         "{'name': 'foo', 'repositories': {"
-            + "  'internal': {'type': 'dummy'}, 'public': {'type': 'dummy'}" + "}}");
+            + "  'internal': {'type': 'dummy'}, 'public': {'type': 'dummy'}"
+            + "}}");
     super.setUp();
     Injector.INSTANCE = new Injector(mockFs, cmd, contextFactory, ui);
 
     d = new NoteEquivalenceDirective(contextFactory, mockFs, ui);
-    d.getFlags().configFilename = "moe_config.txt";
-    d.getFlags().dbLocation = "/foo/db.txt";
+    d.setContextFileName("moe_config.txt");
+    d.dbLocation = "/foo/db.txt";
   }
 
   public void testPerform_invalidRepo() throws Exception {
-    d.getFlags().repo1 = "nonexistent(revision=2)";
-    d.getFlags().repo2 = "public(revision=3)";
+    d.repo1 = "nonexistent(revision=2)";
+    d.repo2 = "public(revision=3)";
 
     expect(mockFs.exists(new File("/foo/db.txt"))).andReturn(false);
 
@@ -65,26 +66,30 @@ public class NoteEquivalenceDirectiveTest extends TestCase {
   }
 
   public void testPerform_newDbFile() throws Exception {
-    d.getFlags().repo1 = "internal(revision=1)";
-    d.getFlags().repo2 = "public(revision=4)";
+    d.repo1 = "internal(revision=1)";
+    d.repo2 = "public(revision=4)";
 
     expect(mockFs.exists(new File("/foo/db.txt"))).andReturn(false);
-    mockFs.write(Joiner.on('\n').join(
-        "{",
-        "  'equivalences': [",
-        "    {",
-        "      'rev1': {",
-        "        'revId': '1',",
-        "        'repositoryName': 'internal'",
-        "      },",
-        "      'rev2': {",
-        "        'revId': '4',",
-        "        'repositoryName': 'public'",
-        "      }",
-        "    }",
-        "  ],",
-        "  'migrations': []",
-        "}").replace('\'', '"'),
+    mockFs.write(
+        Joiner.on('\n')
+            .join(
+                "{",
+                "  'equivalences': [",
+                "    {",
+                "      'rev1': {",
+                "        'revId': '1',",
+                "        'repositoryName': 'internal'",
+                "      },",
+                "      'rev2': {",
+                "        'revId': '4',",
+                "        'repositoryName': 'public'",
+                "      }",
+                "    }",
+                "  ],",
+                "  'migrations': []",
+                "}",
+                "")
+            .replace('\'', '"'),
         new File("/foo/db.txt"));
 
     control.replay();
@@ -95,29 +100,33 @@ public class NoteEquivalenceDirectiveTest extends TestCase {
   }
 
   public void testPerform_existingDbFile_noChanges() throws Exception {
-    d.getFlags().repo1 = "internal(revision=1)";
-    d.getFlags().repo2 = "public(revision=4)";
+    d.repo1 = "internal(revision=1)";
+    d.repo2 = "public(revision=4)";
 
-    String dbString = Joiner.on('\n').join(
-        "{",
-        "  'equivalences': [",
-        "    {",
-        "      'rev1': {",
-        "        'revId': '1',",
-        "        'repositoryName': 'internal'",
-        "      },",
-        "      'rev2': {",
-        "        'revId': '4',",
-        "        'repositoryName': 'public'",
-        "      }",
-        "    }",
-        "  ],",
-        "  'migrations': []",
-        "}").replace('\'', '"');
+    String dbString =
+        Joiner.on('\n')
+            .join(
+                "{",
+                "  'equivalences': [",
+                "    {",
+                "      'rev1': {",
+                "        'revId': '1',",
+                "        'repositoryName': 'internal'",
+                "      },",
+                "      'rev2': {",
+                "        'revId': '4',",
+                "        'repositoryName': 'public'",
+                "      }",
+                "    }",
+                "  ],",
+                "  'migrations': []",
+                "}",
+                "")
+            .replace('\'', '"');
 
     expect(mockFs.exists(new File("/foo/db.txt"))).andReturn(true);
     expect(mockFs.fileToString(new File("/foo/db.txt"))).andReturn(dbString);
-    mockFs.write(dbString,  new File("/foo/db.txt"));
+    mockFs.write(dbString, new File("/foo/db.txt"));
 
     control.replay();
     int result = d.perform();
@@ -127,44 +136,52 @@ public class NoteEquivalenceDirectiveTest extends TestCase {
   }
 
   public void testPerform_existingDbFile_addEquivalence() throws Exception {
-    d.getFlags().repo1 = "internal(revision=1)";
-    d.getFlags().repo2 = "public(revision=4)";
+    d.repo1 = "internal(revision=1)";
+    d.repo2 = "public(revision=4)";
 
-    String baseDbString = Joiner.on('\n').join(
-        "{",
-        "  'equivalences': [",
-        "    {",
-        "      'rev1': {",
-        "        'revId': '0',",
-        "        'repositoryName': 'internal'",
-        "      },",
-        "      'rev2': {",
-        "        'revId': '3',",
-        "        'repositoryName': 'public'",
-        "      }",
-        "    }%s",  // New equivalence is added here.
-        "  ],",
-        "  'migrations': []",
-        "}").replace('\'', '"');
+    String baseDbString =
+        Joiner.on('\n')
+            .join(
+                "{",
+                "  'equivalences': [",
+                "    {",
+                "      'rev1': {",
+                "        'revId': '0',",
+                "        'repositoryName': 'internal'",
+                "      },",
+                "      'rev2': {",
+                "        'revId': '3',",
+                "        'repositoryName': 'public'",
+                "      }",
+                "    }%s", // New equivalence is added here.
+                "  ],",
+                "  'migrations': []",
+                "}",
+                "")
+            .replace('\'', '"');
 
     String oldDbString = String.format(baseDbString, "");
-    String newDbString = String.format(baseDbString, Joiner.on('\n').join(
-        ",",
-        "    {",
-        "      'rev1': {",
-        "        'revId': '1',",
-        "        'repositoryName': 'internal'",
-        "      },",
-        "      'rev2': {",
-        "        'revId': '4',",
-        "        'repositoryName': 'public'",
-        "      }",
-        "    }"
-        )).replace('\'', '"');
+    String newDbString =
+        String.format(
+                baseDbString,
+                Joiner.on('\n')
+                    .join(
+                        ",",
+                        "    {",
+                        "      'rev1': {",
+                        "        'revId': '1',",
+                        "        'repositoryName': 'internal'",
+                        "      },",
+                        "      'rev2': {",
+                        "        'revId': '4',",
+                        "        'repositoryName': 'public'",
+                        "      }",
+                        "    }"))
+            .replace('\'', '"');
 
     expect(mockFs.exists(new File("/foo/db.txt"))).andReturn(true);
     expect(mockFs.fileToString(new File("/foo/db.txt"))).andReturn(oldDbString);
-    mockFs.write(newDbString,  new File("/foo/db.txt"));
+    mockFs.write(newDbString, new File("/foo/db.txt"));
 
     control.replay();
     int result = d.perform();

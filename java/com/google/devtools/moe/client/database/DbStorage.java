@@ -11,12 +11,12 @@ import java.util.List;
  * MOE's database, storing all Equivalences and SubmittedMigrations in order from those between
  * lower revisions to those between higher revisions.
  *
- * This class is used for serialization of a database file.
+ * <p>This class is used for serialization of a database file.
  *
  */
 public class DbStorage {
 
-  private final List<Equivalence> equivalences;
+  private final List<RepositoryEquivalence> equivalences;
   private final List<SubmittedMigration> migrations;
 
   public DbStorage() {
@@ -24,7 +24,7 @@ public class DbStorage {
     migrations = Lists.newArrayList();
   } // Constructed by gson.
 
-  public List<Equivalence> getEquivalences() {
+  public List<RepositoryEquivalence> getEquivalences() {
     return ImmutableList.copyOf(equivalences);
   }
 
@@ -32,7 +32,7 @@ public class DbStorage {
     return ImmutableList.copyOf(migrations);
   }
 
-  public void addEquivalence(Equivalence e) {
+  public void addEquivalence(RepositoryEquivalence e) {
     if (!equivalences.contains(e)) {
       equivalences.add(e);
     }

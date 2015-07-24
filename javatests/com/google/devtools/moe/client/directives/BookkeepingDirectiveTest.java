@@ -9,8 +9,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.database.DbStorage;
-import com.google.devtools.moe.client.database.Equivalence;
 import com.google.devtools.moe.client.database.FileDb;
+import com.google.devtools.moe.client.database.RepositoryEquivalence;
 import com.google.devtools.moe.client.database.SubmittedMigration;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.testing.InMemoryFileSystem;
@@ -46,30 +46,28 @@ public class BookkeepingDirectiveTest extends TestCase {
     super.setUp();
     contextFactory.projectConfigs.put(
         "moe_config.txt",
-        "{\"name\":\"foo\",\"repositories\":{" +
-        "\"int\":{\"type\":\"dummy\",\"project_space\":\"internal\"}," +
-        "\"pub\":{\"type\":\"dummy\"}}," +
-        "\"translators\":[{\"from_project_space\":\"internal\"," +
-        "\"to_project_space\":\"public\",\"steps\":[{\"name\":\"id_step\"," +
-        "\"editor\":{\"type\":\"identity\"}}]}]," +
-        "\"migrations\":[{\"name\":\"test\",\"from_repository\":\"int\"," +
-        "\"to_repository\":\"pub\"}]}");
+        "{\"name\":\"foo\",\"repositories\":{"
+            + "\"int\":{\"type\":\"dummy\",\"project_space\":\"internal\"},"
+            + "\"pub\":{\"type\":\"dummy\"}},"
+            + "\"translators\":[{\"from_project_space\":\"internal\","
+            + "\"to_project_space\":\"public\",\"steps\":[{\"name\":\"id_step\","
+            + "\"editor\":{\"type\":\"identity\"}}]}],"
+            + "\"migrations\":[{\"name\":\"test\",\"from_repository\":\"int\","
+            + "\"to_repository\":\"pub\"}]}");
   }
 
   private void expectDiffs() throws Exception {
     // updateCompletedMigrations
-    expect(cmd.runCommand(
-        "diff",
+    ImmutableList<String> args =
         ImmutableList.of(
             "-N",
-            "/dummy/codebase/int/migrated_from/file", "/dummy/codebase/pub/migrated_to/file"),
-        "")).andReturn("unused");
+            "/dummy/codebase/int/migrated_from/file",
+            "/dummy/codebase/pub/migrated_to/file");
+    expect(cmd.runCommand("diff", args, "")).andReturn("unused");
 
     // updateHeadEquivalence
-    expect(cmd.runCommand(
-        "diff",
-        ImmutableList.of("-N", "/dummy/codebase/int/1/file", "/dummy/codebase/pub/1/file"),
-        "")).andReturn("unused");
+    args = ImmutableList.of("-N", "/dummy/codebase/int/1/file", "/dummy/codebase/pub/1/file");
+    expect(cmd.runCommand("diff", args, "")).andReturn("unused");
   }
 
   /**
@@ -85,8 +83,8 @@ public class BookkeepingDirectiveTest extends TestCase {
             "/dummy/codebase/pub/migrated_to/", "dir (different)");
     Injector.INSTANCE = new Injector(new InMemoryFileSystem(files), cmd, contextFactory, ui);
     BookkeepingDirective d = new BookkeepingDirective(contextFactory, ui);
-    d.getFlags().configFilename = "moe_config.txt";
-    d.getFlags().dbLocation = DB_FILE.getAbsolutePath();
+    d.setContextFileName("moe_config.txt");
+    d.dbLocation = DB_FILE.getAbsolutePath();
 
     expectDiffs();
 
@@ -96,9 +94,11 @@ public class BookkeepingDirectiveTest extends TestCase {
 
     // expected db at end of call to bookkeep
     DbStorage dbStorage = new DbStorage();
-    dbStorage.addEquivalence(new Equivalence(new Revision("1", "int"), new Revision("1", "pub")));
-    dbStorage.addMigration(new SubmittedMigration(
-        new Revision("migrated_from", "int"), new Revision("migrated_to", "pub")));
+    dbStorage.addEquivalence(
+        RepositoryEquivalence.create(Revision.create(1, "int"), Revision.create(1, "pub")));
+    dbStorage.addMigration(
+        SubmittedMigration.create(
+            Revision.create("migrated_from", "int"), Revision.create("migrated_to", "pub")));
     FileDb expectedDb = new FileDb(dbStorage);
 
     assertEquals(expectedDb.toJsonString(), Injector.INSTANCE.fileSystem().fileToString(DB_FILE));
@@ -117,8 +117,8 @@ public class BookkeepingDirectiveTest extends TestCase {
             "/dummy/codebase/pub/migrated_to/", "empty dir (different)");
     Injector.INSTANCE = new Injector(new InMemoryFileSystem(files), cmd, contextFactory, ui);
     BookkeepingDirective d = new BookkeepingDirective(contextFactory, ui);
-    d.getFlags().configFilename = "moe_config.txt";
-    d.getFlags().dbLocation = DB_FILE.getAbsolutePath();
+    d.setContextFileName("moe_config.txt");
+    d.dbLocation = DB_FILE.getAbsolutePath();
 
     expectDiffs();
 
@@ -128,8 +128,9 @@ public class BookkeepingDirectiveTest extends TestCase {
 
     // expected db at end of call to bookkeep
     DbStorage dbStorage = new DbStorage();
-    dbStorage.addMigration(new SubmittedMigration(
-        new Revision("migrated_from", "int"), new Revision("migrated_to", "pub")));
+    dbStorage.addMigration(
+        SubmittedMigration.create(
+            Revision.create("migrated_from", "int"), Revision.create("migrated_to", "pub")));
     FileDb expectedDb = new FileDb(dbStorage);
 
     assertEquals(expectedDb.toJsonString(), Injector.INSTANCE.fileSystem().fileToString(DB_FILE));
@@ -148,8 +149,8 @@ public class BookkeepingDirectiveTest extends TestCase {
             "/dummy/codebase/pub/migrated_to/file", "migrated_to (equivalent)");
     Injector.INSTANCE = new Injector(new InMemoryFileSystem(files), cmd, contextFactory, ui);
     BookkeepingDirective d = new BookkeepingDirective(contextFactory, ui);
-    d.getFlags().configFilename = "moe_config.txt";
-    d.getFlags().dbLocation = DB_FILE.getAbsolutePath();
+    d.setContextFileName("moe_config.txt");
+    d.dbLocation = DB_FILE.getAbsolutePath();
 
     expectDiffs();
 
@@ -160,10 +161,11 @@ public class BookkeepingDirectiveTest extends TestCase {
     // expected db at end of call to bookkeep
     DbStorage dbStorage = new DbStorage();
     dbStorage.addEquivalence(
-        new Equivalence(new Revision("migrated_from", "int"), new Revision("migrated_to", "pub")));
+        RepositoryEquivalence.create(
+            Revision.create("migrated_from", "int"), Revision.create("migrated_to", "pub")));
     dbStorage.addMigration(
-        new SubmittedMigration(
-            new Revision("migrated_from", "int"), new Revision("migrated_to", "pub")));
+        SubmittedMigration.create(
+            Revision.create("migrated_from", "int"), Revision.create("migrated_to", "pub")));
     FileDb expectedDb = new FileDb(dbStorage);
 
     assertEquals(expectedDb.toJsonString(), Injector.INSTANCE.fileSystem().fileToString(DB_FILE));

@@ -44,16 +44,15 @@ public class ExpressionTest extends TestCase {
   private static final Map<String, String> EMPTY_MAP = ImmutableMap.of();
 
   // TODO(cgruber): Rework these when statics aren't inherent in the design.
-  @dagger.Component(modules = {
-      TestingModule.class,
-      SystemCommandRunner.Module.class,
-      NullFileSystemModule.class})
+  @dagger.Component(
+      modules = {TestingModule.class, SystemCommandRunner.Module.class, NullFileSystemModule.class})
   @Singleton
   interface Component {
     Injector context(); // TODO (b/19676630) Remove when bug is fixed.
   }
 
-  @Override protected void setUp() throws Exception {
+  @Override
+  protected void setUp() throws Exception {
     super.setUp();
     Injector.INSTANCE = DaggerExpressionTest_Component.create().context();
   }
@@ -70,12 +69,18 @@ public class ExpressionTest extends TestCase {
   public void testFileCodebaseCreator() throws Exception {
     IMocksControl control = EasyMock.createControl();
     final FileSystem mockFs = control.createMock(FileSystem.class);
-    Injector.INSTANCE = DaggerExpressionTest_Component.builder().nullFileSystemModule(
-        new NullFileSystemModule() {
-          @Override @Nullable public FileSystem filesystem() {
-            return mockFs;
-          }
-        }).build().context();
+    Injector.INSTANCE =
+        DaggerExpressionTest_Component.builder()
+            .nullFileSystemModule(
+                new NullFileSystemModule() {
+                  @Override
+                  @Nullable
+                  public FileSystem filesystem() {
+                    return mockFs;
+                  }
+                })
+            .build()
+            .context();
     expect(mockFs.exists(new File("/foo"))).andReturn(true);
     expect(mockFs.isDirectory(new File("/foo"))).andReturn(true);
     File copyLocation = new File("/tmp/copy");
@@ -100,17 +105,16 @@ public class ExpressionTest extends TestCase {
 
   public void testNoSuchEditor() throws Exception {
     try {
-      ProjectContext context = ProjectContext.builder()
-          .withEditors(ImmutableMap.<String, Editor>of())
-          .build();
+      ProjectContext context =
+          ProjectContext.builder().withEditors(ImmutableMap.<String, Editor>of()).build();
 
       IMocksControl control = EasyMock.createControl();
       RepositoryExpression mockRepoEx = control.createMock(RepositoryExpression.class);
-      expect(mockRepoEx.createCodebase(context)).andReturn(null);  // Codebase unneeded
+      expect(mockRepoEx.createCodebase(context)).andReturn(null); // Codebase unneeded
 
-      Expression ex = new EditExpression(
-          mockRepoEx,
-          new Operation(Operator.EDIT, new Term("noSuchEditor", EMPTY_MAP)));
+      Expression ex =
+          new EditExpression(
+              mockRepoEx, new Operation(Operator.EDIT, new Term("noSuchEditor", EMPTY_MAP)));
 
       control.replay();
       ex.createCodebase(context);
@@ -123,12 +127,13 @@ public class ExpressionTest extends TestCase {
   public void testNoSuchTranslator() throws Exception {
     try {
       TranslatorPath tPath = new TranslatorPath("foo", "bar");
-      Translator t = new ForwardTranslator(ImmutableList.<TranslatorStep>of(
-          new TranslatorStep("quux", null)));
-      ProjectContext context = ProjectContext.builder()
-          .withEditors(ImmutableMap.<String, Editor>of())
-          .withTranslators(ImmutableMap.of(tPath, t))
-          .build();
+      Translator t =
+          new ForwardTranslator(ImmutableList.<TranslatorStep>of(new TranslatorStep("quux", null)));
+      ProjectContext context =
+          ProjectContext.builder()
+              .withEditors(ImmutableMap.<String, Editor>of())
+              .withTranslators(ImmutableMap.of(tPath, t))
+              .build();
 
       IMocksControl control = EasyMock.createControl();
       RepositoryExpression mockRepoEx = control.createMock(RepositoryExpression.class);
@@ -136,17 +141,17 @@ public class ExpressionTest extends TestCase {
       expect(mockRepoCodebase.getProjectSpace()).andReturn("internal").times(2);
       expect(mockRepoEx.createCodebase(context)).andReturn(mockRepoCodebase);
 
-      Expression ex = new TranslateExpression(
-          mockRepoEx,
-          new Operation(Operator.TRANSLATE, new Term("public", EMPTY_MAP)));
+      Expression ex =
+          new TranslateExpression(
+              mockRepoEx, new Operation(Operator.TRANSLATE, new Term("public", EMPTY_MAP)));
 
       control.replay();
       ex.createCodebase(context);
       fail();
     } catch (CodebaseCreationError expected) {
       assertEquals(
-          "Could not find translator from project space \"internal\" to \"public\".\n" +
-          "Translators only available for [foo>bar]",
+          "Could not find translator from project space \"internal\" to \"public\".\n"
+              + "Translators only available for [foo>bar]",
           expected.getMessage());
     }
   }
@@ -164,22 +169,25 @@ public class ExpressionTest extends TestCase {
     File finalDir = new File("/final");
 
     TranslatorPath tPath = new TranslatorPath("foo", "public");
-    Translator t = new ForwardTranslator(ImmutableList.<TranslatorStep>of(
-        new TranslatorStep("quux", translatorEditor)));
+    Translator t =
+        new ForwardTranslator(
+            ImmutableList.<TranslatorStep>of(new TranslatorStep("quux", translatorEditor)));
 
-    ProjectContext context = ProjectContext.builder()
-        .withRepositories(ImmutableMap.of("foo", Repository.create("foo", rh, cc, wc)))
-        .withTranslators(ImmutableMap.of(tPath, t))
-        .withEditors(ImmutableMap.of("bar", e)).build();
+    ProjectContext context =
+        ProjectContext.builder()
+            .withRepositories(ImmutableMap.of("foo", Repository.create("foo", rh, cc, wc)))
+            .withTranslators(ImmutableMap.of(tPath, t))
+            .withEditors(ImmutableMap.of("bar", e))
+            .build();
 
-    Codebase firstCb = new Codebase(firstDir, "foo",
-        new RepositoryExpression(new Term("foo", EMPTY_MAP)));
+    Codebase firstCb =
+        new Codebase(firstDir, "foo", new RepositoryExpression(new Term("foo", EMPTY_MAP)));
 
-    Codebase secondCb = new Codebase(secondDir, "public",
-        new RepositoryExpression(new Term("foo2", EMPTY_MAP)));
+    Codebase secondCb =
+        new Codebase(secondDir, "public", new RepositoryExpression(new Term("foo2", EMPTY_MAP)));
 
-    Codebase finalCb = new Codebase(finalDir, "public",
-        new RepositoryExpression(new Term("foo3", EMPTY_MAP)));
+    Codebase finalCb =
+        new Codebase(finalDir, "public", new RepositoryExpression(new Term("foo3", EMPTY_MAP)));
 
     expect(cc.create(EMPTY_MAP)).andReturn(firstCb);
     expect(translatorEditor.edit(firstCb, context, EMPTY_MAP)).andReturn(secondCb);

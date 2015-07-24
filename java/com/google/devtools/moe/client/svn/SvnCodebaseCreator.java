@@ -3,7 +3,6 @@
 package com.google.devtools.moe.client.svn;
 
 import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
@@ -29,16 +28,21 @@ public class SvnCodebaseCreator implements CodebaseCreator {
   private final String name;
   private final RepositoryConfig config;
   private final SvnRevisionHistory revisionHistory;
+  private final SvnUtil util;
 
   public SvnCodebaseCreator(
-      String repositoryName, RepositoryConfig config, SvnRevisionHistory revisionHistory) {
+      String repositoryName,
+      RepositoryConfig config,
+      SvnRevisionHistory revisionHistory,
+      SvnUtil util) {
     this.name = repositoryName;
     this.config = config;
     this.revisionHistory = revisionHistory;
+    this.util = util;
   }
 
   @Override
-  public Codebase create(Map<String, String> options) throws CodebaseCreationError{
+  public Codebase create(Map<String, String> options) throws CodebaseCreationError {
     String revId = options.get("revision");
     if (revId == null) {
       revId = "HEAD";
@@ -47,12 +51,13 @@ public class SvnCodebaseCreator implements CodebaseCreator {
     Revision rev = revisionHistory.findHighestRevision(revId);
 
     File exportPath =
-        Injector.INSTANCE.fileSystem().getTemporaryDirectory(
-        String.format("svn_export_%s_%s_", name, rev.revId));
+        Injector.INSTANCE
+            .fileSystem()
+            .getTemporaryDirectory(String.format("svn_export_%s_%s_", name, rev.revId()));
 
     try {
-      SvnRepository.runSvnCommand(ImmutableList.of(
-          "export", config.getUrl(), "-r", rev.revId, exportPath.getAbsolutePath()), "");
+      util.runSvnCommand(
+          "export", config.getUrl(), "-r", rev.revId(), exportPath.getAbsolutePath());
     } catch (CommandRunner.CommandException e) {
       throw new MoeProblem("could not export from svn" + e.getMessage());
     }

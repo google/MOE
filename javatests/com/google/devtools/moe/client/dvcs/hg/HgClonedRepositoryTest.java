@@ -45,11 +45,15 @@ public class HgClonedRepositoryTest extends TestCase {
     Injector context(); // TODO (b/19676630) Remove when bug is fixed.
   }
 
-  @dagger.Module class Module {
-    @Provides public CommandRunner cmd() {
+  @dagger.Module
+  class Module {
+    @Provides
+    public CommandRunner cmd() {
       return cmd;
     }
-    @Provides public FileSystem mockFS() {
+
+    @Provides
+    public FileSystem mockFS() {
       return mockFS;
     }
   }
@@ -64,19 +68,17 @@ public class HgClonedRepositoryTest extends TestCase {
 
     // The Lifetimes of clones in these tests are arbitrary since we're not really creating any
     // temp dirs and we're not testing clean-up.
-    expect(mockFS.getTemporaryDirectory(
-        EasyMock.eq("hg_clone_" + repositoryName + "_"), EasyMock.<Lifetime>anyObject()))
+    expect(
+            mockFS.getTemporaryDirectory(
+                EasyMock.eq("hg_clone_" + repositoryName + "_"), EasyMock.<Lifetime>anyObject()))
         .andReturn(new File(localCloneTempDir));
 
     expect(
-        cmd.runCommand(
-            "hg",
-            ImmutableList.<String>of(
-                "clone",
-                repositoryURL,
-                localCloneTempDir,
-                "--rev=" + "mybranch"),
-            "" /*workingDirectory*/))
+            cmd.runCommand(
+                "hg",
+                ImmutableList.<String>of(
+                    "clone", repositoryURL, localCloneTempDir, "--rev=" + "mybranch"),
+                "" /*workingDirectory*/))
         .andReturn("hg clone ok (mock output)");
     expect(cmd.runCommand("hg", ImmutableList.of("branch"), localCloneTempDir))
         .andReturn("mybranch");
@@ -94,7 +96,8 @@ public class HgClonedRepositoryTest extends TestCase {
     try {
       repo.cloneLocallyAtHead(Lifetimes.persistent());
       fail("Re-cloning repo succeeded unexpectedly.");
-    } catch (IllegalStateException expected) {}
+    } catch (IllegalStateException expected) {
+    }
 
     control.verify();
   }

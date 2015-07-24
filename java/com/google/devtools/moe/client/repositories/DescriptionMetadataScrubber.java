@@ -24,27 +24,28 @@ import org.joda.time.format.DateTimeFormatter;
  *
  */
 public class DescriptionMetadataScrubber extends MetadataScrubber {
-  private static final DateTimeFormatter DATE_FMT =
-      DateTimeFormat.forPattern("yyyy/MM/dd");
+  private static final DateTimeFormatter DATE_FMT = DateTimeFormat.forPattern("yyyy/MM/dd");
   private final String logFormat;
 
   public DescriptionMetadataScrubber(String logFormat) {
     this.logFormat = logFormat;
   }
 
-  @Override public RevisionMetadata scrub(RevisionMetadata rm) {
+  @Override
+  public RevisionMetadata scrub(RevisionMetadata rm) {
     ImmutableList.Builder<String> parentRevIds = ImmutableList.builder();
     for (Revision parent : rm.parents) {
-      parentRevIds.add(parent.revId);
+      parentRevIds.add(parent.revId());
     }
     String parentsString = Joiner.on(", ").join(parentRevIds.build());
 
-    String scrubbedDescription = logFormat
-        .replace("{id}", rm.id)
-        .replace("{author}", rm.author)
-        .replace("{date}", DATE_FMT.print(rm.date))
-        .replace("{description}", rm.description)
-        .replace("{parents}", parentsString);
+    String scrubbedDescription =
+        logFormat
+            .replace("{id}", rm.id)
+            .replace("{author}", rm.author)
+            .replace("{date}", DATE_FMT.print(rm.date))
+            .replace("{description}", rm.description)
+            .replace("{parents}", parentsString);
 
     return new RevisionMetadata(rm.id, rm.author, rm.date, scrubbedDescription, rm.parents);
   }

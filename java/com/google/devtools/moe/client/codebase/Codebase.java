@@ -27,15 +27,15 @@ public class Codebase {
   /**
    * Constructs the Codebase.
    *
-   * @param path  where this codebase lives (should be a directory)
-   * @param projectSpace  the projectSpace this Codebase exists in. One project often looks slightly
-                          different in different repositories. MOE describes these differences as
-                          project spaces. So a Codebase in the internal project space cannot be
-                          directly compared to a Codebase in the public project space: we would
-                          never expect them to be equal. By storing the project space of this
-                          Codebase, we can know how to translate it.
-   * @param expression  an expression that generates this Codebase. This expression identifies the
-   *                    Codebase.
+   * @param path where this codebase lives (should be a directory)
+   * @param projectSpace the projectSpace this Codebase exists in. One project often looks slightly
+   *                     different in different repositories. MOE describes these differences as
+   *                     project spaces. So a Codebase in the internal project space cannot be
+   *                     directly compared to a Codebase in the public project space: we would
+   *                     never expect them to be equal. By storing the project space of this
+   *                     Codebase, we can know how to translate it.
+   * @param expression an expression that generates this Codebase. This expression identifies the
+   *                   Codebase.
    */
   public Codebase(File path, String projectSpace, Expression expression) {
     this.path = path;
@@ -79,7 +79,8 @@ public class Codebase {
     return other instanceof Codebase && getPath().equals(((Codebase) other).getPath());
   }
 
-  @Override public int hashCode() {
+  @Override
+  public int hashCode() {
     return getPath().hashCode();
   }
 
@@ -108,9 +109,10 @@ public class Codebase {
   public void checkProjectSpace(String projectSpace) {
     if (!this.getProjectSpace().equals(projectSpace)) {
       throw new MoeProblem(
-          String.format(
-              "Expected project space \"%s\", but Codebase \"%s\" is in project space \"%s\"",
-              projectSpace, toString(), this.projectSpace));
+          "Expected project space \"%s\", but Codebase \"%s\" is in project space \"%s\"",
+          projectSpace,
+          this,
+          this.projectSpace);
     }
   }
 

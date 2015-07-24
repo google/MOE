@@ -17,12 +17,22 @@ import com.google.devtools.moe.client.writer.WriterCreator;
 
 import org.joda.time.DateTime;
 
-/**
- *
- * @author dbentley@google.com (Daniel Bentley)
- */
-public class DummyRepository {
+import javax.inject.Inject;
 
+/**
+ * Creates a simple {@link Repository} for testing.
+ */
+public class DummyRepositoryFactory implements Repository.Factory {
+
+  @Inject
+  public DummyRepositoryFactory() {}
+
+  @Override
+  public String type() {
+    return "dummy";
+  }
+
+  /** A fake implementation of {@link RevisionHistory} for testing. */
   public static class DummyRevisionHistory implements RevisionHistory {
     private final String name;
 
@@ -35,36 +45,45 @@ public class DummyRepository {
       if (Strings.isNullOrEmpty(revId)) {
         revId = "1";
       }
-      return new Revision(revId, name);
+      return Revision.create(revId, name);
     }
 
     @Override
     public RevisionMetadata getMetadata(Revision revision) throws MoeProblem {
-      if (!name.equals(revision.repositoryName)) {
-        throw new MoeProblem (
-            String.format("Could not get metadata: Revision %s is in repository %s instead of %s",
-                          revision.revId, revision.repositoryName, name));
+      if (!name.equals(revision.repositoryName())) {
+        throw new MoeProblem(
+            String.format(
+                "Could not get metadata: Revision %s is in repository %s instead of %s",
+                revision.revId(),
+                revision.repositoryName(),
+                name));
       }
-      return new RevisionMetadata(revision.revId, "author", new DateTime(1L),
-                                  revision.revId.equals("migrated_to") ?
-                                  "MOE_MIGRATED_REVID=migrated_from" : "description",
-                                  ImmutableList.of(new Revision("parent", name)));
+      return new RevisionMetadata(
+          revision.revId(),
+          "author",
+          new DateTime(1L),
+          revision.revId().equals("migrated_to")
+              ? "MOE_MIGRATED_REVID=migrated_from"
+              : "description",
+          ImmutableList.of(Revision.create("parent", name)));
     }
 
     @Override
     public <T> T findRevisions(
         Revision revision, RevisionMatcher<T> matcher, SearchType searchType) {
       if (revision == null) {
-        revision = new Revision("migrated_to", name);
+        revision = Revision.create("migrated_to", name);
       }
-      RevisionGraph revTree = RevisionGraph.builder(ImmutableList.of(revision))
-          .addRevision(revision, getMetadata(revision))
-          .build();
-      return matcher.makeResult(revTree, ImmutableList.of(new Revision("1", name)));
+      RevisionGraph revTree =
+          RevisionGraph.builder(ImmutableList.of(revision))
+              .addRevision(revision, getMetadata(revision))
+              .build();
+      return matcher.makeResult(revTree, ImmutableList.of(Revision.create(1, name)));
     }
   }
 
-  public static Repository makeDummyRepository(String repositoryName, RepositoryConfig config) {
+  @Override
+  public Repository create(String repositoryName, RepositoryConfig config) {
     String projectSpace = null;
     if (config != null) {
       projectSpace = config.getProjectSpace();
@@ -72,14 +91,9 @@ public class DummyRepository {
     if (projectSpace == null) {
       projectSpace = "public";
     }
-
     RevisionHistory revisionHistory = new DummyRevisionHistory(repositoryName);
-
     CodebaseCreator codebaseCreator = new DummyCodebaseCreator(repositoryName, projectSpace);
-
     WriterCreator writerCreator = new DummyWriterCreator(repositoryName);
-
     return Repository.create(repositoryName, revisionHistory, codebaseCreator, writerCreator);
   }
-
 }

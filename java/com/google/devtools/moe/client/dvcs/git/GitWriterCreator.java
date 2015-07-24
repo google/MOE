@@ -31,7 +31,7 @@ public class GitWriterCreator implements WriterCreator {
     // Sanity check: make sure the given revision exists.
     Revision rev = revHistory.findHighestRevision(options.get("revision"));
     GitClonedRepository freshClone = freshCloneSupplier.get();
-    freshClone.updateToRevision(rev.revId);
+    freshClone.updateToRevision(rev.revId());
     return new GitWriter(freshClone);
   }
 }

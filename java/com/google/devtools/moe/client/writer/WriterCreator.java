@@ -23,5 +23,4 @@ public interface WriterCreator {
    * @throw EditingError if we cannot create the Writer
    */
   public Writer create(Map<String, String> options) throws WritingError;
-
 }

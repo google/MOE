@@ -19,7 +19,8 @@ import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
 
 import java.io.File;
-import java.util.Vector;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.inject.Singleton;
 
@@ -38,36 +39,39 @@ public class ShellEditorTest extends TestCase {
     Injector context(); // TODO (b/19676630) Remove when bug is fixed.
   }
 
-  @dagger.Module class Module {
-    @Provides public CommandRunner cmd() {
+  @dagger.Module
+  class Module {
+    @Provides
+    public CommandRunner cmd() {
       return cmd;
     }
-    @Provides public FileSystem filesystem() {
+
+    @Provides
+    public FileSystem filesystem() {
       return fileSystem;
     }
   }
 
-  @Override protected void setUp() throws Exception {
+  @Override
+  protected void setUp() throws Exception {
     super.setUp();
-    Injector.INSTANCE = DaggerShellEditorTest_Component.builder().module(new Module()).build()
-        .context();
+    Injector.INSTANCE =
+        DaggerShellEditorTest_Component.builder().module(new Module()).build().context();
   }
 
   public void testShellStuff() throws Exception {
     File shellRun = new File("/shell_run_foo");
     File codebaseFile = new File("/codebase");
 
-    Codebase codebase = new Codebase(codebaseFile,
-                                     "internal",
-                                     null /* CodebaseExpression is not needed here. */);
-
+    Codebase codebase =
+        new Codebase(codebaseFile, "internal", null /* CodebaseExpression is not needed here. */);
 
     expect(fileSystem.getTemporaryDirectory("shell_run_")).andReturn(shellRun);
     fileSystem.makeDirsForFile(shellRun);
     expect(fileSystem.isFile(codebaseFile)).andReturn(false);
     expect(fileSystem.listFiles(codebaseFile)).andReturn(new File[] {});
 
-    Vector<String> argsList = new Vector<String>();
+    List<String> argsList = new ArrayList<String>();
     argsList.add("-c");
     argsList.add("touch test.txt");
 
@@ -76,9 +80,10 @@ public class ShellEditorTest extends TestCase {
     control.replay();
 
     new ShellEditor("shell_editor", "touch test.txt")
-        .edit(codebase,
-              null /* this edit doesn't require a ProjectContext */,
-              ImmutableMap.<String, String>of() /* this edit doesn't require options */);
+        .edit(
+            codebase,
+            null /* this edit doesn't require a ProjectContext */,
+            ImmutableMap.<String, String>of() /* this edit doesn't require options */);
 
     control.verify();
   }

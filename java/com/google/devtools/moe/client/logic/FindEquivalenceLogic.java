@@ -29,17 +29,19 @@ public class FindEquivalenceLogic {
       StringBuilder result = new StringBuilder();
       Iterator<Revision> it = equivalences.iterator();
       while (it.hasNext()) {
-        result.append(it.next().revId);
+        result.append(it.next().revId());
         if (it.hasNext()) {
           result.append(",");
         }
       }
       if (equivalences.isEmpty()) {
-        Injector.INSTANCE.ui().info(noEquivalenceBuilder(rev.repositoryName, rev.revId, inRepo));
+        Injector.INSTANCE
+            .ui()
+            .info(noEquivalenceBuilder(rev.repositoryName(), rev.revId(), inRepo));
       } else {
-        Injector.INSTANCE.ui().info(
-          equivalenceBuilder(rev.repositoryName, rev.revId,
-              inRepo, result.toString()));
+        Injector.INSTANCE
+            .ui()
+            .info(equivalenceBuilder(rev.repositoryName(), rev.revId(), inRepo, result.toString()));
       }
     }
   }
@@ -49,17 +51,22 @@ public class FindEquivalenceLogic {
    * Ex) No equivalences for "googlecode{3}" in repository "internal"
    */
   public static String noEquivalenceBuilder(String repoName, String revId, String inRepoName) {
-    return "No equivalences for \"" + repoName + "{" + revId + "}\"" +
-        " in repository \"" + inRepoName + "\"";
+    return "No equivalences for \""
+        + repoName
+        + "{"
+        + revId
+        + "}\""
+        + " in repository \""
+        + inRepoName
+        + "\"";
   }
 
   /**
    * Builds a string to display the equivalences.
    * Ex) "internal{35}" == "googlecode{14,15}"
    */
-  public static String equivalenceBuilder(String repoName, String revId,
-      String inRepoName, String equivRevIds) {
-    return "\"" + repoName + "{" + revId + "}\" == \"" +
-        inRepoName + "{" + equivRevIds + "}\"";
+  public static String equivalenceBuilder(
+      String repoName, String revId, String inRepoName, String equivRevIds) {
+    return "\"" + repoName + "{" + revId + "}\" == \"" + inRepoName + "{" + equivRevIds + "}\"";
   }
 }

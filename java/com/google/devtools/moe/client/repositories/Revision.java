@@ -2,14 +2,16 @@
 
 package com.google.devtools.moe.client.repositories;
 
+import com.google.auto.value.AutoValue;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.devtools.moe.client.AutoValueGsonAdapter;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.project.ProjectContext;
+import com.google.gson.annotations.JsonAdapter;
 
 import java.util.List;
-import java.util.Objects;
 
 /**
  * A Revision in a source control system.
@@ -18,39 +20,30 @@ import java.util.Objects;
  *
  * @author dbentley@google.com (Daniel Bentley)
  */
-public class Revision {
-
-  public final String revId;
-  public final String repositoryName;
-
-  public Revision() {
-    this.revId = "";
-    this.repositoryName = "";
-  } // For gson
-
-  public Revision(String revId, String repositoryName) {
-    this.revId = revId;
-    this.repositoryName = repositoryName;
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(repositoryName, revId);
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (obj instanceof Revision) {
-      Revision revisionObj = (Revision) obj;
-      return (Objects.equals(repositoryName, revisionObj.repositoryName) &&
-              Objects.equals(revId, revisionObj.revId));
-    }
-    return false;
-  }
+@AutoValue
+@JsonAdapter(AutoValueGsonAdapter.class)
+public abstract class Revision {
+  /** The unique ID assigned to this revision by the underlying revision control system. */
+  public abstract String revId();
+  /** The label for the configured repository from which this revision originates. */
+  public abstract String repositoryName();
 
   @Override
   public String toString() {
-    return this.repositoryName + "{" + revId + "}";
+    return this.repositoryName() + "{" + revId() + "}";
+  }
+
+  /**
+   * Creates a revision using a long ID for convenience, primarily in testing.
+   *
+   * @see #create(String, String)
+   */
+  public static Revision create(long revId, String repositoryName) {
+    return create(String.valueOf(revId), repositoryName);
+  }
+
+  public static Revision create(String revId, String repositoryName) {
+    return new AutoValue_Revision(revId, repositoryName);
   }
 
   /**

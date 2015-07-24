@@ -9,9 +9,8 @@ import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.database.Db;
-import com.google.devtools.moe.client.database.Equivalence;
-import com.google.devtools.moe.client.database.EquivalenceMatcher;
-import com.google.devtools.moe.client.database.EquivalenceMatcher.EquivalenceMatchResult;
+import com.google.devtools.moe.client.database.RepositoryEquivalence;
+import com.google.devtools.moe.client.database.RepositoryEquivalenceMatcher;
 import com.google.devtools.moe.client.database.SubmittedMigration;
 import com.google.devtools.moe.client.migrations.MigrationConfig;
 import com.google.devtools.moe.client.parser.Expression;
@@ -43,8 +42,8 @@ public class BookkeepingLogic {
    * Diff codebases at HEADs of fromRepository and toRepository, adding an Equivalence to db if
    * equivalent at HEADs.
    */
-  private static void updateHeadEquivalence(String fromRepository, String toRepository,
-                                            Db db, ProjectContext context) {
+  private static void updateHeadEquivalence(
+      String fromRepository, String toRepository, Db db, ProjectContext context) {
     Codebase to, from;
     RevisionHistory fromHistory = context.getRepository(fromRepository).revisionHistory();
     RevisionHistory toHistory = context.getRepository(toRepository).revisionHistory();
@@ -52,22 +51,22 @@ public class BookkeepingLogic {
     Revision fromHead = fromHistory.findHighestRevision(null);
 
     try {
-      to = new RepositoryExpression(toRepository).atRevision(toHead.revId).createCodebase(context);
-      from = new RepositoryExpression(fromRepository)
-          .atRevision(fromHead.revId)
-          .translateTo(to.getProjectSpace())
-          .createCodebase(context);
+      to =
+          new RepositoryExpression(toRepository).atRevision(toHead.revId()).createCodebase(context);
+      from =
+          new RepositoryExpression(fromRepository)
+              .atRevision(fromHead.revId())
+              .translateTo(to.getProjectSpace())
+              .createCodebase(context);
     } catch (CodebaseCreationError e) {
       Injector.INSTANCE.ui().error(e, "Could not generate codebase");
       return;
     }
 
     Ui.Task t =
-        Injector.INSTANCE.ui().pushTask(
-        "diff_codebases",
-        String.format("Diff codebases '%s' and '%s'", from.toString(), to.toString()));
+        Injector.INSTANCE.ui().pushTask("diff_codebases", "Diff codebases '%s' and '%s'", from, to);
     if (!CodebaseDifference.diffCodebases(from, to).areDifferent()) {
-      db.noteEquivalence(new Equivalence(fromHead, toHead));
+      db.noteEquivalence(RepositoryEquivalence.create(fromHead, toHead));
     }
     Injector.INSTANCE.ui().popTask(t, "");
   }
@@ -80,25 +79,27 @@ public class BookkeepingLogic {
       String fromRepository, String toRepository, Db db, ProjectContext context, boolean inverse) {
 
     RevisionHistory toHistory = context.getRepository(toRepository).revisionHistory();
-    EquivalenceMatchResult equivMatch = toHistory.findRevisions(
-        null /*revision*/,
-        new EquivalenceMatcher(fromRepository, db),
-        SearchType.LINEAR);
+    RepositoryEquivalenceMatcher.Result equivMatch =
+        toHistory.findRevisions(
+            null /*revision*/,
+            new RepositoryEquivalenceMatcher(fromRepository, db),
+            SearchType.LINEAR);
 
     List<Revision> linearToRevs =
         equivMatch.getRevisionsSinceEquivalence().getBreadthFirstHistory();
-    Injector.INSTANCE.ui().info(
-        String.format(
-        "Found %d revisions in %s since equivalence (%s): %s",
-        linearToRevs.size(),
-        toRepository,
-        equivMatch.getEquivalences(),
-        Joiner.on(", ").join(linearToRevs)));
+    Injector.INSTANCE
+        .ui()
+        .info(
+            "Found %d revisions in %s since equivalence (%s): %s",
+            linearToRevs.size(),
+            toRepository,
+            equivMatch.getEquivalences(),
+            Joiner.on(", ").join(linearToRevs));
 
     for (Revision toRev : linearToRevs) {
       String fromRevId = getMigratedRevId(toHistory.getMetadata(toRev));
       if (fromRevId != null) {
-        processMigration(new Revision(fromRevId, fromRepository), toRev, db, context, inverse);
+        processMigration(Revision.create(fromRevId, fromRepository), toRev, db, context, inverse);
       }
     }
   }
@@ -113,31 +114,33 @@ public class BookkeepingLogic {
    * in the case of an inverse translation, translating the to-repo to the from-repo via the
    * forward-translator.
    */
-  private static void processMigration(Revision fromRev, Revision toRev,
-                                       Db db, ProjectContext context, boolean inverse) {
-    SubmittedMigration migration = new SubmittedMigration(fromRev, toRev);
+  private static void processMigration(
+      Revision fromRev, Revision toRev, Db db, ProjectContext context, boolean inverse) {
+    SubmittedMigration migration = SubmittedMigration.create(fromRev, toRev);
     if (!db.noteMigration(migration)) {
-      Injector.INSTANCE.ui().info(
-          "Skipping bookkeeping of this SubmittedMigration " + "because it was already in the Db: "
-              + migration);
+      Injector.INSTANCE
+          .ui()
+          .info(
+              "Skipping bookkeeping of this SubmittedMigration "
+                  + "because it was already in the Db: "
+                  + migration);
       return;
     }
 
     Codebase to, from;
     try {
-      Expression toEx =
-          new RepositoryExpression(toRev.repositoryName).atRevision(toRev.revId);
+      Expression toEx = new RepositoryExpression(toRev.repositoryName()).atRevision(toRev.revId());
       Expression fromEx =
-          new RepositoryExpression(fromRev.repositoryName).atRevision(fromRev.revId);
+          new RepositoryExpression(fromRev.repositoryName()).atRevision(fromRev.revId());
 
       // Use the forward-translator to check an inverse-translated migration.
       if (inverse) {
         String fromProjectSpace =
-            context.config.getRepositoryConfig(fromRev.repositoryName).getProjectSpace();
+            context.config.getRepositoryConfig(fromRev.repositoryName()).getProjectSpace();
         toEx = toEx.translateTo(fromProjectSpace);
       } else {
         String toProjectSpace =
-            context.config.getRepositoryConfig(toRev.repositoryName).getProjectSpace();
+            context.config.getRepositoryConfig(toRev.repositoryName()).getProjectSpace();
         fromEx = fromEx.translateTo(toProjectSpace);
       }
 
@@ -149,13 +152,11 @@ public class BookkeepingLogic {
     }
 
     Ui.Task t =
-        Injector.INSTANCE.ui().pushTask(
-        "diff_codebases",
-        String.format("Diff codebases '%s' and '%s'", from.toString(), to.toString()));
+        Injector.INSTANCE.ui().pushTask("diff_codebases", "Diff codebases '%s' and '%s'", from, to);
     if (!CodebaseDifference.diffCodebases(from, to).areDifferent()) {
-      Equivalence newEquiv = new Equivalence(fromRev, toRev);
+      RepositoryEquivalence newEquiv = RepositoryEquivalence.create(fromRev, toRev);
       db.noteEquivalence(newEquiv);
-      Injector.INSTANCE.ui().info("Codebases are identical, noted new equivalence: " + newEquiv);
+      Injector.INSTANCE.ui().info("Codebases are identical, noted new equivalence: %s", newEquiv);
     }
     Injector.INSTANCE.ui().popTask(t, "");
   }
@@ -165,8 +166,7 @@ public class BookkeepingLogic {
    */
   private static TranslatorConfig getTranslatorConfig(
       String fromRepo, String toRepo, ProjectContext context) {
-    String fromProjectSpace =
-        context.config.getRepositoryConfig(fromRepo).getProjectSpace();
+    String fromProjectSpace = context.config.getRepositoryConfig(fromRepo).getProjectSpace();
     String toProjectSpace = context.config.getRepositoryConfig(toRepo).getProjectSpace();
     List<TranslatorConfig> transConfigs = context.config.getTranslators();
     for (TranslatorConfig transConfig : transConfigs) {
@@ -184,7 +184,7 @@ public class BookkeepingLogic {
    * considers Equivalences between repositories which are part of a migration listed both in
    * migrationNames and context.
    *
-   * Bookkeep should be run before performing any directive which reads from the db, since it is
+   * <p>Bookkeep should be run before performing any directive which reads from the db, since it is
    * MOE's way of keeping the db up-to-date.
    *
    * @param migrationNames the names of all migrations
@@ -199,15 +199,19 @@ public class BookkeepingLogic {
     for (String s : migrationNames) {
       MigrationConfig m = context.migrationConfigs.get(s);
       if (m == null) {
-        Injector.INSTANCE.ui().error(String.format("No migration '%s' in MOE config", s));
+        Injector.INSTANCE.ui().error("No migration '%s' in MOE config", s);
         return 1;
       }
 
       Ui.Task bookkeepOneMigrationTask =
-          Injector.INSTANCE.ui().pushTask(
-          "bookkeping_one_migration",
-          String.format("Doing bookkeeping between '%s' and '%s' for migration '%s'",
-                        m.getFromRepository(), m.getToRepository(), m.getName()));
+          Injector.INSTANCE
+              .ui()
+              .pushTask(
+                  "bookkeping_one_migration",
+                  "Doing bookkeeping between '%s' and '%s' for migration '%s'",
+                  m.getFromRepository(),
+                  m.getToRepository(),
+                  m.getName());
 
       TranslatorConfig migrationTranslator =
           getTranslatorConfig(m.getFromRepository(), m.getToRepository(), context);
@@ -215,11 +219,13 @@ public class BookkeepingLogic {
       // TODO(user): ? Switch the order of these two checks, so that we don't have to look back
       // through the history for irrelevant equivalences if there's one at head.
       Ui.Task checkMigrationsTask =
-          Injector.INSTANCE.ui().pushTask(
-          "check_migrations",
-          String.format(
-              "Checking completed migrations for new equivalence between '%s' and '%s'",
-              m.getFromRepository(), m.getToRepository()));
+          Injector.INSTANCE
+              .ui()
+              .pushTask(
+                  "check_migrations",
+                  "Checking completed migrations for new equivalence between '%s' and '%s'",
+                  m.getFromRepository(),
+                  m.getToRepository());
       updateCompletedMigrations(
           m.getFromRepository(), m.getToRepository(), db, context, migrationTranslator.isInverse());
       Injector.INSTANCE.ui().popTask(checkMigrationsTask, "");
@@ -228,11 +234,13 @@ public class BookkeepingLogic {
       // the forward-translated migration.
       if (!migrationTranslator.isInverse()) {
         Ui.Task checkHeadsTask =
-            Injector.INSTANCE.ui().pushTask(
-            "check_heads",
-            String.format(
-                "Checking head equivalence between '%s' and '%s'",
-                m.getFromRepository(), m.getToRepository()));
+            Injector.INSTANCE
+                .ui()
+                .pushTask(
+                    "check_heads",
+                    "Checking head equivalence between '%s' and '%s'",
+                    m.getFromRepository(),
+                    m.getToRepository());
         updateHeadEquivalence(m.getFromRepository(), m.getToRepository(), db, context);
         Injector.INSTANCE.ui().popTask(checkHeadsTask, "");
       }

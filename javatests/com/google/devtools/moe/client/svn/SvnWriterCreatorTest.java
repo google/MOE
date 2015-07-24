@@ -32,6 +32,7 @@ public class SvnWriterCreatorTest extends TestCase {
   private final IMocksControl control = EasyMock.createControl();
   private final FileSystem fileSystem = control.createMock(FileSystem.class);
   private final CommandRunner cmd = control.createMock(CommandRunner.class);
+  private final SvnUtil util = new SvnUtil(cmd);
 
   // TODO(cgruber): Rework these when statics aren't inherent in the design.
   @dagger.Component(modules = {TestingModule.class, Module.class})
@@ -42,18 +43,22 @@ public class SvnWriterCreatorTest extends TestCase {
 
   @dagger.Module
   class Module {
-    @Provides public CommandRunner commandRunner() {
+    @Provides
+    public CommandRunner commandRunner() {
       return cmd;
     }
-    @Provides public FileSystem fileSystem() {
+
+    @Provides
+    public FileSystem fileSystem() {
       return fileSystem;
     }
   }
 
-  @Override protected void setUp() throws Exception {
+  @Override
+  protected void setUp() throws Exception {
     super.setUp();
-    Injector.INSTANCE = DaggerSvnWriterCreatorTest_Component.builder().module(new Module()).build()
-        .context();
+    Injector.INSTANCE =
+        DaggerSvnWriterCreatorTest_Component.builder().module(new Module()).build().context();
   }
 
   public void testCreate() throws Exception {
@@ -63,23 +68,26 @@ public class SvnWriterCreatorTest extends TestCase {
     expect(mockConfig.getProjectSpace()).andReturn("internal").anyTimes();
     expect(mockConfig.getIgnoreFileRes()).andReturn(ImmutableList.<String>of()).anyTimes();
 
-    Revision result = new Revision("45", "");
-    expect(fileSystem.getTemporaryDirectory("svn_writer_45_")).
-        andReturn(new File("/dummy/path/45"));
+    Revision result = Revision.create(45, "");
+    expect(fileSystem.getTemporaryDirectory("svn_writer_45_"))
+        .andReturn(new File("/dummy/path/45"));
     expect(revisionHistory.findHighestRevision("45")).andReturn(result);
-    expect(cmd.runCommand(
-        "svn",
-        ImmutableList.of("--no-auth-cache", "co", "-r", "45", "http://foo/svn/trunk/",
-                         "/dummy/path/45"), "")).andReturn("");
+    expect(
+            cmd.runCommand(
+                "svn",
+                ImmutableList.of(
+                    "--no-auth-cache", "co", "-r", "45", "http://foo/svn/trunk/", "/dummy/path/45"),
+                ""))
+        .andReturn("");
 
     control.replay();
-    SvnWriterCreator c = new SvnWriterCreator(mockConfig, revisionHistory);
+    SvnWriterCreator c = new SvnWriterCreator(mockConfig, revisionHistory, util);
     c.create(ImmutableMap.of("revision", "45"));
     control.verify();
 
     try {
       c.create(ImmutableMap.of("revisionmisspelled", "45"));
       fail();
-    } catch (MoeProblem p) {}
+    } catch (MoeProblem expected) {}
   }
 }

@@ -2,15 +2,12 @@
 
 package com.google.devtools.moe.client.directives;
 
-import com.google.devtools.moe.client.MoeOptions;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.logic.DiffCodebasesLogic;
 import com.google.devtools.moe.client.parser.Parser;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
-import com.google.devtools.moe.client.project.InvalidProject;
-import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.project.ProjectContextFactory;
 
 import org.kohsuke.args4j.Option;
@@ -23,36 +20,26 @@ import javax.inject.Inject;
  * @author dbentley@google.com (Daniel Bentley)
  */
 public class DiffCodebasesDirective extends Directive {
-  private final DiffCodebasesOptions options = new DiffCodebasesOptions();
+  @Option(name = "--codebase1", required = true, usage = "Codebase1 expression")
+  String codebase1Spec = "";
 
-  private final ProjectContextFactory contextFactory;
+  @Option(name = "--codebase2", required = true, usage = "Codebase2 expression")
+  String codebase2Spec = "";
+
   private final Ui ui;
 
   @Inject
   DiffCodebasesDirective(ProjectContextFactory contextFactory, Ui ui) {
-    this.contextFactory = contextFactory;
+    super(contextFactory); // TODO(cgruber) Inject project context, not its factory
     this.ui = ui;
   }
 
   @Override
-  public DiffCodebasesOptions getFlags() {
-    return options;
-  }
-
-  @Override
-  public int perform() {
-    ProjectContext context;
-    try {
-      context = contextFactory.makeProjectContext(options.configFilename);
-    } catch (InvalidProject e) {
-      ui.error(e, "Error creating project");
-      return 1;
-    }
-
+  protected int performDirectiveBehavior() {
     Codebase codebase1, codebase2;
     try {
-      codebase1 = Parser.parseExpression(options.codebase1).createCodebase(context);
-      codebase2 = Parser.parseExpression(options.codebase2).createCodebase(context);
+      codebase1 = Parser.parseExpression(codebase1Spec).createCodebase(context());
+      codebase2 = Parser.parseExpression(codebase2Spec).createCodebase(context());
     } catch (ParseError e) {
       ui.error(e, "Error parsing codebase expression");
       return 1;
@@ -69,17 +56,4 @@ public class DiffCodebasesDirective extends Directive {
   public String getDescription() {
     return "Prints the diff output between two codebase expressions";
   }
-
-  static class DiffCodebasesOptions extends MoeOptions {
-    @Option(name = "--config_file", required = true,
-            usage = "Location of MOE config file")
-    String configFilename = "";
-    @Option(name = "--codebase1", required = true,
-            usage = "Codebase1 expression")
-    String codebase1 = "";
-    @Option(name = "--codebase2", required = true,
-            usage = "Codebase2 expression")
-    String codebase2 = "";
-  }
-
 }

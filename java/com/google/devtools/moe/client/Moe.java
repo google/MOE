@@ -6,6 +6,10 @@ import static com.google.devtools.moe.client.Ui.MOE_TERMINATION_TASK_NAME;
 
 import com.google.devtools.moe.client.directives.Directive;
 import com.google.devtools.moe.client.directives.Directives;
+import com.google.devtools.moe.client.directives.Directives.NoSuchDirectiveException;
+import com.google.devtools.moe.client.options.OptionsModule;
+import com.google.devtools.moe.client.options.OptionsParser;
+import com.google.devtools.moe.client.project.InvalidProject;
 
 import java.io.IOException;
 import java.util.logging.ConsoleHandler;
@@ -35,7 +39,7 @@ public class Moe {
   @dagger.Component(modules = MoeModule.class)
   public abstract static class Component {
     public abstract Injector context(); // Legacy context object for static initialization.
-
+    public abstract OptionsParser options();
     public abstract Directives directives();
   }
 
@@ -57,24 +61,33 @@ public class Moe {
       return 1;
     }
     // This needs to get called first, so that DirectiveFactory can report errors appropriately.
-    Moe.Component component = DaggerMoe_Component.create();
+    Moe.Component component =
+        DaggerMoe_Component.builder().optionsModule(new OptionsModule(args)).build();
     Injector.INSTANCE = component.context();
 
     try {
-      Directive d = component.directives().getDirective(args[0]);
-      if (d == null) {
+      Directive directive = component.directives().getSelectedDirective();
+      if (directive == null) {
         return 1; // Directive lookup will have reported the error already..
       }
-      boolean parseError = !d.parseFlags(args);
-      if (d.getFlags().shouldDisplayHelp() || parseError) {
+
+      boolean parseError = !component.options().parseFlags(directive);
+      if (directive.shouldDisplayHelp() || parseError) {
         return parseError ? 1 : 0;
       }
-      int result = d.perform();
+
+      int result = directive.perform();
       Ui.Task terminateTask =
           Injector.INSTANCE.ui().pushTask(MOE_TERMINATION_TASK_NAME, "Final clean-up");
       Injector.INSTANCE.fileSystem().cleanUpTempDirs();
       Injector.INSTANCE.ui().popTask(terminateTask, "");
       return result;
+    } catch (InvalidProject e) {
+      Injector.INSTANCE.ui().error(e, "Couldn't create project");
+      return 1;
+    } catch (NoSuchDirectiveException e) {
+      e.reportTo(Injector.INSTANCE.ui());
+      return 1;
     } catch (MoeProblem m) {
       // TODO(dbentley): implement verbose mode; if it is above a threshold, print a stack trace.
       Injector.INSTANCE.ui().error(m, "Moe encountered a problem; look above for explanation");
@@ -85,40 +98,40 @@ public class Moe {
     // Exit early since we're postponing Task usage until post-dagger2.
 
     /*
-    // Tasks are a work in progress, which are only currently used to implement a
-    // HelloWorld style trivial task.  For now, leave them be until we get directive/task
-    // scopes hooked up in dagger.  Then this can be re-examined.
+     // Tasks are a work in progress, which are only currently used to implement a
+     // HelloWorld style trivial task.  For now, leave them be until we get directive/task
+     // scopes hooked up in dagger.  Then this can be re-examined.
 
-    TaskType t = TaskType.TASK_MAP.get(args[0]);
-    if (t == null) {
-      // We did not find a task for this name. We should print help and quit.
-      // But because we are in the process of converting from the old Directive framework to
-      // the new Task framework, we may instead have to run oldMain. Therefore, don't
-      // System.exit; just return.
-      // TODO(dbentley): kill all Directives, print the relevant help, and exit instead
-      // of calling directiveMain().
-      try {
-        directiveMain(args);
-      } catch (IOException e) {
-        System.exit(1);
-        return;
-      }
-      return;
-    }
+     TaskType t = TaskType.TASK_MAP.get(args[0]);
+     if (t == null) {
+     // We did not find a task for this name. We should print help and quit.
+     // But because we are in the process of converting from the old Directive framework to
+     // the new Task framework, we may instead have to run oldMain. Therefore, don't
+     // System.exit; just return.
+     // TODO(dbentley): kill all Directives, print the relevant help, and exit instead
+     // of calling directiveMain().
+     try {
+     directiveMain(args);
+     } catch (IOException e) {
+     System.exit(1);
+     return;
+     }
+     return;
+     }
 
-    // Strip off the task name
-    // This mutates t.getOptions, and so has to be called before we create the graph.
-    Flags.parseOptions(t.getOptions(), ImmutableList.copyOf(args).subList(1, args.length));
-    ObjectGraph injector = ObjectGraph.create(t, new MoeModule());
-    Task task = injector.get(Task.class);
+     // Strip off the task name
+     // This mutates t.getOptions, and so has to be called before we create the graph.
+     Flags.parseOptions(t.getOptions(), ImmutableList.copyOf(args).subList(1, args.length));
+     ObjectGraph injector = ObjectGraph.create(t, new MoeModule());
+     Task task = injector.get(Task.class);
 
-    Task.Explanation result = task.executeAtTopLevel();
-    if (!Strings.isNullOrEmpty(result.message)) {
-      logger.info(result.message);
-      System.out.println(result.message);
-    }
-    System.exit(result.exitCode);
-    */
+     Task.Explanation result = task.executeAtTopLevel();
+     if (!Strings.isNullOrEmpty(result.message)) {
+     logger.info(result.message);
+     System.out.println(result.message);
+     }
+     System.exit(result.exitCode);
+     */
   }
 
   private Moe() {}

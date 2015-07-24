@@ -39,19 +39,24 @@ public class PatchingEditorTest extends TestCase {
     Injector context(); // TODO (b/19676630) Remove when bug is fixed.
   }
 
-  @dagger.Module class Module {
-    @Provides public CommandRunner cmd() {
+  @dagger.Module
+  class Module {
+    @Provides
+    public CommandRunner cmd() {
       return cmd;
     }
-    @Provides public FileSystem filesystem() {
+
+    @Provides
+    public FileSystem filesystem() {
       return fileSystem;
     }
   }
 
-  @Override protected void setUp() throws Exception {
+  @Override
+  protected void setUp() throws Exception {
     super.setUp();
-    Injector.INSTANCE = DaggerPatchingEditorTest_Component.builder().module(new Module()).build()
-        .context();
+    Injector.INSTANCE =
+        DaggerPatchingEditorTest_Component.builder().module(new Module()).build().context();
   }
 
   public void testNoSuchPatchFile() throws Exception {
@@ -67,9 +72,8 @@ public class PatchingEditorTest extends TestCase {
     control.replay();
 
     try {
-      new PatchingEditor("patcher").edit(codebase,
-          null /* This editor doesn't need a ProjectContext. */,
-          options);
+      new PatchingEditor("patcher")
+          .edit(codebase, null /* This editor doesn't need a ProjectContext. */, options);
       fail();
     } catch (MoeProblem e) {
       assertEquals("cannot read file notFile", e.getMessage());
@@ -82,9 +86,8 @@ public class PatchingEditorTest extends TestCase {
     File patchFile = new File("/patchfile");
     File codebaseFile = new File("/codebase");
 
-    Codebase codebase = new Codebase(codebaseFile,
-                                     "internal",
-                                     null /* CodebaseExpression is not needed here. */);
+    Codebase codebase =
+        new Codebase(codebaseFile, "internal", null /* CodebaseExpression is not needed here. */);
 
     Map<String, String> options = new HashMap<String, String>();
     options.put("file", "/patchfile");
@@ -95,17 +98,15 @@ public class PatchingEditorTest extends TestCase {
     expect(fileSystem.isFile(codebaseFile)).andReturn(false);
     expect(fileSystem.listFiles(codebaseFile)).andReturn(new File[] {});
 
-    expect(cmd.runCommand(
-        "patch",
-        ImmutableList.of("-p0",
-                         "--input=/patchfile"),
-        "/patcher_run_foo")).andReturn("");
+    expect(
+            cmd.runCommand(
+                "patch", ImmutableList.of("-p0", "--input=/patchfile"), "/patcher_run_foo"))
+        .andReturn("");
 
     control.replay();
 
-    new PatchingEditor("patcher").edit(codebase,
-        null /* This edit doesn't require a ProjectContext. */,
-        options);
+    new PatchingEditor("patcher")
+        .edit(codebase, null /* This edit doesn't require a ProjectContext. */, options);
 
     control.verify();
   }

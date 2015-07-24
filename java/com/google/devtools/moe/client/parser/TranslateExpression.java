@@ -33,24 +33,26 @@ public class TranslateExpression extends AbstractExpression {
   public Codebase createCodebase(ProjectContext context) throws CodebaseCreationError {
     Codebase codebaseToTranslate = exToTranslate.createCodebase(context);
     String toProjectSpace = translateOp.term.identifier;
-    TranslatorPath path = new TranslatorPath(
-        codebaseToTranslate.getProjectSpace(), toProjectSpace);
+    TranslatorPath path = new TranslatorPath(codebaseToTranslate.getProjectSpace(), toProjectSpace);
     Translator translator = context.translators.get(path);
     if (translator == null) {
       throw new CodebaseCreationError(
-          String.format(
-              "Could not find translator from project space \"%s\" to \"%s\".\n" +
-              "Translators only available for %s",
-              codebaseToTranslate.getProjectSpace(), toProjectSpace,
-              context.translators.keySet()));
+          "Could not find translator from project space \"%s\" to \"%s\".\n"
+              + "Translators only available for %s",
+          codebaseToTranslate.getProjectSpace(),
+          toProjectSpace,
+          context.translators.keySet());
     }
 
     Ui.Task translateTask =
-        Injector.INSTANCE.ui().pushTask(
-        "translate",
-        String.format(
-            "Translating %s from project space \"%s\" to \"%s\"",
-            codebaseToTranslate.getPath(), codebaseToTranslate.getProjectSpace(), toProjectSpace));
+        Injector.INSTANCE
+            .ui()
+            .pushTask(
+                "translate",
+                "Translating %s from project space \"%s\" to \"%s\"",
+                codebaseToTranslate.getPath(),
+                codebaseToTranslate.getProjectSpace(),
+                toProjectSpace);
 
     Codebase translatedCodebase =
         translator.translate(codebaseToTranslate, translateOp.term.options, context);

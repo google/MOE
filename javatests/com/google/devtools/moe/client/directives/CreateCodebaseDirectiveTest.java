@@ -28,8 +28,8 @@ public class CreateCodebaseDirectiveTest extends TestCase {
         "moe_config.txt",
         "{\"name\": \"foo\", \"repositories\": {\"internal\": {\"type\": \"dummy\"}}}");
     CreateCodebaseDirective d = new CreateCodebaseDirective(cmd, contextFactory, ui);
-    d.getFlags().configFilename = "moe_config.txt";
-    d.getFlags().codebase = "internal";
+    d.setContextFileName("moe_config.txt");
+    d.codebase = "internal";
     assertEquals(0, d.perform());
     assertEquals(
         String.format("Codebase \"%s\" created at %s", "internal", "/dummy/codebase/internal/1"),
@@ -39,12 +39,12 @@ public class CreateCodebaseDirectiveTest extends TestCase {
   public void testCreateCodebaseWithEditors() throws Exception {
     contextFactory.projectConfigs.put(
         "moe_config.txt",
-        "{\"name\": \"foo\", \"repositories\": {" +
-        "\"internal\": {\"type\": \"dummy\"}}, \"editors\": {" +
-        "\"identity\": {\"type\":\"identity\"}}}");
+        "{\"name\": \"foo\", \"repositories\": {"
+            + "\"internal\": {\"type\": \"dummy\"}}, \"editors\": {"
+            + "\"identity\": {\"type\":\"identity\"}}}");
     CreateCodebaseDirective d = new CreateCodebaseDirective(cmd, contextFactory, ui);
-    d.getFlags().configFilename = "moe_config.txt";
-    d.getFlags().codebase = "internal|identity";
+    d.setContextFileName("moe_config.txt");
+    d.codebase = "internal|identity";
     assertEquals(0, d.perform());
     assertEquals(
         String.format(

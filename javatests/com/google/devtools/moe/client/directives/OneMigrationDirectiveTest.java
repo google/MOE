@@ -22,20 +22,20 @@ public class OneMigrationDirectiveTest extends TestCase {
     super.setUp();
     contextFactory.projectConfigs.put(
         "moe_config.txt",
-        "{\"name\":\"foo\",\"repositories\":{" +
-        "\"int\":{\"type\":\"dummy\",\"project_space\":\"internal\"}," +
-        "\"pub\":{\"type\":\"dummy\"}}," +
-        "\"translators\":[{\"from_project_space\":\"internal\"," +
-        "\"to_project_space\":\"public\",\"steps\":[{\"name\":\"id_step\"," +
-        "\"editor\":{\"type\":\"identity\"}}]}]}");
+        "{\"name\":\"foo\",\"repositories\":{"
+            + "\"int\":{\"type\":\"dummy\",\"project_space\":\"internal\"},"
+            + "\"pub\":{\"type\":\"dummy\"}},"
+            + "\"translators\":[{\"from_project_space\":\"internal\","
+            + "\"to_project_space\":\"public\",\"steps\":[{\"name\":\"id_step\","
+            + "\"editor\":{\"type\":\"identity\"}}]}]}");
     Injector.INSTANCE = new Injector(null, cmd, contextFactory, ui);
   }
 
   public void testOneMigration() throws Exception {
     OneMigrationDirective d = new OneMigrationDirective(contextFactory, ui);
-    d.getFlags().configFilename = "moe_config.txt";
-    d.getFlags().fromRepository = "int(revision=1000)";
-    d.getFlags().toRepository = "pub(revision=2)";
+    d.setContextFileName("moe_config.txt");
+    d.fromRepository = "int(revision=1000)";
+    d.toRepository = "pub(revision=2)";
     assertEquals(0, d.perform());
     assertEquals(
         String.format("Created Draft Revision: %s", "/dummy/revision/pub"),
@@ -44,31 +44,29 @@ public class OneMigrationDirectiveTest extends TestCase {
 
   public void testOneMigrationFailOnFromRevision() throws Exception {
     OneMigrationDirective d = new OneMigrationDirective(contextFactory, ui);
-    d.getFlags().configFilename = "moe_config.txt";
-    d.getFlags().fromRepository = "x(revision=1000)";
-    d.getFlags().toRepository = "pub(revision=2)";
+    d.setContextFileName("moe_config.txt");
+    d.fromRepository = "x(revision=1000)";
+    d.toRepository = "pub(revision=2)";
     try {
       d.perform();
       fail("OneMigrationDirective didn't fail on invalid repository 'x'.");
     } catch (MoeProblem expected) {
       assertEquals(
-          "No such repository 'x' in the config. Found: [int, pub]",
-          expected.getMessage());
+          "No such repository 'x' in the config. Found: [int, pub]", expected.getMessage());
     }
   }
 
   public void testOneMigrationFailOnToRevision() throws Exception {
     OneMigrationDirective d = new OneMigrationDirective(contextFactory, ui);
-    d.getFlags().configFilename = "moe_config.txt";
-    d.getFlags().fromRepository = "int(revision=1000)";
-    d.getFlags().toRepository = "x(revision=2)";
+    d.setContextFileName("moe_config.txt");
+    d.fromRepository = "int(revision=1000)";
+    d.toRepository = "x(revision=2)";
     try {
-      int result = d.perform();
+      d.perform();
       fail("OneMigrationDirective didn't fail on invalid repository 'x'.");
     } catch (MoeProblem expected) {
       assertEquals(
-          "No such repository 'x' in the config. Found: [int, pub]",
-          expected.getMessage());
+          "No such repository 'x' in the config. Found: [int, pub]", expected.getMessage());
     }
   }
 }

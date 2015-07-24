@@ -7,9 +7,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
-import java.io.StringReader;
 import java.io.StreamTokenizer;
-import java.lang.IllegalArgumentException;
+import java.io.StringReader;
 import java.util.List;
 import java.util.Map;
 
@@ -48,13 +47,13 @@ import java.util.Map;
  * @author dbentley@google.com (Daniel Bentley)
  */
 public class Parser {
-  
-  private Parser() {}  // Do not instantiate.
+
+  private Parser() {} // Do not instantiate.
 
   /** Exception for any parsing error. */
   public static class ParseError extends Exception {
-    public ParseError(String error) {
-      super("Cannot parse: " + error);
+    public ParseError(String error, Object... args) {
+      super("Cannot parse: " + String.format(error, args));
     }
   }
 
@@ -102,8 +101,8 @@ public class Parser {
           "Expression must represent a simple repository, e.g. 'internal(revision=3)'.");
     }
     return ex;
-  }  
-  
+  }
+
   @VisibleForTesting
   static ParseOptionResult parseOption(StreamTokenizer input) throws ParseError {
     try {
@@ -236,8 +235,7 @@ public class Parser {
         Operator result = Operator.getOperator((char) operator);
         return result;
       } catch (IllegalArgumentException e) {
-        throw new ParseError(
-            String.format("Invalid operator \"%s\"", input.toString()));
+        throw new ParseError("Invalid operator \"%s\"", input);
       }
     } catch (IOException e) {
       throw new ParseError(e.getMessage());
@@ -246,16 +244,16 @@ public class Parser {
 
   public static List<Operation> parseOperationList(StreamTokenizer input) throws ParseError {
     ImmutableList.Builder<Operation> operations = new ImmutableList.Builder<Operation>();
-    while(!Parser.isInputExhausted(input)) {
+    while (!Parser.isInputExhausted(input)) {
       Operator operator = parseOperator(input);
       Term t = Parser.parseTerm(input);
       operations.add(new Operation(operator, t));
-   }
+    }
     return operations.build();
   }
 
   public static StreamTokenizer tokenize(String input) {
-    StreamTokenizer result =  new StreamTokenizer(new StringReader(input));
+    StreamTokenizer result = new StreamTokenizer(new StringReader(input));
     result.resetSyntax();
     result.wordChars('a', 'z');
     result.wordChars('A', 'Z');

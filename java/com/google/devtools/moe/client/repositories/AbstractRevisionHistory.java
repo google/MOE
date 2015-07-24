@@ -3,10 +3,10 @@
 package com.google.devtools.moe.client.repositories;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.devtools.moe.client.MoeProblem;
 
+import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
 import java.util.Set;
@@ -26,15 +26,15 @@ public abstract class AbstractRevisionHistory implements RevisionHistory {
         (revision == null) ? findHeadRevisions() : ImmutableList.of(revision);
 
     if (startingRevisions.size() > 1 && searchType == SearchType.LINEAR) {
-      throw new MoeProblem(String.format(
+      throw new MoeProblem(
           "MOE found a repository (%s) with multiple heads while trying to search linear history.",
-          startingRevisions.get(0).repositoryName));
+          startingRevisions.get(0).repositoryName());
     }
 
     RevisionGraph.Builder nonMatchingBuilder = RevisionGraph.builder(startingRevisions);
     ImmutableList.Builder<Revision> matchingBuilder = ImmutableList.builder();
 
-    Deque<Revision> workList = Lists.newLinkedList();
+    Deque<Revision> workList = new ArrayDeque<>();
     workList.addAll(startingRevisions);
 
     // Keep a visited list to make sure we don't visit the same change twice.
@@ -59,11 +59,11 @@ public abstract class AbstractRevisionHistory implements RevisionHistory {
         }
 
         if (visited.size() > MAX_REVISIONS_TO_SEARCH) {
-          throw new MoeProblem(String.format(
+          throw new MoeProblem(
               "Couldn't find a matching revision for matcher (%s) from %s within %d revisions.",
               matcher,
               (revision == null) ? "head" : revision,
-              MAX_REVISIONS_TO_SEARCH));
+              MAX_REVISIONS_TO_SEARCH);
         }
       } else {
         // Don't search past matching revisions.

@@ -2,7 +2,7 @@
 
 package com.google.devtools.moe.client.tasks;
 
-import com.google.devtools.moe.client.MoeOptions;
+import com.google.devtools.moe.client.options.MoeOptions;
 
 /**
  * A Task is a unit of MOE work. That is, a Task can be run directly by a user.
@@ -47,6 +47,7 @@ public abstract class Task<Result> {
   public static class Explanation {
     public final String message;
     public final int exitCode;
+
     public Explanation(String message, int exitCode) {
       this.message = message;
       this.exitCode = exitCode;

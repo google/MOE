@@ -39,54 +39,63 @@ public class RenamingEditorTest extends TestCase {
     Injector context(); // TODO (b/19676630) Remove when bug is fixed.
   }
 
-  @dagger.Module class Module {
-    @Provides public CommandRunner cmd() {
+  @dagger.Module
+  class Module {
+    @Provides
+    public CommandRunner cmd() {
       return cmd;
     }
-    @Provides public FileSystem filesystem() {
+
+    @Provides
+    public FileSystem filesystem() {
       return fileSystem;
     }
   }
 
-  @Override protected void setUp() throws Exception {
+  @Override
+  protected void setUp() throws Exception {
     super.setUp();
-    Injector.INSTANCE = DaggerRenamingEditorTest_Component.builder().module(new Module()).build()
-        .context();
+    Injector.INSTANCE =
+        DaggerRenamingEditorTest_Component.builder().module(new Module()).build().context();
   }
 
   public void testRenameFile_NoRegex() throws Exception {
-    RenamingEditor renamer = new RenamingEditor(
-        "renamey",
-        ImmutableMap.of("fuzzy/wuzzy", "buzzy", "olddir", "newdir", ".*", "ineffectual_regex"),
-        false /*useRegex*/);
+    RenamingEditor renamer =
+        new RenamingEditor(
+            "renamey",
+            ImmutableMap.of("fuzzy/wuzzy", "buzzy", "olddir", "newdir", ".*", "ineffectual_regex"),
+            false /*useRegex*/);
 
     // Leading '/' should be trimmed.
     assertEquals("tmp/newdir/foo/bar.txt", renamer.renameFile("/tmp/olddir/foo/bar.txt"));
 
-    assertEquals("tmp/buzzy/wasabear/foo.txt",
-                 renamer.renameFile("tmp/fuzzy/wuzzy/wasabear/foo.txt"));
+    assertEquals(
+        "tmp/buzzy/wasabear/foo.txt", renamer.renameFile("tmp/fuzzy/wuzzy/wasabear/foo.txt"));
 
     try {
       renamer.renameFile("/tmp/dir/foo/bar.txt");
       fail("Renamer didn't fail on un-renamable path.");
-    } catch (MoeProblem expected) {}
+    } catch (MoeProblem expected) {
+    }
   }
 
   public void testRenameFile_Regex() throws Exception {
-    RenamingEditor renamer = new RenamingEditor(
-        "renamey",
-        ImmutableMap.of("/old([^/]*)", "/brand/new$1", "fuzzy/wuzzy", "buzzy"),
-        true /*useRegex*/);
+    RenamingEditor renamer =
+        new RenamingEditor(
+            "renamey",
+            ImmutableMap.of("/old([^/]*)", "/brand/new$1", "fuzzy/wuzzy", "buzzy"),
+            true /*useRegex*/);
 
     assertEquals("tmp/brand/newdir/foo/bar.txt", renamer.renameFile("/tmp/olddir/foo/bar.txt"));
 
-    assertEquals("tmp/buzzy/wasabear/foo.txt",
-                 renamer.renameFile("tmp/fuzzy/wuzzy/wasabear/foo.txt"));
+    assertEquals(
+        "tmp/buzzy/wasabear/foo.txt", renamer.renameFile("tmp/fuzzy/wuzzy/wasabear/foo.txt"));
 
     try {
       renamer.renameFile("/tmp/moldydir/foo/bar.txt");
       fail("Renamer didn't fail on un-renamable path.");
-    } catch (MoeProblem expected) {}
+    } catch (MoeProblem expected) {
+    }
   }
 
   public void testCopyDirectoryAndRename() throws Exception {
@@ -95,15 +104,15 @@ public class RenamingEditorTest extends TestCase {
     File src = new File("/src");
     File dest = new File("/dest");
 
-    RenamingEditor renamer = new RenamingEditor(
-        "renamey", ImmutableMap.of("olddummy", "newdummy"), false);
+    RenamingEditor renamer =
+        new RenamingEditor("renamey", ImmutableMap.of("olddummy", "newdummy"), false);
 
     expect(fileSystem.isDirectory(src)).andReturn(true);
     expect(fileSystem.listFiles(src)).andReturn(new File[] {new File("/src/olddummy")});
 
     expect(fileSystem.isDirectory(new File("/src/olddummy"))).andReturn(true);
-    expect(fileSystem.listFiles(new File("/src/olddummy"))).
-        andReturn(new File[] {new File("/src/olddummy/file1"), new File("/src/olddummy/file2")});
+    expect(fileSystem.listFiles(new File("/src/olddummy")))
+        .andReturn(new File[] {new File("/src/olddummy/file1"), new File("/src/olddummy/file2")});
 
     expect(fileSystem.isDirectory(new File("/src/olddummy/file1"))).andReturn(false);
     fileSystem.makeDirsForFile(new File("/dest/newdummy/file1"));
@@ -118,12 +127,10 @@ public class RenamingEditorTest extends TestCase {
     control.verify();
   }
 
-
   public void testEdit() throws Exception {
     File codebaseFile = new File("/codebase/");
-    Codebase codebase = new Codebase(codebaseFile,
-                                     "internal",
-                                     null /* CodebaseExpression is not needed here. */);
+    Codebase codebase =
+        new Codebase(codebaseFile, "internal", null /* CodebaseExpression is not needed here. */);
 
     File oldSubFile = new File("/codebase/moe.txt");
     File renameRun = new File("/rename_run_foo");
@@ -140,9 +147,10 @@ public class RenamingEditorTest extends TestCase {
     control.replay();
 
     new RenamingEditor("renamey", ImmutableMap.of("moe", "joe"), false)
-        .edit(codebase,
-              null /* this edit doesn't require a ProjectContext */,
-              ImmutableMap.<String, String>of() /* this edit doesn't require options */);
+        .edit(
+            codebase,
+            null /* this edit doesn't require a ProjectContext */,
+            ImmutableMap.<String, String>of() /* this edit doesn't require options */);
 
     control.verify();
   }
@@ -152,7 +160,9 @@ public class RenamingEditorTest extends TestCase {
     jsonMap.addProperty("java/com/google/devtools/", "src/");
     jsonMap.addProperty("javatests/com/google/devtools/", "tests/");
     Map<String, String> map = RenamingEditor.parseJsonMap(jsonMap);
-    assertEquals(ImmutableMap.of("java/com/google/devtools/", "src/",
-        "javatests/com/google/devtools/", "tests/"), map);
+    assertEquals(
+        ImmutableMap.of(
+            "java/com/google/devtools/", "src/", "javatests/com/google/devtools/", "tests/"),
+        map);
   }
 }

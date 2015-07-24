@@ -3,6 +3,7 @@
 package com.google.devtools.moe.client;
 
 import com.google.common.collect.Lists;
+import com.google.devtools.moe.client.options.MoeOptions;
 
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;

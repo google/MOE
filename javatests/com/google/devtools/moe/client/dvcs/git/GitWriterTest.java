@@ -39,8 +39,8 @@ public class GitWriterTest extends TestCase {
   private final File codebaseRoot = new File("/codebase");
   private final File writerRoot = new File("/writer");
   private final String projectSpace = "public";
-  private final RepositoryExpression cExp = new RepositoryExpression(
-      new Term(projectSpace, ImmutableMap.<String, String>of()));
+  private final RepositoryExpression cExp =
+      new RepositoryExpression(new Term(projectSpace, ImmutableMap.<String, String>of()));
   private final Codebase codebase = new Codebase(codebaseRoot, projectSpace, cExp);
   private final GitClonedRepository mockRevClone = control.createMock(GitClonedRepository.class);
   private final RepositoryConfig mockRepoConfig = control.createMock(RepositoryConfig.class);
@@ -60,13 +60,16 @@ public class GitWriterTest extends TestCase {
     Injector context(); // TODO (b/19676630) Remove when bug is fixed.
   }
 
-  @dagger.Module class Module {
-    @Provides public FileSystem filesystem() {
+  @dagger.Module
+  class Module {
+    @Provides
+    public FileSystem filesystem() {
       return mockFs;
     }
   }
 
-  @Override protected void setUp() throws Exception {
+  @Override
+  protected void setUp() throws Exception {
     super.setUp();
     Injector.INSTANCE =
         DaggerGitWriterTest_Component.builder().module(new Module()).build().context();
@@ -80,9 +83,11 @@ public class GitWriterTest extends TestCase {
     expect(mockRepoConfig.getIgnoreFileRes()).andReturn(ImmutableList.<String>of());
     // Define the files in the codebase and in the writer (git repo).
     expect(mockFs.findFiles(codebaseRoot)).andReturn(ImmutableSet.<File>of());
-    expect(mockFs.findFiles(writerRoot)).andReturn(ImmutableSet.<File>of(
-        // Doesn't seem to matter that much what we return here, other than .git.
-        new File(writerRoot, ".git/branches")));
+    expect(mockFs.findFiles(writerRoot))
+        .andReturn(
+            ImmutableSet.<File>of(
+                // Doesn't seem to matter that much what we return here, other than .git.
+                new File(writerRoot, ".git/branches")));
 
     // Expect no other mockFs calls from GitWriter.putFile().
 
@@ -99,8 +104,8 @@ public class GitWriterTest extends TestCase {
   public void testPutCodebase_addFile() throws Exception {
     expect(mockRepoConfig.getIgnoreFileRes()).andReturn(ImmutableList.<String>of());
 
-    expect(mockFs.findFiles(codebaseRoot)).andReturn(
-        ImmutableSet.<File>of(new File(codebaseRoot, "file1")));
+    expect(mockFs.findFiles(codebaseRoot))
+        .andReturn(ImmutableSet.<File>of(new File(codebaseRoot, "file1")));
     expect(mockFs.findFiles(writerRoot)).andReturn(ImmutableSet.<File>of());
 
     expect(mockFs.exists(new File(codebaseRoot, "file1"))).andReturn(true);
@@ -121,8 +126,8 @@ public class GitWriterTest extends TestCase {
   public void testPutCodebase_editFile() throws Exception {
     expect(mockRepoConfig.getIgnoreFileRes()).andReturn(ImmutableList.<String>of());
 
-    expect(mockFs.findFiles(codebaseRoot)).andReturn(
-        ImmutableSet.<File>of(new File(codebaseRoot, "file1")));
+    expect(mockFs.findFiles(codebaseRoot))
+        .andReturn(ImmutableSet.<File>of(new File(codebaseRoot, "file1")));
     expect(mockFs.findFiles(writerRoot))
         .andReturn(ImmutableSet.<File>of(new File(writerRoot, "file1")));
 
@@ -165,10 +170,12 @@ public class GitWriterTest extends TestCase {
     expect(mockRepoConfig.getIgnoreFileRes()).andReturn(ImmutableList.of("^.*ignored_\\w+\\.txt$"));
 
     expect(mockFs.findFiles(codebaseRoot)).andReturn(ImmutableSet.<File>of());
-    expect(mockFs.findFiles(writerRoot)).andReturn(ImmutableSet.<File>of(
-        new File(writerRoot, ".git/branches"),
-        new File(writerRoot, "not_really_ignored_dir/file1"),
-        new File(writerRoot, "included_dir/ignored_file.txt")));
+    expect(mockFs.findFiles(writerRoot))
+        .andReturn(
+            ImmutableSet.<File>of(
+                new File(writerRoot, ".git/branches"),
+                new File(writerRoot, "not_really_ignored_dir/file1"),
+                new File(writerRoot, "included_dir/ignored_file.txt")));
 
     expect(mockFs.exists(new File(codebaseRoot, "not_really_ignored_dir/file1"))).andReturn(false);
     expect(mockFs.exists(new File(writerRoot, "not_really_ignored_dir/file1"))).andReturn(true);

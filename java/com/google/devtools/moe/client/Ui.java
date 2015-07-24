@@ -41,6 +41,12 @@ public abstract class Ui implements Messenger {
       this.description = description;
     }
 
+    public Task(String taskName, String descriptionFormat, Object... args) {
+      this.taskName = taskName;
+      // TODO(cgruber) make this lazy once Task is an autovalue.
+      this.description = String.format(descriptionFormat, args);
+    }
+
     @Override
     public String toString() {
       return taskName;
@@ -50,16 +56,18 @@ public abstract class Ui implements Messenger {
   /**
    * Pushes a task onto the Task Stack.
    *
-   * MOE's UI operates on a stack model. Tasks get pushed onto the stack and then what is popped
+   * <p>MOE's UI operates on a stack model. Tasks get pushed onto the stack and then what is popped
    * must be the top task on the stack, allowing nesting only.
    *
    * @param task  the name of the task; should be sensical to a computer
-   * @param description  a description of what MOE is about to do, suitable for a user
+   * @param descriptionFormat  a String.format() template for the description of what MOE is
+   *     about to do, suitable for a user.
+   * @param formatArgs  arguments which will be used to format the descriptionFormat template
    *
    * @returns the Task created
    */
-  public Task pushTask(String task, String description) {
-    Task t = new Task(task, description);
+  public Task pushTask(String task, String descriptionFormat, Object... formatArgs) {
+    Task t = new Task(task, descriptionFormat, formatArgs);
     stack.addFirst(t);
     return t;
   }
@@ -74,16 +82,13 @@ public abstract class Ui implements Messenger {
    */
   public void popTask(Task task, String result) {
     if (stack.isEmpty()) {
-      throw new MoeProblem(
-          String.format("Tried to end task %s, but stack is empty", task.taskName));
+      throw new MoeProblem("Tried to end task %s, but stack is empty", task.taskName);
     }
 
     Task top = stack.removeFirst();
 
     if (top != task) {
-      throw new MoeProblem(
-          String.format("Tried to end task %s, but stack contains: %s", task.taskName,
-                        stack.toString()));
+      throw new MoeProblem("Tried to end task %s, but stack contains: %s", task.taskName, stack);
     }
 
     if (fileSystem != null) {
@@ -142,7 +147,8 @@ public abstract class Ui implements Messenger {
       this.task = task;
     }
 
-    @Override public boolean shouldCleanUp() {
+    @Override
+    public boolean shouldCleanUp() {
       return !stack.contains(task);
     }
   }
@@ -152,7 +158,8 @@ public abstract class Ui implements Messenger {
    */
   private class MoeExecutionLifetime implements Lifetime {
 
-    @Override public boolean shouldCleanUp() {
+    @Override
+    public boolean shouldCleanUp() {
       return !stack.isEmpty() && stack.peek().taskName.equals(MOE_TERMINATION_TASK_NAME);
     }
   }

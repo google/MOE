@@ -27,7 +27,6 @@ import java.io.File;
 
 import javax.inject.Singleton;
 
-
 /**
  * @author dbentley@google.com (Daniel Bentley)
  */
@@ -35,6 +34,7 @@ public class SvnCodebaseCreatorTest extends TestCase {
   private final IMocksControl control = EasyMock.createControl();
   private final FileSystem fileSystem = control.createMock(FileSystem.class);
   private final CommandRunner cmd = control.createMock(CommandRunner.class);
+  private final SvnUtil util = new SvnUtil(cmd);
 
   // TODO(cgruber): Rework these when statics aren't inherent in the design.
   @dagger.Component(modules = {TestingModule.class, Module.class})
@@ -45,22 +45,26 @@ public class SvnCodebaseCreatorTest extends TestCase {
 
   @dagger.Module
   class Module {
-    @Provides public CommandRunner commandRunner() {
+    @Provides
+    public CommandRunner commandRunner() {
       return cmd;
     }
-    @Provides public FileSystem fileSystem() {
+
+    @Provides
+    public FileSystem fileSystem() {
       return fileSystem;
     }
   }
 
-  @Override protected void setUp() throws Exception {
+  @Override
+  protected void setUp() throws Exception {
     super.setUp();
-    Injector.INSTANCE = DaggerSvnCodebaseCreatorTest_Component.builder().module(new Module())
-        .build().context();
+    Injector.INSTANCE =
+        DaggerSvnCodebaseCreatorTest_Component.builder().module(new Module()).build().context();
   }
 
   public void testExportExplicitRevision() throws Exception {
-    Revision result = new Revision("45", "");
+    Revision result = Revision.create(45, "");
     SvnRevisionHistory revisionHistory = control.createMock(SvnRevisionHistory.class);
 
     RepositoryConfig mockConfig = control.createMock(RepositoryConfig.class);
@@ -69,18 +73,26 @@ public class SvnCodebaseCreatorTest extends TestCase {
     expect(mockConfig.getIgnoreFileRes()).andReturn(ImmutableList.<String>of()).anyTimes();
 
     expect(revisionHistory.findHighestRevision("46")).andReturn(result);
-    expect(fileSystem.getTemporaryDirectory("svn_export_testing_45_")).
-        andReturn(new File("/dummy/path/45"));
-    expect(cmd.runCommand(
-        "svn",
-        ImmutableList.of("--no-auth-cache", "export", "http://foo/svn/trunk/", "-r", "45",
-                         "/dummy/path/45"), "")).andReturn("");
+    expect(fileSystem.getTemporaryDirectory("svn_export_testing_45_"))
+        .andReturn(new File("/dummy/path/45"));
+    expect(
+            cmd.runCommand(
+                "svn",
+                ImmutableList.of(
+                    "--no-auth-cache",
+                    "export",
+                    "http://foo/svn/trunk/",
+                    "-r",
+                    "45",
+                    "/dummy/path/45"),
+                ""))
+        .andReturn("");
     // Short-circuit Utils.filterFiles for ignore_files_re.
-    expect(Injector.INSTANCE.fileSystem().findFiles(new File("/dummy/path/45"))).andReturn(
-        ImmutableSet.<File>of());
+    expect(Injector.INSTANCE.fileSystem().findFiles(new File("/dummy/path/45")))
+        .andReturn(ImmutableSet.<File>of());
 
     control.replay();
-    CodebaseCreator cc = new SvnCodebaseCreator("testing", mockConfig, revisionHistory);
+    CodebaseCreator cc = new SvnCodebaseCreator("testing", mockConfig, revisionHistory, util);
     Codebase r = cc.create(ImmutableMap.of("revision", "46"));
     assertEquals("/dummy/path/45", r.getPath().getAbsolutePath());
     assertEquals("internal", r.getProjectSpace());

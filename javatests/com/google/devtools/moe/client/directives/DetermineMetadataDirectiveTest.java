@@ -38,14 +38,17 @@ public class DetermineMetadataDirectiveTest extends TestCase {
         "moe_config.txt",
         "{\"name\": \"foo\", \"repositories\": {\"internal\": {\"type\": \"dummy\"}}}");
     DetermineMetadataDirective d = new DetermineMetadataDirective(contextFactory, ui);
-    d.getFlags().configFilename = "moe_config.txt";
-    d.getFlags().repositoryExpression = "internal(revision=\"1,2\")";
+    d.setContextFileName("moe_config.txt");
+    d.repositoryExpression = "internal(revision=\"1,2\")";
     assertEquals(0, d.perform());
-    RevisionMetadata rm = new RevisionMetadata("1, 2", "author, author",
-        new DateTime(1L),
-        "description\n-------------\ndescription",
+    RevisionMetadata rm =
+        new RevisionMetadata(
+            "1, 2",
+            "author, author",
+            new DateTime(1L),
+            "description\n-------------\ndescription",
             ImmutableList.of(
-                new Revision("parent", "internal"), new Revision("parent", "internal")));
+                Revision.create("parent", "internal"), Revision.create("parent", "internal")));
     assertEquals(rm.toString(), ui.lastInfo);
   }
 
@@ -58,8 +61,8 @@ public class DetermineMetadataDirectiveTest extends TestCase {
         "moe_config.txt",
         "{\"name\": \"foo\", \"repositories\": {\"internal\": {\"type\": \"dummy\"}}}");
     DetermineMetadataDirective d = new DetermineMetadataDirective(contextFactory, ui);
-    d.getFlags().configFilename = "moe_config.txt";
-    d.getFlags().repositoryExpression = "internal(revision=7)";
+    d.setContextFileName("moe_config.txt");
+    d.repositoryExpression = "internal(revision=7)";
     assertEquals(0, d.perform());
     RevisionMetadata rm =
         new RevisionMetadata(
@@ -67,7 +70,7 @@ public class DetermineMetadataDirectiveTest extends TestCase {
             "author",
             new DateTime(1L),
             "description",
-            ImmutableList.of(new Revision("parent", "internal")));
+            ImmutableList.of(Revision.create("parent", "internal")));
     assertEquals(rm.toString(), ui.lastInfo);
   }
 }

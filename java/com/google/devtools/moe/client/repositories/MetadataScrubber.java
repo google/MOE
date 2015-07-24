@@ -2,7 +2,6 @@
 
 package com.google.devtools.moe.client.repositories;
 
-
 import java.util.List;
 
 /**
@@ -29,8 +28,8 @@ public abstract class MetadataScrubber {
    * @param wordAlone true if the words to match must surrounded by word boundaries
    * @return a copy representing the RevisionMetadata resulting from the scrub
    */
-  public static RevisionMetadata stripFromAllFields(RevisionMetadata rm,
-      List<String> words, String replacement, boolean wordAlone) {
+  public static RevisionMetadata stripFromAllFields(
+      RevisionMetadata rm, List<String> words, String replacement, boolean wordAlone) {
     String newId = new String(rm.id);
     String newAuthor = new String(rm.author);
     String newDescription = new String(rm.description);

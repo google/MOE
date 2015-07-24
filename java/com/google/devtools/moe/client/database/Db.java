@@ -15,7 +15,7 @@ public interface Db {
   /**
    * Adds an Equivalence to this Db.
    */
-  public void noteEquivalence(Equivalence equivalence);
+  public void noteEquivalence(RepositoryEquivalence equivalence);
 
   /**
    * Returns the Revisions in Repository {@code otherRepository} that are equivalent to the given

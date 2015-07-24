@@ -59,10 +59,11 @@ public abstract class AbstractDvcsWriter<T extends LocalClone> implements Writer
     incomingChangeCodebase.checkProjectSpace(revClone.getConfig().getProjectSpace());
 
     Set<String> codebaseFiles = incomingChangeCodebase.getRelativeFilenames();
-    Set<String> writerRepoFiles = Utils.filterByRegEx(
-        Utils.makeFilenamesRelative(
-            Injector.INSTANCE.fileSystem().findFiles(getRoot()), getRoot()),
-        getIgnoreFilePatterns());
+    Set<String> writerRepoFiles =
+        Utils.filterByRegEx(
+            Utils.makeFilenamesRelative(
+                Injector.INSTANCE.fileSystem().findFiles(getRoot()), getRoot()),
+            getIgnoreFilePatterns());
 
     Set<String> filesToUpdate = Sets.union(codebaseFiles, writerRepoFiles);
 
@@ -108,8 +109,10 @@ public abstract class AbstractDvcsWriter<T extends LocalClone> implements Writer
 
     if (!srcExists && !destExists) {
       throw new MoeProblem(
-          String.format("Neither src nor dests exists. Unreachable code:\n%s\n%s\n%s",
-                        relativeFilename, src, dest));
+          "Neither src nor dests exists. Unreachable code:\n%s\n%s\n%s",
+          relativeFilename,
+          src,
+          dest);
     }
 
     if (!srcExists) {
@@ -153,8 +156,9 @@ public abstract class AbstractDvcsWriter<T extends LocalClone> implements Writer
     if (hasPendingChanges()) {
       try {
         commitChanges(revMetaData);
-        Injector.INSTANCE.ui().info(
-            "Converted draft revision to writer at " + getRoot().getAbsolutePath());
+        Injector.INSTANCE
+            .ui()
+            .info("Converted draft revision to writer at " + getRoot().getAbsolutePath());
       } catch (CommandException e) {
         throw new WritingError("Error committing: " + e);
       }

@@ -2,9 +2,10 @@
 
 package com.google.devtools.moe.client.database;
 
+import com.google.auto.value.AutoValue;
+import com.google.devtools.moe.client.AutoValueGsonAdapter;
 import com.google.devtools.moe.client.repositories.Revision;
-
-import java.util.Objects;
+import com.google.gson.annotations.JsonAdapter;
 
 /**
  * A SubmittedMigration holds information about a completed migration.
@@ -13,37 +14,21 @@ import java.util.Objects;
  * Revisions.
  *
  */
-public class SubmittedMigration {
-
-  public final Revision fromRevision;
-  public final Revision toRevision;
-
-  /**
-   * @param fromRevision  the Revision in the source repository
-   * @param toRevision  the Revision in the destination repository
-   */
-  public SubmittedMigration(Revision fromRevision, Revision toRevision) {
-    this.fromRevision = fromRevision;
-    this.toRevision = toRevision;
+@AutoValue
+@JsonAdapter(AutoValueGsonAdapter.class)
+public abstract class SubmittedMigration {
+  public static SubmittedMigration create(Revision fromRevision, Revision toRevision) {
+    return new AutoValue_SubmittedMigration(fromRevision, toRevision);
   }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(fromRevision, toRevision);
-  }
+  /** The {@link Revision} that represents the source of this migrated commit */
+  public abstract Revision fromRevision();
 
-  @Override
-  public boolean equals(Object obj) {
-    if (obj instanceof SubmittedMigration) {
-      SubmittedMigration migrationObj = (SubmittedMigration) obj;
-      return (migrationObj.fromRevision.equals(fromRevision) &&
-              migrationObj.toRevision.equals(toRevision));
-    }
-    return false;
-  }
+  /** The {@link Revision} that represents the destination of this migrated commit */
+  public abstract Revision toRevision();
 
   @Override
   public String toString() {
-    return fromRevision.toString() + " ==> " + toRevision.toString();
+    return fromRevision() + " ==> " + toRevision();
   }
 }

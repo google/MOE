@@ -15,8 +15,7 @@ public class UsernamesConfig {
   @SerializedName("publishable_usernames")
   private List<String> publishableUsernames;
 
-  private UsernamesConfig() {
-  }
+  private UsernamesConfig() {}
 
   public List<String> getScrubbableUsernames() {
     return scrubbableUsernames;
@@ -25,5 +24,4 @@ public class UsernamesConfig {
   public List<String> getPublishableUsernames() {
     return publishableUsernames;
   }
-
 }

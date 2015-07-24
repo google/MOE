@@ -48,11 +48,8 @@ public class MigrationConfig {
   }
 
   public void validate() throws InvalidProject {
-    InvalidProject.assertNotEmpty(
-        name, "Missing name in migration");
-    InvalidProject.assertNotEmpty(
-        fromRepository, "Missing from_repository in migration");
-    InvalidProject.assertNotEmpty(
-        toRepository, "Missing to_repository in migration");
+    InvalidProject.assertNotEmpty(name, "Missing name in migration");
+    InvalidProject.assertNotEmpty(fromRepository, "Missing from_repository in migration");
+    InvalidProject.assertNotEmpty(toRepository, "Missing to_repository in migration");
   }
 }

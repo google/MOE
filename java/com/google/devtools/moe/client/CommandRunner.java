@@ -18,11 +18,16 @@ public interface CommandRunner {
     public final String stderr;
     public final int returnStatus;
 
-    public CommandException(String cmd, List<String> args,
-                            String stdout, String stderr, int returnStatus) {
-      super(String.format(
-          "Running %s with args %s returned %d with stdout %s and stderr %s",
-          cmd, args, returnStatus, stdout, stderr));
+    public CommandException(
+        String cmd, List<String> args, String stdout, String stderr, int returnStatus) {
+      super(
+          String.format(
+              "Running %s with args %s returned %d with stdout %s and stderr %s",
+              cmd,
+              args,
+              returnStatus,
+              stdout,
+              stderr));
       this.cmd = cmd;
       this.args = Collections.unmodifiableList(args);
       this.stdout = stdout;
@@ -43,8 +48,13 @@ public interface CommandRunner {
       this.stderr = stderr;
     }
 
-    public String getStdout() { return stdout; }
-    public String getStderr() { return stderr; }
+    public String getStdout() {
+      return stdout;
+    }
+
+    public String getStderr() {
+      return stderr;
+    }
   }
 
   /**
@@ -59,8 +69,7 @@ public interface CommandRunner {
    *
    * TODO(dbentley): make it easier to do error-handling
    */
-  String runCommand(String cmd, List<String> args, String workingDirectory)
-      throws CommandException;
+  String runCommand(String cmd, List<String> args, String workingDirectory) throws CommandException;
 
   /**
    * Runs a command.
