@@ -21,6 +21,8 @@ import javax.inject.Singleton;
 /**
  * MOE (Make Open Easy) client.
  *
+ * Fake change for testing
+ *
  * Progress is written to STDOUT, then logged as INFO logs. We suppress INFO logs
  * by default unless you programmatically set a handler on com.google.devtools.moe.
  *
@@ -47,6 +49,7 @@ public class Moe {
    * a main() that works with the new Task framework.
    */
   public static void main(String[] args) {
+    System.out.println("This is a test change - should not be merged.");
     ConsoleHandler sysErrHandler = new ConsoleHandler();
     sysErrHandler.setLevel(Level.WARNING);
     allMoeLogger.addHandler(sysErrHandler);
