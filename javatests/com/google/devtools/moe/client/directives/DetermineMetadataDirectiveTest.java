@@ -38,8 +38,8 @@ public class DetermineMetadataDirectiveTest extends TestCase {
         "moe_config.txt",
         "{\"name\": \"foo\", \"repositories\": {\"internal\": {\"type\": \"dummy\"}}}");
     DetermineMetadataDirective d = new DetermineMetadataDirective(contextFactory, ui);
-    d.getFlags().configFilename = "moe_config.txt";
-    d.getFlags().repositoryExpression = "internal(revision=\"1,2\")";
+    d.setContextFileName("moe_config.txt");
+    d.repositoryExpression = "internal(revision=\"1,2\")";
     assertEquals(0, d.perform());
     RevisionMetadata rm =
         new RevisionMetadata(
@@ -61,8 +61,8 @@ public class DetermineMetadataDirectiveTest extends TestCase {
         "moe_config.txt",
         "{\"name\": \"foo\", \"repositories\": {\"internal\": {\"type\": \"dummy\"}}}");
     DetermineMetadataDirective d = new DetermineMetadataDirective(contextFactory, ui);
-    d.getFlags().configFilename = "moe_config.txt";
-    d.getFlags().repositoryExpression = "internal(revision=7)";
+    d.setContextFileName("moe_config.txt");
+    d.repositoryExpression = "internal(revision=7)";
     assertEquals(0, d.perform());
     RevisionMetadata rm =
         new RevisionMetadata(

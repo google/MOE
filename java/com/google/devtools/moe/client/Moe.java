@@ -6,6 +6,10 @@ import static com.google.devtools.moe.client.Ui.MOE_TERMINATION_TASK_NAME;
 
 import com.google.devtools.moe.client.directives.Directive;
 import com.google.devtools.moe.client.directives.Directives;
+import com.google.devtools.moe.client.directives.Directives.NoSuchDirectiveException;
+import com.google.devtools.moe.client.options.OptionsModule;
+import com.google.devtools.moe.client.options.OptionsParser;
+import com.google.devtools.moe.client.project.InvalidProject;
 
 import java.io.IOException;
 import java.util.logging.ConsoleHandler;
@@ -35,7 +39,7 @@ public class Moe {
   @dagger.Component(modules = MoeModule.class)
   public abstract static class Component {
     public abstract Injector context(); // Legacy context object for static initialization.
-
+    public abstract OptionsParser options();
     public abstract Directives directives();
   }
 
@@ -57,24 +61,33 @@ public class Moe {
       return 1;
     }
     // This needs to get called first, so that DirectiveFactory can report errors appropriately.
-    Moe.Component component = DaggerMoe_Component.create();
+    Moe.Component component =
+        DaggerMoe_Component.builder().optionsModule(new OptionsModule(args)).build();
     Injector.INSTANCE = component.context();
 
     try {
-      Directive d = component.directives().getDirective(args[0]);
-      if (d == null) {
+      Directive directive = component.directives().getSelectedDirective();
+      if (directive == null) {
         return 1; // Directive lookup will have reported the error already..
       }
-      boolean parseError = !d.parseFlags(args);
-      if (d.getFlags().shouldDisplayHelp() || parseError) {
+
+      boolean parseError = !component.options().parseFlags(directive);
+      if (directive.shouldDisplayHelp() || parseError) {
         return parseError ? 1 : 0;
       }
-      int result = d.perform();
+
+      int result = directive.perform();
       Ui.Task terminateTask =
           Injector.INSTANCE.ui().pushTask(MOE_TERMINATION_TASK_NAME, "Final clean-up");
       Injector.INSTANCE.fileSystem().cleanUpTempDirs();
       Injector.INSTANCE.ui().popTask(terminateTask, "");
       return result;
+    } catch (InvalidProject e) {
+      Injector.INSTANCE.ui().error(e, "Couldn't create project");
+      return 1;
+    } catch (NoSuchDirectiveException e) {
+      e.reportTo(Injector.INSTANCE.ui());
+      return 1;
     } catch (MoeProblem m) {
       // TODO(dbentley): implement verbose mode; if it is above a threshold, print a stack trace.
       Injector.INSTANCE.ui().error(m, "Moe encountered a problem; look above for explanation");

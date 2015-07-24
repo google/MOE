@@ -29,12 +29,10 @@ public class LastEquivalenceDirectiveTest extends TestCase {
         "moe_config.txt",
         "{\"name\": \"foo\", \"repositories\": {\"internal\": {\"type\": \"dummy\"}}}");
     LastEquivalenceDirective d = new LastEquivalenceDirective(contextFactory, ui);
-    LastEquivalenceDirective.LastEquivalenceOptions options =
-        ((LastEquivalenceDirective.LastEquivalenceOptions) d.getFlags());
-    options.configFilename = "moe_config.txt";
-    options.dbLocation = "dummy";
-    options.fromRepository = "internal(revision=1)";
-    options.withRepository = "public";
+    d.setContextFileName("moe_config.txt");
+    d.dbLocation = "dummy";
+    d.fromRepository = "internal(revision=1)";
+    d.withRepository = "public";
     assertEquals(0, d.perform());
     assertEquals(
         "Last equivalence: internal{1} == public{1}",

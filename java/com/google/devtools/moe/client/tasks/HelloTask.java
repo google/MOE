@@ -2,7 +2,7 @@
 
 package com.google.devtools.moe.client.tasks;
 
-import com.google.devtools.moe.client.MoeOptions;
+import com.google.devtools.moe.client.options.MoeOptions;
 
 import org.kohsuke.args4j.Option;
 

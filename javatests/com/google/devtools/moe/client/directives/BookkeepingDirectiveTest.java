@@ -83,8 +83,8 @@ public class BookkeepingDirectiveTest extends TestCase {
             "/dummy/codebase/pub/migrated_to/", "dir (different)");
     Injector.INSTANCE = new Injector(new InMemoryFileSystem(files), cmd, contextFactory, ui);
     BookkeepingDirective d = new BookkeepingDirective(contextFactory, ui);
-    d.getFlags().configFilename = "moe_config.txt";
-    d.getFlags().dbLocation = DB_FILE.getAbsolutePath();
+    d.setContextFileName("moe_config.txt");
+    d.dbLocation = DB_FILE.getAbsolutePath();
 
     expectDiffs();
 
@@ -117,8 +117,8 @@ public class BookkeepingDirectiveTest extends TestCase {
             "/dummy/codebase/pub/migrated_to/", "empty dir (different)");
     Injector.INSTANCE = new Injector(new InMemoryFileSystem(files), cmd, contextFactory, ui);
     BookkeepingDirective d = new BookkeepingDirective(contextFactory, ui);
-    d.getFlags().configFilename = "moe_config.txt";
-    d.getFlags().dbLocation = DB_FILE.getAbsolutePath();
+    d.setContextFileName("moe_config.txt");
+    d.dbLocation = DB_FILE.getAbsolutePath();
 
     expectDiffs();
 
@@ -149,8 +149,8 @@ public class BookkeepingDirectiveTest extends TestCase {
             "/dummy/codebase/pub/migrated_to/file", "migrated_to (equivalent)");
     Injector.INSTANCE = new Injector(new InMemoryFileSystem(files), cmd, contextFactory, ui);
     BookkeepingDirective d = new BookkeepingDirective(contextFactory, ui);
-    d.getFlags().configFilename = "moe_config.txt";
-    d.getFlags().dbLocation = DB_FILE.getAbsolutePath();
+    d.setContextFileName("moe_config.txt");
+    d.dbLocation = DB_FILE.getAbsolutePath();
 
     expectDiffs();
 

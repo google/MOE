@@ -27,10 +27,10 @@ public class FindEquivalenceDirectiveTest extends TestCase {
         "moe_config.txt",
         "{\"name\": \"test\",\"repositories\": {\"internal\": {\"type\": \"dummy\"}}}");
     FindEquivalenceDirective d = new FindEquivalenceDirective(contextFactory, ui);
-    d.getFlags().configFilename = "moe_config.txt";
-    d.getFlags().dbLocation = "dummy";
-    d.getFlags().fromRepository = "internal(revision=1)";
-    d.getFlags().inRepository = "public";
+    d.setContextFileName("moe_config.txt");
+    d.dbLocation = "dummy";
+    d.fromRepository = "internal(revision=1)";
+    d.inRepository = "public";
     assertEquals(0, d.perform());
     assertEquals(
         "\"internal{1}\" == \"public{1,2}\"", ((RecordingUi) Injector.INSTANCE.ui()).lastInfo);

@@ -1,6 +1,6 @@
 // Copyright 2011 The MOE Authors All Rights Reserved.
 
-package com.google.devtools.moe.client;
+package com.google.devtools.moe.client.options;
 
 import com.google.common.collect.Sets;
 

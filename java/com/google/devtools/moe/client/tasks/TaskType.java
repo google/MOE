@@ -3,7 +3,7 @@
 package com.google.devtools.moe.client.tasks;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.moe.client.MoeOptions;
+import com.google.devtools.moe.client.options.MoeOptions;
 
 import dagger.Module;
 import dagger.Provides;

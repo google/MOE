@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.SystemFileSystem;
+import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.svn.SvnRepositoryFactory;
 import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
@@ -34,25 +35,33 @@ public class CheckConfigDirectiveTest extends TestCase {
     Injector.INSTANCE = new Injector(new SystemFileSystem(), cmd, contextFactory, ui);
   }
 
-  public void testEmptyConfigFilenameReturnsOne() throws Exception {
+  public void testEmptyConfigFilenameThrows() throws Exception {
     contextFactory.projectConfigs.put("moe_config.txt", "");
-    CheckConfigDirective d = new CheckConfigDirective(contextFactory, new RecordingUi());
-    assertEquals(1, d.perform());
+    CheckConfigDirective d = new CheckConfigDirective(contextFactory);
+    try {
+      d.perform();
+      fail();
+    } catch (InvalidProject expected) {
+    }
   }
 
   public void testEmptyConfigFileReturnsOne() throws Exception {
     contextFactory.projectConfigs.put("moe_config.txt", "");
-    CheckConfigDirective d = new CheckConfigDirective(contextFactory, new RecordingUi());
-    d.getFlags().configFilename = "moe_config.txt";
-    assertEquals(1, d.perform());
+    CheckConfigDirective d = new CheckConfigDirective(contextFactory);
+    d.setContextFileName("moe_config.txt");
+    try {
+      d.perform();
+      fail();
+    } catch (InvalidProject expected) {
+    }
   }
 
   public void testSimpleConfigFileWorks() throws Exception {
     contextFactory.projectConfigs.put(
         "moe_config.txt",
         "{\"name\": \"foo\", \"repositories\": {\"public\": {\"type\": \"dummy\"}}}");
-    CheckConfigDirective d = new CheckConfigDirective(contextFactory, new RecordingUi());
-    d.getFlags().configFilename = "moe_config.txt";
+    CheckConfigDirective d = new CheckConfigDirective(contextFactory);
+    d.setContextFileName("moe_config.txt");
     assertEquals(0, d.perform());
   }
 }

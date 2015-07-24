@@ -28,8 +28,8 @@ public class HighestRevisionDirectiveTest extends TestCase {
         "moe_config.txt",
         "{\"name\": \"foo\", \"repositories\": {\"internal\": {\"type\": \"dummy\"}}}");
     HighestRevisionDirective d = new HighestRevisionDirective(contextFactory, ui);
-    d.getFlags().configFilename = "moe_config.txt";
-    d.getFlags().repository = "internal";
+    d.setContextFileName("moe_config.txt");
+    d.repository = "internal";
     assertEquals(0, d.perform());
     assertEquals("Highest revision in repository \"internal\": 1", ui.lastInfo);
   }
@@ -39,8 +39,8 @@ public class HighestRevisionDirectiveTest extends TestCase {
         "moe_config.txt",
         "{\"name\": \"foo\", \"repositories\": {\"internal\": {\"type\": \"dummy\"}}}");
     HighestRevisionDirective d = new HighestRevisionDirective(contextFactory, ui);
-    d.getFlags().configFilename = "moe_config.txt";
-    d.getFlags().repository = "internal(revision=4)";
+    d.setContextFileName("moe_config.txt");
+    d.repository = "internal(revision=4)";
     assertEquals(0, d.perform());
     assertEquals("Highest revision in repository \"internal\": 4", ui.lastInfo);
   }

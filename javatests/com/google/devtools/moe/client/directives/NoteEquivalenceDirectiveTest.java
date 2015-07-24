@@ -43,13 +43,13 @@ public class NoteEquivalenceDirectiveTest extends TestCase {
     Injector.INSTANCE = new Injector(mockFs, cmd, contextFactory, ui);
 
     d = new NoteEquivalenceDirective(contextFactory, mockFs, ui);
-    d.getFlags().configFilename = "moe_config.txt";
-    d.getFlags().dbLocation = "/foo/db.txt";
+    d.setContextFileName("moe_config.txt");
+    d.dbLocation = "/foo/db.txt";
   }
 
   public void testPerform_invalidRepo() throws Exception {
-    d.getFlags().repo1 = "nonexistent(revision=2)";
-    d.getFlags().repo2 = "public(revision=3)";
+    d.repo1 = "nonexistent(revision=2)";
+    d.repo2 = "public(revision=3)";
 
     expect(mockFs.exists(new File("/foo/db.txt"))).andReturn(false);
 
@@ -66,8 +66,8 @@ public class NoteEquivalenceDirectiveTest extends TestCase {
   }
 
   public void testPerform_newDbFile() throws Exception {
-    d.getFlags().repo1 = "internal(revision=1)";
-    d.getFlags().repo2 = "public(revision=4)";
+    d.repo1 = "internal(revision=1)";
+    d.repo2 = "public(revision=4)";
 
     expect(mockFs.exists(new File("/foo/db.txt"))).andReturn(false);
     mockFs.write(
@@ -100,8 +100,8 @@ public class NoteEquivalenceDirectiveTest extends TestCase {
   }
 
   public void testPerform_existingDbFile_noChanges() throws Exception {
-    d.getFlags().repo1 = "internal(revision=1)";
-    d.getFlags().repo2 = "public(revision=4)";
+    d.repo1 = "internal(revision=1)";
+    d.repo2 = "public(revision=4)";
 
     String dbString =
         Joiner.on('\n')
@@ -136,8 +136,8 @@ public class NoteEquivalenceDirectiveTest extends TestCase {
   }
 
   public void testPerform_existingDbFile_addEquivalence() throws Exception {
-    d.getFlags().repo1 = "internal(revision=1)";
-    d.getFlags().repo2 = "public(revision=4)";
+    d.repo1 = "internal(revision=1)";
+    d.repo2 = "public(revision=4)";
 
     String baseDbString =
         Joiner.on('\n')

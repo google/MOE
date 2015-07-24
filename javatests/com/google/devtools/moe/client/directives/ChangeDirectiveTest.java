@@ -31,9 +31,9 @@ public class ChangeDirectiveTest extends TestCase {
         "moe_config.txt",
         "{\"name\": \"foo\", \"repositories\": {\"internal\": {\"type\": \"dummy\"}}}");
     ChangeDirective d = new ChangeDirective(contextFactory, ui);
-    d.getFlags().configFilename = "moe_config.txt";
-    d.getFlags().codebase = "internal";
-    d.getFlags().destination = "internal";
+    d.setContextFileName("moe_config.txt");
+    d.codebase = "internal";
+    d.destination = "internal";
     assertEquals(0, d.perform());
     assertEquals("/dummy/writer/internal", ui.lastTaskResult);
   }

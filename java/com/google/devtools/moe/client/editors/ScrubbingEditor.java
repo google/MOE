@@ -76,7 +76,6 @@ public class ScrubbingEditor implements Editor {
   public Codebase edit(Codebase input, ProjectContext context, Map<String, String> options) {
     File tempDir = Injector.INSTANCE.fileSystem().getTemporaryDirectory("scrubber_run_");
     File outputTar = new File(tempDir, "scrubbed.tar");
-
     try {
       Injector.INSTANCE
           .cmd()

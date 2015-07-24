@@ -1,6 +1,6 @@
 // Copyright 2011 The MOE Authors All Rights Reserved.
 
-package com.google.devtools.moe.client;
+package com.google.devtools.moe.client.options;
 
 import org.kohsuke.args4j.Option;
 
@@ -11,19 +11,17 @@ import org.kohsuke.args4j.Option;
  */
 public class MoeOptions {
 
+  @Option(name = "--config_file", required = true, usage = "Location of MOE config file")
+  protected String configFilename = "";
+
   @Option(
-      name = "--help",
-      handler = BooleanOptionHandler.class,
-      usage = "Prints available flags for this directive.")
+    name = "--help",
+    handler = BooleanOptionHandler.class,
+    usage = "Prints available flags for this directive."
+  )
   private boolean help = false;
 
   public boolean shouldDisplayHelp() {
     return help;
   }
-
-  // Here is where accessors for options common across Tasks go.
-  // e.g., getConfigFile
-
-  // TODO(dbentley): delete this once we have converted.
-  public MoeOptions() {}
 }
