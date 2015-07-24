@@ -50,6 +50,7 @@ public class Moe {
    */
   public static void main(String[] args) {
     System.out.println("This is a test change - should not be merged.");
+    System.out.println("This is a second test change - should not be merged.");
     ConsoleHandler sysErrHandler = new ConsoleHandler();
     sysErrHandler.setLevel(Level.WARNING);
     allMoeLogger.addHandler(sysErrHandler);
