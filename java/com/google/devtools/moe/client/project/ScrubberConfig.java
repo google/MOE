@@ -58,10 +58,10 @@ public class ScrubberConfig {
 
   // User options
   @SerializedName("usernames_to_scrub")
-  private final List<String> usernamesToScrub = new ArrayList<>();
+  private List<String> usernamesToScrub = new ArrayList<>();
 
   @SerializedName("usernames_to_publish")
-  private final List<String> usernamesToPublish = new ArrayList<>();
+  private List<String> usernamesToPublish = new ArrayList<>();
 
   @SerializedName("usernames_file")
   private String usernamesFile;
