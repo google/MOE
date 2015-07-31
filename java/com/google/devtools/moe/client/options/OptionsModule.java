@@ -2,12 +2,13 @@
 package com.google.devtools.moe.client.options;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import com.google.devtools.moe.client.directives.Directives.SelectedDirective;
 
 import dagger.Provides;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -42,7 +43,8 @@ public class OptionsModule {
    * compability) and strip off the directive.
    */
   private static String[] preProcessArgs(String[] unprocessedArgs) {
-    List<String> args = Lists.newLinkedList(unprocessedArgs);
+    List<String> args = new LinkedList<>();
+    Collections.addAll(args, unprocessedArgs);
     args.remove(0); // Remove the directive.
     // Args4j has a different format than the old command-line parser.
     // So we use some voodoo to get the args into the format that args4j
