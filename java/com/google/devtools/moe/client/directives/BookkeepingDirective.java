@@ -12,8 +12,6 @@ import com.google.devtools.moe.client.testing.DummyDb;
 
 import org.kohsuke.args4j.Option;
 
-import java.util.List;
-
 import javax.inject.Inject;
 
 /**
@@ -46,9 +44,7 @@ public class BookkeepingDirective extends Directive {
         return 1;
       }
     }
-
-    List<String> names = context().migrationConfigs.keySet().asList();
-    return BookkeepingLogic.bookkeep(names, db, dbLocation, context());
+    return BookkeepingLogic.bookkeep(db, dbLocation, context());
   }
 
   @Override

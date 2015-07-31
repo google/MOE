@@ -13,7 +13,7 @@ import com.google.devtools.moe.client.FileSystem.Lifetime;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.Lifetimes;
 import com.google.devtools.moe.client.MoeProblem;
-import com.google.devtools.moe.client.codebase.LocalClone;
+import com.google.devtools.moe.client.codebase.LocalWorkspace;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 
 import java.io.File;
@@ -23,7 +23,7 @@ import java.io.IOException;
  * Hg implementation of LocalClone, i.e. an 'hg clone' to local disk.
  *
  */
-public class HgClonedRepository implements LocalClone {
+public class HgClonedRepository implements LocalWorkspace {
 
   private final String repositoryName;
   private final RepositoryConfig repositoryConfig;

@@ -12,7 +12,7 @@ import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.codebase.Codebase;
-import com.google.devtools.moe.client.codebase.LocalClone;
+import com.google.devtools.moe.client.codebase.LocalWorkspace;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
@@ -41,12 +41,12 @@ public class AbstractDvcsCodebaseCreatorTest extends TestCase {
   private final FileSystem mockFS = control.createMock(FileSystem.class);
   private final RepositoryConfig mockRepoConfig = control.createMock(RepositoryConfig.class);
 
-  private final LocalClone mockRepo = control.createMock(LocalClone.class);
+  private final LocalWorkspace mockRepo = control.createMock(LocalWorkspace.class);
   private final RevisionHistory mockRevHistory = control.createMock(RevisionHistory.class);
   private final AbstractDvcsCodebaseCreator codebaseCreator =
       new AbstractDvcsCodebaseCreator(Suppliers.ofInstance(mockRepo), mockRevHistory, "public") {
         @Override
-        protected LocalClone cloneAtLocalRoot(String localroot) {
+        protected LocalWorkspace cloneAtLocalRoot(String localroot) {
           throw new UnsupportedOperationException();
         }
       };

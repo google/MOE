@@ -187,34 +187,27 @@ public class BookkeepingLogic {
    * <p>Bookkeep should be run before performing any directive which reads from the db, since it is
    * MOE's way of keeping the db up-to-date.
    *
-   * @param migrationNames the names of all migrations
    * @param db the database to update
    * @param dbLocation where db is located
    * @param context the ProjectContext to evaluate in
    * @return 0 on success, 1 on failure
    */
-  public static int bookkeep(
-      List<String> migrationNames, Db db, String dbLocation, ProjectContext context) {
+  public static int bookkeep(Db db, String dbLocation, ProjectContext context) {
     Ui.Task t = Injector.INSTANCE.ui().pushTask("perform_checks", "Updating database");
-    for (String s : migrationNames) {
-      MigrationConfig m = context.migrationConfigs.get(s);
-      if (m == null) {
-        Injector.INSTANCE.ui().error("No migration '%s' in MOE config", s);
-        return 1;
-      }
 
+    for (MigrationConfig config : context.migrationConfigs.values()) {
       Ui.Task bookkeepOneMigrationTask =
           Injector.INSTANCE
               .ui()
               .pushTask(
                   "bookkeping_one_migration",
                   "Doing bookkeeping between '%s' and '%s' for migration '%s'",
-                  m.getFromRepository(),
-                  m.getToRepository(),
-                  m.getName());
+                  config.getFromRepository(),
+                  config.getToRepository(),
+                  config.getName());
 
       TranslatorConfig migrationTranslator =
-          getTranslatorConfig(m.getFromRepository(), m.getToRepository(), context);
+          getTranslatorConfig(config.getFromRepository(), config.getToRepository(), context);
 
       // TODO(user): ? Switch the order of these two checks, so that we don't have to look back
       // through the history for irrelevant equivalences if there's one at head.
@@ -224,10 +217,13 @@ public class BookkeepingLogic {
               .pushTask(
                   "check_migrations",
                   "Checking completed migrations for new equivalence between '%s' and '%s'",
-                  m.getFromRepository(),
-                  m.getToRepository());
+                  config.getFromRepository(),
+                  config.getToRepository());
       updateCompletedMigrations(
-          m.getFromRepository(), m.getToRepository(), db, context, migrationTranslator.isInverse());
+          config.getFromRepository(),
+          config.getToRepository(),
+          db, context,
+          migrationTranslator.isInverse());
       Injector.INSTANCE.ui().popTask(checkMigrationsTask, "");
 
       // Skip head-equivalence checking for inverse translation -- assume it will be performed via
@@ -239,9 +235,9 @@ public class BookkeepingLogic {
                 .pushTask(
                     "check_heads",
                     "Checking head equivalence between '%s' and '%s'",
-                    m.getFromRepository(),
-                    m.getToRepository());
-        updateHeadEquivalence(m.getFromRepository(), m.getToRepository(), db, context);
+                    config.getFromRepository(),
+                    config.getToRepository());
+        updateHeadEquivalence(config.getFromRepository(), config.getToRepository(), db, context);
         Injector.INSTANCE.ui().popTask(checkHeadsTask, "");
       }
 

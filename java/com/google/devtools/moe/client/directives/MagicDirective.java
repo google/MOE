@@ -74,7 +74,7 @@ public class MagicDirective extends Directive {
         ImmutableList.copyOf(
             migrations.isEmpty() ? context().migrationConfigs.keySet() : migrations);
 
-    if (BookkeepingLogic.bookkeep(migrationNames, db, dbLocation, context()) != 0) {
+    if (BookkeepingLogic.bookkeep(db, dbLocation, context()) != 0) {
       // Bookkeeping has failed, so fail here as well.
       return 1;
     }
@@ -121,6 +121,7 @@ public class MagicDirective extends Directive {
         lastMigratedRevision = lastEq.getRevisionForRepository(migrationConfig.getFromRepository());
       }
 
+      int currentlyPerformedMigration = 1; // To display to users.
       for (Migration m : migrations) {
         // For each migration, the reference to-codebase for inverse translation is the Writer,
         // since it contains the latest changes (i.e. previous migrations) to the to-repository.
@@ -129,7 +130,12 @@ public class MagicDirective extends Directive {
                 .withOption("localroot", toWriter.getRoot().getAbsolutePath());
 
         Ui.Task oneMigrationTask =
-            ui.pushTask("perform_individual_migration", "Performing individual migration '%s'", m);
+            ui.pushTask(
+                "perform_individual_migration",
+                "Performing %s/%s migration '%s'",
+                currentlyPerformedMigration++,
+                migrations.size(),
+                m);
         dr = OneMigrationLogic.migrate(m, context(), toWriter, referenceToCodebase);
 
         lastMigratedRevision = m.fromRevisions.get(m.fromRevisions.size() - 1);

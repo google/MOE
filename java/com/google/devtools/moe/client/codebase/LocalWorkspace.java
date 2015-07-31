@@ -10,11 +10,11 @@ import java.io.File;
 import javax.annotation.Nullable;
 
 /**
- * Operations for objects encapsulating a local clone ('hg clone', 'git clone', 'svn checkout') of
- * a remote repository to disk.
+ * Operations for objects encapsulating a local workspace/clone/client of a repository
+ * (e.g. {@code hg clone}, {@code git clone}, {@code svn checkout}).
  *
  */
-public interface LocalClone {
+public interface LocalWorkspace {
 
   /**
    * Returns the name of the cloned {@link com.google.devtools.moe.client.repositories.Repository}.

@@ -6,6 +6,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.devtools.moe.client.repositories.Repository;
+import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
@@ -123,6 +124,16 @@ public class RepositoryConfig {
           getType(),
           repositoryFactory.getClass().getSimpleName());
     }
+  }
+
+  /**
+   * Modified copy creator.
+   */
+  public RepositoryConfig copyWithBranch(String branch) {
+    Gson gson = new Gson(); // Clone using Gson to ensure all things are serialized.
+    RepositoryConfig newConfig = gson.fromJson(gson.toJsonTree(this), getClass());
+    newConfig.branch = branch;
+    return newConfig;
   }
 
   @SuppressWarnings("unused")

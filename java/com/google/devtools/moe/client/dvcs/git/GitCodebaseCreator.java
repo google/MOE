@@ -4,7 +4,7 @@ package com.google.devtools.moe.client.dvcs.git;
 
 import com.google.common.base.Supplier;
 import com.google.devtools.moe.client.Lifetimes;
-import com.google.devtools.moe.client.codebase.LocalClone;
+import com.google.devtools.moe.client.codebase.LocalWorkspace;
 import com.google.devtools.moe.client.dvcs.AbstractDvcsCodebaseCreator;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
@@ -19,7 +19,7 @@ public class GitCodebaseCreator extends AbstractDvcsCodebaseCreator {
   private final RepositoryConfig config;
 
   public GitCodebaseCreator(
-      Supplier<? extends LocalClone> headCloneSupplier,
+      Supplier<? extends LocalWorkspace> headCloneSupplier,
       RevisionHistory revisionHistory,
       String projectSpace,
       String repositoryName,
@@ -30,7 +30,7 @@ public class GitCodebaseCreator extends AbstractDvcsCodebaseCreator {
   }
 
   @Override
-  protected LocalClone cloneAtLocalRoot(String localroot) {
+  protected LocalWorkspace cloneAtLocalRoot(String localroot) {
     GitClonedRepository clone = new GitClonedRepository(repositoryName, config, localroot);
     clone.cloneLocallyAtHead(Lifetimes.currentTask());
     return clone;
