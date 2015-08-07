@@ -102,7 +102,7 @@ public class SvnWriterTest extends TestCase {
     Codebase c =
         new Codebase(f("/codebase"), "public", e("public", ImmutableMap.<String, String>of()));
     SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"), null);
-    DraftRevision r = e.putCodebase(c);
+    DraftRevision r = e.putCodebase(c, null);
     control.verify();
     assertEquals("/writer", r.getLocation());
   }
@@ -112,7 +112,7 @@ public class SvnWriterTest extends TestCase {
         new Codebase(f("/codebase"), "internal", e("internal", ImmutableMap.<String, String>of()));
     SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"), null);
     try {
-      DraftRevision r = e.putCodebase(c);
+      DraftRevision r = e.putCodebase(c, null);
       fail();
     } catch (MoeProblem p) {
     }

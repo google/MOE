@@ -5,7 +5,7 @@ package com.google.devtools.moe.client.directives;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
-import com.google.devtools.moe.client.logic.OneMigrationLogic;
+import com.google.devtools.moe.client.migrations.Migrator;
 import com.google.devtools.moe.client.parser.Parser;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
@@ -41,11 +41,13 @@ public class OneMigrationDirective extends Directive {
   String toRepository = "";
 
   private final Ui ui;
+  private final Migrator oneMigrationLogic;
 
   @Inject
-  OneMigrationDirective(ProjectContextFactory contextFactory, Ui ui) {
+  OneMigrationDirective(ProjectContextFactory contextFactory, Ui ui, Migrator oneMigrationLogic) {
     super(contextFactory); // TODO(cgruber) Inject project context, not its factory
     this.ui = ui;
+    this.oneMigrationLogic = oneMigrationLogic;
   }
 
   @Override
@@ -56,7 +58,7 @@ public class OneMigrationDirective extends Directive {
       toRepoEx = Parser.parseRepositoryExpression(toRepository);
       fromRepoEx = Parser.parseRepositoryExpression(fromRepository);
       toProjectSpace =
-          context().config.getRepositoryConfig(toRepoEx.getRepositoryName()).getProjectSpace();
+          context().config().getRepositoryConfig(toRepoEx.getRepositoryName()).getProjectSpace();
     } catch (ParseError e) {
       ui.error(e, "Couldn't parse expression");
       return 1;
@@ -87,7 +89,7 @@ public class OneMigrationDirective extends Directive {
     ui.info("Migrating '%s' to '%s'", fromRepoEx, toRepoEx);
 
     DraftRevision r =
-        OneMigrationLogic.migrate(
+        oneMigrationLogic.migrate(
             sourceCodebase,
             destination,
             revs,

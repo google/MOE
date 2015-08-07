@@ -2,15 +2,13 @@
 
 package com.google.devtools.moe.client.directives;
 
-import static com.google.devtools.moe.client.logic.DetermineMigrationsLogic.determineMigrations;
-
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.database.Db;
 import com.google.devtools.moe.client.database.FileDb;
-import com.google.devtools.moe.client.logic.DetermineMigrationsLogic;
 import com.google.devtools.moe.client.migrations.Migration;
 import com.google.devtools.moe.client.migrations.MigrationConfig;
+import com.google.devtools.moe.client.migrations.Migrator;
 import com.google.devtools.moe.client.project.ProjectContextFactory;
 import com.google.devtools.moe.client.testing.DummyDb;
 
@@ -36,11 +34,14 @@ public class DetermineMigrationsDirective extends Directive {
   String dbLocation = "";
 
   private final Ui ui;
+  private final Migrator migrator;
 
   @Inject
-  public DetermineMigrationsDirective(ProjectContextFactory contextFactory, Ui ui) {
+  public DetermineMigrationsDirective(
+      ProjectContextFactory contextFactory, Ui ui, Migrator migrator) {
     super(contextFactory); // TODO(cgruber) Inject project context, not its factory
     this.ui = ui;
+    this.migrator = migrator;
   }
 
   @Override
@@ -58,13 +59,13 @@ public class DetermineMigrationsDirective extends Directive {
       }
     }
 
-    MigrationConfig config = context().migrationConfigs.get(migrationName);
+    MigrationConfig config = context().migrationConfigs().get(migrationName);
     if (config == null) {
       ui.error("No migration found with name " + migrationName);
       return 1;
     }
 
-    List<Migration> migrations = determineMigrations(context(), config, db);
+    List<Migration> migrations = migrator.determineMigrations(context(), config, db);
     for (Migration migration : migrations) {
       ui.info("Pending migration: " + migration);
     }

@@ -34,14 +34,14 @@ public class TranslateExpression extends AbstractExpression {
     Codebase codebaseToTranslate = exToTranslate.createCodebase(context);
     String toProjectSpace = translateOp.term.identifier;
     TranslatorPath path = new TranslatorPath(codebaseToTranslate.getProjectSpace(), toProjectSpace);
-    Translator translator = context.translators.get(path);
+    Translator translator = context.translators().get(path);
     if (translator == null) {
       throw new CodebaseCreationError(
           "Could not find translator from project space \"%s\" to \"%s\".\n"
               + "Translators only available for %s",
           codebaseToTranslate.getProjectSpace(),
           toProjectSpace,
-          context.translators.keySet());
+          context.translators().keySet());
     }
 
     Ui.Task translateTask =

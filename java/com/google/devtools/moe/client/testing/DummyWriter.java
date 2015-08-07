@@ -23,11 +23,6 @@ public class DummyWriter implements Writer {
   }
 
   @Override
-  public DraftRevision putCodebase(Codebase c) throws WritingError {
-    return new DummyDraftRevision(repositoryName);
-  }
-
-  @Override
   public DraftRevision putCodebase(Codebase c, RevisionMetadata rm) throws WritingError {
     return new DummyDraftRevision(repositoryName);
   }

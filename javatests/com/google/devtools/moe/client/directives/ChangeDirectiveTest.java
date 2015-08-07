@@ -6,6 +6,7 @@ import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
 import com.google.devtools.moe.client.testing.RecordingUi;
+import com.google.devtools.moe.client.writer.DraftRevision;
 
 import junit.framework.TestCase;
 
@@ -30,7 +31,7 @@ public class ChangeDirectiveTest extends TestCase {
     contextFactory.projectConfigs.put(
         "moe_config.txt",
         "{\"name\": \"foo\", \"repositories\": {\"internal\": {\"type\": \"dummy\"}}}");
-    ChangeDirective d = new ChangeDirective(contextFactory, ui);
+    ChangeDirective d = new ChangeDirective(contextFactory, ui, new DraftRevision.Factory(ui));
     d.setContextFileName("moe_config.txt");
     d.codebase = "internal";
     d.destination = "internal";

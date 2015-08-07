@@ -8,6 +8,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.database.Bookkeeper;
 import com.google.devtools.moe.client.database.DbStorage;
 import com.google.devtools.moe.client.database.FileDb;
 import com.google.devtools.moe.client.database.RepositoryEquivalence;
@@ -82,7 +83,7 @@ public class BookkeepingDirectiveTest extends TestCase {
             "/dummy/codebase/int/migrated_from/file", "migrated_from",
             "/dummy/codebase/pub/migrated_to/", "dir (different)");
     Injector.INSTANCE = new Injector(new InMemoryFileSystem(files), cmd, contextFactory, ui);
-    BookkeepingDirective d = new BookkeepingDirective(contextFactory, ui);
+    BookkeepingDirective d = new BookkeepingDirective(contextFactory, ui, new Bookkeeper(ui));
     d.setContextFileName("moe_config.txt");
     d.dbLocation = DB_FILE.getAbsolutePath();
 
@@ -116,7 +117,7 @@ public class BookkeepingDirectiveTest extends TestCase {
             "/dummy/codebase/int/migrated_from/file", "migrated_from",
             "/dummy/codebase/pub/migrated_to/", "empty dir (different)");
     Injector.INSTANCE = new Injector(new InMemoryFileSystem(files), cmd, contextFactory, ui);
-    BookkeepingDirective d = new BookkeepingDirective(contextFactory, ui);
+    BookkeepingDirective d = new BookkeepingDirective(contextFactory, ui, new Bookkeeper(ui));
     d.setContextFileName("moe_config.txt");
     d.dbLocation = DB_FILE.getAbsolutePath();
 
@@ -148,7 +149,7 @@ public class BookkeepingDirectiveTest extends TestCase {
             "/dummy/codebase/int/migrated_from/file", "migrated_from",
             "/dummy/codebase/pub/migrated_to/file", "migrated_to (equivalent)");
     Injector.INSTANCE = new Injector(new InMemoryFileSystem(files), cmd, contextFactory, ui);
-    BookkeepingDirective d = new BookkeepingDirective(contextFactory, ui);
+    BookkeepingDirective d = new BookkeepingDirective(contextFactory, ui, new Bookkeeper(ui));
     d.setContextFileName("moe_config.txt");
     d.dbLocation = DB_FILE.getAbsolutePath();
 

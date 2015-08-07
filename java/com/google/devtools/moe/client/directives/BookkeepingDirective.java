@@ -4,9 +4,9 @@ package com.google.devtools.moe.client.directives;
 
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
+import com.google.devtools.moe.client.database.Bookkeeper;
 import com.google.devtools.moe.client.database.Db;
 import com.google.devtools.moe.client.database.FileDb;
-import com.google.devtools.moe.client.logic.BookkeepingLogic;
 import com.google.devtools.moe.client.project.ProjectContextFactory;
 import com.google.devtools.moe.client.testing.DummyDb;
 
@@ -23,11 +23,13 @@ public class BookkeepingDirective extends Directive {
   String dbLocation = "";
 
   private final Ui ui;
+  private final Bookkeeper bookkeeper;
 
   @Inject
-  BookkeepingDirective(ProjectContextFactory contextFactory, Ui ui) {
+  BookkeepingDirective(ProjectContextFactory contextFactory, Ui ui, Bookkeeper bookkeeper) {
     super(contextFactory); // TODO(cgruber) Inject project context, not its factory
     this.ui = ui;
+    this.bookkeeper = bookkeeper;
   }
 
   @Override
@@ -44,7 +46,7 @@ public class BookkeepingDirective extends Directive {
         return 1;
       }
     }
-    return BookkeepingLogic.bookkeep(db, dbLocation, context());
+    return bookkeeper.bookkeep(db, dbLocation, context());
   }
 
   @Override

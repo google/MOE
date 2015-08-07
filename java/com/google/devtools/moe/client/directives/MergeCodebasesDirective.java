@@ -5,7 +5,7 @@ package com.google.devtools.moe.client.directives;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
-import com.google.devtools.moe.client.logic.MergeCodebasesLogic;
+import com.google.devtools.moe.client.codebase.CodebaseMerger;
 import com.google.devtools.moe.client.parser.Parser;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
 import com.google.devtools.moe.client.project.ProjectContextFactory;
@@ -64,7 +64,7 @@ public class MergeCodebasesDirective extends Directive {
       ui.error(e, "Error creating codebase");
       return 1;
     }
-    MergeCodebasesLogic.merge(originalCodebase, destinationCodebase, modifiedCodebase);
+    new CodebaseMerger(originalCodebase, destinationCodebase, modifiedCodebase).merge();
     return 0;
   }
 

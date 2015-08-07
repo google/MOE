@@ -32,7 +32,7 @@ public class EditExpression extends AbstractExpression {
   public Codebase createCodebase(ProjectContext context) throws CodebaseCreationError {
     Codebase codebaseToEdit = exToEdit.createCodebase(context);
     String editorName = editOp.term.identifier;
-    Editor editor = context.editors.get(editorName);
+    Editor editor = context.editors().get(editorName);
     if (editor == null) {
       throw new CodebaseCreationError("no editor " + editorName);
     }

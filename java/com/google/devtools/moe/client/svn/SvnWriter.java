@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
+import javax.annotation.Nullable;
+
 /**
  * {@link Writer} for svn.
  *
@@ -56,8 +58,7 @@ public class SvnWriter implements Writer {
   }
 
   // TODO(user): Handle separate_revisions! (an 'svn commit' per exported change)
-  @Override
-  public DraftRevision putCodebase(Codebase c) throws WritingError {
+  private DraftRevision putCodebase(Codebase c) {
     c.checkProjectSpace(config.getProjectSpace());
 
     // Filter out files that either start with .svn or have .svn after a slash, plus the repo
@@ -84,21 +85,24 @@ public class SvnWriter implements Writer {
   }
 
   @Override
-  public DraftRevision putCodebase(Codebase c, RevisionMetadata rm) throws WritingError {
+  public DraftRevision putCodebase(Codebase c, @Nullable RevisionMetadata rm) throws WritingError {
     DraftRevision dr = putCodebase(c);
-    // Generate a shell script to commit repo with author and description
-    String script =
-        String.format(
-            "svn update%n"
-                + "svn commit -m \"%s\"%n"
-                + "svn propset -r HEAD svn:author \"%s\" --revprop",
-            rm.description,
-            rm.author);
-    Utils.makeShellScript(script, rootDirectory.getAbsolutePath() + "/svn_commit.sh");
+    if (rm != null) {
+      // Generate a shell script to commit repo with author and description
+      String script =
+          String.format(
+              "svn update%n"
+                  + "svn commit -m \"%s\"%n"
+                  + "svn propset -r HEAD svn:author \"%s\" --revprop",
+              rm.description,
+              rm.author);
+      Utils.makeShellScript(script, rootDirectory.getAbsolutePath() + "/svn_commit.sh");
 
-    Injector.INSTANCE
-        .ui()
-        .info("To submit, run: cd %s && ./svn_commit.sh && cd -", rootDirectory.getAbsolutePath());
+      Injector.INSTANCE
+          .ui()
+          .info(
+              "To submit, run: cd %s && ./svn_commit.sh && cd -", rootDirectory.getAbsolutePath());
+    }
     return dr;
   }
 
