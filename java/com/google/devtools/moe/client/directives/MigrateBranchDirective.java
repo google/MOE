@@ -11,9 +11,9 @@ import com.google.common.collect.Lists;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.database.RepositoryEquivalence;
-import com.google.devtools.moe.client.logic.OneMigrationLogic;
 import com.google.devtools.moe.client.migrations.Migration;
 import com.google.devtools.moe.client.migrations.MigrationConfig;
+import com.google.devtools.moe.client.migrations.Migrator;
 import com.google.devtools.moe.client.parser.Expression;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.project.ProjectContextFactory;
@@ -59,23 +59,31 @@ public class MigrateBranchDirective extends Directive {
 
   private Repositories repositories;
   private final Ui ui;
+  private final Migrator oneMigrationLogic;
 
   @Inject
-  MigrateBranchDirective(ProjectContextFactory contextFactory, Repositories repositories, Ui ui) {
+  MigrateBranchDirective(
+      ProjectContextFactory contextFactory,
+      Repositories repositories,
+      Ui ui,
+      Migrator oneMigrationLogic) {
     super(contextFactory);
     this.repositories = repositories;
     this.ui = ui;
+    this.oneMigrationLogic = oneMigrationLogic;
   }
 
   @Override
   protected int performDirectiveBehavior() {
     List<MigrationConfig> configs =
-        FluentIterable.from(context().migrationConfigs.values())
-            .filter(new Predicate<MigrationConfig>() {
-              @Override public boolean apply(MigrationConfig input) {
-                return input.getFromRepository().equals(fromRepository);
-              }
-            })
+        FluentIterable.from(context().migrationConfigs().values())
+            .filter(
+                new Predicate<MigrationConfig>() {
+                  @Override
+                  public boolean apply(MigrationConfig input) {
+                    return input.getFromRepository().equals(fromRepository);
+                  }
+                })
             .toList();
     switch (configs.size()) {
       case 0:
@@ -120,7 +128,7 @@ public class MigrateBranchDirective extends Directive {
           ui.pushTask(
               "perform_individual_migration",
               String.format("Performing individual migration '%s'", m.toString()));
-      dr = OneMigrationLogic.migrate(m, context(), toWriter, referenceToCodebase);
+      dr = oneMigrationLogic.migrate(m, context(), toWriter, referenceToCodebase);
       ui.popTask(oneMigrationTask, "");
     }
     toWriter.printPushMessage();
@@ -140,7 +148,7 @@ public class MigrateBranchDirective extends Directive {
   private List<Migration> determineMigrations(MigrationConfig migrationConfig) {
     String fromRepoName = migrationConfig.getFromRepository();
     RepositoryConfig fromRepoConfig =
-        context().config.getRepositoryConfig(fromRepoName).copyWithBranch(branchLabel);
+        context().config().getRepositoryConfig(fromRepoName).copyWithBranch(branchLabel);
     Repository fromRepo = repositories.create(fromRepoName, fromRepoConfig);
     Revision branchPointRevision = Revision.create(branchPoint, fromRepoName);
     RevisionHistory history = fromRepo.revisionHistory();

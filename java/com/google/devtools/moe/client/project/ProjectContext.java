@@ -2,6 +2,7 @@
 
 package com.google.devtools.moe.client.project;
 
+import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -31,25 +32,17 @@ import java.util.List;
  * Represents the fully interpreted project, its textual configurations realized into
  * relevant data structures.
  */
-public class ProjectContext {
-  public final ProjectConfig config;
-  private final ImmutableMap<String, Repository> repositories;
-  public final ImmutableMap<String, Editor> editors;
-  public final ImmutableMap<TranslatorPath, Translator> translators;
-  public final ImmutableMap<String, MigrationConfig> migrationConfigs;
+@AutoValue
+public abstract class ProjectContext {
+  public abstract ProjectConfig config();
 
-  public ProjectContext(
-      ProjectConfig config,
-      ImmutableMap<String, Repository> repositories,
-      ImmutableMap<String, Editor> editors,
-      ImmutableMap<TranslatorPath, Translator> translators,
-      ImmutableMap<String, MigrationConfig> migrationConfigs) {
-    this.config = config;
-    this.repositories = repositories;
-    this.editors = editors;
-    this.translators = translators;
-    this.migrationConfigs = migrationConfigs;
-  }
+  public abstract ImmutableMap<String, Repository> repositories();
+
+  public abstract ImmutableMap<String, Editor> editors();
+
+  public abstract ImmutableMap<TranslatorPath, Translator> translators();
+
+  public abstract ImmutableMap<String, MigrationConfig> migrationConfigs();
 
   /**
    * Returns the {@link Repository} in this context with the given name.
@@ -57,14 +50,14 @@ public class ProjectContext {
    * @throws MoeProblem if no such repository with the given name exists
    */
   public Repository getRepository(String repositoryName) {
-    if (!repositories.containsKey(repositoryName)) {
+    if (!repositories().containsKey(repositoryName)) {
       throw new MoeProblem(
           "No such repository '"
               + repositoryName
               + "' in the config. Found: "
-              + ImmutableSortedSet.copyOf(repositories.keySet()));
+              + ImmutableSortedSet.copyOf(repositories().keySet()));
     }
-    return repositories.get(repositoryName);
+    return repositories().get(repositoryName);
   }
 
   static Editor makeEditorFromConfig(String editorName, EditorConfig config) throws InvalidProject {
@@ -132,10 +125,9 @@ public class ProjectContext {
       }
     }
     throw new InvalidProject(
-        "Couldn't find translator whose path is inverse of "
-            + transConfig.getFromProjectSpace()
-            + " -> "
-            + transConfig.getToProjectSpace());
+        "Couldn't find translator whose path is inverse of %s -> %s",
+        transConfig.getFromProjectSpace(),
+        transConfig.getToProjectSpace());
   }
 
   private static InverseEditor makeInverseEditorFromConfig(
@@ -150,49 +142,5 @@ public class ProjectContext {
       default:
         throw new InvalidProject("Non-invertible editor type: " + originalConfig.getType());
     }
-  }
-
-  public static class Builder {
-    public ProjectConfig config;
-    public ImmutableMap<String, Repository> repositories;
-    public ImmutableMap<String, Editor> editors;
-    public ImmutableMap<TranslatorPath, Translator> translators;
-    public ImmutableMap<String, MigrationConfig> migrationConfigs;
-
-    public Builder() {
-      config = null;
-      repositories = ImmutableMap.of();
-      editors = ImmutableMap.of();
-      translators = ImmutableMap.of();
-      migrationConfigs = ImmutableMap.of();
-    }
-
-    public Builder withRepositories(ImmutableMap<String, Repository> repositories) {
-      this.repositories = repositories;
-      return this;
-    }
-
-    public Builder withEditors(ImmutableMap<String, Editor> editors) {
-      this.editors = editors;
-      return this;
-    }
-
-    public Builder withTranslators(ImmutableMap<TranslatorPath, Translator> translators) {
-      this.translators = translators;
-      return this;
-    }
-
-    public Builder withMigrations(ImmutableMap<String, MigrationConfig> migrationConfigs) {
-      this.migrationConfigs = migrationConfigs;
-      return this;
-    }
-
-    public ProjectContext build() {
-      return new ProjectContext(config, repositories, editors, translators, migrationConfigs);
-    }
-  }
-
-  public static Builder builder() {
-    return new Builder();
   }
 }

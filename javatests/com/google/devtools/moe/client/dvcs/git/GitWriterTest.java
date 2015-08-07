@@ -94,7 +94,7 @@ public class GitWriterTest extends TestCase {
     control.replay();
 
     GitWriter w = new GitWriter(mockRevClone);
-    DraftRevision dr = w.putCodebase(codebase);
+    DraftRevision dr = w.putCodebase(codebase, null);
 
     control.verify();
 
@@ -118,7 +118,7 @@ public class GitWriterTest extends TestCase {
     control.replay();
 
     GitWriter w = new GitWriter(mockRevClone);
-    DraftRevision dr = w.putCodebase(codebase);
+    DraftRevision dr = w.putCodebase(codebase, null);
 
     control.verify();
   }
@@ -141,7 +141,7 @@ public class GitWriterTest extends TestCase {
     control.replay();
 
     GitWriter w = new GitWriter(mockRevClone);
-    DraftRevision dr = w.putCodebase(codebase);
+    DraftRevision dr = w.putCodebase(codebase, null);
 
     control.verify();
   }
@@ -161,7 +161,7 @@ public class GitWriterTest extends TestCase {
     control.replay();
 
     GitWriter w = new GitWriter(mockRevClone);
-    DraftRevision dr = w.putCodebase(codebase);
+    DraftRevision dr = w.putCodebase(codebase, null);
 
     control.verify();
   }
@@ -185,7 +185,7 @@ public class GitWriterTest extends TestCase {
     control.replay();
 
     GitWriter w = new GitWriter(mockRevClone);
-    DraftRevision dr = w.putCodebase(codebase);
+    DraftRevision dr = w.putCodebase(codebase, null);
 
     control.verify();
 

@@ -8,7 +8,7 @@ import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.database.Db;
 import com.google.devtools.moe.client.database.FileDb;
 import com.google.devtools.moe.client.database.RepositoryEquivalence;
-import com.google.devtools.moe.client.logic.LastEquivalenceLogic;
+import com.google.devtools.moe.client.database.RepositoryEquivalenceMatcher;
 import com.google.devtools.moe.client.parser.Parser;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
@@ -16,6 +16,7 @@ import com.google.devtools.moe.client.project.ProjectContextFactory;
 import com.google.devtools.moe.client.repositories.Repository;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
+import com.google.devtools.moe.client.repositories.RevisionHistory.SearchType;
 import com.google.devtools.moe.client.testing.DummyDb;
 
 import org.kohsuke.args4j.Option;
@@ -86,9 +87,10 @@ public class LastEquivalenceDirective extends Directive {
     }
 
     Revision rev = rh.findHighestRevision(repoEx.getOption("revision"));
+    RepositoryEquivalenceMatcher matcher = new RepositoryEquivalenceMatcher(withRepository, db);
 
     List<RepositoryEquivalence> lastEquivs =
-        LastEquivalenceLogic.lastEquivalence(withRepository, rev, db, rh);
+        rh.findRevisions(rev, matcher, SearchType.BRANCHED).getEquivalences();
 
     if (lastEquivs.isEmpty()) {
       ui.info(

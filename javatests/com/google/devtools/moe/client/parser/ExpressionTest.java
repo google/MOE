@@ -20,6 +20,7 @@ import com.google.devtools.moe.client.editors.ForwardTranslator;
 import com.google.devtools.moe.client.editors.Translator;
 import com.google.devtools.moe.client.editors.TranslatorPath;
 import com.google.devtools.moe.client.editors.TranslatorStep;
+import com.google.devtools.moe.client.project.FakeProjectContext;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.Repository;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
@@ -59,7 +60,7 @@ public class ExpressionTest extends TestCase {
 
   public void testNoSuchCreator() throws Exception {
     try {
-      new RepositoryExpression("foo").createCodebase(ProjectContext.builder().build());
+      new RepositoryExpression("foo").createCodebase(new FakeProjectContext());
       fail();
     } catch (MoeProblem expected) {
       assertEquals("No such repository 'foo' in the config. Found: []", expected.getMessage());
@@ -95,7 +96,7 @@ public class ExpressionTest extends TestCase {
     RepositoryExpression repoEx = new RepositoryExpression("file").withOption("path", "/foo");
 
     control.replay();
-    Codebase c = repoEx.createCodebase(ProjectContext.builder().build());
+    Codebase c = repoEx.createCodebase(new FakeProjectContext());
     control.verify();
 
     assertEquals(copyLocation, c.getPath());
@@ -105,8 +106,7 @@ public class ExpressionTest extends TestCase {
 
   public void testNoSuchEditor() throws Exception {
     try {
-      ProjectContext context =
-          ProjectContext.builder().withEditors(ImmutableMap.<String, Editor>of()).build();
+      ProjectContext context = new FakeProjectContext();
 
       IMocksControl control = EasyMock.createControl();
       RepositoryExpression mockRepoEx = control.createMock(RepositoryExpression.class);
@@ -126,14 +126,16 @@ public class ExpressionTest extends TestCase {
 
   public void testNoSuchTranslator() throws Exception {
     try {
-      TranslatorPath tPath = new TranslatorPath("foo", "bar");
-      Translator t =
+      final TranslatorPath tPath = new TranslatorPath("foo", "bar");
+      final Translator t =
           new ForwardTranslator(ImmutableList.<TranslatorStep>of(new TranslatorStep("quux", null)));
       ProjectContext context =
-          ProjectContext.builder()
-              .withEditors(ImmutableMap.<String, Editor>of())
-              .withTranslators(ImmutableMap.of(tPath, t))
-              .build();
+          new FakeProjectContext() {
+            @Override
+            public ImmutableMap<TranslatorPath, Translator> translators() {
+              return ImmutableMap.of(tPath, t);
+            }
+          };
 
       IMocksControl control = EasyMock.createControl();
       RepositoryExpression mockRepoEx = control.createMock(RepositoryExpression.class);
@@ -158,27 +160,38 @@ public class ExpressionTest extends TestCase {
 
   public void testParseAndEvaluate() throws Exception {
     IMocksControl control = EasyMock.createControl();
-    RevisionHistory rh = control.createMock(RevisionHistory.class);
-    CodebaseCreator cc = control.createMock(CodebaseCreator.class);
-    WriterCreator wc = control.createMock(WriterCreator.class);
-    Editor e = control.createMock(Editor.class);
+    final RevisionHistory rh = control.createMock(RevisionHistory.class);
+    final CodebaseCreator cc = control.createMock(CodebaseCreator.class);
+    final WriterCreator wc = control.createMock(WriterCreator.class);
+    final Editor e = control.createMock(Editor.class);
     Editor translatorEditor = control.createMock(Editor.class);
 
     File firstDir = new File("/first");
     File secondDir = new File("/second");
     File finalDir = new File("/final");
 
-    TranslatorPath tPath = new TranslatorPath("foo", "public");
-    Translator t =
+    final TranslatorPath tPath = new TranslatorPath("foo", "public");
+    final Translator t =
         new ForwardTranslator(
             ImmutableList.<TranslatorStep>of(new TranslatorStep("quux", translatorEditor)));
 
     ProjectContext context =
-        ProjectContext.builder()
-            .withRepositories(ImmutableMap.of("foo", Repository.create("foo", rh, cc, wc)))
-            .withTranslators(ImmutableMap.of(tPath, t))
-            .withEditors(ImmutableMap.of("bar", e))
-            .build();
+        new FakeProjectContext() {
+          @Override
+          public ImmutableMap<String, Repository> repositories() {
+            return ImmutableMap.of("foo", Repository.create("foo", rh, cc, wc));
+          }
+
+          @Override
+          public ImmutableMap<TranslatorPath, Translator> translators() {
+            return ImmutableMap.of(tPath, t);
+          }
+
+          @Override
+          public ImmutableMap<String, Editor> editors() {
+            return ImmutableMap.of("bar", e);
+          }
+        };
 
     Codebase firstCb =
         new Codebase(firstDir, "foo", new RepositoryExpression(new Term("foo", EMPTY_MAP)));

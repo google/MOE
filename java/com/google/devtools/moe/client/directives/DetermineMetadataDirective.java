@@ -3,7 +3,7 @@
 package com.google.devtools.moe.client.directives;
 
 import com.google.devtools.moe.client.Ui;
-import com.google.devtools.moe.client.logic.DetermineMetadataLogic;
+import com.google.devtools.moe.client.migrations.Migrator;
 import com.google.devtools.moe.client.parser.Parser;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
@@ -31,11 +31,13 @@ public class DetermineMetadataDirective extends Directive {
   String repositoryExpression = "";
 
   private final Ui ui;
+  private final Migrator migrator;
 
   @Inject
-  DetermineMetadataDirective(ProjectContextFactory contextFactory, Ui ui) {
+  DetermineMetadataDirective(ProjectContextFactory contextFactory, Ui ui, Migrator migrator) {
     super(contextFactory); // TODO(cgruber) Inject project context, not its factory
     this.ui = ui;
+    this.migrator = migrator;
   }
 
   @Override
@@ -49,8 +51,7 @@ public class DetermineMetadataDirective extends Directive {
     }
 
     List<Revision> revs = Revision.fromRepositoryExpression(repoEx, context());
-
-    RevisionMetadata rm = DetermineMetadataLogic.determine(context(), revs, null);
+    RevisionMetadata rm = migrator.processMetadata(context(), revs, null, null);
     ui.info(rm.toString());
     return 0;
   }

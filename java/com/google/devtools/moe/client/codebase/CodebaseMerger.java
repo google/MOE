@@ -19,10 +19,48 @@ import java.io.IOException;
 import java.util.Set;
 
 /**
- * Once constructed with three codebases, this class can call merge() which will merge the three
- * codebases into one. A CodebaseMerger keeps track of the names of files that either merged
- * successfully or conflicted.
+ * Merges all changes that lead from {@code originalCodebase} to {@code modifiedCodebase} into
+ * destinationCodebase when its {@link #merge()} method is invoked.
  *
+ * <p>Here is a description of the UNIX merge(1) tool from its man page:
+ * <pre>{@code
+ *
+ *   merge [ options ] file1 file2 file3
+ *
+ *   merge incorporates all changes that lead from file2 to file3 into file1.  The result
+ *   ordinarily goes into file1.  merge is useful for combining separate changes to an original.
+ *   Suppose file2 is the original, and both file1 and file3 are modifications of file2.  Then
+ *   merge combines both changes.
+ *
+ * }</pre>
+ *
+ * <p>{@link CodebaseMerger#merge()} performs this type of merge on each file in the three
+ * codebases. In {@link CodebaseMerger#merge}, {@code originalCodebase} is analogous to
+ * {@code file2}, {@code modifiedCodebase} is analogous to {@code file3}, and
+ * {@code destinationCodebase} is analogous to {@code file1}. The output of
+ * {@link CodebaseMerger#merge()} is a codebase that incorporates the changes that both
+ * {@code modifiedCodebase} and {@code destinationCodebase} made on the {@code originalCodebase}.
+ * The differences between {@code modifiedCodebase} and the {@code originalCodebase} are brought
+ * into a copy of {@code destinationCodebase}. The result is the merged codebase.
+ *
+ * <p>This is useful when bringing changes to the public repository into the internal repository.
+ * For example, say you run:
+ *
+ * <pre>{@code
+ *    merge_codebases --originalCodebase "publicrepo(revision=142)"
+ *                    --modifiedCodebase "publicrepo(revision=143)"
+ *                    --destinationCodebase "internalrepo(revision=74)"
+ * }</pre>
+ *
+ * <p>Let internalrepo(revision=74) be in equivalence with publicrepo(revision=142). That is, let
+ * publicrepo(revision=142) represent the same state of the code as internalrepo(revision=74)
+ * minus any confidential code that may have been scrubbed during translation. That means that
+ * publicrepo(revision=143) is a change to the public repository which has yet to be brought to
+ * the internal repository. By running the above merge_codebases, the changes from the public
+ * revision 142 to 143 will be merged into a copy of internal revision 74. The result is an
+ * internal revision 75 which has the new public changes and still has the confidential code that
+ * a public revision wouldn't have. Thus, internal revision 75 would be equivalent with public
+ * revision 143 assuming there were no conflicts when merging.
  */
 public class CodebaseMerger {
 
@@ -167,20 +205,18 @@ public class CodebaseMerger {
 
     File mergedFile = copyToMergedCodebase(filename, destFile);
 
-    String mergeOutput;
     try {
       // Merges the changes that lead from origFile to modFile into mergedFile (which is a copy
       // of destFile). After, mergedFile will have the combined changes of modFile and destFile.
-      mergeOutput =
-          Injector.INSTANCE
-              .cmd()
-              .runCommand(
-                  "merge",
-                  ImmutableList.of(
-                      mergedFile.getAbsolutePath(),
-                      origFile.getAbsolutePath(),
-                      modFile.getAbsolutePath()),
-                  this.mergedCodebase.getPath().getAbsolutePath());
+      Injector.INSTANCE
+          .cmd()
+          .runCommand(
+              "merge",
+              ImmutableList.of(
+                  mergedFile.getAbsolutePath(),
+                  origFile.getAbsolutePath(),
+                  modFile.getAbsolutePath()),
+              this.mergedCodebase.getPath().getAbsolutePath());
       // Return status was 0 and the merge was successful. Note it.
       mergedFiles.add(mergedFile.getAbsolutePath());
     } catch (CommandException e) {

@@ -7,14 +7,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
+import com.google.devtools.moe.client.database.Bookkeeper;
 import com.google.devtools.moe.client.database.Db;
 import com.google.devtools.moe.client.database.FileDb;
 import com.google.devtools.moe.client.database.RepositoryEquivalence;
-import com.google.devtools.moe.client.logic.BookkeepingLogic;
-import com.google.devtools.moe.client.logic.DetermineMigrationsLogic;
-import com.google.devtools.moe.client.logic.OneMigrationLogic;
 import com.google.devtools.moe.client.migrations.Migration;
 import com.google.devtools.moe.client.migrations.MigrationConfig;
+import com.google.devtools.moe.client.migrations.Migrator;
 import com.google.devtools.moe.client.parser.Expression;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.project.ProjectContextFactory;
@@ -48,11 +47,16 @@ public class MagicDirective extends Directive {
   List<String> migrations = Lists.newArrayList();
 
   private final Ui ui;
+  private final Migrator migrator;
+  private final Bookkeeper bookkeeper;
 
   @Inject
-  MagicDirective(ProjectContextFactory contextFactory, Ui ui) {
+  MagicDirective(
+      ProjectContextFactory contextFactory, Ui ui, Bookkeeper bookkeeper, Migrator migrator) {
     super(contextFactory); // TODO(cgruber) Inject project context, not its factory
     this.ui = ui;
+    this.bookkeeper = bookkeeper;
+    this.migrator = migrator;
   }
 
   @Override
@@ -72,9 +76,9 @@ public class MagicDirective extends Directive {
 
     List<String> migrationNames =
         ImmutableList.copyOf(
-            migrations.isEmpty() ? context().migrationConfigs.keySet() : migrations);
+            migrations.isEmpty() ? context().migrationConfigs().keySet() : migrations);
 
-    if (BookkeepingLogic.bookkeep(db, dbLocation, context()) != 0) {
+    if (bookkeeper.bookkeep(db, dbLocation, context()) != 0) {
       // Bookkeeping has failed, so fail here as well.
       return 1;
     }
@@ -85,14 +89,13 @@ public class MagicDirective extends Directive {
       Ui.Task migrationTask =
           ui.pushTask("perform_migration", "Performing migration '%s'", migrationName);
 
-      MigrationConfig migrationConfig = context().migrationConfigs.get(migrationName);
+      MigrationConfig migrationConfig = context().migrationConfigs().get(migrationName);
       if (migrationConfig == null) {
         ui.error("No migration found with name %s", migrationName);
         continue;
       }
 
-      List<Migration> migrations =
-          DetermineMigrationsLogic.determineMigrations(context(), migrationConfig, db);
+      List<Migration> migrations = migrator.determineMigrations(context(), migrationConfig, db);
 
       if (migrations.isEmpty()) {
         ui.info("No pending revisions to migrate for %s", migrationName);
@@ -136,7 +139,7 @@ public class MagicDirective extends Directive {
                 currentlyPerformedMigration++,
                 migrations.size(),
                 m);
-        dr = OneMigrationLogic.migrate(m, context(), toWriter, referenceToCodebase);
+        dr = migrator.migrate(m, context(), toWriter, referenceToCodebase);
 
         lastMigratedRevision = m.fromRevisions.get(m.fromRevisions.size() - 1);
         ui.popTask(oneMigrationTask, "");

@@ -6,7 +6,6 @@ import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.Ui.Task;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
-import com.google.devtools.moe.client.logic.ChangeLogic;
 import com.google.devtools.moe.client.parser.Parser;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
 import com.google.devtools.moe.client.project.ProjectContextFactory;
@@ -31,11 +30,14 @@ public class ChangeDirective extends Directive {
   String destination = "";
 
   private final Ui ui;
+  private final DraftRevision.Factory revisionFactory;
 
   @Inject
-  ChangeDirective(ProjectContextFactory contextFactory, Ui ui) {
+  ChangeDirective(
+      ProjectContextFactory contextFactory, Ui ui, DraftRevision.Factory revisionFactory) {
     super(contextFactory); // TODO(cgruber) Inject project context, not its factory
     this.ui = ui;
+    this.revisionFactory = revisionFactory;
   }
 
   @Override
@@ -69,7 +71,7 @@ public class ChangeDirective extends Directive {
       return 1;
     }
 
-    DraftRevision r = ChangeLogic.change(c, writer);
+    DraftRevision r = revisionFactory.create(c, writer, null);
     if (r == null) {
       return 1;
     }

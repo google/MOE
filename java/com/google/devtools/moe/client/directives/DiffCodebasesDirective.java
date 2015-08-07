@@ -5,10 +5,11 @@ package com.google.devtools.moe.client.directives;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
-import com.google.devtools.moe.client.logic.DiffCodebasesLogic;
 import com.google.devtools.moe.client.parser.Parser;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
 import com.google.devtools.moe.client.project.ProjectContextFactory;
+import com.google.devtools.moe.client.tools.CodebaseDifference;
+import com.google.devtools.moe.client.tools.PatchCodebaseDifferenceRenderer;
 
 import org.kohsuke.args4j.Option;
 
@@ -20,6 +21,9 @@ import javax.inject.Inject;
  * @author dbentley@google.com (Daniel Bentley)
  */
 public class DiffCodebasesDirective extends Directive {
+  private static final PatchCodebaseDifferenceRenderer RENDERER =
+      new PatchCodebaseDifferenceRenderer();
+
   @Option(name = "--codebase1", required = true, usage = "Codebase1 expression")
   String codebase1Spec = "";
 
@@ -48,7 +52,13 @@ public class DiffCodebasesDirective extends Directive {
       return 1;
     }
 
-    DiffCodebasesLogic.printDiff(codebase1, codebase2);
+    CodebaseDifference diff = CodebaseDifference.diffCodebases(codebase1, codebase2);
+    if (diff.areDifferent()) {
+      ui.info(
+          "Codebases \"%s\" and \"%s\" differ:\n%s", codebase1, codebase2, RENDERER.render(diff));
+    } else {
+      ui.info("Codebases \"%s\" and \"%s\" are identical", codebase1, codebase2);
+    }
     return 0;
   }
 

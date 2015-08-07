@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
+import javax.annotation.Nullable;
+
 /**
  * A Writer for DVCSes. Subclasses should implement file modification commands such as add, rm, and
  * commit.
@@ -54,8 +56,7 @@ public abstract class AbstractDvcsWriter<T extends LocalWorkspace> implements Wr
    */
   protected abstract List<String> getIgnoreFilePatterns();
 
-  @Override
-  public DraftRevision putCodebase(Codebase incomingChangeCodebase) throws WritingError {
+  private DraftRevision putCodebase(Codebase incomingChangeCodebase) {
     incomingChangeCodebase.checkProjectSpace(revClone.getConfig().getProjectSpace());
 
     Set<String> codebaseFiles = incomingChangeCodebase.getRelativeFilenames();
@@ -149,11 +150,11 @@ public abstract class AbstractDvcsWriter<T extends LocalWorkspace> implements Wr
   protected abstract void commitChanges(RevisionMetadata revMetaData) throws CommandException;
 
   @Override
-  public DraftRevision putCodebase(Codebase incomingChangeCodebase, RevisionMetadata revMetaData)
-      throws WritingError {
+  public DraftRevision putCodebase(
+      Codebase incomingChangeCodebase, @Nullable RevisionMetadata revMetaData) throws WritingError {
     DraftRevision draftRevision = putCodebase(incomingChangeCodebase);
 
-    if (hasPendingChanges()) {
+    if (revMetaData != null && hasPendingChanges()) {
       try {
         commitChanges(revMetaData);
         Injector.INSTANCE

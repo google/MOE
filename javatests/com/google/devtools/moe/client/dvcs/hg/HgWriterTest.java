@@ -108,7 +108,7 @@ public class HgWriterTest extends TestCase {
     control.replay();
 
     HgWriter writer = new HgWriter(mockRevClone);
-    DraftRevision draftRevision = writer.putCodebase(codebase);
+    DraftRevision draftRevision = writer.putCodebase(codebase, null);
 
     control.verify();
 
@@ -131,7 +131,7 @@ public class HgWriterTest extends TestCase {
     control.replay();
 
     HgWriter writer = new HgWriter(mockRevClone);
-    DraftRevision draftRevision = writer.putCodebase(codebase);
+    DraftRevision draftRevision = writer.putCodebase(codebase, null);
 
     control.verify();
 
@@ -154,7 +154,7 @@ public class HgWriterTest extends TestCase {
     control.replay();
 
     HgWriter writer = new HgWriter(mockRevClone);
-    DraftRevision draftRevision = writer.putCodebase(codebase);
+    DraftRevision draftRevision = writer.putCodebase(codebase, null);
 
     control.verify();
 
@@ -175,7 +175,7 @@ public class HgWriterTest extends TestCase {
     control.replay();
 
     HgWriter writer = new HgWriter(mockRevClone);
-    DraftRevision draftRevision = writer.putCodebase(codebase);
+    DraftRevision draftRevision = writer.putCodebase(codebase, null);
 
     control.verify();
 

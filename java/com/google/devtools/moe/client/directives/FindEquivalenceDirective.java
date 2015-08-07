@@ -6,7 +6,6 @@ import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.database.Db;
 import com.google.devtools.moe.client.database.FileDb;
-import com.google.devtools.moe.client.logic.FindEquivalenceLogic;
 import com.google.devtools.moe.client.parser.Parser;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
@@ -16,7 +15,9 @@ import com.google.devtools.moe.client.testing.DummyDb;
 
 import org.kohsuke.args4j.Option;
 
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import javax.inject.Inject;
 
@@ -67,19 +68,47 @@ public class FindEquivalenceDirective extends Directive {
       }
     }
 
-    RepositoryExpression repoEx;
     try {
-      repoEx = Parser.parseRepositoryExpression(fromRepository);
+      RepositoryExpression repoEx = Parser.parseRepositoryExpression(fromRepository);
+      List<Revision> revs = Revision.fromRepositoryExpression(repoEx, context());
+      printEquivalences(revs, inRepository, db);
+      return 0;
     } catch (ParseError e) {
       ui.error(e, "Couldn't parse " + fromRepository);
       return 1;
     }
-
-    List<Revision> revs = Revision.fromRepositoryExpression(repoEx, context());
-
-    FindEquivalenceLogic.printEquivalences(revs, inRepository, db);
-    return 0;
   }
+
+  /**
+   * Prints the revisions in inRepo that the revisions in revs are equivalent to.
+   *
+   * @param revs a list of Revisions to find equivalences for
+   * @param inRepo the String of the name of the repository to look for equivalences in
+   * @param db the database to consult for equivalences
+   */
+  public void printEquivalences(List<Revision> revs, String inRepo, Db db) {
+    for (Revision rev : revs) {
+      Set<Revision> equivalences = db.findEquivalences(rev, inRepo);
+      StringBuilder result = new StringBuilder();
+      Iterator<Revision> it = equivalences.iterator();
+      while (it.hasNext()) {
+        result.append(it.next().revId());
+        if (it.hasNext()) {
+          result.append(",");
+        }
+      }
+      if (equivalences.isEmpty()) {
+        ui.info(
+            "No Equivalences for \"%s{%s}\" in repository \"%s\"",
+            rev.repositoryName(),
+            rev.revId(),
+            inRepo);
+      } else {
+        ui.info("\"%s{%s}\" == \"%s{%s}\"", rev.repositoryName(), rev.revId(), inRepo, result);
+      }
+    }
+  }
+
 
   @Override
   public String getDescription() {

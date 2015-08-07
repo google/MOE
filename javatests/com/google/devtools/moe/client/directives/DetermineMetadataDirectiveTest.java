@@ -6,10 +6,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.SystemFileSystem;
+import com.google.devtools.moe.client.migrations.Migrator;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
 import com.google.devtools.moe.client.testing.RecordingUi;
+import com.google.devtools.moe.client.writer.DraftRevision;
 
 import junit.framework.TestCase;
 
@@ -37,7 +39,9 @@ public class DetermineMetadataDirectiveTest extends TestCase {
     contextFactory.projectConfigs.put(
         "moe_config.txt",
         "{\"name\": \"foo\", \"repositories\": {\"internal\": {\"type\": \"dummy\"}}}");
-    DetermineMetadataDirective d = new DetermineMetadataDirective(contextFactory, ui);
+    DetermineMetadataDirective d =
+        new DetermineMetadataDirective(
+            contextFactory, ui, new Migrator(new DraftRevision.Factory(ui)));
     d.setContextFileName("moe_config.txt");
     d.repositoryExpression = "internal(revision=\"1,2\")";
     assertEquals(0, d.perform());
@@ -60,7 +64,9 @@ public class DetermineMetadataDirectiveTest extends TestCase {
     contextFactory.projectConfigs.put(
         "moe_config.txt",
         "{\"name\": \"foo\", \"repositories\": {\"internal\": {\"type\": \"dummy\"}}}");
-    DetermineMetadataDirective d = new DetermineMetadataDirective(contextFactory, ui);
+    DetermineMetadataDirective d =
+        new DetermineMetadataDirective(
+            contextFactory, ui, new Migrator(new DraftRevision.Factory(ui)));
     d.setContextFileName("moe_config.txt");
     d.repositoryExpression = "internal(revision=7)";
     assertEquals(0, d.perform());
