@@ -33,7 +33,7 @@ branches:
 notifications:
   email: cgruber@google.com
 
-sudo: false
+sudo: required
 
 cache:
   directories:
