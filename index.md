@@ -1,4 +1,9 @@
-Introduction
+---
+layout: default
+title: MOE (Make Open Easy)
+---
+
+Introduction
 ------------
 
 MOE has several concepts which litter the code. It's useful to understand them.
