@@ -1,0 +1,6 @@
+auto: true
+url: "http://google.github.io/MOE/"
+markdown: redcarpet
+dagger:
+  groupId: com.google.devtools
+  version: 1.0

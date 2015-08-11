@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+      <meta charset="utf-8">
+      <title>Dagger &#x2021; A fast dependency injector for Android and Java.</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="description" content="A fast dependency injector for Android and Java." />
+      <link href="bower-components/normalize.css/normalize.css" rel="stylesheet"/>
+      <script src="bower_components/platform/platform.js"></script>
+      <link rel="import"
+        href="bower_components/core-icon-button/core-icon-button.html">
+      <link rel="import"
+          href="bower_components/core-header-panel/core-header-panel.html">
+      <link rel="import"
+          href="bower_components/core-toolbar/core-toolbar.html">
+      <link rel="import"
+          href="bower_components/core-scaffold/core-scaffold.html">
+      <link rel="import"
+          href="elements/github-fab.html">
+      <link rel="import"
+          href="bower_components/paper-item/paper-item.html">
+
+      <link href="static/syntax.css" rel="stylesheet"/>
+      <link href="static/main.css" rel="stylesheet" shim-shadowdom/>
+  </head>
+  <body unresolved fullbleed layout vertical>
+    <core-scaffold mode="waterfall-tall">
+      <nav navigation>
+        <paper-item label="Home">
+          <a href="//google.github.io/dagger/"></a>
+        </paper-item>
+        <paper-item label="Migrating from Dagger 1">
+          <a href="dagger-1-migration.html"></a>
+        </paper-item>
+        <h4>Project Pages</h4>
+        <paper-item label="GitHub" icon="open-in-browser">
+          <a href="https://github.com/google/dagger" target="_blank"></a>
+        </paper-item>
+        <paper-item label="Release 2.0 API (javadoc)" icon="open-in-browser">
+          <a href="api/2.0/" target="_blank"></a>
+        </paper-item>
+        <paper-item label="Developer API (javadoc)" icon="open-in-browser">
+          <a href="api/latest/" target="_blank"></a>
+        </paper-item>
+        <h4>Resources</h4>
+        <paper-item label="Stack Overflow" icon="open-in-browser">
+          <a href="http://stackoverflow.com/questions/tagged/dagger?sort=active"
+              target="_blank"></a>
+        </paper-item>
+        <paper-item label="dagger-discuss@" icon="open-in-browser">
+          <a href="https://groups.google.com/forum/#!forum/dagger-discuss" target="_blank"></a>
+        </paper-item>
+      </nav>
+      <h1 tool class="indent bottom title">{{page.title}}</h1>
+      <div tool class="bottom fit">
+        <div flex></div>
+        <github-fab id="fork-button"></github-fab>
+      </div>
+      <article fit>
+        {{content}}
+      </article>
+    </core-scaffold>
+  </body>
+</html>

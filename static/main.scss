@@ -1,0 +1,73 @@
+---
+---
+
+@import 'typography';
+@import 'color';
+
+body {
+  @include type-body1(dark);
+  background-color: $grey50;
+}
+
+h1 {
+  @include type-display1(light);
+}
+
+h2 {
+  @include type-headline(dark);
+}
+
+h3 {
+  @include type-title(dark);
+}
+
+h4 {
+  @include type-subhead2(dark);
+}
+
+h5 {
+  @include type-subhead1(dark);
+}
+
+a {
+  text-decoration: none;
+  color: $googblue500;
+}
+
+a:visited {
+  color: $googblue700;
+}
+
+article {
+  margin: 48px auto;
+  max-width: 800px;
+}
+
+code, pre {
+  font-family: $type-monospace;
+}
+
+div.highlight {
+  border-radius: 2px;
+  background-color: $grey300;
+  padding: 48px;
+}
+
+pre {
+  margin: 0;
+}
+
+nav {
+  padding: 0 16px;
+}
+
+#fork-button {
+  position: absolute;
+  top: -28px;
+  right: 16px;
+  z-index: 1;
+}
+
+core-scaffold /deep/ core-toolbar {
+  background-color: $googblue500;
+}
