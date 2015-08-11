@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <title>Moe by google</title>
+  </head>
+
+  <body>
+    <header>
+      <div class="inner">
+        <h1>Moe</h1>
+        <h2>Make Opensource Easy - tools for synchronizing repositories</h2>
+        <a href="https://github.com/google/MOE" class="button"><small>View project on</small> GitHub</a>
+      </div>
+    </header>
+
+    <div id="content-wrapper">
+      <div class="inner clearfix">
+        <section id="main-content">
+          <h2>
+<a id="introduction" class="anchor" href="#introduction" aria-hidden="true"><span class="octicon octicon-link"></span></a>Introduction</h2>
+
+<p>MOE has several concepts which litter the code. It's useful to understand them.</p>
+
+<h2>
+<a id="a-list-of-useful-concepts" class="anchor" href="#a-list-of-useful-concepts" aria-hidden="true"><span class="octicon octicon-link"></span></a>A list of useful concepts</h2>
+
+<h3>
+<a id="project" class="anchor" href="#project" aria-hidden="true"><span class="octicon octicon-link"></span></a>Project</h3>
+
+<p>A MOE project is one project that wants to be both internal and open source.</p>
+
+<h3>
+<a id="codebase" class="anchor" href="#codebase" aria-hidden="true"><span class="octicon octicon-link"></span></a>Codebase</h3>
+
+<p>A Codebase is a set of files in a filesystem and its metadata. E.g., foo/Bar.java and foo/Baz.java, and that it came from this repository at this revision. This roughly corresponds to a subversion “export” or a git “tree”.</p>
+
+<h3>
+<a id="writer" class="anchor" href="#writer" aria-hidden="true"><span class="octicon octicon-link"></span></a>Writer</h3>
+
+<p>A Writer takes a Codebase and edits the Repository to create a DraftRevision in which the Repository has the contents of the Codebase.</p>
+
+<h3>
+<a id="repository" class="anchor" href="#repository" aria-hidden="true"><span class="octicon octicon-link"></span></a>Repository</h3>
+
+<p>MOE interacts with a repository in three ways:</p>
+
+<ul>
+<li>Determining what revisions there are</li>
+<li>Getting the contents at one revision</li>
+<li>Making a change (that can be submitted as a revision)</li>
+</ul>
+
+<p>Thus, a Repository object has three members to fulfill these roles, respectively:</p>
+
+<ul>
+<li>RevisionHistory</li>
+<li>CodebaseCreator</li>
+<li>WriterCreator</li>
+</ul>
+
+<h3>
+<a id="project-spaces" class="anchor" href="#project-spaces" aria-hidden="true"><span class="octicon octicon-link"></span></a>Project Spaces</h3>
+
+<p>A Project Space is one way of viewing a project's code. The most common project spaces are "public" and "internal". A Codebase knows what Project Space it is in.</p>
+
+<h3>
+<a id="translators" class="anchor" href="#translators" aria-hidden="true"><span class="octicon octicon-link"></span></a>Translators</h3>
+
+<p>A Translator takes a Codebase in one Project Space and returns the equivalent Codebase in another Project Space. This is the central concept of MOE: <strong>instead of scrubbing code once, the user describes the scrubbing in a repeatable manner so we can do it automatically.</strong> A Translator must be configured in the config, and it performs translation by applying a preconfigured series of editors.</p>
+
+<p>For instance, to translate from "internal" to "public", we may have to rearrange, then scrub, then run a shell command. We don't want to have to say the same series of editors every time we translate, so instead we configure it as part of the Translator from "internal" to "public".</p>
+
+<h3>
+<a id="editor" class="anchor" href="#editor" aria-hidden="true"><span class="octicon octicon-link"></span></a>Editor</h3>
+
+<p>An Editor takes a Codebase and returns a new Codebase. (This is very similar to the Translator interface described above. The difference is that the Editor doesn't change the project space.)</p>
+
+<p>Examples of Editors are:</p>
+
+<ul>
+<li>RearrangingEditory: rearranges the files according to a config. E.g., java/. -&gt; src/.</li>
+<li>PatchingEditor: applies a patch file to the Codebase.</li>
+<li>ShellEditor: runs a shell command (e.g., a sed command)</li>
+</ul>
+
+<p>Editors must be configured in the config.</p>
+
+<h3>
+<a id="equivalence" class="anchor" href="#equivalence" aria-hidden="true"><span class="octicon octicon-link"></span></a>Equivalence</h3>
+
+<p>In MOE, two revisions are equivalent when they represent the same files as they appear in their respective repositories. The purpose of MOE is to get projects into equivalence whenever they get out of it.</p>
+
+<h3>
+<a id="migration" class="anchor" href="#migration" aria-hidden="true"><span class="octicon octicon-link"></span></a>Migration</h3>
+
+<p>A Migration represents the series of changes needed to make one repository equivalent to another. It has four properties:</p>
+
+<ul>
+<li>name: String. The name of the migration, as given in the MOE config.</li>
+<li>fromRepository: String. The name of the repository to make equivalent.</li>
+<li>toRepository: String. The name of the repository to make fromRepository equivalent to.</li>
+<li>separateRevisions: Boolean.
+
+<ul>
+<li>false: Combine all separate revisions in one repository into one big change in the other repository.</li>
+<li>true: Let all separate revisions in one repository remain separate changes in the other repository [NOTE: this is not yet supported].</li>
+</ul>
+</li>
+<li>metadataScrubberConfig:
+
+<ul>
+<li>usernamesToScrub: List. All names to scrub from the metadata of a MOE commit.</li>
+<li>scrubConfidentialWords: Boolean. You must implement this yourself.</li>
+</ul>
+</li>
+</ul>
+        </section>
+
+        <aside id="sidebar">
+          <a href="https://github.com/google/MOE/zipball/master" class="button">
+            <small>Download</small>
+            .zip file
+          </a>
+          <a href="https://github.com/google/MOE/tarball/master" class="button">
+            <small>Download</small>
+            .tar.gz file
+          </a>
+
+          <p class="repo-owner"><a href="https://github.com/google/MOE"></a> is maintained by <a href="https://github.com/google">google</a>.</p>
+
+          <p>This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+        </aside>
+      </div>
+    </div>
+
+  
+  </body>
+</html>
