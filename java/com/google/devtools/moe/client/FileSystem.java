@@ -12,7 +12,6 @@ import java.util.Set;
  * @author dbentley@google.com (Daniel Bentley)
  */
 public interface FileSystem {
-
   /**
    * Finds a Temporary Directory starting with prefix that lasts as long as the current task. This
    * is equivalent to calling {@link #getTemporaryDirectory(String, Lifetime)} with
@@ -154,3 +153,4 @@ public interface FileSystem {
     boolean shouldCleanUp();
   }
 }
+
