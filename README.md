@@ -60,4 +60,4 @@ Contributing to MOE is subject to the guidelines in the CONTRIBUTING.md file, wh
   limitations under the License.
 ```
 
-[1]: https://spreadsheets.google.com/spreadsheet/viewform?formkey=dDViT2xzUHAwRkI3X3k5Z0lQM091OGc6MQ&ndplr=1
+[1]: https://cla.developers.google.com/
