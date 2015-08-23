@@ -95,7 +95,7 @@ public class RevisionMetadata {
 
     if (migrationFromRev != null) {
       descBuilder.add(
-          "Created by MOE: http://code.google.com/p/moe-java\n"
+          "Created by MOE: https://github.com/google/moe\n"
               + "MOE_MIGRATED_REVID="
               + migrationFromRev.revId());
     }
