@@ -76,7 +76,7 @@ public class RevisionMetadataTest extends TestCase {
             "auth1, auth2",
             new DateTime(2L),
             "description1\n-------------\ndescription2"
-                + "\n-------------\nCreated by MOE: http://code.google.com/p/moe-java\n"
+                + "\n-------------\nCreated by MOE: https://github.com/google/moe\n"
                 + "MOE_MIGRATED_REVID="
                 + migrationFromRev.revId(),
             ImmutableList.of(Revision.create("revId1", "repo"), Revision.create("revId2", "repo")));
