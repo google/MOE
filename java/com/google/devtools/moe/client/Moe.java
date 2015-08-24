@@ -12,6 +12,8 @@ import com.google.devtools.moe.client.options.OptionsParser;
 import com.google.devtools.moe.client.project.InvalidProject;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -39,7 +41,7 @@ public class Moe {
   @dagger.Component(modules = MoeModule.class)
   public abstract static class Component {
     abstract Injector context(); // Legacy context object for static initialization.
-    public abstract OptionsParser options();
+    public abstract OptionsParser optionsParser();
     public abstract Directives directives();
   }
   /**
@@ -62,6 +64,7 @@ public class Moe {
     // This needs to get called first, so that DirectiveFactory can report errors appropriately.
     Moe.Component component =
         DaggerMoe_Component.builder().optionsModule(new OptionsModule(args)).build();
+    boolean debug = component.optionsParser().debug();
     Injector.INSTANCE = component.context();
     Ui ui = component.context().ui();
 
@@ -71,7 +74,7 @@ public class Moe {
         return 1; // Directive lookup will have reported the error already..
       }
 
-      boolean parseError = !component.options().parseFlags(directive);
+      boolean parseError = !component.optionsParser().parseFlags(directive);
       if (directive.shouldDisplayHelp() || parseError) {
         return parseError ? 1 : 0;
       }
@@ -91,9 +94,18 @@ public class Moe {
       ui.error(e, "Couldn't create project");
     } catch (NoSuchDirectiveException e) {
       e.reportTo(ui);
+      if (debug) {
+        StringWriter sw = new StringWriter();
+        e.printStackTrace(new PrintWriter(sw));
+        ui.info(sw.getBuffer().toString());
+      }
     } catch (MoeProblem m) {
-      // TODO(dbentley): implement verbose mode; if it is above a threshold, print a stack trace.
       ui.error(m, "Moe encountered a problem; look above for explanation");
+      if (debug) {
+        StringWriter sw = new StringWriter();
+        m.printStackTrace(new PrintWriter(sw));
+        ui.error(sw.getBuffer().toString());
+      }
     }
     return 1;
   }

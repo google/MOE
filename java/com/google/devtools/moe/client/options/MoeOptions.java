@@ -9,8 +9,8 @@ import org.kohsuke.args4j.Option;
  * Tasks should subclass this if they want task-specific options.
  * @author nicksantos@google.com (Nick Santos)
  */
-public class MoeOptions {
-
+//TODO(cgruber) remove extends when JCommander is used.
+public abstract class MoeOptions extends DebugOptions {
   @Option(name = "--config_file", required = true, usage = "Location of MOE config file")
   protected String configFilename = "";
 
