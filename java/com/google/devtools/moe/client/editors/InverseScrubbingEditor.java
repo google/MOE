@@ -2,6 +2,9 @@
 
 package com.google.devtools.moe.client.editors;
 
+import com.google.devtools.moe.client.CommandRunner;
+import com.google.devtools.moe.client.FileSystem;
+import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseMerger;
 import com.google.devtools.moe.client.project.ProjectContext;
@@ -27,11 +30,15 @@ import java.util.Map;
  */
 public class InverseScrubbingEditor implements InverseEditor {
 
-  public static InverseScrubbingEditor makeInverseScrubbingEditor() {
-    return new InverseScrubbingEditor();
-  }
+  private final CommandRunner cmd;
+  private final FileSystem filesystem;
+  private final Ui ui;
 
-  private InverseScrubbingEditor() {}
+  public InverseScrubbingEditor(CommandRunner cmd, FileSystem filesystem, Ui ui) {
+    this.cmd = cmd;
+    this.filesystem = filesystem;
+    this.ui = ui;
+  }
 
   @Override
   public Codebase inverseEdit(
@@ -40,7 +47,8 @@ public class InverseScrubbingEditor implements InverseEditor {
       Codebase referenceTo,
       ProjectContext context,
       Map<String, String> options) {
-    CodebaseMerger merger = new CodebaseMerger(referenceFrom, input, referenceTo);
+    CodebaseMerger merger =
+        new CodebaseMerger(ui, filesystem, cmd, referenceFrom, input, referenceTo);
     return merger.merge();
   }
 }
