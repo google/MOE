@@ -10,6 +10,9 @@ import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.Ui;
+import com.google.devtools.moe.client.repositories.Repositories;
+import com.google.devtools.moe.client.repositories.RepositoryType;
+import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
 import com.google.devtools.moe.client.testing.RecordingUi;
 
@@ -45,11 +48,15 @@ import java.util.List;
  *
  */
 public class CodebaseMergerTest extends TestCase {
-  private final InMemoryProjectContextFactory contextFactory = new InMemoryProjectContextFactory();
   private final RecordingUi ui = new RecordingUi();
   private final IMocksControl control = EasyMock.createControl();
   private final FileSystem fileSystem = control.createMock(FileSystem.class);
   private final CommandRunner cmd = control.createMock(CommandRunner.class);
+  private final Repositories repositories =
+      new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory()));
+  private final InMemoryProjectContextFactory contextFactory =
+      new InMemoryProjectContextFactory(repositories);
+
   private Codebase orig, dest, mod;
 
   @Override
@@ -94,7 +101,7 @@ public class CodebaseMergerTest extends TestCase {
 
     control.replay();
 
-    CodebaseMerger merger = new CodebaseMerger(orig, mod, dest);
+    CodebaseMerger merger = new CodebaseMerger(ui, fileSystem, cmd, orig, mod, dest);
     merger.generateMergedFile("foo");
 
     control.verify();
@@ -126,7 +133,7 @@ public class CodebaseMergerTest extends TestCase {
 
     control.replay();
 
-    CodebaseMerger merger = new CodebaseMerger(orig, mod, dest);
+    CodebaseMerger merger = new CodebaseMerger(ui, fileSystem, cmd, orig, mod, dest);
     merger.generateMergedFile("foo");
 
     control.verify();
@@ -161,7 +168,7 @@ public class CodebaseMergerTest extends TestCase {
 
     control.replay();
 
-    CodebaseMerger merger = new CodebaseMerger(orig, mod, dest);
+    CodebaseMerger merger = new CodebaseMerger(ui, fileSystem, cmd, orig, mod, dest);
     merger.generateMergedFile("foo");
 
     control.verify();
@@ -203,7 +210,7 @@ public class CodebaseMergerTest extends TestCase {
 
     control.replay();
 
-    CodebaseMerger merger = new CodebaseMerger(orig, mod, dest);
+    CodebaseMerger merger = new CodebaseMerger(ui, fileSystem, cmd, orig, mod, dest);
     merger.generateMergedFile("foo");
 
     control.verify();
@@ -245,7 +252,7 @@ public class CodebaseMergerTest extends TestCase {
 
     control.replay();
 
-    CodebaseMerger merger = new CodebaseMerger(orig, mod, dest);
+    CodebaseMerger merger = new CodebaseMerger(ui, fileSystem, cmd, orig, mod, dest);
     merger.generateMergedFile("foo");
 
     control.verify();
@@ -280,7 +287,7 @@ public class CodebaseMergerTest extends TestCase {
 
     control.replay();
 
-    CodebaseMerger merger = new CodebaseMerger(orig, mod, dest);
+    CodebaseMerger merger = new CodebaseMerger(ui, fileSystem, cmd, orig, mod, dest);
     merger.generateMergedFile("foo");
 
     control.verify();
@@ -324,7 +331,7 @@ public class CodebaseMergerTest extends TestCase {
 
     control.replay();
 
-    CodebaseMerger merger = new CodebaseMerger(orig, mod, dest);
+    CodebaseMerger merger = new CodebaseMerger(ui, fileSystem, cmd, orig, mod, dest);
     merger.generateMergedFile("foo");
 
     control.verify();
@@ -368,7 +375,7 @@ public class CodebaseMergerTest extends TestCase {
 
     control.replay();
 
-    CodebaseMerger merger = new CodebaseMerger(orig, mod, dest);
+    CodebaseMerger merger = new CodebaseMerger(ui, fileSystem, cmd, orig, mod, dest);
     merger.generateMergedFile("foo");
 
     control.verify();
@@ -441,7 +448,7 @@ public class CodebaseMergerTest extends TestCase {
 
     control.replay();
 
-    CodebaseMerger merger = new CodebaseMerger(orig, mod, dest);
+    CodebaseMerger merger = new CodebaseMerger(ui, fileSystem, cmd, orig, mod, dest);
     merger.merge();
 
     control.verify();

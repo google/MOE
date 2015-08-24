@@ -6,10 +6,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.FileSystem;
-import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
+import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.parser.Term;
 import com.google.devtools.moe.client.tools.FileDifference;
@@ -62,18 +63,29 @@ import java.util.Set;
  * a public revision wouldn't have. Thus, internal revision 75 would be equivalent with public
  * revision 143 assuming there were no conflicts when merging.
  */
+// TODO(cgruber) AutoFactory or split out a MergeResult object with metadata/reporting.
 public class CodebaseMerger {
-
+  private final Ui ui;
+  private final FileSystem filesystem;
+  private final CommandRunner cmd;
   private final Codebase originalCodebase, destinationCodebase, modifiedCodebase, mergedCodebase;
   private final Set<String> mergedFiles, failedToMergeFiles;
 
   public CodebaseMerger(
-      Codebase originalCodebase, Codebase modifiedCodebase, Codebase destinationCodebase) {
+      Ui ui,
+      FileSystem filesystem,
+      CommandRunner cmd,
+      Codebase originalCodebase,
+      Codebase modifiedCodebase,
+      Codebase destinationCodebase) {
+    this.ui = ui;
+    this.filesystem = filesystem;
+    this.cmd = cmd;
     this.originalCodebase = originalCodebase;
     this.modifiedCodebase = modifiedCodebase;
     this.destinationCodebase = destinationCodebase;
 
-    File mergedDir = Injector.INSTANCE.fileSystem().getTemporaryDirectory("merged_codebase_");
+    File mergedDir = filesystem.getTemporaryDirectory("merged_codebase_");
     RepositoryExpression mergedExpression =
         new RepositoryExpression(new Term("merged", ImmutableMap.<String, String>of()));
     this.mergedCodebase = new Codebase(mergedDir, "merged", mergedExpression);
@@ -111,17 +123,13 @@ public class CodebaseMerger {
    * Print the results of a merge to the UI.
    */
   public void report() {
-    Injector.INSTANCE
-        .ui()
-        .info("Merged codebase generated at: %s", mergedCodebase.getPath().getAbsolutePath());
-    Injector.INSTANCE
-        .ui()
-        .info(
-            "%d files merged successfully\n%d files have merge "
-                + "conflicts. Edit the following files to resolve conflicts:\n%s",
-            mergedFiles.size(),
-            failedToMergeFiles.size(),
-            failedToMergeFiles);
+    ui.info("Merged codebase generated at: %s", mergedCodebase.getPath().getAbsolutePath());
+    ui.info(
+        "%d files merged successfully\n%d files have merge "
+            + "conflicts. Edit the following files to resolve conflicts:\n%s",
+        mergedFiles.size(),
+        failedToMergeFiles.size(),
+        failedToMergeFiles);
   }
 
   private static boolean areDifferent(String filename, File x, File y) {
@@ -133,11 +141,10 @@ public class CodebaseMerger {
    * written to.
    */
   private File copyToMergedCodebase(String filename, File destFile) {
-    FileSystem fs = Injector.INSTANCE.fileSystem();
     File mergedFile = mergedCodebase.getFile(filename);
     try {
-      fs.makeDirsForFile(mergedFile);
-      fs.copyFile(destFile, mergedFile);
+      filesystem.makeDirsForFile(mergedFile);
+      filesystem.copyFile(destFile, mergedFile);
       return mergedFile;
     } catch (IOException e) {
       throw new MoeProblem(e.getMessage());
@@ -158,16 +165,14 @@ public class CodebaseMerger {
    * @param filename the name of the file to merge
    */
   public void generateMergedFile(String filename) {
-    FileSystem fs = Injector.INSTANCE.fileSystem();
-
     File origFile = originalCodebase.getFile(filename);
-    boolean origExists = fs.exists(origFile);
+    boolean origExists = filesystem.exists(origFile);
 
     File destFile = destinationCodebase.getFile(filename);
-    boolean destExists = fs.exists(destFile);
+    boolean destExists = filesystem.exists(destFile);
 
     File modFile = modifiedCodebase.getFile(filename);
-    boolean modExists = fs.exists(modFile);
+    boolean modExists = filesystem.exists(modFile);
 
     if (!destExists && !modExists) {
       // This should never be thrown since generateMergedFile(...) is only called on filesToMerge
@@ -208,15 +213,11 @@ public class CodebaseMerger {
     try {
       // Merges the changes that lead from origFile to modFile into mergedFile (which is a copy
       // of destFile). After, mergedFile will have the combined changes of modFile and destFile.
-      Injector.INSTANCE
-          .cmd()
-          .runCommand(
-              "merge",
-              ImmutableList.of(
-                  mergedFile.getAbsolutePath(),
-                  origFile.getAbsolutePath(),
-                  modFile.getAbsolutePath()),
-              this.mergedCodebase.getPath().getAbsolutePath());
+      cmd.runCommand(
+          "merge",
+          ImmutableList.of(
+              mergedFile.getAbsolutePath(), origFile.getAbsolutePath(), modFile.getAbsolutePath()),
+          this.mergedCodebase.getPath().getAbsolutePath());
       // Return status was 0 and the merge was successful. Note it.
       mergedFiles.add(mergedFile.getAbsolutePath());
     } catch (CommandException e) {

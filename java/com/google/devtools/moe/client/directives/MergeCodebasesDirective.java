@@ -2,6 +2,8 @@
 
 package com.google.devtools.moe.client.directives;
 
+import com.google.devtools.moe.client.CommandRunner;
+import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
@@ -43,11 +45,16 @@ public class MergeCodebasesDirective extends Directive {
   String destinationExpression = "";
 
   private final Ui ui;
+  private final FileSystem filesystem;
+  private final CommandRunner cmd;
 
   @Inject
-  MergeCodebasesDirective(ProjectContextFactory contextFactory, Ui ui) {
+  MergeCodebasesDirective(
+      ProjectContextFactory contextFactory, Ui ui, FileSystem filesystem, CommandRunner cmd) {
     super(contextFactory); // TODO(cgruber) Inject project context, not its factory
     this.ui = ui;
+    this.filesystem = filesystem;
+    this.cmd = cmd;
   }
 
   @Override
@@ -64,7 +71,8 @@ public class MergeCodebasesDirective extends Directive {
       ui.error(e, "Error creating codebase");
       return 1;
     }
-    new CodebaseMerger(originalCodebase, destinationCodebase, modifiedCodebase).merge();
+    new CodebaseMerger(ui, filesystem, cmd, originalCodebase, destinationCodebase, modifiedCodebase)
+        .merge();
     return 0;
   }
 

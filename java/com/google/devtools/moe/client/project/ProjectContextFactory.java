@@ -4,14 +4,30 @@ package com.google.devtools.moe.client.project;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.editors.Editor;
+import com.google.devtools.moe.client.editors.ForwardTranslator;
+import com.google.devtools.moe.client.editors.IdentityEditor;
+import com.google.devtools.moe.client.editors.InverseEditor;
+import com.google.devtools.moe.client.editors.InverseRenamingEditor;
+import com.google.devtools.moe.client.editors.InverseScrubbingEditor;
+import com.google.devtools.moe.client.editors.InverseTranslator;
+import com.google.devtools.moe.client.editors.InverseTranslatorStep;
+import com.google.devtools.moe.client.editors.PatchingEditor;
+import com.google.devtools.moe.client.editors.RenamingEditor;
+import com.google.devtools.moe.client.editors.ScrubbingEditor;
+import com.google.devtools.moe.client.editors.ShellEditor;
 import com.google.devtools.moe.client.editors.Translator;
 import com.google.devtools.moe.client.editors.TranslatorPath;
+import com.google.devtools.moe.client.editors.TranslatorStep;
 import com.google.devtools.moe.client.migrations.MigrationConfig;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -67,7 +83,7 @@ public abstract class ProjectContextFactory {
     ImmutableMap.Builder<String, Editor> builder = ImmutableMap.builder();
     for (Map.Entry<String, EditorConfig> entry : config.getEditorConfigs().entrySet()) {
       builder.put(
-          entry.getKey(), ProjectContext.makeEditorFromConfig(entry.getKey(), entry.getValue()));
+          entry.getKey(), makeEditorFromConfig(entry.getKey(), entry.getValue()));
     }
     return builder.build();
   }
@@ -76,7 +92,7 @@ public abstract class ProjectContextFactory {
       throws InvalidProject {
     ImmutableMap.Builder<TranslatorPath, Translator> builder = ImmutableMap.builder();
     for (TranslatorConfig translatorConfig : config.getTranslators()) {
-      Translator t = ProjectContext.makeTranslatorFromConfig(translatorConfig, config);
+      Translator t = makeTranslatorFromConfig(translatorConfig, config);
       TranslatorPath tPath =
           new TranslatorPath(
               translatorConfig.getFromProjectSpace(), translatorConfig.getToProjectSpace());
@@ -91,5 +107,93 @@ public abstract class ProjectContextFactory {
       builder.put(migrationConfig.getName(), migrationConfig);
     }
     return builder.build();
+  }
+
+  Editor makeEditorFromConfig(String editorName, EditorConfig config) throws InvalidProject {
+    switch (config.getType()) {
+      case identity:
+        return IdentityEditor.makeIdentityEditor(editorName, config);
+      case scrubber:
+        return ScrubbingEditor.makeScrubbingEditor(editorName, config);
+      case patcher:
+        return PatchingEditor.makePatchingEditor(editorName, config);
+      case shell:
+        return ShellEditor.makeShellEditor(editorName, config);
+      case renamer:
+        return RenamingEditor.makeRenamingEditor(editorName, config);
+      default:
+        throw new InvalidProject("Invalid editor type: \"%s\"", config.getType());
+    }
+  }
+
+  Translator makeTranslatorFromConfig(TranslatorConfig transConfig, ProjectConfig projConfig)
+      throws InvalidProject {
+    if (transConfig.isInverse()) {
+      TranslatorConfig otherTrans = findInverseTranslatorConfig(transConfig, projConfig);
+      return new InverseTranslator(
+          makeStepsFromConfigs(otherTrans.getSteps()),
+          makeInverseStepsFromConfigs(otherTrans.getSteps()));
+    } else {
+      return new ForwardTranslator(makeStepsFromConfigs(transConfig.getSteps()));
+    }
+  }
+
+  private List<TranslatorStep> makeStepsFromConfigs(List<StepConfig> stepConfigs)
+      throws InvalidProject {
+    ImmutableList.Builder<TranslatorStep> steps = ImmutableList.builder();
+    for (StepConfig sc : stepConfigs) {
+      steps.add(
+          new TranslatorStep(
+              sc.getName(), makeEditorFromConfig(sc.getName(), sc.getEditorConfig())));
+    }
+    return steps.build();
+  }
+
+  private List<InverseTranslatorStep> makeInverseStepsFromConfigs(List<StepConfig> stepConfigs)
+      throws InvalidProject {
+    ImmutableList.Builder<InverseTranslatorStep> inverseSteps = ImmutableList.builder();
+    for (StepConfig sc : Lists.reverse(stepConfigs)) {
+      inverseSteps.add(
+          new InverseTranslatorStep(
+              "inverse_" + sc.getName(),
+              makeInverseEditorFromConfig("inverse_" + sc.getName(), sc.getEditorConfig())));
+    }
+    return inverseSteps.build();
+  }
+
+  private TranslatorConfig findInverseTranslatorConfig(
+      TranslatorConfig transConfig, ProjectConfig projConfig) throws InvalidProject {
+    List<TranslatorConfig> otherTranslators = projConfig.getTranslators();
+    for (TranslatorConfig otherTrans : otherTranslators) {
+      if (otherTrans.getToProjectSpace().equals(transConfig.getFromProjectSpace())
+          && otherTrans.getFromProjectSpace().equals(transConfig.getToProjectSpace())) {
+        if (otherTrans.isInverse()) {
+          throw new InvalidProject("Can't have mutually inverse translators!");
+        }
+        return otherTrans;
+      }
+    }
+    throw new InvalidProject(
+        "Couldn't find translator whose path is inverse of %s -> %s",
+        transConfig.getFromProjectSpace(),
+        transConfig.getToProjectSpace());
+  }
+
+  private InverseEditor makeInverseEditorFromConfig(String editorName, EditorConfig originalConfig)
+      throws InvalidProject {
+    switch (originalConfig.getType()) {
+      case identity:
+        return IdentityEditor.makeIdentityEditor(editorName, originalConfig);
+      case renamer:
+        return InverseRenamingEditor.makeInverseRenamingEditor(editorName, originalConfig);
+      case scrubber:
+        // TODO(cgruber) remove Injector.INSTANCE
+        return new InverseScrubbingEditor(
+            Injector.INSTANCE.cmd(),
+            Injector.INSTANCE.fileSystem(),
+            Injector.INSTANCE.ui());
+      default:
+        throw new InvalidProject("Non-invertible editor type: " + originalConfig.getType());
+    }
   }
 }
