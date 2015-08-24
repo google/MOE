@@ -6,7 +6,6 @@ import static com.google.devtools.moe.client.Ui.MOE_TERMINATION_TASK_NAME;
 
 import com.google.devtools.moe.client.directives.Directive;
 import com.google.devtools.moe.client.directives.Directives;
-import com.google.devtools.moe.client.directives.Directives.NoSuchDirectiveException;
 import com.google.devtools.moe.client.options.OptionsModule;
 import com.google.devtools.moe.client.options.OptionsParser;
 import com.google.devtools.moe.client.project.InvalidProject;
@@ -92,7 +91,7 @@ public class Moe {
       return result;
     } catch (InvalidProject e) {
       ui.error(e, "Couldn't create project");
-    } catch (NoSuchDirectiveException e) {
+    } catch (MoeUserProblem e) {
       e.reportTo(ui);
       if (debug) {
         StringWriter sw = new StringWriter();
