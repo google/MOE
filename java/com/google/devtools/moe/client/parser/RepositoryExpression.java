@@ -9,7 +9,7 @@ import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.codebase.CodebaseCreator;
 import com.google.devtools.moe.client.project.ProjectContext;
-import com.google.devtools.moe.client.repositories.Repository;
+import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.testing.FileCodebaseCreator;
 import com.google.devtools.moe.client.writer.Writer;
 import com.google.devtools.moe.client.writer.WriterCreator;
@@ -64,7 +64,7 @@ public class RepositoryExpression extends AbstractExpression {
     if (repositoryName.equals("file")) {
       cc = new FileCodebaseCreator();
     } else {
-      Repository repo = context.getRepository(repositoryName);
+      RepositoryType repo = context.getRepository(repositoryName);
       cc = repo.codebaseCreator();
     }
 
@@ -83,7 +83,7 @@ public class RepositoryExpression extends AbstractExpression {
    * @throws WritingError
    */
   public Writer createWriter(ProjectContext context) throws WritingError {
-    Repository r = context.getRepository(term.identifier);
+    RepositoryType r = context.getRepository(term.identifier);
     WriterCreator wc = r.writerCreator();
 
     Ui.Task t = Injector.INSTANCE.ui().pushTask("create_writer", "Creating Writer \"%s\"", term);

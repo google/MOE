@@ -5,7 +5,7 @@ package com.google.devtools.moe.client.project;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.devtools.moe.client.repositories.Repository;
+import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 
@@ -113,10 +113,10 @@ public class RepositoryConfig {
   }
 
   /**
-   * Validates that the supplied {@link Repository.Factory} targets the correct repo type,
+   * Validates that the supplied {@link RepositoryType.Factory} targets the correct repo type,
    * throwing an {@link InvalidProject} exception if it does not.
    */
-  public void checkType(Repository.Factory repositoryFactory) throws InvalidProject {
+  public void checkType(RepositoryType.Factory repositoryFactory) throws InvalidProject {
     if (!repositoryFactory.type().equals(getType())) {
       // TODO(cgruber): Make it so this can't happen at runtime, ever, and throw AssertionError.
       throw new InvalidProject(

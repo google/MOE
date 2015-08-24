@@ -22,7 +22,7 @@ import com.google.devtools.moe.client.editors.TranslatorPath;
 import com.google.devtools.moe.client.editors.TranslatorStep;
 import com.google.devtools.moe.client.project.FakeProjectContext;
 import com.google.devtools.moe.client.project.ProjectContext;
-import com.google.devtools.moe.client.repositories.Repository;
+import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
 import com.google.devtools.moe.client.testing.TestingModule;
 import com.google.devtools.moe.client.writer.WriterCreator;
@@ -178,8 +178,8 @@ public class ExpressionTest extends TestCase {
     ProjectContext context =
         new FakeProjectContext() {
           @Override
-          public ImmutableMap<String, Repository> repositories() {
-            return ImmutableMap.of("foo", Repository.create("foo", rh, cc, wc));
+          public ImmutableMap<String, RepositoryType> repositories() {
+            return ImmutableMap.of("foo", RepositoryType.create("foo", rh, cc, wc));
           }
 
           @Override

@@ -6,7 +6,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.project.FakeProjectContext;
 import com.google.devtools.moe.client.project.ProjectContext;
-import com.google.devtools.moe.client.repositories.Repository;
+import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
 
 import junit.framework.TestCase;
@@ -25,11 +25,11 @@ public class RepositoryExpressionTest extends TestCase {
   }
 
   public void testMakeWriter_DummyRepository() throws Exception {
-    final Repository.Factory repositoryFactory = new DummyRepositoryFactory();
+    final RepositoryType.Factory repositoryFactory = new DummyRepositoryFactory();
     ProjectContext context =
         new FakeProjectContext() {
           @Override
-          public ImmutableMap<String, Repository> repositories() {
+          public ImmutableMap<String, RepositoryType> repositories() {
             return ImmutableMap.of("internal", repositoryFactory.create("internal", null));
           }
         };

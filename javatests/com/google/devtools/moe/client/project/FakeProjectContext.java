@@ -5,7 +5,7 @@ import com.google.devtools.moe.client.editors.Editor;
 import com.google.devtools.moe.client.editors.Translator;
 import com.google.devtools.moe.client.editors.TranslatorPath;
 import com.google.devtools.moe.client.migrations.MigrationConfig;
-import com.google.devtools.moe.client.repositories.Repository;
+import com.google.devtools.moe.client.repositories.RepositoryType;
 
 public class FakeProjectContext extends ProjectContext {
   @Override
@@ -14,7 +14,7 @@ public class FakeProjectContext extends ProjectContext {
   }
 
   @Override
-  public ImmutableMap<String, Repository> repositories() {
+  public ImmutableMap<String, RepositoryType> repositories() {
     return ImmutableMap.of();
   }
 

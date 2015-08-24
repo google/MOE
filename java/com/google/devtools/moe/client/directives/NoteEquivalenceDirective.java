@@ -12,7 +12,7 @@ import com.google.devtools.moe.client.parser.Parser;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.project.ProjectContextFactory;
-import com.google.devtools.moe.client.repositories.Repository;
+import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.repositories.Revision;
 
 import org.kohsuke.args4j.Option;
@@ -78,8 +78,8 @@ public class NoteEquivalenceDirective extends Directive {
     }
 
     // Sanity check: make sure the given repos and revisions exist.
-    Repository repo1 = context().getRepository(repoEx1.getRepositoryName());
-    Repository repo2 = context().getRepository(repoEx2.getRepositoryName());
+    RepositoryType repo1 = context().getRepository(repoEx1.getRepositoryName());
+    RepositoryType repo2 = context().getRepository(repoEx2.getRepositoryName());
 
     Revision realRev1 = repo1.revisionHistory().findHighestRevision(repoEx1.getOption("revision"));
     Revision realRev2 = repo2.revisionHistory().findHighestRevision(repoEx2.getOption("revision"));

@@ -24,7 +24,7 @@ import com.google.devtools.moe.client.editors.Translator;
 import com.google.devtools.moe.client.editors.TranslatorPath;
 import com.google.devtools.moe.client.editors.TranslatorStep;
 import com.google.devtools.moe.client.migrations.MigrationConfig;
-import com.google.devtools.moe.client.repositories.Repository;
+import com.google.devtools.moe.client.repositories.RepositoryType;
 
 import java.util.List;
 
@@ -36,7 +36,7 @@ import java.util.List;
 public abstract class ProjectContext {
   public abstract ProjectConfig config();
 
-  public abstract ImmutableMap<String, Repository> repositories();
+  public abstract ImmutableMap<String, RepositoryType> repositories();
 
   public abstract ImmutableMap<String, Editor> editors();
 
@@ -45,11 +45,11 @@ public abstract class ProjectContext {
   public abstract ImmutableMap<String, MigrationConfig> migrationConfigs();
 
   /**
-   * Returns the {@link Repository} in this context with the given name.
+   * Returns the {@link RepositoryType} in this context with the given name.
    *
    * @throws MoeProblem if no such repository with the given name exists
    */
-  public Repository getRepository(String repositoryName) {
+  public RepositoryType getRepository(String repositoryName) {
     if (!repositories().containsKey(repositoryName)) {
       throw new MoeProblem(
           "No such repository '"

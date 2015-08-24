@@ -10,7 +10,7 @@ import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.ProjectConfig;
 import com.google.devtools.moe.client.project.ProjectContextFactory;
 import com.google.devtools.moe.client.repositories.Repositories;
-import com.google.devtools.moe.client.repositories.Repository;
+import com.google.devtools.moe.client.repositories.RepositoryType;
 
 import dagger.Provides;
 
@@ -36,7 +36,7 @@ public class InMemoryProjectContextFactory extends ProjectContextFactory {
   }
 
   public InMemoryProjectContextFactory() {
-    this(new Repositories(ImmutableSet.<Repository.Factory>of(new DummyRepositoryFactory())));
+    this(new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory())));
   }
 
   @Override

@@ -5,7 +5,7 @@ import static dagger.Provides.Type.SET;
 
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.project.ProjectContextFactory;
-import com.google.devtools.moe.client.repositories.Repository;
+import com.google.devtools.moe.client.repositories.RepositoryType;
 
 import dagger.Module;
 import dagger.Provides;
@@ -32,7 +32,7 @@ public class TestingModule {
   }
 
   @Provides(type = SET)
-  Repository.Factory dummyRepository(DummyRepositoryFactory implementation) {
+  RepositoryType.Factory dummyRepository(DummyRepositoryFactory implementation) {
     return implementation;
   }
 }

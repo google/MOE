@@ -15,7 +15,7 @@ import junit.framework.TestCase;
 import org.easymock.EasyMock;
 
 public class RepositoriesTest extends TestCase {
-  private final Repository.Factory dummyService = new DummyRepositoryFactory();
+  private final RepositoryType.Factory dummyService = new DummyRepositoryFactory();
   private final Repositories repositories = new Repositories(ImmutableSet.of(dummyService));
   private final RepositoryConfig config = EasyMock.createNiceMock(RepositoryConfig.class);
 
@@ -31,7 +31,7 @@ public class RepositoriesTest extends TestCase {
    */
   public void testValidRepositoryConfig() throws InvalidProject {
     // Test the .create method.
-    Repository repository = repositories.create("myRepository", config);
+    RepositoryType repository = repositories.create("myRepository", config);
     assertNotNull(repository);
     assertEquals("myRepository", repository.name());
   }

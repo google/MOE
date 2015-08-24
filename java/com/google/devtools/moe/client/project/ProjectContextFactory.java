@@ -10,7 +10,7 @@ import com.google.devtools.moe.client.editors.Translator;
 import com.google.devtools.moe.client.editors.TranslatorPath;
 import com.google.devtools.moe.client.migrations.MigrationConfig;
 import com.google.devtools.moe.client.repositories.Repositories;
-import com.google.devtools.moe.client.repositories.Repository;
+import com.google.devtools.moe.client.repositories.RepositoryType;
 
 import java.util.Map;
 
@@ -54,9 +54,9 @@ public abstract class ProjectContextFactory {
   protected abstract ProjectConfig loadConfiguration(String configFilename) throws InvalidProject;
 
   //TODO(cgruber): Consider making InvalidProject an unchecked exception to eliminate these loops.
-  private ImmutableMap<String, Repository> buildRepositories(ProjectConfig config)
+  private ImmutableMap<String, RepositoryType> buildRepositories(ProjectConfig config)
       throws InvalidProject {
-    ImmutableMap.Builder<String, Repository> builder = ImmutableMap.builder();
+    ImmutableMap.Builder<String, RepositoryType> builder = ImmutableMap.builder();
     for (Map.Entry<String, RepositoryConfig> entry : config.getRepositoryConfigs().entrySet()) {
       builder.put(entry.getKey(), repositories.create(entry.getKey(), entry.getValue()));
     }

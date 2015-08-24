@@ -4,14 +4,14 @@ package com.google.devtools.moe.client.svn;
 
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.RepositoryConfig;
-import com.google.devtools.moe.client.repositories.Repository;
+import com.google.devtools.moe.client.repositories.RepositoryType;
 
 import javax.inject.Inject;
 
 /**
- * Creates a Subversion implementation of {@link Repository}.
+ * Creates a Subversion implementation of {@link RepositoryType}.
  */
-public class SvnRepositoryFactory implements Repository.Factory {
+public class SvnRepositoryFactory implements RepositoryType.Factory {
 
   private final SvnUtil util;
 
@@ -26,7 +26,7 @@ public class SvnRepositoryFactory implements Repository.Factory {
   }
 
   @Override
-  public Repository create(String name, RepositoryConfig config) throws InvalidProject {
+  public RepositoryType create(String name, RepositoryConfig config) throws InvalidProject {
     config.checkType(this);
 
     String url = config.getUrl();
@@ -35,7 +35,7 @@ public class SvnRepositoryFactory implements Repository.Factory {
     }
 
     SvnRevisionHistory rh = new SvnRevisionHistory(name, url, util);
-    return Repository.create(
+    return RepositoryType.create(
         name,
         rh,
         new SvnCodebaseCreator(name, config, rh, util),
