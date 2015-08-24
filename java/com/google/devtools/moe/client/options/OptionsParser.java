@@ -18,6 +18,7 @@ public class OptionsParser {
   private static final Logger logger = Logger.getLogger(OptionsParser.class.getName());
 
   private final String[] preprocessedArgs;
+  private final boolean debug;
 
   /**
    * Creates the OptionsParser
@@ -28,6 +29,21 @@ public class OptionsParser {
   @Inject
   OptionsParser(String[] preprocessedArgs) {
     this.preprocessedArgs = preprocessedArgs;
+    this.debug = debugFlagPresent(preprocessedArgs);
+  }
+
+  // TODO(cgruber) Rip this out when we can process multiple args sets.
+  private static boolean debugFlagPresent(String[] preprocessedArgs) {
+    for (String opt : preprocessedArgs) {
+      if (opt.equals("--debug")) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public boolean debug() {
+    return debug;
   }
 
   /**
@@ -44,7 +60,7 @@ public class OptionsParser {
       }
       return true;
     } catch (CmdLineException e) {
-      logger.log(Level.SEVERE, "Failure", e);
+      logger.log(Level.SEVERE, e.getMessage());
       parser.printUsage(System.err);
       return false;
     }
