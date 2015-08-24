@@ -8,7 +8,7 @@ import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.codebase.CodebaseCreator;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.RepositoryConfig;
-import com.google.devtools.moe.client.repositories.Repository;
+import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
 import com.google.devtools.moe.client.repositories.RevisionMatcher;
@@ -22,9 +22,9 @@ import java.util.Map;
 import javax.inject.Inject;
 
 /**
- * Creates a simple {@link Repository} for testing.
+ * Creates a simple {@link RepositoryType} for testing.
  */
-public class NoopRepositoryFactory implements Repository.Factory {
+public class NoopRepositoryFactory implements RepositoryType.Factory {
   private static final String NOOP_NOT_VALID =
       "No-op repository \"none\" invalid for directives "
           + "that expect to interact with a real repository";
@@ -57,8 +57,8 @@ public class NoopRepositoryFactory implements Repository.Factory {
   }
 
   @Override
-  public Repository create(String name, RepositoryConfig config) throws InvalidProject {
-    return Repository.create(
+  public RepositoryType create(String name, RepositoryConfig config) throws InvalidProject {
+    return RepositoryType.create(
         name,
         new NoOpRevisionHistory(),
         new CodebaseCreator() {

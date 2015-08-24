@@ -51,7 +51,7 @@ public abstract class Revision {
    */
   public static List<Revision> fromRepositoryExpression(
       RepositoryExpression repoEx, ProjectContext context) {
-    Repository repo = context.getRepository(repoEx.getRepositoryName());
+    RepositoryType repo = context.getRepository(repoEx.getRepositoryName());
     if (Strings.isNullOrEmpty(repoEx.getOption("revision"))) {
       throw new MoeProblem(
           "Repository expression must have a 'revision' option, e.g. internal(revision=3,4,5).");

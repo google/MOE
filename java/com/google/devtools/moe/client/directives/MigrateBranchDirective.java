@@ -20,7 +20,7 @@ import com.google.devtools.moe.client.project.ProjectContextFactory;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.ExactRevisionMatcher;
 import com.google.devtools.moe.client.repositories.Repositories;
-import com.google.devtools.moe.client.repositories.Repository;
+import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
 import com.google.devtools.moe.client.repositories.RevisionHistory.SearchType;
@@ -149,7 +149,7 @@ public class MigrateBranchDirective extends Directive {
     String fromRepoName = migrationConfig.getFromRepository();
     RepositoryConfig fromRepoConfig =
         context().config().getRepositoryConfig(fromRepoName).copyWithBranch(branchLabel);
-    Repository fromRepo = repositories.create(fromRepoName, fromRepoConfig);
+    RepositoryType fromRepo = repositories.create(fromRepoName, fromRepoConfig);
     Revision branchPointRevision = Revision.create(branchPoint, fromRepoName);
     RevisionHistory history = fromRepo.revisionHistory();
 

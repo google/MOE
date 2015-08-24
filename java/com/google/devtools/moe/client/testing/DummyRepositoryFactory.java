@@ -7,7 +7,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.codebase.CodebaseCreator;
 import com.google.devtools.moe.client.project.RepositoryConfig;
-import com.google.devtools.moe.client.repositories.Repository;
+import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionGraph;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
@@ -20,9 +20,9 @@ import org.joda.time.DateTime;
 import javax.inject.Inject;
 
 /**
- * Creates a simple {@link Repository} for testing.
+ * Creates a simple {@link RepositoryType} for testing.
  */
-public class DummyRepositoryFactory implements Repository.Factory {
+public class DummyRepositoryFactory implements RepositoryType.Factory {
 
   @Inject
   public DummyRepositoryFactory() {}
@@ -83,7 +83,7 @@ public class DummyRepositoryFactory implements Repository.Factory {
   }
 
   @Override
-  public Repository create(String repositoryName, RepositoryConfig config) {
+  public RepositoryType create(String repositoryName, RepositoryConfig config) {
     String projectSpace = null;
     if (config != null) {
       projectSpace = config.getProjectSpace();
@@ -94,6 +94,6 @@ public class DummyRepositoryFactory implements Repository.Factory {
     RevisionHistory revisionHistory = new DummyRevisionHistory(repositoryName);
     CodebaseCreator codebaseCreator = new DummyCodebaseCreator(repositoryName, projectSpace);
     WriterCreator writerCreator = new DummyWriterCreator(repositoryName);
-    return Repository.create(repositoryName, revisionHistory, codebaseCreator, writerCreator);
+    return RepositoryType.create(repositoryName, revisionHistory, codebaseCreator, writerCreator);
   }
 }

@@ -4,13 +4,13 @@ package com.google.devtools.moe.client.migrations;
 
 import com.google.common.base.Joiner;
 import com.google.devtools.moe.client.database.RepositoryEquivalence;
-import com.google.devtools.moe.client.repositories.Repository;
+import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.repositories.Revision;
 
 import java.util.List;
 
 /**
- * A Migration represents a change to be ported from one {@link Repository} to another.
+ * A Migration represents a change to be ported from one {@link RepositoryType} to another.
  *
  */
 // TODO(cgruber) @AutoValue

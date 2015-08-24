@@ -20,7 +20,7 @@ import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.project.ScrubberConfig;
 import com.google.devtools.moe.client.repositories.MetadataScrubber;
 import com.google.devtools.moe.client.repositories.MetadataScrubberConfig;
-import com.google.devtools.moe.client.repositories.Repository;
+import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory.SearchType;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
@@ -150,7 +150,7 @@ public class Migrator {
   public List<Migration> determineMigrations(
       ProjectContext context, MigrationConfig migrationConfig, Db db) {
 
-    Repository fromRepo = context.getRepository(migrationConfig.getFromRepository());
+    RepositoryType fromRepo = context.getRepository(migrationConfig.getFromRepository());
     // TODO(user): Decide whether to migrate linear or graph history here. Once DVCS Writers
     // support writing a graph of Revisions, we'll need to opt for linear or graph history based
     // on the MigrationConfig (e.g. whether or not the destination repo is linear-only).

@@ -9,16 +9,16 @@ import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.Lifetimes;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.RepositoryConfig;
-import com.google.devtools.moe.client.repositories.Repository;
+import com.google.devtools.moe.client.repositories.RepositoryType;
 
 import java.util.List;
 
 import javax.inject.Inject;
 
 /**
- * Creates a Mercurial (hg) implementation of {@link Repository}.
+ * Creates a Mercurial (hg) implementation of {@link RepositoryType}.
  */
-public class HgRepositoryFactory implements Repository.Factory {
+public class HgRepositoryFactory implements RepositoryType.Factory {
 
   // TODO(cgruber) remove static reference to Injector
   @Inject
@@ -35,7 +35,8 @@ public class HgRepositoryFactory implements Repository.Factory {
    * @throws InvalidProject if RepositoryConfig is missing a repo URL.
    */
   @Override
-  public Repository create(final String name, final RepositoryConfig config) throws InvalidProject {
+  public RepositoryType create(final String name, final RepositoryConfig config)
+      throws InvalidProject {
     config.checkType(this);
 
     final String url = config.getUrl();
@@ -77,7 +78,7 @@ public class HgRepositoryFactory implements Repository.Factory {
 
     HgWriterCreator wc = new HgWriterCreator(freshSupplier, rh);
 
-    return Repository.create(name, rh, cc, wc);
+    return RepositoryType.create(name, rh, cc, wc);
   }
 
   static String runHgCommand(List<String> args, String workingDirectory) throws CommandException {
