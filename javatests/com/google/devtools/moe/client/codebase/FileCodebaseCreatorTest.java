@@ -5,12 +5,16 @@ package com.google.devtools.moe.client.codebase;
 import static org.easymock.EasyMock.expect;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.SystemCommandRunner;
+import com.google.devtools.moe.client.repositories.Repositories;
+import com.google.devtools.moe.client.repositories.RepositoryType;
+import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
 import com.google.devtools.moe.client.testing.FileCodebaseCreator;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
 import com.google.devtools.moe.client.testing.RecordingUi;
@@ -29,11 +33,14 @@ import java.util.List;
  *
  */
 public class FileCodebaseCreatorTest extends TestCase {
-  private final InMemoryProjectContextFactory contextFactory = new InMemoryProjectContextFactory();
   private final RecordingUi ui = new RecordingUi();
   private final SystemCommandRunner cmd = new SystemCommandRunner(ui);
   private final IMocksControl control = EasyMock.createControl();
   private final FileSystem mockfs = control.createMock(FileSystem.class);
+  private final Repositories repositories =
+      new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory()));
+  private final InMemoryProjectContextFactory contextFactory =
+      new InMemoryProjectContextFactory(cmd, mockfs, ui, repositories);
 
   @Override
   public void setUp() throws Exception {
@@ -59,7 +66,6 @@ public class FileCodebaseCreatorTest extends TestCase {
     FileCodebaseCreator cc = new FileCodebaseCreator();
 
     // Validate parameters.
-    ImmutableMap<String, String> s;
     try {
       cc.create(ImmutableMap.<String, String>of());
       fail("Method does not check for required options.");
@@ -122,7 +128,6 @@ public class FileCodebaseCreatorTest extends TestCase {
     expectDirCopy(fileFolder, copyLocation);
 
     control.replay();
-    FileCodebaseCreator cc = new FileCodebaseCreator();
     File newPath = FileCodebaseCreator.getCodebasePath(fileFolder);
     control.verify();
 

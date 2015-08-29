@@ -55,7 +55,7 @@ public class CodebaseMergerTest extends TestCase {
   private final Repositories repositories =
       new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory()));
   private final InMemoryProjectContextFactory contextFactory =
-      new InMemoryProjectContextFactory(repositories);
+      new InMemoryProjectContextFactory(cmd, fileSystem, ui, repositories);
 
   private Codebase orig, dest, mod;
 

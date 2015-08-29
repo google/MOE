@@ -54,7 +54,7 @@ public class ProjectConfig {
    * Returns a mapping of {@link RepositoryConfig} by name in this config. Useful for inspection of
    * this config's contents.
    */
-  Map<String, RepositoryConfig> getRepositoryConfigs() {
+  Map<String, RepositoryConfig> repositories() {
     Preconditions.checkNotNull(repositories);
     return Collections.unmodifiableMap(repositories);
   }
@@ -160,7 +160,7 @@ public class ProjectConfig {
     }
 
     InvalidProject.assertFalse(Strings.isNullOrEmpty(getName()), "Must specify a name");
-    InvalidProject.assertFalse(getRepositoryConfigs().isEmpty(), "Must specify repositories");
+    InvalidProject.assertFalse(repositories().isEmpty(), "Must specify repositories");
 
     for (RepositoryConfig r : repositories.values()) {
       r.validate();
