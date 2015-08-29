@@ -2,12 +2,13 @@
 
 package com.google.devtools.moe.client.project;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.CommandRunner;
+import com.google.devtools.moe.client.FileSystem;
+import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.editors.Editor;
 import com.google.devtools.moe.client.editors.ForwardTranslator;
 import com.google.devtools.moe.client.editors.IdentityEditor;
@@ -30,6 +31,8 @@ import com.google.devtools.moe.client.repositories.RepositoryType;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 /**
  * Creates a {@link ProjectContext} given a context file name.
  *
@@ -38,10 +41,18 @@ import java.util.Map;
 // TODO(cgruber): Move most of the create logic to ProjectConfig, since they're basically accessors
 public abstract class ProjectContextFactory {
 
+  private final CommandRunner cmd;
+  private final FileSystem filesystem;
+  protected final Ui ui;
   private final Repositories repositories;
 
-  public ProjectContextFactory(Repositories repositories) {
-    this.repositories = checkNotNull(repositories);
+  public ProjectContextFactory(
+      CommandRunner cmd, @Nullable FileSystem filesystem, Ui ui, Repositories repositories) {
+    // TODO(cgruber):push nullability back from this point.
+    this.repositories = Preconditions.checkNotNull(repositories);
+    this.cmd = cmd;
+    this.filesystem = filesystem;
+    this.ui = ui;
   }
 
   /**
@@ -73,7 +84,8 @@ public abstract class ProjectContextFactory {
   private ImmutableMap<String, RepositoryType> buildRepositories(ProjectConfig config)
       throws InvalidProject {
     ImmutableMap.Builder<String, RepositoryType> builder = ImmutableMap.builder();
-    for (Map.Entry<String, RepositoryConfig> entry : config.getRepositoryConfigs().entrySet()) {
+
+    for (Map.Entry<String, RepositoryConfig> entry : config.repositories().entrySet()) {
       builder.put(entry.getKey(), repositories.create(entry.getKey(), entry.getValue()));
     }
     return builder.build();
@@ -82,8 +94,7 @@ public abstract class ProjectContextFactory {
   private ImmutableMap<String, Editor> buildEditors(ProjectConfig config) throws InvalidProject {
     ImmutableMap.Builder<String, Editor> builder = ImmutableMap.builder();
     for (Map.Entry<String, EditorConfig> entry : config.getEditorConfigs().entrySet()) {
-      builder.put(
-          entry.getKey(), makeEditorFromConfig(entry.getKey(), entry.getValue()));
+      builder.put(entry.getKey(), makeEditorFromConfig(entry.getKey(), entry.getValue()));
     }
     return builder.build();
   }
@@ -93,6 +104,7 @@ public abstract class ProjectContextFactory {
     ImmutableMap.Builder<TranslatorPath, Translator> builder = ImmutableMap.builder();
     for (TranslatorConfig translatorConfig : config.getTranslators()) {
       Translator t = makeTranslatorFromConfig(translatorConfig, config);
+
       TranslatorPath tPath =
           new TranslatorPath(
               translatorConfig.getFromProjectSpace(), translatorConfig.getToProjectSpace());
@@ -187,11 +199,7 @@ public abstract class ProjectContextFactory {
       case renamer:
         return InverseRenamingEditor.makeInverseRenamingEditor(editorName, originalConfig);
       case scrubber:
-        // TODO(cgruber) remove Injector.INSTANCE
-        return new InverseScrubbingEditor(
-            Injector.INSTANCE.cmd(),
-            Injector.INSTANCE.fileSystem(),
-            Injector.INSTANCE.ui());
+        return new InverseScrubbingEditor(cmd, filesystem, ui);
       default:
         throw new InvalidProject("Non-invertible editor type: " + originalConfig.getType());
     }

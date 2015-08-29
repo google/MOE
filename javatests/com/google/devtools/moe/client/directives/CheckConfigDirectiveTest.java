@@ -27,7 +27,7 @@ public class CheckConfigDirectiveTest extends TestCase {
               new DummyRepositoryFactory(),
               new SvnRepositoryFactory(null)));
   private final InMemoryProjectContextFactory contextFactory =
-      new InMemoryProjectContextFactory(repositories);
+      new InMemoryProjectContextFactory(cmd, null, ui, repositories);
 
   @Override
   public void setUp() throws Exception {

@@ -5,6 +5,8 @@ package com.google.devtools.moe.client.project;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.io.Files;
+import com.google.devtools.moe.client.CommandRunner;
+import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.repositories.Repositories;
 
@@ -17,12 +19,11 @@ import javax.inject.Inject;
  * Creates a ProjectContext from a configuration file loaded from the file system.
  */
 public class FileReadingProjectContextFactory extends ProjectContextFactory {
-  private final Ui ui;
 
   @Inject
-  public FileReadingProjectContextFactory(Ui ui, Repositories repositories) {
-    super(repositories);
-    this.ui = ui;
+  public FileReadingProjectContextFactory(
+      CommandRunner cmd, FileSystem filesystem, Ui ui, Repositories repositories) {
+    super(cmd, filesystem, ui, repositories);
   }
 
   @Override

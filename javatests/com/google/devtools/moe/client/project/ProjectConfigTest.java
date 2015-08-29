@@ -139,7 +139,7 @@ public class ProjectConfigTest extends TestCase {
                 + " \"scrubber_config\": {\"a\": 1, \"b\": 2},"
                 + " \"repositories\": {\"internal\": {\"type\":\"svn\"}}"
                 + "}");
-    assertEquals(1, p.getRepositoryConfigs().size());
+    assertEquals(1, p.repositories().size());
     assertNotNull(p.getRepositoryConfig("internal"));
   }
 }

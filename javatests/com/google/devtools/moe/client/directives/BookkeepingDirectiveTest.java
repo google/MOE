@@ -6,6 +6,7 @@ import static org.easymock.EasyMock.expect;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.database.Bookkeeper;
@@ -13,7 +14,10 @@ import com.google.devtools.moe.client.database.DbStorage;
 import com.google.devtools.moe.client.database.FileDb;
 import com.google.devtools.moe.client.database.RepositoryEquivalence;
 import com.google.devtools.moe.client.database.SubmittedMigration;
+import com.google.devtools.moe.client.repositories.Repositories;
+import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.repositories.Revision;
+import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
 import com.google.devtools.moe.client.testing.InMemoryFileSystem;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
 import com.google.devtools.moe.client.testing.RecordingUi;
@@ -37,10 +41,13 @@ import java.io.File;
  */
 public class BookkeepingDirectiveTest extends TestCase {
   private static final File DB_FILE = new File("/path/to/db");
-  private final InMemoryProjectContextFactory contextFactory = new InMemoryProjectContextFactory();
   private final RecordingUi ui = new RecordingUi();
   private final IMocksControl control = EasyMock.createControl();
   private final CommandRunner cmd = control.createMock(CommandRunner.class);
+  private final Repositories repositories =
+      new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory()));
+  private final InMemoryProjectContextFactory contextFactory =
+      new InMemoryProjectContextFactory(cmd, null, ui, repositories);
 
   @Override
   public void setUp() throws Exception {
