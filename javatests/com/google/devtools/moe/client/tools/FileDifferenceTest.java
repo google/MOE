@@ -10,6 +10,7 @@ import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.testing.TestingModule;
 import com.google.devtools.moe.client.tools.FileDifference.Comparison;
+import com.google.devtools.moe.client.tools.FileDifference.ConcreteFileDiffer;
 
 import dagger.Provides;
 
@@ -30,6 +31,7 @@ public class FileDifferenceTest extends TestCase {
   private final IMocksControl control = EasyMock.createControl();
   private final FileSystem fileSystem = control.createMock(FileSystem.class);
   private final CommandRunner cmd = control.createMock(CommandRunner.class);
+  private final ConcreteFileDiffer differ = new ConcreteFileDiffer(cmd, fileSystem);
 
   // TODO(cgruber): Rework these when statics aren't inherent in the design.
   @dagger.Component(modules = {TestingModule.class, Module.class})
@@ -72,11 +74,11 @@ public class FileDifferenceTest extends TestCase {
                 "diff", ImmutableList.of("-N", "/1/foo", "/2/foo"), "foo", "", 1));
 
     control.replay();
-    FileDifference d = FileDifference.CONCRETE_FILE_DIFFER.diffFiles("foo", file1, file2);
+    FileDifference d = differ.diffFiles("foo", file1, file2);
     control.verify();
-    assertEquals(Comparison.ONLY1, d.existence);
-    assertEquals(Comparison.SAME, d.executability);
-    assertEquals("foo", d.contentDiff);
+    assertEquals(Comparison.ONLY1, d.existence());
+    assertEquals(Comparison.SAME, d.executability());
+    assertEquals("foo", d.contentDiff());
   }
 
   public void testExistence2() throws Exception {
@@ -93,11 +95,11 @@ public class FileDifferenceTest extends TestCase {
                 "diff", ImmutableList.of("-N", "/1/foo", "/2/foo"), "foo", "", 1));
 
     control.replay();
-    FileDifference d = FileDifference.CONCRETE_FILE_DIFFER.diffFiles("foo", file1, file2);
+    FileDifference d = differ.diffFiles("foo", file1, file2);
     control.verify();
-    assertEquals(Comparison.ONLY2, d.existence);
-    assertEquals(Comparison.SAME, d.executability);
-    assertEquals("foo", d.contentDiff);
+    assertEquals(Comparison.ONLY2, d.existence());
+    assertEquals(Comparison.SAME, d.executability());
+    assertEquals("foo", d.contentDiff());
   }
 
   public void testExecutability() throws Exception {
@@ -111,11 +113,11 @@ public class FileDifferenceTest extends TestCase {
     expect(cmd.runCommand("diff", ImmutableList.of("-N", "/1/foo", "/2/foo"), "")).andReturn("");
 
     control.replay();
-    FileDifference d = FileDifference.CONCRETE_FILE_DIFFER.diffFiles("foo", file1, file2);
+    FileDifference d = differ.diffFiles("foo", file1, file2);
     control.verify();
-    assertEquals(Comparison.SAME, d.existence);
-    assertEquals(Comparison.ONLY1, d.executability);
-    assertEquals(null, d.contentDiff);
+    assertEquals(Comparison.SAME, d.existence());
+    assertEquals(Comparison.ONLY1, d.executability());
+    assertEquals(null, d.contentDiff());
   }
 
   public void testExecutability2() throws Exception {
@@ -129,11 +131,11 @@ public class FileDifferenceTest extends TestCase {
     expect(cmd.runCommand("diff", ImmutableList.of("-N", "/1/foo", "/2/foo"), "")).andReturn("");
 
     control.replay();
-    FileDifference d = FileDifference.CONCRETE_FILE_DIFFER.diffFiles("foo", file1, file2);
+    FileDifference d = differ.diffFiles("foo", file1, file2);
     control.verify();
-    assertEquals(Comparison.SAME, d.existence);
-    assertEquals(Comparison.ONLY2, d.executability);
-    assertEquals(null, d.contentDiff);
+    assertEquals(Comparison.SAME, d.existence());
+    assertEquals(Comparison.ONLY2, d.executability());
+    assertEquals(null, d.contentDiff());
   }
 
   public void testContents() throws Exception {
@@ -150,11 +152,11 @@ public class FileDifferenceTest extends TestCase {
                 "diff", ImmutableList.of("-N", "/1/foo", "/2/foo"), "foo", "", 1));
 
     control.replay();
-    FileDifference d = FileDifference.CONCRETE_FILE_DIFFER.diffFiles("foo", file1, file2);
+    FileDifference d = differ.diffFiles("foo", file1, file2);
     control.verify();
-    assertEquals(Comparison.SAME, d.existence);
-    assertEquals(Comparison.SAME, d.executability);
-    assertEquals("foo", d.contentDiff);
+    assertEquals(Comparison.SAME, d.existence());
+    assertEquals(Comparison.SAME, d.executability());
+    assertEquals("foo", d.contentDiff());
   }
 
   public void testExecutabilityAndContents() throws Exception {
@@ -171,11 +173,11 @@ public class FileDifferenceTest extends TestCase {
                 "diff", ImmutableList.of("-N", "/1/foo", "/2/foo"), "foo", "", 1));
 
     control.replay();
-    FileDifference d = FileDifference.CONCRETE_FILE_DIFFER.diffFiles("foo", file1, file2);
+    FileDifference d = differ.diffFiles("foo", file1, file2);
     control.verify();
-    assertEquals(Comparison.SAME, d.existence);
-    assertEquals(Comparison.ONLY1, d.executability);
-    assertEquals("foo", d.contentDiff);
+    assertEquals(Comparison.SAME, d.existence());
+    assertEquals(Comparison.ONLY1, d.executability());
+    assertEquals("foo", d.contentDiff());
   }
 
   public void testIdentical() throws Exception {
@@ -189,7 +191,7 @@ public class FileDifferenceTest extends TestCase {
     expect(cmd.runCommand("diff", ImmutableList.of("-N", "/1/foo", "/2/foo"), "")).andReturn("");
 
     control.replay();
-    FileDifference d = FileDifference.CONCRETE_FILE_DIFFER.diffFiles("foo", file1, file2);
+    FileDifference d = differ.diffFiles("foo", file1, file2);
     control.verify();
     assertFalse(d.isDifferent());
   }

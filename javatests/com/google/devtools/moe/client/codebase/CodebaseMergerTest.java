@@ -16,6 +16,8 @@ import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
 import com.google.devtools.moe.client.testing.RecordingUi;
+import com.google.devtools.moe.client.tools.FileDifference.ConcreteFileDiffer;
+import com.google.devtools.moe.client.tools.FileDifference.FileDiffer;
 
 import junit.framework.TestCase;
 
@@ -56,15 +58,16 @@ public class CodebaseMergerTest extends TestCase {
   private final Repositories repositories =
       new Repositories(
           ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(fileSystem)));
+  private final FileDiffer fileDiffer = new ConcreteFileDiffer(cmd, fileSystem);
   private final InMemoryProjectContextFactory contextFactory =
-      new InMemoryProjectContextFactory(cmd, fileSystem, ui, repositories);
+      new InMemoryProjectContextFactory(fileDiffer, cmd, fileSystem, ui, repositories);
 
   private Codebase orig, dest, mod;
 
   @Override
   public void setUp() throws Exception {
     super.setUp();
-    Injector.INSTANCE = new Injector(fileSystem, cmd, contextFactory, ui);
+    //Injector.INSTANCE = new Injector(fileSystem, cmd, contextFactory, ui);
     orig = control.createMock(Codebase.class);
     dest = control.createMock(Codebase.class);
     mod = control.createMock(Codebase.class);
@@ -103,7 +106,7 @@ public class CodebaseMergerTest extends TestCase {
 
     control.replay();
 
-    CodebaseMerger merger = new CodebaseMerger(ui, fileSystem, cmd, orig, mod, dest);
+    CodebaseMerger merger = new CodebaseMerger(ui, fileSystem, cmd, fileDiffer, orig, mod, dest);
     merger.generateMergedFile("foo");
 
     control.verify();
@@ -135,7 +138,7 @@ public class CodebaseMergerTest extends TestCase {
 
     control.replay();
 
-    CodebaseMerger merger = new CodebaseMerger(ui, fileSystem, cmd, orig, mod, dest);
+    CodebaseMerger merger = new CodebaseMerger(ui, fileSystem, cmd, null, orig, mod, dest);
     merger.generateMergedFile("foo");
 
     control.verify();
@@ -170,7 +173,7 @@ public class CodebaseMergerTest extends TestCase {
 
     control.replay();
 
-    CodebaseMerger merger = new CodebaseMerger(ui, fileSystem, cmd, orig, mod, dest);
+    CodebaseMerger merger = new CodebaseMerger(ui, fileSystem, cmd, null, orig, mod, dest);
     merger.generateMergedFile("foo");
 
     control.verify();
@@ -212,7 +215,7 @@ public class CodebaseMergerTest extends TestCase {
 
     control.replay();
 
-    CodebaseMerger merger = new CodebaseMerger(ui, fileSystem, cmd, orig, mod, dest);
+    CodebaseMerger merger = new CodebaseMerger(ui, fileSystem, cmd, null, orig, mod, dest);
     merger.generateMergedFile("foo");
 
     control.verify();
@@ -254,7 +257,7 @@ public class CodebaseMergerTest extends TestCase {
 
     control.replay();
 
-    CodebaseMerger merger = new CodebaseMerger(ui, fileSystem, cmd, orig, mod, dest);
+    CodebaseMerger merger = new CodebaseMerger(ui, fileSystem, cmd, null, orig, mod, dest);
     merger.generateMergedFile("foo");
 
     control.verify();
@@ -289,7 +292,7 @@ public class CodebaseMergerTest extends TestCase {
 
     control.replay();
 
-    CodebaseMerger merger = new CodebaseMerger(ui, fileSystem, cmd, orig, mod, dest);
+    CodebaseMerger merger = new CodebaseMerger(ui, fileSystem, cmd, null, orig, mod, dest);
     merger.generateMergedFile("foo");
 
     control.verify();
@@ -333,7 +336,7 @@ public class CodebaseMergerTest extends TestCase {
 
     control.replay();
 
-    CodebaseMerger merger = new CodebaseMerger(ui, fileSystem, cmd, orig, mod, dest);
+    CodebaseMerger merger = new CodebaseMerger(ui, fileSystem, cmd, null, orig, mod, dest);
     merger.generateMergedFile("foo");
 
     control.verify();
@@ -377,7 +380,7 @@ public class CodebaseMergerTest extends TestCase {
 
     control.replay();
 
-    CodebaseMerger merger = new CodebaseMerger(ui, fileSystem, cmd, orig, mod, dest);
+    CodebaseMerger merger = new CodebaseMerger(ui, fileSystem, cmd, null, orig, mod, dest);
     merger.generateMergedFile("foo");
 
     control.verify();
@@ -450,7 +453,7 @@ public class CodebaseMergerTest extends TestCase {
 
     control.replay();
 
-    CodebaseMerger merger = new CodebaseMerger(ui, fileSystem, cmd, orig, mod, dest);
+    CodebaseMerger merger = new CodebaseMerger(ui, fileSystem, cmd, null, orig, mod, dest);
     merger.merge();
 
     control.verify();

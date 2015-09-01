@@ -2,7 +2,6 @@
 
 package com.google.devtools.moe.client.writer;
 
-import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
@@ -51,10 +50,10 @@ public interface DraftRevision {
       try {
         Ui.Task t = ui.pushTask("push_codebase", "Putting files from Codebase into Writer");
         DraftRevision r = destination.putCodebase(c, rm);
-        Injector.INSTANCE.ui().popTask(t, "");
+        ui.popTask(t, "");
         return r;
       } catch (WritingError e) {
-        Injector.INSTANCE.ui().error(e, "Error writing change");
+        ui.error(e, "Error writing change");
         return null;
       }
     }

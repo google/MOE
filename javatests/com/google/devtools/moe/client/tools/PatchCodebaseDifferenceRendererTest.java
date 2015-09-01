@@ -27,7 +27,7 @@ public class PatchCodebaseDifferenceRendererTest extends TestCase {
     ImmutableSet.Builder<FileDifference> diffs = ImmutableSet.builder();
 
     diffs.add(
-        new FileDifference(
+        FileDifference.create(
             "foo",
             new File("/c1/foo"),
             new File("/c2/foo"),
@@ -36,7 +36,7 @@ public class PatchCodebaseDifferenceRendererTest extends TestCase {
             "> foo"));
 
     diffs.add(
-        new FileDifference(
+        FileDifference.create(
             "bar",
             new File("/c1/bar"),
             new File("/c2/bar"),
@@ -45,7 +45,7 @@ public class PatchCodebaseDifferenceRendererTest extends TestCase {
             null));
 
     diffs.add(
-        new FileDifference(
+        FileDifference.create(
             "baz",
             new File("/c1/baz"),
             new File("/c2/baz"),
@@ -54,7 +54,7 @@ public class PatchCodebaseDifferenceRendererTest extends TestCase {
             null));
 
     diffs.add(
-        new FileDifference(
+        FileDifference.create(
             "quux",
             new File("/c1/quux"),
             new File("/c2/quux"),
@@ -63,7 +63,7 @@ public class PatchCodebaseDifferenceRendererTest extends TestCase {
             "> quux"));
 
     diffs.add(
-        new FileDifference(
+        FileDifference.create(
             "fuzzy",
             new File("/c1/fuzzy"),
             new File("/c2/fuzzy"),

@@ -16,7 +16,7 @@ import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
 import com.google.devtools.moe.client.repositories.RevisionHistory.SearchType;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
-import com.google.devtools.moe.client.tools.CodebaseDifference;
+import com.google.devtools.moe.client.tools.CodebaseDiffer;
 
 import java.util.List;
 import java.util.regex.Matcher;
@@ -33,10 +33,13 @@ public class Bookkeeper {
   /** The regex for MOE-migrated changes, as found in the changelog of the to-repo. */
   private static final Pattern MIGRATED_REV_PATTERN = Pattern.compile("MOE_MIGRATED_REVID=(\\S*)");
 
+  private final CodebaseDiffer differ;
   private final Ui ui;
 
+
   @Inject
-  public Bookkeeper(Ui ui) {
+  public Bookkeeper(CodebaseDiffer differ, Ui ui) {
+    this.differ = differ;
     this.ui = ui;
   }
 
@@ -66,7 +69,7 @@ public class Bookkeeper {
     }
 
     Ui.Task t = ui.pushTask("diff_codebases", "Diff codebases '%s' and '%s'", from, to);
-    if (!CodebaseDifference.diffCodebases(from, to).areDifferent()) {
+    if (!differ.diffCodebases(from, to).areDifferent()) {
       db.noteEquivalence(RepositoryEquivalence.create(fromHead, toHead));
     }
     ui.popTask(t, "");
@@ -149,7 +152,7 @@ public class Bookkeeper {
     }
 
     Ui.Task t = ui.pushTask("diff_codebases", "Diff codebases '%s' and '%s'", from, to);
-    if (!CodebaseDifference.diffCodebases(from, to).areDifferent()) {
+    if (!differ.diffCodebases(from, to).areDifferent()) {
       RepositoryEquivalence newEquiv = RepositoryEquivalence.create(fromRev, toRev);
       db.noteEquivalence(newEquiv);
       ui.info("Codebases are identical, noted new equivalence: %s", newEquiv);

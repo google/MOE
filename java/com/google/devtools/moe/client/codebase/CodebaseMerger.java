@@ -13,7 +13,7 @@ import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.parser.Term;
-import com.google.devtools.moe.client.tools.FileDifference;
+import com.google.devtools.moe.client.tools.FileDifference.FileDiffer;
 
 import java.io.File;
 import java.io.IOException;
@@ -68,6 +68,7 @@ public class CodebaseMerger {
   private final Ui ui;
   private final FileSystem filesystem;
   private final CommandRunner cmd;
+  private final FileDiffer differ;
   private final Codebase originalCodebase, destinationCodebase, modifiedCodebase, mergedCodebase;
   private final Set<String> mergedFiles, failedToMergeFiles;
 
@@ -75,12 +76,14 @@ public class CodebaseMerger {
       Ui ui,
       FileSystem filesystem,
       CommandRunner cmd,
+      FileDiffer differ,
       Codebase originalCodebase,
       Codebase modifiedCodebase,
       Codebase destinationCodebase) {
     this.ui = ui;
     this.filesystem = filesystem;
     this.cmd = cmd;
+    this.differ = differ;
     this.originalCodebase = originalCodebase;
     this.modifiedCodebase = modifiedCodebase;
     this.destinationCodebase = destinationCodebase;
@@ -132,8 +135,8 @@ public class CodebaseMerger {
         failedToMergeFiles);
   }
 
-  private static boolean areDifferent(String filename, File x, File y) {
-    return FileDifference.CONCRETE_FILE_DIFFER.diffFiles(filename, x, y).isDifferent();
+  private boolean areDifferent(String filename, File x, File y) {
+    return differ.diffFiles(filename, x, y).isDifferent();
   }
 
   /**

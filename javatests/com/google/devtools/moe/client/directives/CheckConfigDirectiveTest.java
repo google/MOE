@@ -25,7 +25,7 @@ public class CheckConfigDirectiveTest extends TestCase {
               new DummyRepositoryFactory(null),
               new SvnRepositoryFactory(null, null)));
   private final InMemoryProjectContextFactory contextFactory =
-      new InMemoryProjectContextFactory(cmd, null, ui, repositories);
+      new InMemoryProjectContextFactory(null, cmd, null, ui, repositories);
 
   public void testEmptyConfigFilenameThrows() throws Exception {
     contextFactory.projectConfigs.put("moe_config.txt", "");

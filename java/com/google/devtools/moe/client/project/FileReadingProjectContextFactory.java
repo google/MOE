@@ -9,6 +9,7 @@ import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.repositories.Repositories;
+import com.google.devtools.moe.client.tools.FileDifference.FileDiffer;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,8 +23,12 @@ public class FileReadingProjectContextFactory extends ProjectContextFactory {
 
   @Inject
   public FileReadingProjectContextFactory(
-      CommandRunner cmd, FileSystem filesystem, Ui ui, Repositories repositories) {
-    super(cmd, filesystem, ui, repositories);
+      FileDiffer differ,
+      CommandRunner cmd,
+      FileSystem filesystem,
+      Ui ui,
+      Repositories repositories) {
+    super(differ, cmd, filesystem, ui, repositories);
   }
 
   @Override

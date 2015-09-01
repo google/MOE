@@ -22,6 +22,9 @@ import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
 import com.google.devtools.moe.client.testing.InMemoryFileSystem;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
 import com.google.devtools.moe.client.testing.RecordingUi;
+import com.google.devtools.moe.client.tools.CodebaseDiffer;
+import com.google.devtools.moe.client.tools.FileDifference.ConcreteFileDiffer;
+import com.google.devtools.moe.client.tools.FileDifference.FileDiffer;
 
 import junit.framework.TestCase;
 
@@ -88,13 +91,16 @@ public class BookkeepingDirectiveTest extends TestCase {
             "/dummy/codebase/int/migrated_from/file", "migrated_from",
             "/dummy/codebase/pub/migrated_to/", "dir (different)");
     FileSystem filesystem = new InMemoryFileSystem(files);
+    FileDiffer fileDiffer = new ConcreteFileDiffer(cmd, filesystem);
+    CodebaseDiffer codebaseDiffer = new CodebaseDiffer(fileDiffer);
     Repositories repositories =
         new Repositories(
             ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(filesystem)));
     InMemoryProjectContextFactory contextFactory =
-        init(new InMemoryProjectContextFactory(cmd, filesystem, ui, repositories));
+        init(new InMemoryProjectContextFactory(fileDiffer, cmd, filesystem, ui, repositories));
     Injector.INSTANCE = new Injector(filesystem, cmd, contextFactory, ui);
-    BookkeepingDirective d = new BookkeepingDirective(contextFactory, ui, new Bookkeeper(ui));
+    BookkeepingDirective d =
+        new BookkeepingDirective(contextFactory, ui, new Bookkeeper(codebaseDiffer, ui));
     d.setContextFileName("moe_config.txt");
     d.dbLocation = DB_FILE.getAbsolutePath();
 
@@ -128,13 +134,16 @@ public class BookkeepingDirectiveTest extends TestCase {
             "/dummy/codebase/int/migrated_from/file", "migrated_from",
             "/dummy/codebase/pub/migrated_to/", "empty dir (different)");
     FileSystem filesystem = new InMemoryFileSystem(files);
+    FileDiffer fileDiffer = new ConcreteFileDiffer(cmd, filesystem);
+    CodebaseDiffer codebaseDiffer = new CodebaseDiffer(fileDiffer);
     Repositories repositories =
         new Repositories(
             ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(filesystem)));
     InMemoryProjectContextFactory contextFactory =
-        init(new InMemoryProjectContextFactory(cmd, filesystem, ui, repositories));
+        init(new InMemoryProjectContextFactory(fileDiffer, cmd, filesystem, ui, repositories));
     Injector.INSTANCE = new Injector(filesystem, cmd, contextFactory, ui);
-    BookkeepingDirective d = new BookkeepingDirective(contextFactory, ui, new Bookkeeper(ui));
+    BookkeepingDirective d =
+        new BookkeepingDirective(contextFactory, ui, new Bookkeeper(codebaseDiffer, ui));
     d.setContextFileName("moe_config.txt");
     d.dbLocation = DB_FILE.getAbsolutePath();
 
@@ -166,13 +175,16 @@ public class BookkeepingDirectiveTest extends TestCase {
             "/dummy/codebase/int/migrated_from/file", "migrated_from",
             "/dummy/codebase/pub/migrated_to/file", "migrated_to (equivalent)");
     FileSystem filesystem = new InMemoryFileSystem(files);
+    FileDiffer fileDiffer = new ConcreteFileDiffer(cmd, filesystem);
+    CodebaseDiffer codebaseDiffer = new CodebaseDiffer(fileDiffer);
     Repositories repositories =
         new Repositories(
             ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(filesystem)));
     InMemoryProjectContextFactory contextFactory =
-        init(new InMemoryProjectContextFactory(cmd, filesystem, ui, repositories));
+        init(new InMemoryProjectContextFactory(fileDiffer, cmd, filesystem, ui, repositories));
     Injector.INSTANCE = new Injector(filesystem, cmd, contextFactory, ui);
-    BookkeepingDirective d = new BookkeepingDirective(contextFactory, ui, new Bookkeeper(ui));
+    BookkeepingDirective d =
+        new BookkeepingDirective(contextFactory, ui, new Bookkeeper(codebaseDiffer, ui));
     d.setContextFileName("moe_config.txt");
     d.dbLocation = DB_FILE.getAbsolutePath();
 

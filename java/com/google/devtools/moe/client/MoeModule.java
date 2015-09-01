@@ -7,6 +7,8 @@ import com.google.devtools.moe.client.options.OptionsModule;
 import com.google.devtools.moe.client.project.FileReadingProjectContextFactory;
 import com.google.devtools.moe.client.project.ProjectContextFactory;
 import com.google.devtools.moe.client.repositories.Repositories;
+import com.google.devtools.moe.client.tools.FileDifference.ConcreteFileDiffer;
+import com.google.devtools.moe.client.tools.FileDifference.FileDiffer;
 
 import dagger.Module;
 import dagger.Provides;
@@ -48,5 +50,11 @@ public class MoeModule {
   @Singleton
   public FileSystem fileSystem(SystemFileSystem sysfs) {
     return sysfs;
+  }
+
+  @Provides
+  @Singleton
+  FileDiffer fileDiffer(ConcreteFileDiffer cfd) {
+    return cfd;
   }
 }

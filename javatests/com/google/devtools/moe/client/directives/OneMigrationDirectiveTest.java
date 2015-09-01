@@ -3,7 +3,6 @@
 package com.google.devtools.moe.client.directives;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.migrations.Migrator;
@@ -24,7 +23,7 @@ public class OneMigrationDirectiveTest extends TestCase {
   private final Repositories repositories =
       new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(null)));
   private final InMemoryProjectContextFactory contextFactory =
-      new InMemoryProjectContextFactory(cmd, null, ui, repositories);
+      new InMemoryProjectContextFactory(null, cmd, null, ui, repositories);
 
   @Override
   public void setUp() throws Exception {
@@ -37,7 +36,6 @@ public class OneMigrationDirectiveTest extends TestCase {
             + "\"translators\":[{\"from_project_space\":\"internal\","
             + "\"to_project_space\":\"public\",\"steps\":[{\"name\":\"id_step\","
             + "\"editor\":{\"type\":\"identity\"}}]}]}");
-    Injector.INSTANCE = new Injector(null, cmd, contextFactory, ui);
   }
 
   public void testOneMigration() throws Exception {

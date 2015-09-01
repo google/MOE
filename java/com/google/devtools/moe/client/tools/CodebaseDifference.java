@@ -2,8 +2,6 @@
 
 package com.google.devtools.moe.client.tools;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import com.google.devtools.moe.client.codebase.Codebase;
 
 import java.util.Collections;
@@ -33,31 +31,5 @@ public class CodebaseDifference {
     return !this.fileDiffs.isEmpty();
   }
 
-  /**
-   * Diff two Codebases.
-   */
-  public static CodebaseDifference diffCodebases(Codebase codebase1, Codebase codebase2) {
-    return diffCodebases(codebase1, codebase2, FileDifference.CONCRETE_FILE_DIFFER);
-  }
 
-  /**
-   * Diff two Codebases with a custom FileDiffer.
-   */
-  public static CodebaseDifference diffCodebases(
-      Codebase codebase1, Codebase codebase2, FileDifference.FileDiffer differ) {
-    Set<String> filenames =
-        Sets.union(codebase1.getRelativeFilenames(), codebase2.getRelativeFilenames());
-
-    ImmutableSet.Builder<FileDifference> fileDiffs = ImmutableSet.builder();
-
-    for (String filename : filenames) {
-      FileDifference fileDiff =
-          differ.diffFiles(filename, codebase1.getFile(filename), codebase2.getFile(filename));
-      if (fileDiff.isDifferent()) {
-        fileDiffs.add(fileDiff);
-      }
-    }
-
-    return new CodebaseDifference(codebase1, codebase2, fileDiffs.build());
-  }
 }
