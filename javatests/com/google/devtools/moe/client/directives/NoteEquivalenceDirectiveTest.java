@@ -33,9 +33,9 @@ public class NoteEquivalenceDirectiveTest extends TestCase {
   private final FileSystem mockFs = control.createMock(FileSystem.class);
   private final SystemCommandRunner cmd = new SystemCommandRunner(ui);
   private final Repositories repositories =
-      new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory()));
+      new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(mockFs)));
   private final InMemoryProjectContextFactory contextFactory =
-      new InMemoryProjectContextFactory(cmd, null, ui, repositories);
+      new InMemoryProjectContextFactory(cmd, mockFs, ui, repositories);
 
   NoteEquivalenceDirective d;
 
@@ -47,6 +47,7 @@ public class NoteEquivalenceDirectiveTest extends TestCase {
             + "  'internal': {'type': 'dummy'}, 'public': {'type': 'dummy'}"
             + "}}");
     super.setUp();
+    // TODO(cgruber): Rip this out when Db.Factory is injected.
     Injector.INSTANCE = new Injector(mockFs, cmd, contextFactory, ui);
 
     d = new NoteEquivalenceDirective(contextFactory, mockFs, ui);

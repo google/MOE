@@ -9,6 +9,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.codebase.CodebaseCreator;
 import com.google.devtools.moe.client.project.RepositoryConfig;
@@ -24,15 +25,19 @@ import org.joda.time.DateTime;
 
 import java.util.List;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 /**
  * Creates a simple {@link RepositoryType} for testing.
  */
 public class DummyRepositoryFactory implements RepositoryType.Factory {
+  private final FileSystem filesystem;
 
   @Inject
-  public DummyRepositoryFactory() {}
+  public DummyRepositoryFactory(@Nullable FileSystem filesystem) {
+    this.filesystem = filesystem;
+  }
 
   @Override
   public String type() {
@@ -190,7 +195,8 @@ public class DummyRepositoryFactory implements RepositoryType.Factory {
         commits == null
             ? new DummyRevisionHistory(repositoryName)
             : new DummyRevisionHistory(repositoryName, commits);
-    CodebaseCreator codebaseCreator = new DummyCodebaseCreator(repositoryName, projectSpace);
+    CodebaseCreator codebaseCreator =
+        new DummyCodebaseCreator(filesystem, repositoryName, projectSpace);
     WriterCreator writerCreator = new DummyWriterCreator(repositoryName);
     return RepositoryType.create(repositoryName, revisionHistory, codebaseCreator, writerCreator);
   }

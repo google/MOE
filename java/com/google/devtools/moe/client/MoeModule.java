@@ -26,6 +26,12 @@ public class MoeModule {
     return sysui;
   }
 
+  /* Alias to UI which extends this interface */
+  @Provides
+  public Messenger messenger(Ui ui) {
+    return ui;
+  }
+
   @Provides
   @Singleton
   public ProjectContextFactory projectContextFactory(FileReadingProjectContextFactory factory) {

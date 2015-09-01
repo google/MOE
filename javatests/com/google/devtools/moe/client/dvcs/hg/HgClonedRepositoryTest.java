@@ -86,7 +86,7 @@ public class HgClonedRepositoryTest extends TestCase {
     // Run test
     control.replay();
 
-    HgClonedRepository repo = new HgClonedRepository(repositoryName, repositoryConfig);
+    HgClonedRepository repo = new HgClonedRepository(cmd, mockFS, repositoryName, repositoryConfig);
     repo.cloneLocallyAtHead(Lifetimes.persistent());
 
     assertEquals(repositoryName, repo.getRepositoryName());

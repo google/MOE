@@ -92,7 +92,8 @@ public class SvnCodebaseCreatorTest extends TestCase {
         .andReturn(ImmutableSet.<File>of());
 
     control.replay();
-    CodebaseCreator cc = new SvnCodebaseCreator("testing", mockConfig, revisionHistory, util);
+    CodebaseCreator cc =
+        new SvnCodebaseCreator(fileSystem, "testing", mockConfig, revisionHistory, util);
     Codebase r = cc.create(ImmutableMap.of("revision", "46"));
     assertEquals("/dummy/path/45", r.getPath().getAbsolutePath());
     assertEquals("internal", r.getProjectSpace());

@@ -15,7 +15,7 @@ import junit.framework.TestCase;
 import org.easymock.EasyMock;
 
 public class RepositoriesTest extends TestCase {
-  private final RepositoryType.Factory dummyService = new DummyRepositoryFactory();
+  private final RepositoryType.Factory dummyService = new DummyRepositoryFactory(null);
   private final Repositories repositories = new Repositories(ImmutableSet.of(dummyService));
   private final RepositoryConfig config = EasyMock.createNiceMock(RepositoryConfig.class);
 

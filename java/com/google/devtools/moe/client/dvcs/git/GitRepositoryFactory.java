@@ -2,9 +2,12 @@
 
 package com.google.devtools.moe.client.dvcs.git;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
+
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.devtools.moe.client.CommandRunner;
+import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.Lifetimes;
 import com.google.devtools.moe.client.project.InvalidProject;
@@ -19,10 +22,14 @@ import javax.inject.Inject;
  * Creates a Git implementation of {@link RepositoryType}.
  */
 public class GitRepositoryFactory implements RepositoryType.Factory {
+  private final CommandRunner cmd;
+  private final FileSystem filesystem;
 
-  // TODO(cgruber) remove static reference to Injector
   @Inject
-  GitRepositoryFactory() {}
+  GitRepositoryFactory(CommandRunner cmd, FileSystem filesystem) {
+    this.cmd = cmd;
+    this.filesystem = filesystem;
+  }
 
   @Override
   public String type() {
@@ -40,7 +47,7 @@ public class GitRepositoryFactory implements RepositoryType.Factory {
     config.checkType(this);
 
     final String url = config.getUrl();
-    if (url == null || url.isEmpty()) {
+    if (isNullOrEmpty(url)) {
       throw new InvalidProject("Git repository config missing \"url\".");
     }
 
@@ -48,7 +55,7 @@ public class GitRepositoryFactory implements RepositoryType.Factory {
         new Supplier<GitClonedRepository>() {
           @Override
           public GitClonedRepository get() {
-            GitClonedRepository headClone = new GitClonedRepository(name, config);
+            GitClonedRepository headClone = new GitClonedRepository(cmd, filesystem, name, config);
             headClone.cloneLocallyAtHead(Lifetimes.currentTask());
             return headClone;
           }
@@ -61,7 +68,8 @@ public class GitRepositoryFactory implements RepositoryType.Factory {
             new Supplier<GitClonedRepository>() {
               @Override
               public GitClonedRepository get() {
-                GitClonedRepository tipClone = new GitClonedRepository(name, config);
+                GitClonedRepository tipClone =
+                    new GitClonedRepository(cmd, filesystem, name, config);
                 tipClone.cloneLocallyAtHead(Lifetimes.moeExecution());
                 return tipClone;
               }
@@ -75,7 +83,7 @@ public class GitRepositoryFactory implements RepositoryType.Factory {
     }
 
     GitCodebaseCreator cc =
-        new GitCodebaseCreator(memoizedSupplier, rh, projectSpace, name, config);
+        new GitCodebaseCreator(cmd, filesystem, memoizedSupplier, rh, projectSpace, name, config);
 
     GitWriterCreator wc = new GitWriterCreator(freshSupplier, rh);
 

@@ -6,6 +6,7 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.CommandRunner;
+import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Utils;
@@ -26,12 +27,16 @@ import java.util.Map;
  */
 public class ScrubbingEditor implements Editor {
 
+  private final CommandRunner cmd = Injector.INSTANCE.cmd(); // TODO(cgruber) @Inject
+  private final FileSystem filesystem = Injector.INSTANCE.fileSystem(); // TODO(cgruber) @Inject
+
   /**
    * A {@code Supplier} that extracts the scrubber binary. We use a Supplier because we don't want
    * to extract the scrubber until it's needed. (A run of MOE may initialize a project context and
    * instantiate editors without actually editing.) It is memoized because we only need one copy of
    * the scrubber binary across MOE execution.
    */
+  // TODO(cgruber): Inject this
   private static final Supplier<File> SCRUBBER_BINARY_SUPPLIER =
       Suppliers.memoize(
           new Supplier<File>() {
@@ -74,37 +79,33 @@ public class ScrubbingEditor implements Editor {
    */
   @Override
   public Codebase edit(Codebase input, ProjectContext context, Map<String, String> options) {
-    File tempDir = Injector.INSTANCE.fileSystem().getTemporaryDirectory("scrubber_run_");
+    File tempDir = filesystem.getTemporaryDirectory("scrubber_run_");
     File outputTar = new File(tempDir, "scrubbed.tar");
     try {
-      Injector.INSTANCE
-          .cmd()
-          .runCommand(
-              // The ./ preceding scrubber.par is sometimes needed.
-              // TODO(user): figure out why
-              "./scrubber.par",
-              ImmutableList.of(
-                  "--temp_dir",
-                  tempDir.getAbsolutePath(),
-                  "--output_tar",
-                  outputTar.getAbsolutePath(),
-                  // TODO(dbentley): allow configuring the scrubber config
-                  "--config_data",
-                  (scrubberConfig == null) ? "{}" : ProjectConfig.makeGson().toJson(scrubberConfig),
-                  input.getPath().getAbsolutePath()),
-              SCRUBBER_BINARY_SUPPLIER.get().getParentFile().getPath());
+      cmd.runCommand(
+          // The ./ preceding scrubber.par is sometimes needed.
+          // TODO(user): figure out why
+          "./scrubber.par",
+          ImmutableList.of(
+              "--temp_dir",
+              tempDir.getAbsolutePath(),
+              "--output_tar",
+              outputTar.getAbsolutePath(),
+              // TODO(dbentley): allow configuring the scrubber config
+              "--config_data",
+              (scrubberConfig == null) ? "{}" : ProjectConfig.makeGson().toJson(scrubberConfig),
+              input.getPath().getAbsolutePath()),
+          SCRUBBER_BINARY_SUPPLIER.get().getParentFile().getPath());
     } catch (CommandRunner.CommandException e) {
       throw new MoeProblem(e.getMessage());
     }
     File expandedDir = null;
     try {
       expandedDir = Utils.expandTar(outputTar);
-    } catch (IOException e) {
-      throw new MoeProblem(e.getMessage());
-    } catch (CommandRunner.CommandException e) {
+    } catch (IOException | CommandRunner.CommandException e) {
       throw new MoeProblem(e.getMessage());
     }
-    return new Codebase(expandedDir, input.getProjectSpace(), input.getExpression());
+    return new Codebase(filesystem, expandedDir, input.getProjectSpace(), input.getExpression());
   }
 
   public static ScrubbingEditor makeScrubbingEditor(String editorName, EditorConfig config) {

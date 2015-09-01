@@ -86,7 +86,8 @@ public class GitClonedRepositoryTest extends TestCase {
     expectCloneLocally();
 
     control.replay();
-    GitClonedRepository repo = new GitClonedRepository(repositoryName, repositoryConfig);
+    GitClonedRepository repo =
+        new GitClonedRepository(cmd, mockFS, repositoryName, repositoryConfig);
     repo.cloneLocallyAtHead(Lifetimes.persistent());
     assertEquals(repositoryName, repo.getRepositoryName());
     assertEquals(repositoryURL, repo.getConfig().getUrl());
@@ -118,7 +119,8 @@ public class GitClonedRepositoryTest extends TestCase {
         .andReturn("git clone ok (mock output)");
 
     control.replay();
-    GitClonedRepository repo = new GitClonedRepository(repositoryName, repositoryConfig);
+    GitClonedRepository repo =
+        new GitClonedRepository(cmd, mockFS, repositoryName, repositoryConfig);
     repo.cloneLocallyAtHead(Lifetimes.persistent());
     assertEquals(repositoryName, repo.getRepositoryName());
     assertEquals(repositoryURL, repo.getConfig().getUrl());
@@ -154,7 +156,8 @@ public class GitClonedRepositoryTest extends TestCase {
         .andReturn(headRevId);
 
     control.replay();
-    GitClonedRepository repo = new GitClonedRepository(repositoryName, repositoryConfig);
+    GitClonedRepository repo =
+        new GitClonedRepository(cmd, mockFS, repositoryName, repositoryConfig);
     repo.cloneLocallyAtHead(Lifetimes.persistent());
     repo.updateToRevision(updateRevId);
     control.verify();
@@ -172,7 +175,8 @@ public class GitClonedRepositoryTest extends TestCase {
     // No branch creation expected.
 
     control.replay();
-    GitClonedRepository repo = new GitClonedRepository(repositoryName, repositoryConfig);
+    GitClonedRepository repo =
+        new GitClonedRepository(cmd, mockFS, repositoryName, repositoryConfig);
     repo.cloneLocallyAtHead(Lifetimes.persistent());
     repo.updateToRevision(updateRevId);
     control.verify();

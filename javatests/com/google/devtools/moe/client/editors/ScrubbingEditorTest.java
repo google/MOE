@@ -61,12 +61,15 @@ public class ScrubbingEditorTest extends TestCase {
     File scrubberTemp = new File("/scrubber_extraction_foo");
     File scrubberBin = new File(scrubberTemp, "scrubber.par");
     File scrubberRun = new File("/scrubber_run_foo");
-    File outputTar = new File(scrubberRun, "scrubbed.tar");
     File codebaseFile = new File("/codebase");
     File expandedDir = new File("/expanded_tar_foo");
 
     Codebase codebase =
-        new Codebase(codebaseFile, "internal", null /* CodebaseExpression is not needed here. */);
+        new Codebase(
+            fileSystem,
+            codebaseFile,
+            "internal",
+            null /* CodebaseExpression is not needed here. */);
 
 
     expect(fileSystem.getResourceAsFile("/devtools/moe/scrubber/scrubber.par"))

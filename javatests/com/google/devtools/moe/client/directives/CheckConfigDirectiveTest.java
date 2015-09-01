@@ -3,9 +3,7 @@
 package com.google.devtools.moe.client.directives;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.SystemCommandRunner;
-import com.google.devtools.moe.client.SystemFileSystem;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.svn.SvnRepositoryFactory;
@@ -24,16 +22,10 @@ public class CheckConfigDirectiveTest extends TestCase {
   private final Repositories repositories =
       new Repositories(
           ImmutableSet.of(
-              new DummyRepositoryFactory(),
-              new SvnRepositoryFactory(null)));
+              new DummyRepositoryFactory(null),
+              new SvnRepositoryFactory(null, null)));
   private final InMemoryProjectContextFactory contextFactory =
       new InMemoryProjectContextFactory(cmd, null, ui, repositories);
-
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    Injector.INSTANCE = new Injector(new SystemFileSystem(), cmd, contextFactory, ui);
-  }
 
   public void testEmptyConfigFilenameThrows() throws Exception {
     contextFactory.projectConfigs.put("moe_config.txt", "");

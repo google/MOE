@@ -16,7 +16,7 @@ import java.io.File;
 public class PatchCodebaseDifferenceRendererTest extends TestCase {
 
   private static Codebase makeCodebase(String name) throws Exception {
-    return new Codebase(new File("/" + name), "public", new RepositoryExpression(name));
+    return new Codebase(null, new File("/" + name), "public", new RepositoryExpression(name));
   }
 
   public void testRender() throws Exception {

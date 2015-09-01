@@ -8,6 +8,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.CommandRunner;
+import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.database.Bookkeeper;
 import com.google.devtools.moe.client.database.DbStorage;
@@ -44,14 +45,10 @@ public class BookkeepingDirectiveTest extends TestCase {
   private final RecordingUi ui = new RecordingUi();
   private final IMocksControl control = EasyMock.createControl();
   private final CommandRunner cmd = control.createMock(CommandRunner.class);
-  private final Repositories repositories =
-      new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory()));
-  private final InMemoryProjectContextFactory contextFactory =
-      new InMemoryProjectContextFactory(cmd, null, ui, repositories);
 
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
+
+  private static InMemoryProjectContextFactory init(InMemoryProjectContextFactory contextFactory)
+      throws Exception {
     contextFactory.projectConfigs.put(
         "moe_config.txt",
         "{\"name\":\"foo\",\"repositories\":{"
@@ -62,6 +59,7 @@ public class BookkeepingDirectiveTest extends TestCase {
             + "\"editor\":{\"type\":\"identity\"}}]}],"
             + "\"migrations\":[{\"name\":\"test\",\"from_repository\":\"int\","
             + "\"to_repository\":\"pub\"}]}");
+    return contextFactory;
   }
 
   private void expectDiffs() throws Exception {
@@ -89,7 +87,13 @@ public class BookkeepingDirectiveTest extends TestCase {
             "/dummy/codebase/pub/1/file", "1 (equivalent)",
             "/dummy/codebase/int/migrated_from/file", "migrated_from",
             "/dummy/codebase/pub/migrated_to/", "dir (different)");
-    Injector.INSTANCE = new Injector(new InMemoryFileSystem(files), cmd, contextFactory, ui);
+    FileSystem filesystem = new InMemoryFileSystem(files);
+    Repositories repositories =
+        new Repositories(
+            ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(filesystem)));
+    InMemoryProjectContextFactory contextFactory =
+        init(new InMemoryProjectContextFactory(cmd, filesystem, ui, repositories));
+    Injector.INSTANCE = new Injector(filesystem, cmd, contextFactory, ui);
     BookkeepingDirective d = new BookkeepingDirective(contextFactory, ui, new Bookkeeper(ui));
     d.setContextFileName("moe_config.txt");
     d.dbLocation = DB_FILE.getAbsolutePath();
@@ -123,7 +127,13 @@ public class BookkeepingDirectiveTest extends TestCase {
             "/dummy/codebase/pub/1/", "empty dir (different)",
             "/dummy/codebase/int/migrated_from/file", "migrated_from",
             "/dummy/codebase/pub/migrated_to/", "empty dir (different)");
-    Injector.INSTANCE = new Injector(new InMemoryFileSystem(files), cmd, contextFactory, ui);
+    FileSystem filesystem = new InMemoryFileSystem(files);
+    Repositories repositories =
+        new Repositories(
+            ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(filesystem)));
+    InMemoryProjectContextFactory contextFactory =
+        init(new InMemoryProjectContextFactory(cmd, filesystem, ui, repositories));
+    Injector.INSTANCE = new Injector(filesystem, cmd, contextFactory, ui);
     BookkeepingDirective d = new BookkeepingDirective(contextFactory, ui, new Bookkeeper(ui));
     d.setContextFileName("moe_config.txt");
     d.dbLocation = DB_FILE.getAbsolutePath();
@@ -155,7 +165,13 @@ public class BookkeepingDirectiveTest extends TestCase {
             "/dummy/codebase/pub/1/", "empty dir (different)",
             "/dummy/codebase/int/migrated_from/file", "migrated_from",
             "/dummy/codebase/pub/migrated_to/file", "migrated_to (equivalent)");
-    Injector.INSTANCE = new Injector(new InMemoryFileSystem(files), cmd, contextFactory, ui);
+    FileSystem filesystem = new InMemoryFileSystem(files);
+    Repositories repositories =
+        new Repositories(
+            ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(filesystem)));
+    InMemoryProjectContextFactory contextFactory =
+        init(new InMemoryProjectContextFactory(cmd, filesystem, ui, repositories));
+    Injector.INSTANCE = new Injector(filesystem, cmd, contextFactory, ui);
     BookkeepingDirective d = new BookkeepingDirective(contextFactory, ui, new Bookkeeper(ui));
     d.setContextFileName("moe_config.txt");
     d.dbLocation = DB_FILE.getAbsolutePath();

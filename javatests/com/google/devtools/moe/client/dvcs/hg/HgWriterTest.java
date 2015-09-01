@@ -48,7 +48,8 @@ public class HgWriterTest extends TestCase {
   private final FileSystem mockFs = control.createMock(FileSystem.class);
   private final CommandRunner mockCmd = control.createMock(CommandRunner.class);
   private final RepositoryConfig mockRepoConfig = control.createMock(RepositoryConfig.class);
-  private final Codebase codebase = new Codebase(CODEBASE_ROOT, PROJECT_SPACE, CODEBASE_EXPR);
+  private final Codebase codebase =
+      new Codebase(mockFs, CODEBASE_ROOT, PROJECT_SPACE, CODEBASE_EXPR);
   private final HgClonedRepository mockRevClone = control.createMock(HgClonedRepository.class);
 
   /* Helper methods */

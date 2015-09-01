@@ -194,13 +194,15 @@ public class ExpressionTest extends TestCase {
         };
 
     Codebase firstCb =
-        new Codebase(firstDir, "foo", new RepositoryExpression(new Term("foo", EMPTY_MAP)));
+        new Codebase(null, firstDir, "foo", new RepositoryExpression(new Term("foo", EMPTY_MAP)));
 
     Codebase secondCb =
-        new Codebase(secondDir, "public", new RepositoryExpression(new Term("foo2", EMPTY_MAP)));
+        new Codebase(
+            null, secondDir, "public", new RepositoryExpression(new Term("foo2", EMPTY_MAP)));
 
     Codebase finalCb =
-        new Codebase(finalDir, "public", new RepositoryExpression(new Term("foo3", EMPTY_MAP)));
+        new Codebase(
+            null, finalDir, "public", new RepositoryExpression(new Term("foo3", EMPTY_MAP)));
 
     expect(cc.create(EMPTY_MAP)).andReturn(firstCb);
     expect(translatorEditor.edit(firstCb, context, EMPTY_MAP)).andReturn(secondCb);

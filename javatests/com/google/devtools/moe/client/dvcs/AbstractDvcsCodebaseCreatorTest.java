@@ -44,7 +44,8 @@ public class AbstractDvcsCodebaseCreatorTest extends TestCase {
   private final LocalWorkspace mockRepo = control.createMock(LocalWorkspace.class);
   private final RevisionHistory mockRevHistory = control.createMock(RevisionHistory.class);
   private final AbstractDvcsCodebaseCreator codebaseCreator =
-      new AbstractDvcsCodebaseCreator(Suppliers.ofInstance(mockRepo), mockRevHistory, "public") {
+      new AbstractDvcsCodebaseCreator(
+          null, mockFS, Suppliers.ofInstance(mockRepo), mockRevHistory, "public") {
         @Override
         protected LocalWorkspace cloneAtLocalRoot(String localroot) {
           throw new UnsupportedOperationException();

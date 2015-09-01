@@ -66,9 +66,11 @@ public class InverseRenamingEditorTest extends TestCase {
             new RenamingEditor(
                 "renamey", ImmutableMap.of("internal_root", "public_root"), false /*useRegex*/));
 
-    Codebase input = new Codebase(new File("/input"), "public", new RepositoryExpression("input"));
+    Codebase input =
+        new Codebase(mockFs, new File("/input"), "public", new RepositoryExpression("input"));
     Codebase destination =
-        new Codebase(new File("/destination"), "public", new RepositoryExpression("destination"));
+        new Codebase(
+            mockFs, new File("/destination"), "public", new RepositoryExpression("destination"));
 
     expect(mockFs.getTemporaryDirectory("inverse_rename_run_")).andReturn(new File("/output"));
 

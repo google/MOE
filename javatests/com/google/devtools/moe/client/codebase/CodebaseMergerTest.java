@@ -2,6 +2,7 @@
 
 package com.google.devtools.moe.client.codebase;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.easymock.EasyMock.expect;
 
 import com.google.common.collect.ImmutableList;
@@ -27,9 +28,9 @@ import java.util.List;
 /**
  * Unit tests for the CodebaseMerger class.
  *
- * Here is a diagram illustrating a merge situation. The test cases below will refer to this
+ * <p>Here is a diagram illustrating a merge situation. The test cases below will refer to this
  * diagram when explaining what type of case they are testing.
- *
+ * <pre>
  *                                                   _____
  *                                                  |     |
  *                                                  |  7  | (mod)
@@ -44,7 +45,7 @@ import java.util.List;
  *                       |____|                     |_____|
  *
  *                    internalrepo                 publicrepo
- *
+ * </pre>
  *
  */
 public class CodebaseMergerTest extends TestCase {
@@ -53,7 +54,8 @@ public class CodebaseMergerTest extends TestCase {
   private final FileSystem fileSystem = control.createMock(FileSystem.class);
   private final CommandRunner cmd = control.createMock(CommandRunner.class);
   private final Repositories repositories =
-      new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory()));
+      new Repositories(
+          ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(fileSystem)));
   private final InMemoryProjectContextFactory contextFactory =
       new InMemoryProjectContextFactory(cmd, fileSystem, ui, repositories);
 
@@ -79,7 +81,7 @@ public class CodebaseMergerTest extends TestCase {
 
     File origFile = new File("orig/foo");
     expect(orig.getFile("foo")).andReturn(origFile);
-    expect(fileSystem.exists(origFile)).andReturn(true).times(2);
+    expect(fileSystem.exists(origFile)).andReturn(true).anyTimes();
 
     File destFile = new File("dest/foo");
     expect(dest.getFile("foo")).andReturn(destFile);
@@ -88,7 +90,7 @@ public class CodebaseMergerTest extends TestCase {
 
     File modFile = new File("mod/foo");
     expect(mod.getFile("foo")).andReturn(modFile);
-    expect(fileSystem.exists(modFile)).andReturn(true).times(2);
+    expect(fileSystem.exists(modFile)).andReturn(true).anyTimes();
 
     expect(fileSystem.isExecutable(origFile)).andReturn(false);
     expect(fileSystem.isExecutable(modFile)).andReturn(false);
@@ -138,8 +140,8 @@ public class CodebaseMergerTest extends TestCase {
 
     control.verify();
 
-    assertTrue(merger.getFailedToMergeFiles().isEmpty());
-    assertTrue(merger.getMergedFiles().isEmpty());
+    assertThat(merger.getFailedToMergeFiles()).isEmpty();
+    assertThat(merger.getMergedFiles()).isEmpty();
   }
 
   /**
@@ -173,8 +175,8 @@ public class CodebaseMergerTest extends TestCase {
 
     control.verify();
 
-    assertTrue(merger.getMergedFiles().isEmpty());
-    assertTrue(merger.getFailedToMergeFiles().isEmpty());
+    assertThat(merger.getMergedFiles()).isEmpty();
+    assertThat(merger.getFailedToMergeFiles()).isEmpty();
   }
 
   /**
@@ -215,8 +217,8 @@ public class CodebaseMergerTest extends TestCase {
 
     control.verify();
 
-    assertEquals(0, merger.getFailedToMergeFiles().size());
-    assertTrue(merger.getMergedFiles().contains(mergedFile.getAbsolutePath()));
+    assertThat(merger.getFailedToMergeFiles()).isEmpty();
+    assertThat(merger.getMergedFiles()).contains(mergedFile.getAbsolutePath());
   }
 
   /**
@@ -257,8 +259,8 @@ public class CodebaseMergerTest extends TestCase {
 
     control.verify();
 
-    assertEquals(0, merger.getMergedFiles().size());
-    assertTrue(merger.getFailedToMergeFiles().contains(mergedFile.getAbsolutePath()));
+    assertThat(merger.getMergedFiles()).isEmpty();
+    assertThat(merger.getFailedToMergeFiles()).contains(mergedFile.getAbsolutePath());
   }
 
   /**
@@ -292,8 +294,8 @@ public class CodebaseMergerTest extends TestCase {
 
     control.verify();
 
-    assertTrue(merger.getFailedToMergeFiles().isEmpty());
-    assertTrue(merger.getMergedFiles().isEmpty());
+    assertThat(merger.getFailedToMergeFiles()).isEmpty();
+    assertThat(merger.getMergedFiles()).isEmpty();
   }
 
   /**
@@ -336,7 +338,7 @@ public class CodebaseMergerTest extends TestCase {
 
     control.verify();
 
-    assertEquals(0, merger.getFailedToMergeFiles().size());
+    assertThat(merger.getFailedToMergeFiles()).isEmpty();
     assertTrue(merger.getMergedFiles().contains(mergedFile.getAbsolutePath()));
   }
 
@@ -453,7 +455,7 @@ public class CodebaseMergerTest extends TestCase {
 
     control.verify();
 
-    assertTrue(merger.getMergedFiles().contains(mergedFile.getAbsolutePath()));
-    assertTrue(merger.getFailedToMergeFiles().isEmpty());
+    assertThat(merger.getMergedFiles()).contains(mergedFile.getAbsolutePath());
+    assertThat(merger.getFailedToMergeFiles()).isEmpty();
   }
 }

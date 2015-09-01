@@ -3,12 +3,13 @@
 package com.google.devtools.moe.client.codebase;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.parser.Term;
-import com.google.devtools.moe.client.MoeProblem;
+
+import junit.framework.TestCase;
 
 import java.io.File;
-import junit.framework.TestCase;
 
 /**
  * @author dbentley@google.com (Daniel Bentley)
@@ -18,6 +19,7 @@ public class CodebaseTest extends TestCase {
   public void testCheckProjectSpace() throws Exception {
     Codebase c =
         new Codebase(
+            null,
             new File("/foo"),
             "internal",
             new RepositoryExpression(new Term("foo", ImmutableMap.<String, String>of())));
@@ -25,12 +27,13 @@ public class CodebaseTest extends TestCase {
     try {
       c =
           new Codebase(
+              null,
               new File("/foo"),
               "internal",
               new RepositoryExpression(new Term("foo", ImmutableMap.<String, String>of())));
       c.checkProjectSpace("public");
       fail();
-    } catch (MoeProblem p) {
+    } catch (MoeProblem expected) {
     }
   }
 }

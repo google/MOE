@@ -3,6 +3,8 @@
 package com.google.devtools.moe.client.dvcs.hg;
 
 import com.google.common.base.Supplier;
+import com.google.devtools.moe.client.CommandRunner;
+import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Lifetimes;
 import com.google.devtools.moe.client.codebase.LocalWorkspace;
 import com.google.devtools.moe.client.dvcs.AbstractDvcsCodebaseCreator;
@@ -19,19 +21,22 @@ public class HgCodebaseCreator extends AbstractDvcsCodebaseCreator {
   private final RepositoryConfig config;
 
   public HgCodebaseCreator(
+      CommandRunner cmd,
+      FileSystem filesystem,
       Supplier<? extends LocalWorkspace> headCloneSupplier,
       RevisionHistory revisionHistory,
       String projectSpace,
       String repositoryName,
       RepositoryConfig config) {
-    super(headCloneSupplier, revisionHistory, projectSpace);
+    super(cmd, filesystem, headCloneSupplier, revisionHistory, projectSpace);
     this.repositoryName = repositoryName;
     this.config = config;
   }
 
   @Override
   protected LocalWorkspace cloneAtLocalRoot(String localroot) {
-    HgClonedRepository clone = new HgClonedRepository(repositoryName, config, localroot);
+    HgClonedRepository clone =
+        new HgClonedRepository(cmd, filesystem, repositoryName, config, localroot);
     clone.cloneLocallyAtHead(Lifetimes.currentTask());
     return clone;
   }

@@ -2,6 +2,7 @@
 
 package com.google.devtools.moe.client.database;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.easymock.EasyMock.expect;
 
 import com.google.common.base.Joiner;
@@ -32,7 +33,7 @@ public class FileDbTest extends TestCase {
   private final RecordingUi ui = new RecordingUi();
   private final SystemCommandRunner cmd = new SystemCommandRunner(ui);
   private final Repositories repositories =
-      new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory()));
+      new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(null)));
   private final InMemoryProjectContextFactory contextFactory =
       new InMemoryProjectContextFactory(cmd, null, ui, repositories);
 
@@ -71,7 +72,7 @@ public class FileDbTest extends TestCase {
 
   public void testEmptyDb() throws Exception {
     FileDb db = FileDb.makeDbFromDbText("{}");
-    assertTrue(db.getEquivalences().isEmpty());
+    assertThat(db.getEquivalences()).isEmpty();
   }
 
   public void testNoteEquivalence() throws Exception {

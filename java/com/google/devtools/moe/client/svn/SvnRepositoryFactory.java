@@ -2,6 +2,9 @@
 
 package com.google.devtools.moe.client.svn;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
+
+import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.RepositoryType;
@@ -13,10 +16,12 @@ import javax.inject.Inject;
  */
 public class SvnRepositoryFactory implements RepositoryType.Factory {
 
+  private final FileSystem filesystem;
   private final SvnUtil util;
 
   @Inject
-  public SvnRepositoryFactory(SvnUtil util) {
+  public SvnRepositoryFactory(FileSystem filesystem, SvnUtil util) {
+    this.filesystem = filesystem;
     this.util = util;
   }
 
@@ -30,7 +35,7 @@ public class SvnRepositoryFactory implements RepositoryType.Factory {
     config.checkType(this);
 
     String url = config.getUrl();
-    if (url == null || url.isEmpty()) {
+    if (isNullOrEmpty(url)) {
       throw new InvalidProject("Svn repository config missing \"url\".");
     }
 
@@ -38,7 +43,7 @@ public class SvnRepositoryFactory implements RepositoryType.Factory {
     return RepositoryType.create(
         name,
         rh,
-        new SvnCodebaseCreator(name, config, rh, util),
+        new SvnCodebaseCreator(filesystem, name, config, rh, util),
         new SvnWriterCreator(config, rh, util));
   }
 }
