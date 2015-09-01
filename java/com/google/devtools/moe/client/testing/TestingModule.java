@@ -6,6 +6,8 @@ import static dagger.Provides.Type.SET;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.project.ProjectContextFactory;
 import com.google.devtools.moe.client.repositories.RepositoryType;
+import com.google.devtools.moe.client.tools.FileDifference.ConcreteFileDiffer;
+import com.google.devtools.moe.client.tools.FileDifference.FileDiffer;
 
 import dagger.Module;
 import dagger.Provides;
@@ -29,6 +31,12 @@ public class TestingModule {
   @Singleton
   public ProjectContextFactory factory(InMemoryProjectContextFactory factory) {
     return factory;
+  }
+
+  @Provides
+  @Singleton
+  FileDiffer fileDiffer(ConcreteFileDiffer cfd) {
+    return cfd;
   }
 
   @Provides(type = SET)

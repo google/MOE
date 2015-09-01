@@ -2,68 +2,55 @@
 
 package com.google.devtools.moe.client.tools;
 
+import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
-import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
 
 import java.io.File;
 
+import javax.annotation.Nullable;
+import javax.inject.Inject;
+
 /**
  * Describes the difference between a file in two Codebases.
  *
- * It is a dumb data object, and has no behavior.
- *
  * @author dbentley@google.com (Daniel Bentley)
  */
-public class FileDifference {
+@AutoValue
+public abstract class FileDifference {
+  public abstract String relativeFilename();
 
-  public final String relativeFilename;
-  public final File file1;
-  public final File file2;
+  public abstract File file1();
 
-  /**
-   * Describes a comparison between two values.
-   */
-  public enum Comparison {
-    // The values are the same.
-    SAME,
-    // The value is true only for the first.
-    ONLY1,
-    // The value is true only for the second.
-    ONLY2;
-
-    public static Comparison diffBools(boolean first, boolean second) {
-      if (first == second) return SAME;
-      return first ? ONLY1 : ONLY2;
-    }
-  }
+  public abstract File file2();
 
   // There are three ways a pair of files can differ: existence, executability, and content.
-  public final Comparison existence;
-  public final Comparison executability;
-  public final String contentDiff;
+  public abstract Comparison existence();
 
-  public FileDifference(
+  public abstract Comparison executability();
+
+  @Nullable
+  public abstract String contentDiff();
+
+  public static FileDifference create(
       String relativeFilename,
       File file1,
       File file2,
       Comparison existence,
       Comparison executability,
-      String contentDiff) {
-    this.relativeFilename = relativeFilename;
-    this.file1 = file1;
-    this.file2 = file2;
-    this.existence = existence;
-    this.executability = executability;
-    this.contentDiff = contentDiff;
+      @Nullable String contentDiff) {
+    return new AutoValue_FileDifference(
+        relativeFilename, file1, file2, existence, executability, contentDiff);
   }
 
   /** @return whether this FileDifference in fact indicates a difference between files */
   public boolean isDifferent() {
-    return executability != Comparison.SAME || existence != Comparison.SAME || contentDiff != null;
+    return executability() != Comparison.SAME
+        || existence() != Comparison.SAME
+        || contentDiff() != null;
   }
 
   /**
@@ -95,35 +82,65 @@ public class FileDifference {
    */
   private static final int DIFF_ERROR_CODE_FILES_BINARY = 2;
 
+  /**
+   * Describes a comparison between two values.
+   */
+  public enum Comparison {
+    // The values are the same.
+    SAME,
+    // The value is true only for the first.
+    ONLY1,
+    // The value is true only for the second.
+    ONLY2;
+
+    public static Comparison diffBools(boolean first, boolean second) {
+      return (first == second) ? SAME : (first ? ONLY1 : ONLY2);
+    }
+  }
+
+  /**
+   * A {@link FileDiffer} implementation backed by a {@link FileSystem} using the {@code diff}
+   * command from a forked command-line.
+   */
   public static class ConcreteFileDiffer implements FileDiffer {
+    private final CommandRunner cmd;
+    private final FileSystem filesystem;
+
+    @Inject
+    public ConcreteFileDiffer(CommandRunner cmd, @Nullable FileSystem filesystem) {
+      this.cmd = cmd;
+      this.filesystem = filesystem;
+    }
 
     @Override
     public FileDifference diffFiles(String relativeFilename, File file1, File file2) {
+      // TODO(cgruber): Deal with this nullability leak.
+      if (filesystem == null) {
+        return null;
+      }
+
       // Diff their existence.
-      FileSystem fileSystem = Injector.INSTANCE.fileSystem();
-      boolean file1Exists = fileSystem.exists(file1);
-      boolean file2Exists = fileSystem.exists(file2);
+      boolean file1Exists = filesystem.exists(file1);
+      boolean file2Exists = filesystem.exists(file2);
 
       Preconditions.checkArgument(
           file1Exists || file2Exists, "Neither file exists: %s, %s", file1, file2);
 
       Comparison existence = Comparison.diffBools(file1Exists, file2Exists);
 
-      boolean file1Executable = fileSystem.isExecutable(file1);
-      boolean file2Executable = fileSystem.isExecutable(file2);
+      boolean file1Executable = filesystem.isExecutable(file1);
+      boolean file2Executable = filesystem.isExecutable(file2);
 
       Comparison executability = Comparison.diffBools(file1Executable, file2Executable);
 
       String contentDiff = null;
 
       try {
-        Injector.INSTANCE
-            .cmd()
-            .runCommand(
-                "diff",
-                // -N treats absent files as empty.
-                ImmutableList.of("-N", file1.getAbsolutePath(), file2.getAbsolutePath()),
-                "");
+        cmd.runCommand(
+            "diff",
+            // -N treats absent files as empty.
+            ImmutableList.of("-N", file1.getAbsolutePath(), file2.getAbsolutePath()),
+            "");
       } catch (CommandRunner.CommandException e) {
         if (e.returnStatus != DIFF_ERROR_CODE_FILES_DIFFERENT
             && e.returnStatus != DIFF_ERROR_CODE_FILES_BINARY) {
@@ -132,10 +149,8 @@ public class FileDifference {
         contentDiff = e.stdout;
       }
 
-      return new FileDifference(
+      return FileDifference.create(
           relativeFilename, file1, file2, existence, executability, contentDiff);
     }
   }
-
-  public static FileDiffer CONCRETE_FILE_DIFFER = new ConcreteFileDiffer();
 }

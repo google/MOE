@@ -22,7 +22,7 @@ public class LastEquivalenceDirectiveTest extends TestCase {
   private final Repositories repositories =
       new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(null)));
   private final InMemoryProjectContextFactory contextFactory =
-      new InMemoryProjectContextFactory(cmd, null, ui, repositories);
+      new InMemoryProjectContextFactory(null, cmd, null, ui, repositories);
 
   public void testPerform() throws Exception {
     contextFactory.projectConfigs.put(

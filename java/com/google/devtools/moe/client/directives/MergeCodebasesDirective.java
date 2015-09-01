@@ -11,6 +11,7 @@ import com.google.devtools.moe.client.codebase.CodebaseMerger;
 import com.google.devtools.moe.client.parser.Parser;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
 import com.google.devtools.moe.client.project.ProjectContextFactory;
+import com.google.devtools.moe.client.tools.FileDifference.FileDiffer;
 
 import org.kohsuke.args4j.Option;
 
@@ -18,8 +19,6 @@ import javax.inject.Inject;
 
 /**
  * Merge three codebases into one.
- *
- * See MergeCodebasesLogic.merge() for a more detailed description.
  *
  */
 public class MergeCodebasesDirective extends Directive {
@@ -44,14 +43,20 @@ public class MergeCodebasesDirective extends Directive {
   )
   String destinationExpression = "";
 
+  private final FileDiffer differ;
   private final Ui ui;
   private final FileSystem filesystem;
   private final CommandRunner cmd;
 
   @Inject
   MergeCodebasesDirective(
-      ProjectContextFactory contextFactory, Ui ui, FileSystem filesystem, CommandRunner cmd) {
+      ProjectContextFactory contextFactory,
+      FileDiffer differ,
+      Ui ui,
+      FileSystem filesystem,
+      CommandRunner cmd) {
     super(contextFactory); // TODO(cgruber) Inject project context, not its factory
+    this.differ = differ;
     this.ui = ui;
     this.filesystem = filesystem;
     this.cmd = cmd;
@@ -71,7 +76,8 @@ public class MergeCodebasesDirective extends Directive {
       ui.error(e, "Error creating codebase");
       return 1;
     }
-    new CodebaseMerger(ui, filesystem, cmd, originalCodebase, destinationCodebase, modifiedCodebase)
+    new CodebaseMerger(
+            ui, filesystem, cmd, differ, originalCodebase, destinationCodebase, modifiedCodebase)
         .merge();
     return 0;
   }

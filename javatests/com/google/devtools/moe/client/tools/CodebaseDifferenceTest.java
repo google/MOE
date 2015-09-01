@@ -28,17 +28,17 @@ public class CodebaseDifferenceTest extends TestCase {
     Codebase c2 = control.createMock(Codebase.class);
     File f1 = new File("/1/foo");
     File f2 = new File("/2/foo");
-    FileDifference.FileDiffer differ = control.createMock(FileDifference.FileDiffer.class);
+    FileDifference.FileDiffer fileDiffer = control.createMock(FileDifference.FileDiffer.class);
 
     expect(c1.getRelativeFilenames()).andReturn(ImmutableSet.of("foo"));
     expect(c2.getRelativeFilenames()).andReturn(ImmutableSet.of("foo"));
     expect(c1.getFile("foo")).andReturn(f1);
     expect(c2.getFile("foo")).andReturn(f2);
-    expect(differ.diffFiles("foo", f1, f2))
-        .andReturn(new FileDifference("foo", f1, f2, Comparison.SAME, Comparison.SAME, null));
+    expect(fileDiffer.diffFiles("foo", f1, f2))
+        .andReturn(FileDifference.create("foo", f1, f2, Comparison.SAME, Comparison.SAME, null));
 
     control.replay();
-    CodebaseDifference d = CodebaseDifference.diffCodebases(c1, c2, differ);
+    CodebaseDifference d = new CodebaseDiffer(fileDiffer).diffCodebases(c1, c2);
     control.verify();
 
     assertEquals(false, d.areDifferent());
@@ -50,17 +50,17 @@ public class CodebaseDifferenceTest extends TestCase {
     Codebase c2 = control.createMock(Codebase.class);
     File f1 = new File("/1/foo");
     File f2 = new File("/2/foo");
-    FileDifference.FileDiffer differ = control.createMock(FileDifference.FileDiffer.class);
+    FileDifference.FileDiffer fileDiffer = control.createMock(FileDifference.FileDiffer.class);
 
     expect(c1.getRelativeFilenames()).andReturn(ImmutableSet.of("foo"));
     expect(c2.getRelativeFilenames()).andReturn(ImmutableSet.of("foo"));
     expect(c1.getFile("foo")).andReturn(f1);
     expect(c2.getFile("foo")).andReturn(f2);
-    expect(differ.diffFiles("foo", f1, f2))
-        .andReturn(new FileDifference("foo", f1, f2, Comparison.ONLY1, Comparison.SAME, null));
+    expect(fileDiffer.diffFiles("foo", f1, f2))
+        .andReturn(FileDifference.create("foo", f1, f2, Comparison.ONLY1, Comparison.SAME, null));
 
     control.replay();
-    CodebaseDifference d = CodebaseDifference.diffCodebases(c1, c2, differ);
+    CodebaseDifference d = new CodebaseDiffer(fileDiffer).diffCodebases(c1, c2);
     control.verify();
 
     assertEquals(true, d.areDifferent());

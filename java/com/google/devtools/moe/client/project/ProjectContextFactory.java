@@ -27,6 +27,7 @@ import com.google.devtools.moe.client.editors.TranslatorStep;
 import com.google.devtools.moe.client.migrations.MigrationConfig;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.repositories.RepositoryType;
+import com.google.devtools.moe.client.tools.FileDifference.FileDiffer;
 
 import java.util.List;
 import java.util.Map;
@@ -41,14 +42,20 @@ import javax.annotation.Nullable;
 // TODO(cgruber): Move most of the create logic to ProjectConfig, since they're basically accessors
 public abstract class ProjectContextFactory {
 
+  private final FileDiffer differ;
   private final CommandRunner cmd;
   private final FileSystem filesystem;
   protected final Ui ui;
   private final Repositories repositories;
 
   public ProjectContextFactory(
-      CommandRunner cmd, @Nullable FileSystem filesystem, Ui ui, Repositories repositories) {
+      FileDiffer differ,
+      CommandRunner cmd,
+      @Nullable FileSystem filesystem,
+      Ui ui,
+      Repositories repositories) {
     // TODO(cgruber):push nullability back from this point.
+    this.differ = differ;
     this.repositories = Preconditions.checkNotNull(repositories);
     this.cmd = cmd;
     this.filesystem = filesystem;
@@ -199,7 +206,7 @@ public abstract class ProjectContextFactory {
       case renamer:
         return InverseRenamingEditor.makeInverseRenamingEditor(editorName, originalConfig);
       case scrubber:
-        return new InverseScrubbingEditor(cmd, filesystem, ui);
+        return new InverseScrubbingEditor(differ, cmd, filesystem, ui);
       default:
         throw new InvalidProject("Non-invertible editor type: " + originalConfig.getType());
     }

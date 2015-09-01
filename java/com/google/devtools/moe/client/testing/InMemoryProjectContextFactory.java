@@ -12,6 +12,7 @@ import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.ProjectConfig;
 import com.google.devtools.moe.client.project.ProjectContextFactory;
 import com.google.devtools.moe.client.repositories.Repositories;
+import com.google.devtools.moe.client.tools.FileDifference.FileDiffer;
 
 import dagger.Provides;
 
@@ -33,8 +34,12 @@ public class InMemoryProjectContextFactory extends ProjectContextFactory {
 
   @Inject
   public InMemoryProjectContextFactory(
-      CommandRunner cmd, @Nullable FileSystem filesystem, Ui ui, Repositories repositories) {
-    super(cmd, filesystem, ui, repositories);
+      FileDiffer differ,
+      CommandRunner cmd,
+      @Nullable FileSystem filesystem,
+      Ui ui,
+      Repositories repositories) {
+    super(differ, cmd, filesystem, ui, repositories);
     projectConfigs = new HashMap<String, String>();
   }
 

@@ -40,7 +40,7 @@ public class FileCodebaseCreatorTest extends TestCase {
   private final Repositories repositories =
       new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(mockfs)));
   private final InMemoryProjectContextFactory contextFactory =
-      new InMemoryProjectContextFactory(cmd, mockfs, ui, repositories);
+      new InMemoryProjectContextFactory(null, cmd, mockfs, ui, repositories);
 
   @Override
   public void setUp() throws Exception {

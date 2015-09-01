@@ -8,6 +8,7 @@ import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.parser.Parser;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
 import com.google.devtools.moe.client.project.ProjectContextFactory;
+import com.google.devtools.moe.client.tools.CodebaseDiffer;
 import com.google.devtools.moe.client.tools.CodebaseDifference;
 import com.google.devtools.moe.client.tools.PatchCodebaseDifferenceRenderer;
 
@@ -30,11 +31,13 @@ public class DiffCodebasesDirective extends Directive {
   @Option(name = "--codebase2", required = true, usage = "Codebase2 expression")
   String codebase2Spec = "";
 
+  private final CodebaseDiffer differ;
   private final Ui ui;
 
   @Inject
-  DiffCodebasesDirective(ProjectContextFactory contextFactory, Ui ui) {
+  DiffCodebasesDirective(ProjectContextFactory contextFactory, CodebaseDiffer differ, Ui ui) {
     super(contextFactory); // TODO(cgruber) Inject project context, not its factory
+    this.differ = differ;
     this.ui = ui;
   }
 
@@ -52,7 +55,7 @@ public class DiffCodebasesDirective extends Directive {
       return 1;
     }
 
-    CodebaseDifference diff = CodebaseDifference.diffCodebases(codebase1, codebase2);
+    CodebaseDifference diff = differ.diffCodebases(codebase1, codebase2);
     if (diff.areDifferent()) {
       ui.info(
           "Codebases \"%s\" and \"%s\" differ:\n%s", codebase1, codebase2, RENDERER.render(diff));

@@ -35,12 +35,13 @@ public class NoteEquivalenceDirectiveTest extends TestCase {
   private final Repositories repositories =
       new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(mockFs)));
   private final InMemoryProjectContextFactory contextFactory =
-      new InMemoryProjectContextFactory(cmd, mockFs, ui, repositories);
+      new InMemoryProjectContextFactory(null, cmd, mockFs, ui, repositories);
 
   NoteEquivalenceDirective d;
 
   @Override
   public void setUp() throws Exception {
+    super.setUp();
     contextFactory.projectConfigs.put(
         "moe_config.txt",
         "{'name': 'foo', 'repositories': {"
