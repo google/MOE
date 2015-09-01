@@ -88,7 +88,7 @@ public class CodebaseMerger {
     File mergedDir = filesystem.getTemporaryDirectory("merged_codebase_");
     RepositoryExpression mergedExpression =
         new RepositoryExpression(new Term("merged", ImmutableMap.<String, String>of()));
-    this.mergedCodebase = new Codebase(mergedDir, "merged", mergedExpression);
+    this.mergedCodebase = new Codebase(filesystem, mergedDir, "merged", mergedExpression);
 
     mergedFiles = Sets.newHashSet();
     failedToMergeFiles = Sets.newHashSet();
@@ -157,8 +157,8 @@ public class CodebaseMerger {
    * merged codebase. Any conflicts that occurred during merging will appear in the merged codebase
    * file for the user to resolve.
    *
-   * In the case where the file specified by the given filename exists in the original codebase and
-   * in either the modified codebase or the destination codebase (but not both) and if the file
+   * <p>In the case where the file specified by the given filename exists in the original codebase
+   * and in either the modified codebase or the destination codebase (but not both) and if the file
    * is unchanged between those codebases, then a file in the merged codebase will NOT be created
    * and this method will return leaving the merged codebase unchanged.
    *

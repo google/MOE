@@ -25,7 +25,7 @@ public class RepositoryExpressionTest extends TestCase {
   }
 
   public void testMakeWriter_DummyRepository() throws Exception {
-    final RepositoryType.Factory repositoryFactory = new DummyRepositoryFactory();
+    final RepositoryType.Factory repositoryFactory = new DummyRepositoryFactory(null);
     ProjectContext context =
         new FakeProjectContext() {
           @Override

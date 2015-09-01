@@ -62,8 +62,8 @@ public class PatchingEditorTest extends TestCase {
   public void testNoSuchPatchFile() throws Exception {
     File patcherRun = new File("/patcher_run_foo");
     File codebaseFile = new File("/codebase");
-    Codebase codebase = new Codebase(codebaseFile, "internal", null);
-    Map<String, String> options = new HashMap<String, String>();
+    Codebase codebase = new Codebase(fileSystem, codebaseFile, "internal", null);
+    Map<String, String> options = new HashMap<>();
     options.put("file", "notFile");
 
     expect(fileSystem.getTemporaryDirectory("patcher_run_")).andReturn(patcherRun);
@@ -87,9 +87,13 @@ public class PatchingEditorTest extends TestCase {
     File codebaseFile = new File("/codebase");
 
     Codebase codebase =
-        new Codebase(codebaseFile, "internal", null /* CodebaseExpression is not needed here. */);
+        new Codebase(
+            fileSystem,
+            codebaseFile,
+            "internal",
+            null /* CodebaseExpression is not needed here. */);
 
-    Map<String, String> options = new HashMap<String, String>();
+    Map<String, String> options = new HashMap<>();
     options.put("file", "/patchfile");
 
     expect(fileSystem.getTemporaryDirectory("patcher_run_")).andReturn(patcherRun);

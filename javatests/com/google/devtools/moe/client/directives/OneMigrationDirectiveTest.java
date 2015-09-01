@@ -22,7 +22,7 @@ public class OneMigrationDirectiveTest extends TestCase {
   private final RecordingUi ui = new RecordingUi();
   private final SystemCommandRunner cmd = new SystemCommandRunner(ui);
   private final Repositories repositories =
-      new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory()));
+      new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(null)));
   private final InMemoryProjectContextFactory contextFactory =
       new InMemoryProjectContextFactory(cmd, null, ui, repositories);
 
@@ -47,9 +47,7 @@ public class OneMigrationDirectiveTest extends TestCase {
     d.fromRepository = "int(revision=1000)";
     d.toRepository = "pub(revision=2)";
     assertEquals(0, d.perform());
-    assertEquals(
-        String.format("Created Draft Revision: %s", "/dummy/revision/pub"),
-        ((RecordingUi) Injector.INSTANCE.ui()).lastInfo);
+    assertEquals(String.format("Created Draft Revision: %s", "/dummy/revision/pub"), ui.lastInfo);
   }
 
   public void testOneMigrationFailOnFromRevision() throws Exception {

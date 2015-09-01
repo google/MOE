@@ -38,7 +38,7 @@ public class FileCodebaseCreatorTest extends TestCase {
   private final IMocksControl control = EasyMock.createControl();
   private final FileSystem mockfs = control.createMock(FileSystem.class);
   private final Repositories repositories =
-      new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory()));
+      new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(mockfs)));
   private final InMemoryProjectContextFactory contextFactory =
       new InMemoryProjectContextFactory(cmd, mockfs, ui, repositories);
 
@@ -63,7 +63,7 @@ public class FileCodebaseCreatorTest extends TestCase {
    * @throws CodebaseCreationError
    */
   public void testValidationCreate() throws Exception {
-    FileCodebaseCreator cc = new FileCodebaseCreator();
+    FileCodebaseCreator cc = new FileCodebaseCreator(mockfs);
 
     // Validate parameters.
     try {
@@ -89,7 +89,7 @@ public class FileCodebaseCreatorTest extends TestCase {
     expectDirCopy(fileFolder, new File("/tmp/copy"));
 
     control.replay();
-    FileCodebaseCreator cc = new FileCodebaseCreator();
+    FileCodebaseCreator cc = new FileCodebaseCreator(mockfs);
     Codebase codebase = cc.create(ImmutableMap.<String, String>of("path", folder));
     assertNotNull(codebase);
     assertEquals("public", codebase.getProjectSpace());
@@ -107,7 +107,7 @@ public class FileCodebaseCreatorTest extends TestCase {
     expectDirCopy(fileFolder, new File("/tmp/copy"));
 
     control.replay();
-    FileCodebaseCreator cc = new FileCodebaseCreator();
+    FileCodebaseCreator cc = new FileCodebaseCreator(mockfs);
     Codebase codebase =
         cc.create(ImmutableMap.<String, String>of("path", folder, "projectspace", "internal"));
     control.verify();

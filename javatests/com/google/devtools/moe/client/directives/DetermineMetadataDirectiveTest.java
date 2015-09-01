@@ -4,9 +4,7 @@ package com.google.devtools.moe.client.directives;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.SystemCommandRunner;
-import com.google.devtools.moe.client.SystemFileSystem;
 import com.google.devtools.moe.client.migrations.Migrator;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.repositories.RepositoryType;
@@ -29,15 +27,9 @@ public class DetermineMetadataDirectiveTest extends TestCase {
   private final RecordingUi ui = new RecordingUi();
   private final SystemCommandRunner cmd = new SystemCommandRunner(ui);
   private final Repositories repositories =
-      new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory()));
+      new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(null)));
   private final InMemoryProjectContextFactory contextFactory =
       new InMemoryProjectContextFactory(cmd, null, ui, repositories);
-
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    Injector.INSTANCE = new Injector(new SystemFileSystem(), cmd, contextFactory, ui);
-  }
 
   /**
    *  When two or more revisions are given, the metadata fields are concatenated.

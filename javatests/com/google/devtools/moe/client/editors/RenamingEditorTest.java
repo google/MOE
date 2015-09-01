@@ -130,7 +130,11 @@ public class RenamingEditorTest extends TestCase {
   public void testEdit() throws Exception {
     File codebaseFile = new File("/codebase/");
     Codebase codebase =
-        new Codebase(codebaseFile, "internal", null /* CodebaseExpression is not needed here. */);
+        new Codebase(
+            fileSystem,
+            codebaseFile,
+            "internal",
+            null /* CodebaseExpression is not needed here. */);
 
     File oldSubFile = new File("/codebase/moe.txt");
     File renameRun = new File("/rename_run_foo");

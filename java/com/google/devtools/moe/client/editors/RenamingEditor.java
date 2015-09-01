@@ -5,6 +5,7 @@ package com.google.devtools.moe.client.editors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableMap;
+import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.codebase.Codebase;
@@ -29,6 +30,8 @@ public class RenamingEditor implements Editor {
 
   /** CharMatcher for trimming leading and trailing file path separators. */
   private static final CharMatcher SEP_CHAR_MATCHER = CharMatcher.is(File.separatorChar);
+
+  private final FileSystem filesystem = Injector.INSTANCE.fileSystem(); // TODO(cgruber) @Inject
 
   private final String editorName;
   private final Map<Pattern, String> regexMappings;
@@ -62,8 +65,8 @@ public class RenamingEditor implements Editor {
    */
   @VisibleForTesting
   void copyDirectoryAndRename(File srcFile, File srcFolder, File destFolder) throws IOException {
-    if (Injector.INSTANCE.fileSystem().isDirectory(srcFile)) {
-      File[] files = Injector.INSTANCE.fileSystem().listFiles(srcFile);
+    if (filesystem.isDirectory(srcFile)) {
+      File[] files = filesystem.listFiles(srcFile);
       for (File subFile : files) {
         copyDirectoryAndRename(subFile, srcFolder, destFolder);
       }
@@ -71,8 +74,8 @@ public class RenamingEditor implements Editor {
       // "/srcFolder/path/to/file" -> "path/to/file"
       String relativePath = srcFolder.toURI().relativize(srcFile.toURI()).getPath();
       File renamedFile = new File(destFolder, renameFile(relativePath));
-      Injector.INSTANCE.fileSystem().makeDirsForFile(renamedFile);
-      Injector.INSTANCE.fileSystem().copyFile(srcFile, renamedFile);
+      filesystem.makeDirsForFile(renamedFile);
+      filesystem.copyFile(srcFile, renamedFile);
     }
   }
 
@@ -110,7 +113,7 @@ public class RenamingEditor implements Editor {
    */
   @Override
   public Codebase edit(Codebase input, ProjectContext context, Map<String, String> options) {
-    File tempDir = Injector.INSTANCE.fileSystem().getTemporaryDirectory("rename_run_");
+    File tempDir = filesystem.getTemporaryDirectory("rename_run_");
     try {
       copyDirectoryAndRename(
           input.getPath().getAbsoluteFile(),
@@ -119,7 +122,7 @@ public class RenamingEditor implements Editor {
     } catch (IOException e) {
       throw new MoeProblem(e.getMessage());
     }
-    return new Codebase(tempDir, input.getProjectSpace(), input.getExpression());
+    return new Codebase(filesystem, tempDir, input.getProjectSpace(), input.getExpression());
   }
 
   public static RenamingEditor makeRenamingEditor(String editorName, EditorConfig config) {

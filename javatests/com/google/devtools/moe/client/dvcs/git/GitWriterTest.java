@@ -41,7 +41,7 @@ public class GitWriterTest extends TestCase {
   private final String projectSpace = "public";
   private final RepositoryExpression cExp =
       new RepositoryExpression(new Term(projectSpace, ImmutableMap.<String, String>of()));
-  private final Codebase codebase = new Codebase(codebaseRoot, projectSpace, cExp);
+  private final Codebase codebase = new Codebase(mockFs, codebaseRoot, projectSpace, cExp);
   private final GitClonedRepository mockRevClone = control.createMock(GitClonedRepository.class);
   private final RepositoryConfig mockRepoConfig = control.createMock(RepositoryConfig.class);
 
@@ -118,7 +118,7 @@ public class GitWriterTest extends TestCase {
     control.replay();
 
     GitWriter w = new GitWriter(mockRevClone);
-    DraftRevision dr = w.putCodebase(codebase, null);
+    w.putCodebase(codebase, null);
 
     control.verify();
   }
@@ -141,7 +141,7 @@ public class GitWriterTest extends TestCase {
     control.replay();
 
     GitWriter w = new GitWriter(mockRevClone);
-    DraftRevision dr = w.putCodebase(codebase, null);
+    w.putCodebase(codebase, null);
 
     control.verify();
   }
@@ -161,7 +161,7 @@ public class GitWriterTest extends TestCase {
     control.replay();
 
     GitWriter w = new GitWriter(mockRevClone);
-    DraftRevision dr = w.putCodebase(codebase, null);
+    w.putCodebase(codebase, null);
 
     control.verify();
   }

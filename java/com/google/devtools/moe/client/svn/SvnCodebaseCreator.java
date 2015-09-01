@@ -4,7 +4,7 @@ package com.google.devtools.moe.client.svn;
 
 import com.google.common.base.Predicate;
 import com.google.devtools.moe.client.CommandRunner;
-import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Utils;
 import com.google.devtools.moe.client.codebase.Codebase;
@@ -25,16 +25,19 @@ import java.util.Map;
  */
 public class SvnCodebaseCreator implements CodebaseCreator {
 
+  private final FileSystem filesystem;
   private final String name;
   private final RepositoryConfig config;
   private final SvnRevisionHistory revisionHistory;
   private final SvnUtil util;
 
   public SvnCodebaseCreator(
+      FileSystem filesystem,
       String repositoryName,
       RepositoryConfig config,
       SvnRevisionHistory revisionHistory,
       SvnUtil util) {
+    this.filesystem = filesystem;
     this.name = repositoryName;
     this.config = config;
     this.revisionHistory = revisionHistory;
@@ -51,9 +54,7 @@ public class SvnCodebaseCreator implements CodebaseCreator {
     Revision rev = revisionHistory.findHighestRevision(revId);
 
     File exportPath =
-        Injector.INSTANCE
-            .fileSystem()
-            .getTemporaryDirectory(String.format("svn_export_%s_%s_", name, rev.revId()));
+        filesystem.getTemporaryDirectory(String.format("svn_export_%s_%s_", name, rev.revId()));
 
     try {
       util.runSvnCommand(
@@ -68,6 +69,9 @@ public class SvnCodebaseCreator implements CodebaseCreator {
     Utils.filterFiles(exportPath, nonIgnoredFilePred);
 
     return new Codebase(
-        exportPath, config.getProjectSpace(), new RepositoryExpression(new Term(name, options)));
+        filesystem,
+        exportPath,
+        config.getProjectSpace(),
+        new RepositoryExpression(new Term(name, options)));
   }
 }

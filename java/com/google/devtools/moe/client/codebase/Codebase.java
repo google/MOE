@@ -2,7 +2,7 @@
 
 package com.google.devtools.moe.client.codebase;
 
-import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Utils;
 import com.google.devtools.moe.client.parser.Expression;
@@ -13,13 +13,14 @@ import java.util.Set;
 /**
  * A Codebase is a set of Files and their contents.
  *
- * We also want the Metadata of what project space it is in, how to make it again,
+ * <p>We also want the Metadata of what project space it is in, how to make it again,
  * and where it came from.
  *
  * @author dbentley@google.com (Daniel Bentley)
  */
 public class Codebase {
 
+  private final FileSystem filesystem;
   private final File path;
   private final String projectSpace;
   private final Expression expression;
@@ -37,7 +38,8 @@ public class Codebase {
    * @param expression an expression that generates this Codebase. This expression identifies the
    *                   Codebase.
    */
-  public Codebase(File path, String projectSpace, Expression expression) {
+  public Codebase(FileSystem filesystem, File path, String projectSpace, Expression expression) {
+    this.filesystem = filesystem;
     this.path = path;
     this.projectSpace = projectSpace;
     this.expression = expression;
@@ -89,7 +91,7 @@ public class Codebase {
    *         and not absolute paths.
    */
   public Set<String> getRelativeFilenames() {
-    return Utils.makeFilenamesRelative(Injector.INSTANCE.fileSystem().findFiles(path), path);
+    return Utils.makeFilenamesRelative(filesystem.findFiles(path), path);
   }
 
   /**
@@ -122,7 +124,7 @@ public class Codebase {
    * or translating by "imprinting" them with the EditExpression or TranslateExpression.
    */
   public Codebase copyWithExpression(Expression newExpression) {
-    return new Codebase(this.path, this.projectSpace, newExpression);
+    return new Codebase(filesystem, path, projectSpace, newExpression);
   }
 
   /**
@@ -131,6 +133,6 @@ public class Codebase {
    * space it was translated to.
    */
   public Codebase copyWithProjectSpace(String newProjectSpace) {
-    return new Codebase(this.path, newProjectSpace, this.expression);
+    return new Codebase(filesystem, path, newProjectSpace, expression);
   }
 }

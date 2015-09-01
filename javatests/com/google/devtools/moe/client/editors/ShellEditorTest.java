@@ -64,14 +64,18 @@ public class ShellEditorTest extends TestCase {
     File codebaseFile = new File("/codebase");
 
     Codebase codebase =
-        new Codebase(codebaseFile, "internal", null /* CodebaseExpression is not needed here. */);
+        new Codebase(
+            fileSystem,
+            codebaseFile,
+            "internal",
+            null /* CodebaseExpression is not needed here. */);
 
     expect(fileSystem.getTemporaryDirectory("shell_run_")).andReturn(shellRun);
     fileSystem.makeDirsForFile(shellRun);
     expect(fileSystem.isFile(codebaseFile)).andReturn(false);
     expect(fileSystem.listFiles(codebaseFile)).andReturn(new File[] {});
 
-    List<String> argsList = new ArrayList<String>();
+    List<String> argsList = new ArrayList<>();
     argsList.add("-c");
     argsList.add("touch test.txt");
 

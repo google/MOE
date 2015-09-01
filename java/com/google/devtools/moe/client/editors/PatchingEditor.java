@@ -2,8 +2,11 @@
 
 package com.google.devtools.moe.client.editors;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
+
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.CommandRunner;
+import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Utils;
@@ -21,6 +24,8 @@ import java.util.Map;
  */
 public class PatchingEditor implements Editor {
 
+  private final CommandRunner cmd = Injector.INSTANCE.cmd(); // TODO(cgruber) @Inject
+  private final FileSystem filesystem = Injector.INSTANCE.fileSystem(); // TODO(cgruber) @Inject
   private final String name;
 
   PatchingEditor(String editorName) {
@@ -41,33 +46,29 @@ public class PatchingEditor implements Editor {
    */
   @Override
   public Codebase edit(Codebase input, ProjectContext context, Map<String, String> options) {
-    File tempDir = Injector.INSTANCE.fileSystem().getTemporaryDirectory("patcher_run_");
+    File tempDir = filesystem.getTemporaryDirectory("patcher_run_");
     String patchFilePath = options.get("file");
-    if (patchFilePath == null || patchFilePath.equals("")) {
+    if (isNullOrEmpty(patchFilePath)) {
       return input;
     } else {
       File patchFile = new File(patchFilePath);
-      if (!Injector.INSTANCE.fileSystem().isReadable(patchFile)) {
+      if (!filesystem.isReadable(patchFile)) {
         throw new MoeProblem("cannot read file %s", patchFilePath);
       }
       try {
         Utils.copyDirectory(input.getPath(), tempDir);
-      } catch (IOException e) {
-        throw new MoeProblem(e.getMessage());
-      } catch (CommandRunner.CommandException e) {
+      } catch (IOException | CommandRunner.CommandException e) {
         throw new MoeProblem(e.getMessage());
       }
       try {
-        Injector.INSTANCE
-            .cmd()
-            .runCommand(
-                "patch",
-                ImmutableList.of("-p0", "--input=" + patchFilePath),
-                tempDir.getAbsolutePath());
+        cmd.runCommand(
+            "patch",
+            ImmutableList.of("-p0", "--input=" + patchFilePath),
+            tempDir.getAbsolutePath());
       } catch (CommandRunner.CommandException e) {
         throw new MoeProblem(e.getMessage());
       }
-      return new Codebase(tempDir, input.getProjectSpace(), input.getExpression());
+      return new Codebase(filesystem, tempDir, input.getProjectSpace(), input.getExpression());
     }
   }
 

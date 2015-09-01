@@ -62,7 +62,7 @@ public class RepositoryExpression extends AbstractExpression {
     String repositoryName = term.identifier;
     CodebaseCreator cc;
     if (repositoryName.equals("file")) {
-      cc = new FileCodebaseCreator();
+      cc = new FileCodebaseCreator(Injector.INSTANCE.fileSystem());
     } else {
       RepositoryType repo = context.getRepository(repositoryName);
       cc = repo.codebaseCreator();
