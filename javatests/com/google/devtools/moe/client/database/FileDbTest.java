@@ -10,6 +10,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.MoeModule;
 import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.SystemFileSystem;
 import com.google.devtools.moe.client.project.InvalidProject;
@@ -36,11 +37,13 @@ public class FileDbTest extends TestCase {
       new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(null)));
   private final InMemoryProjectContextFactory contextFactory =
       new InMemoryProjectContextFactory(null, cmd, null, ui, repositories);
+  private final FileSystem filesystem = new SystemFileSystem();
+  private final Db.Factory factory = new FileDb.Factory(filesystem, MoeModule.provideGson());
 
   @Override
   public void setUp() throws Exception {
     super.setUp();
-    Injector.INSTANCE = new Injector(new SystemFileSystem(), cmd, contextFactory, ui);
+    Injector.INSTANCE = new Injector(filesystem, cmd, contextFactory, ui);
   }
 
   public void testValidDb() throws Exception {
@@ -62,7 +65,7 @@ public class FileDbTest extends TestCase {
                 "  ]",
                 "}",
                 "");
-    FileDb db = FileDb.makeDbFromDbText(dbText);
+    FileDb db = (FileDb) factory.parseJson(dbText);
     assertEquals(
         db.getEquivalences(),
         ImmutableSet.of(
@@ -71,12 +74,12 @@ public class FileDbTest extends TestCase {
   }
 
   public void testEmptyDb() throws Exception {
-    FileDb db = FileDb.makeDbFromDbText("{}");
+    FileDb db = (FileDb) factory.parseJson("{}");
     assertThat(db.getEquivalences()).isEmpty();
   }
 
   public void testNoteEquivalence() throws Exception {
-    FileDb db = FileDb.makeDbFromDbText("{\"equivalences\":[]}");
+    FileDb db = (FileDb) factory.parseJson("{\"equivalences\":[]}");
     RepositoryEquivalence e =
         RepositoryEquivalence.create(
             Revision.create("r1", "name1"), Revision.create("r2", "name2"));
@@ -85,7 +88,7 @@ public class FileDbTest extends TestCase {
   }
 
   public void testNoteMigration() throws Exception {
-    FileDb db = FileDb.makeDbFromDbText("{}");
+    FileDb db = (FileDb) factory.parseJson("{}");
     SubmittedMigration migration =
         SubmittedMigration.create(Revision.create("r1", "name1"), Revision.create("r2", "name2"));
     assertTrue(db.noteMigration(migration));
@@ -123,7 +126,7 @@ public class FileDbTest extends TestCase {
                 "}",
                 "");
 
-    FileDb db = FileDb.makeDbFromDbText(dbText);
+    FileDb db = (FileDb) factory.parseJson(dbText);
     assertEquals(
         db.findEquivalences(Revision.create("r1", "name1"), "name2"),
         ImmutableSet.of(Revision.create("r2", "name2"), Revision.create("r3", "name2")));
@@ -131,9 +134,8 @@ public class FileDbTest extends TestCase {
 
   public void testMakeDbFromFile() throws Exception {
     IMocksControl control = EasyMock.createControl();
-    FileSystem fileSystem = control.createMock(FileSystem.class);
-    Injector.INSTANCE = new Injector(fileSystem, cmd, contextFactory, ui);
-
+    FileSystem filesystem = control.createMock(FileSystem.class);
+    FileDb.Factory factory = new FileDb.Factory(filesystem, MoeModule.provideGson());
     File dbFile = new File("/path/to/db");
     String dbText =
         Joiner.on("\n")
@@ -154,45 +156,27 @@ public class FileDbTest extends TestCase {
                 "}",
                 "");
 
-    expect(fileSystem.fileToString(dbFile)).andReturn(dbText);
+    expect(filesystem.fileToString(dbFile)).andReturn(dbText);
+    expect(filesystem.exists(dbFile)).andReturn(true);
 
     control.replay();
     assertEquals(
-        FileDb.makeDbFromDbText(dbText).getEquivalences(),
-        FileDb.makeDbFromFile(dbFile.getPath()).getEquivalences());
+        ((FileDb) factory.parseJson(dbText)).getEquivalences(),
+        ((FileDb) factory.load(dbFile.getPath())).getEquivalences());
     control.verify();
   }
 
   public void testWriteDbToFile() throws Exception {
     IMocksControl control = EasyMock.createControl();
-    FileSystem fileSystem = control.createMock(FileSystem.class);
-    Injector.INSTANCE = new Injector(fileSystem, cmd, contextFactory, ui);
-
+    FileSystem filesystem = control.createMock(FileSystem.class);
+    Db.Writer writer = new FileDb.Writer(MoeModule.provideGson(), filesystem);
     File dbFile = new File("/path/to/db");
-    String dbText =
-        Joiner.on("\n")
-            .join(
-                "{",
-                "  'equivalences': [",
-                "    {",
-                "      'rev1': {",
-                "        'revId': 'r1',",
-                "        'repositoryName': 'name1'",
-                "      },",
-                "      'rev2': {",
-                "        'revId': 'r2',",
-                "        'repositoryName': 'name2'",
-                "      }",
-                "    }",
-                "  ],",
-                "  'migrations': []",
-                "}",
-                "");
-
-    fileSystem.write(dbText.replace('\'', '"'), dbFile);
-
+    String dbText = "{\n  \"equivalences\": [],\n  \"migrations\": []\n}";
+    Db db = factory.parseJson(dbText);
+    filesystem.write(dbText, dbFile);
+    EasyMock.expectLastCall();
     control.replay();
-    FileDb.makeDbFromDbText(dbText).writeToLocation(dbFile.getPath());
+    writer.writeToLocation(dbFile.getPath(), db);
     control.verify();
   }
 
@@ -228,7 +212,7 @@ public class FileDbTest extends TestCase {
                 "  ]",
                 "}",
                 "");
-    FileDb db = FileDb.makeDbFromDbText(dbText.replace('\'', '"'));
+    FileDb db = (FileDb) factory.parseJson(dbText.replace('\'', '"'));
     RepositoryEquivalence equivalence = Iterables.getOnlyElement(db.getEquivalences());
     assertEquals("r1", equivalence.getRevisionForRepository("name1").revId());
     assertEquals("r2", equivalence.getRevisionForRepository("name2").revId());

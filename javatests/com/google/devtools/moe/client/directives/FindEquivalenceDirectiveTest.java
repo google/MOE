@@ -4,8 +4,10 @@ package com.google.devtools.moe.client.directives;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.SystemCommandRunner;
+import com.google.devtools.moe.client.database.Db;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.repositories.RepositoryType;
+import com.google.devtools.moe.client.testing.DummyDb;
 import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
 import com.google.devtools.moe.client.testing.RecordingUi;
@@ -21,12 +23,13 @@ public class FindEquivalenceDirectiveTest extends TestCase {
       new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(null)));
   private final InMemoryProjectContextFactory contextFactory =
       new InMemoryProjectContextFactory(null, cmd, null, ui, repositories);
+  private final Db.Factory dbFactory = new DummyDb.Factory(true);
 
   public void testFindEquivalenceDirective() throws Exception {
     contextFactory.projectConfigs.put(
         "moe_config.txt",
         "{\"name\": \"test\",\"repositories\": {\"internal\": {\"type\": \"dummy\"}}}");
-    FindEquivalenceDirective d = new FindEquivalenceDirective(contextFactory, ui);
+    FindEquivalenceDirective d = new FindEquivalenceDirective(contextFactory, dbFactory, ui);
     d.setContextFileName("moe_config.txt");
     d.dbLocation = "dummy";
     d.fromRepository = "internal(revision=1)";

@@ -2,37 +2,42 @@
 
 package com.google.devtools.moe.client.database;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.MoeProblem;
+import com.google.devtools.moe.client.database.Db.HasDbStorage;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.repositories.Revision;
+import com.google.devtools.moe.client.testing.DummyDb;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
+
+import dagger.Provides;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Set;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 /**
  * A file-backed implementation of MOE {@link Db}.
- *
  */
-public class FileDb implements Db {
+public class FileDb implements Db, HasDbStorage {
 
-  private static final Gson FILE_DB_GSON = new GsonBuilder()
-      .setPrettyPrinting()
-      .registerTypeHierarchyAdapter(
-          RepositoryEquivalence.class, new RepositoryEquivalence.Serializer())
-      .create();
-
+  private final String location;
   private final DbStorage dbStorage;
 
   // TODO(cgruber): Rationalize DbStorage.
-  public FileDb(DbStorage dbStorage) {
+  public FileDb(String location, DbStorage dbStorage) {
+    this.location = location;
     this.dbStorage = dbStorage;
+  }
+
+  @Override
+  public String location() {
+    return location;
   }
 
   /**
@@ -73,39 +78,103 @@ public class FileDb implements Db {
     return dbStorage.addMigration(migration);
   }
 
-  @VisibleForTesting
-  public String toJsonString() {
-    return FILE_DB_GSON.toJson(dbStorage) + "\n";
-  }
-
   @Override
-  public void writeToLocation(String dbLocation) {
-    try {
-      Injector.INSTANCE.fileSystem().write(toJsonString(), new File(dbLocation));
-    } catch (IOException e) {
-      throw new MoeProblem(e.getMessage());
-    }
+  public DbStorage getStorage() {
+    return dbStorage;
   }
 
-  public static FileDb makeDbFromDbText(String dbText) throws InvalidProject {
-    try {
-      DbStorage dbStorage = FILE_DB_GSON.fromJson(dbText, DbStorage.class);
-      return new FileDb(dbStorage);
-    } catch (JsonParseException e) {
-      throw new InvalidProject("Could not parse MOE DB: " + e.getMessage());
-    }
-  }
+  /**
+   * Writes a database implementing {@link HasDbStorage} to the supplied filesystem at a given
+   * location, or at the location originally attached to the database.
+   */
+  public static class Writer implements Db.Writer {
+    private final Gson gson;
+    private final FileSystem filesystem;
 
-  public static FileDb makeDbFromFile(String path) throws MoeProblem {
-    try {
-      String dbText = Injector.INSTANCE.fileSystem().fileToString(new File(path));
-      try {
-        return makeDbFromDbText(dbText);
-      } catch (InvalidProject e) {
-        throw new MoeProblem(e.getMessage());
+    @Inject
+    public Writer(Gson gson, FileSystem filesystem) {
+      this.gson = gson;
+      this.filesystem = filesystem;
+    }
+
+    @Override
+    public void write(Db db) {
+      writeToLocation(db.location(), db);
+    }
+
+    @Override
+    public void writeToLocation(String dbLocation, Db db) {
+      if (db instanceof HasDbStorage) {
+        try {
+          DbStorage storage = ((HasDbStorage) db).getStorage();
+          filesystem.write(gson.toJson(storage), new File(dbLocation));
+        } catch (IOException e) {
+          throw new MoeProblem("I/O Error writing database: " + e.getMessage());
+        }
+      } else {
+        throw new MoeProblem("Database does not support exporting its internal storage.");
       }
-    } catch (IOException e) {
-      throw new MoeProblem(e.getMessage());
+    }
+  }
+
+  /** An injectable Factory to produce {@link FileDb} instances. */
+  // TODO(cgruber) @AutoFactory?
+  public static class Factory implements Db.Factory {
+    private final Gson gson;
+    private final FileSystem filesystem;
+
+    @Inject
+    public Factory(FileSystem filesystem, Gson gson) {
+      this.filesystem = filesystem;
+      this.gson = gson;
+    }
+
+    @Override
+    public Db parseJson(String dbText) throws InvalidProject {
+      return parseJson(null, dbText);
+    }
+
+    public Db parseJson(String location, String dbText) throws InvalidProject {
+      try {
+        DbStorage dbStorage = gson.fromJson(dbText, DbStorage.class);
+        return new FileDb(location, dbStorage);
+      } catch (JsonParseException e) {
+        throw new InvalidProject("Could not parse MOE DB: " + e.getMessage());
+      }
+    }
+
+    @Override
+    public Db load(String location) throws MoeProblem {
+      if (location.equals("dummy")) {
+        return new DummyDb(true);
+      } else {
+        try {
+          if (filesystem.exists(new File(location))) {
+            String dbText = filesystem.fileToString(new File(location));
+            return parseJson(location, dbText);
+          } else {
+            return new FileDb(location, new DbStorage());
+          }
+        } catch (IOException e) {
+          throw new MoeProblem(e.getMessage());
+        }
+      }
+    }
+  }
+
+  /** Supplies the various bindings needed to use this database in a dagger graph. */
+  @dagger.Module
+  public static class Module {
+    @Provides
+    @Singleton
+    Db.Factory dbFactory(FileDb.Factory impl) {
+      return impl;
+    }
+
+    @Provides
+    @Singleton
+    Db.Writer dbWriter(FileDb.Writer impl) {
+      return impl;
     }
   }
 }

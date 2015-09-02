@@ -207,9 +207,13 @@ public class DummyRepositoryFactory implements RepositoryType.Factory {
   @AutoValue
   public abstract static class DummyCommit {
     public abstract String id();
+
     public abstract String author();
+
     public abstract String description();
+
     public abstract DateTime timestamp();
+
     public abstract ImmutableList<DummyCommit> parents();
 
     /** returns a commit containing the usual metadata, but with no ancestor(s) */

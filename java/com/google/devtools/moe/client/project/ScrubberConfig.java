@@ -1,6 +1,7 @@
 package com.google.devtools.moe.client.project;
 
 import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.MoeModule;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.annotations.SerializedName;
@@ -15,6 +16,7 @@ import java.util.regex.Pattern;
 /**
  * Configuration for a scrubber.
  */
+@SuppressWarnings("unused") // JSON will read/write private fields.
 public class ScrubberConfig {
 
   // General options
@@ -130,7 +132,7 @@ public class ScrubberConfig {
     if (usernamesFile != null) {
       try {
         UsernamesConfig usernamesConfig =
-            ProjectConfig.makeGson()
+            MoeModule.provideGson() // TODO(cgruber): Eliminate this static reference.
                 .fromJson(
                     Injector.INSTANCE.fileSystem().fileToString(new File(usernamesFile)),
                     UsernamesConfig.class);

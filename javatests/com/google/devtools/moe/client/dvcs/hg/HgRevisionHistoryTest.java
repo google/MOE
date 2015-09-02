@@ -9,8 +9,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.MoeModule;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.NullFileSystemModule;
+import com.google.devtools.moe.client.database.DbStorage;
 import com.google.devtools.moe.client.database.FileDb;
 import com.google.devtools.moe.client.database.RepositoryEquivalence;
 import com.google.devtools.moe.client.database.RepositoryEquivalenceMatcher;
@@ -312,7 +314,7 @@ public class HgRevisionHistoryTest extends TestCase {
 
   /**
    * A test for finding the last equivalence for the following history starting
-   * with repo2{4}:
+   * with repo2{4}:<pre>
    *                                         _____
    *                                        |     |
    *                                        |  4  |
@@ -333,6 +335,7 @@ public class HgRevisionHistoryTest extends TestCase {
    *             |____|                     |_____|
    *
    *              repo1                      repo2
+   * </pre>
    *
    * @throws Exception
    */
@@ -388,7 +391,7 @@ public class HgRevisionHistoryTest extends TestCase {
 
     control.replay();
 
-    FileDb database = FileDb.makeDbFromDbText(testDb1);
+    FileDb database = new FileDb(null, MoeModule.provideGson().fromJson(testDb1, DbStorage.class));
 
     HgRevisionHistory history = new HgRevisionHistory(Suppliers.ofInstance(mockRepo));
 
@@ -415,8 +418,7 @@ public class HgRevisionHistoryTest extends TestCase {
 
   /**
    * A test for finding the last equivalence for the following history starting
-   * with repo2{4}:
-   *
+   * with repo2{4}:<pre>
    *              ____                       _____
    *             |    |                     |     |
    *             |1005|=====================|  5  |
@@ -444,6 +446,7 @@ public class HgRevisionHistoryTest extends TestCase {
    *                                        |_____|
    *
    *              repo1                      repo2
+   * <pre>
    *
    * @throws Exception
    */
@@ -505,7 +508,7 @@ public class HgRevisionHistoryTest extends TestCase {
 
     control.replay();
 
-    FileDb database = FileDb.makeDbFromDbText(testDb2);
+    FileDb database = new FileDb(null, MoeModule.provideGson().fromJson(testDb2, DbStorage.class));
 
     HgRevisionHistory history = new HgRevisionHistory(Suppliers.ofInstance(mockRepo));
     Result result =

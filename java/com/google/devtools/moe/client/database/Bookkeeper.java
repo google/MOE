@@ -34,12 +34,14 @@ public class Bookkeeper {
   private static final Pattern MIGRATED_REV_PATTERN = Pattern.compile("MOE_MIGRATED_REVID=(\\S*)");
 
   private final CodebaseDiffer differ;
+  private final Db.Writer dbWriter;
   private final Ui ui;
 
 
   @Inject
-  public Bookkeeper(CodebaseDiffer differ, Ui ui) {
+  public Bookkeeper(CodebaseDiffer differ, Db.Writer dbWriter, Ui ui) {
     this.differ = differ;
+    this.dbWriter = dbWriter;
     this.ui = ui;
   }
 
@@ -187,11 +189,10 @@ public class Bookkeeper {
    * MOE's way of keeping the db up-to-date.
    *
    * @param db the database to update
-   * @param dbLocation where db is located
    * @param context the ProjectContext to evaluate in
    * @return 0 on success, 1 on failure
    */
-  public int bookkeep(Db db, String dbLocation, ProjectContext context) {
+  public int bookkeep(Db db, ProjectContext context) {
     Ui.Task t = ui.pushTask("perform_checks", "Updating database");
 
     for (MigrationConfig config : context.migrationConfigs().values()) {
@@ -238,7 +239,7 @@ public class Bookkeeper {
       ui.popTask(bookkeepOneMigrationTask, "");
     }
     ui.popTask(t, "");
-    db.writeToLocation(dbLocation);
+    dbWriter.write(db);
     return 0;
   }
 }
