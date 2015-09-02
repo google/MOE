@@ -40,7 +40,11 @@ public class OneMigrationDirectiveTest extends TestCase {
 
   public void testOneMigration() throws Exception {
     OneMigrationDirective d =
-        new OneMigrationDirective(contextFactory, ui, new Migrator(new DraftRevision.Factory(ui)));
+        new OneMigrationDirective(
+            contextFactory,
+            ui,
+            new DraftRevision.Factory(ui),
+            new Migrator(new DraftRevision.Factory(ui), ui));
     d.setContextFileName("moe_config.txt");
     d.fromRepository = "int(revision=1000)";
     d.toRepository = "pub(revision=2)";
@@ -50,7 +54,11 @@ public class OneMigrationDirectiveTest extends TestCase {
 
   public void testOneMigrationFailOnFromRevision() throws Exception {
     OneMigrationDirective d =
-        new OneMigrationDirective(contextFactory, ui, new Migrator(new DraftRevision.Factory(ui)));
+        new OneMigrationDirective(
+            contextFactory,
+            ui,
+            new DraftRevision.Factory(ui),
+            new Migrator(new DraftRevision.Factory(ui), ui));
     d.setContextFileName("moe_config.txt");
     d.fromRepository = "x(revision=1000)";
     d.toRepository = "pub(revision=2)";
@@ -65,7 +73,11 @@ public class OneMigrationDirectiveTest extends TestCase {
 
   public void testOneMigrationFailOnToRevision() throws Exception {
     OneMigrationDirective d =
-        new OneMigrationDirective(contextFactory, ui, new Migrator(new DraftRevision.Factory(ui)));
+        new OneMigrationDirective(
+            contextFactory,
+            ui,
+            new DraftRevision.Factory(ui),
+            new Migrator(new DraftRevision.Factory(ui), ui));
     d.setContextFileName("moe_config.txt");
     d.fromRepository = "int(revision=1000)";
     d.toRepository = "x(revision=2)";

@@ -7,6 +7,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
+import com.google.devtools.moe.client.codebase.Codebase;
+import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.database.Bookkeeper;
 import com.google.devtools.moe.client.database.Db;
 import com.google.devtools.moe.client.database.RepositoryEquivalence;
@@ -16,6 +18,8 @@ import com.google.devtools.moe.client.migrations.Migrator;
 import com.google.devtools.moe.client.parser.Expression;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.project.ProjectContextFactory;
+import com.google.devtools.moe.client.project.ScrubberConfig;
+import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.writer.DraftRevision;
 import com.google.devtools.moe.client.writer.Writer;
@@ -95,7 +99,7 @@ public class MagicDirective extends Directive {
         continue;
       }
 
-      RepositoryEquivalence lastEq = migrations.get(0).sinceEquivalence;
+      RepositoryEquivalence lastEq = migrations.get(0).sinceEquivalence();
       // toRe represents toRepo at the revision of last equivalence with fromRepo.
       RepositoryExpression toRe = new RepositoryExpression(migrationConfig.getToRepository());
       if (lastEq != null) {
@@ -112,14 +116,8 @@ public class MagicDirective extends Directive {
       }
 
       DraftRevision dr = null;
-      @SuppressWarnings("unused")
-      Revision lastMigratedRevision = null; // TODO(cgruber) determine side effects.
-      if (lastEq != null) {
-        lastMigratedRevision = lastEq.getRevisionForRepository(migrationConfig.getFromRepository());
-      }
-
       int currentlyPerformedMigration = 1; // To display to users.
-      for (Migration m : migrations) {
+      for (Migration migration : migrations) {
         // For each migration, the reference to-codebase for inverse translation is the Writer,
         // since it contains the latest changes (i.e. previous migrations) to the to-repository.
         Expression referenceToCodebase =
@@ -132,10 +130,41 @@ public class MagicDirective extends Directive {
                 "Performing %s/%s migration '%s'",
                 currentlyPerformedMigration++,
                 migrations.size(),
-                m);
-        dr = migrator.migrate(m, context(), toWriter, referenceToCodebase);
+                migration);
 
-        lastMigratedRevision = m.fromRevisions.get(m.fromRevisions.size() - 1);
+        Revision mostRecentFromRev =
+            migration.fromRevisions().get(migration.fromRevisions().size() - 1);
+        Codebase fromCodebase;
+        try {
+          String toProjectSpace =
+              context.config().getRepositoryConfig(migration.toRepository()).getProjectSpace();
+          fromCodebase =
+              new RepositoryExpression(migration.fromRepository())
+                  .atRevision(mostRecentFromRev.revId())
+                  .translateTo(toProjectSpace)
+                  .withReferenceToCodebase(referenceToCodebase)
+                  .createCodebase(context);
+
+        } catch (CodebaseCreationError e) {
+          throw new MoeProblem(e.getMessage());
+        }
+
+        RepositoryType fromRepoType = context().getRepository(migrationConfig.getFromRepository());
+        ScrubberConfig scrubber =
+            context
+                .config()
+                .findScrubberConfig(migration.fromRepository(), migration.toRepository());
+        dr =
+            migrator.migrate(
+                migration,
+                fromRepoType,
+                fromCodebase,
+                mostRecentFromRev,
+                migrationConfig.getMetadataScrubberConfig(),
+                scrubber,
+                toWriter,
+                referenceToCodebase);
+
         ui.popTask(oneMigrationTask, "");
       }
 

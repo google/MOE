@@ -53,13 +53,10 @@ public class GitRevisionHistory extends AbstractRevisionHistory {
     String hashID;
     GitClonedRepository headClone = headCloneSupplier.get();
     try {
-      hashID = headClone.runGitCommand("log", "--max-count=1", "--format=%H", revId);
+      hashID = headClone.runGitCommand("log", "--max-count=1", "--format=%H", revId).trim();
     } catch (CommandException e) {
       throw new MoeProblem("Failed git log run: %d %s %s", e.returnStatus, e.stdout, e.stderr);
     }
-    // Clean up output.
-    hashID = hashID.replaceAll("\\W", "");
-
     return Revision.create(hashID, headClone.getRepositoryName());
   }
 

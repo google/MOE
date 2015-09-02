@@ -5,9 +5,8 @@ package com.google.devtools.moe.client.project;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.devtools.moe.client.MoeModule;
+import com.google.devtools.moe.client.Utils;
 import com.google.devtools.moe.client.repositories.RepositoryType;
-import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
@@ -129,12 +128,20 @@ public class RepositoryConfig {
   }
 
   /**
-   * Modified copy creator.
+   * Modified copy creator, that supplies a clone with the branch field altered.
    */
   public RepositoryConfig copyWithBranch(String branch) {
-    Gson gson = MoeModule.provideGson(); // Clone using Gson to ensure all things are serialized.
-    RepositoryConfig newConfig = gson.fromJson(gson.toJsonTree(this), getClass());
+    RepositoryConfig newConfig = Utils.cloneGsonObject(this);
     newConfig.branch = branch;
+    return newConfig;
+  }
+
+  /**
+   * Modified copy creator, that supplies a clone with the branch field altered.
+   */
+  public RepositoryConfig copyWithUrl(String url) {
+    RepositoryConfig newConfig = Utils.cloneGsonObject(this);
+    newConfig.url = url;
     return newConfig;
   }
 

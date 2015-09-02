@@ -2,6 +2,7 @@
 
 package com.google.devtools.moe.client.migrations;
 
+import com.google.devtools.moe.client.Utils;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.repositories.MetadataScrubberConfig;
 import com.google.gson.annotations.SerializedName;
@@ -26,6 +27,13 @@ public class MigrationConfig {
   private MetadataScrubberConfig metadataScrubberConfig;
 
   public MigrationConfig() {} // Constructed by gson
+
+  public MigrationConfig copyWithFromRepository(String alternate) {
+    // TODO(cgruber) Rip this mechanism of using string labels
+    MigrationConfig clone = Utils.cloneGsonObject(this);
+    clone.fromRepository = alternate;
+    return clone;
+  }
 
   public String getName() {
     return name;

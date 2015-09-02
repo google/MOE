@@ -9,6 +9,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
+import com.google.gson.Gson;
 
 import java.io.File;
 import java.io.IOException;
@@ -162,5 +163,18 @@ public class Utils {
     } catch (IOException e) {
       throw new MoeProblem("Could not generate shell script: " + e);
     }
+  }
+
+  /** A Gson parser used specifically for cloning Gson-ready objects */
+  private static final Gson CLONER = new Gson();
+
+  /**
+   * Does a simple clone of a Gson-ready object, by marshalling into a Json intermediary and
+   * processing into a new object.  This is not in any way efficient, but it guarantees the correct
+   * cloning semantics.  It should not be used in tight loops where performance is a concern.
+   */
+  @SuppressWarnings("unchecked")
+  public static <T> T cloneGsonObject(T t) {
+    return (T) CLONER.fromJson(CLONER.toJsonTree(t), t.getClass());
   }
 }

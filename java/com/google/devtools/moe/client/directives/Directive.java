@@ -16,7 +16,11 @@ import com.google.devtools.moe.client.project.ProjectContextFactory;
  */
 // TODO(cgruber) Remove MoeOptions once JCommander is in and we can handle multiple options objects.
 public abstract class Directive extends MoeOptions {
-  private ProjectContext context; // TODO(cgruber): Inject this.
+  // TODO(cgruber): Inject this.
+  // This is only accessible by children so the same context can be shared by dependent
+  // directives (otherwise they clean up each others' files as if they were temporary). This
+  // will go away as soon as ProjectContext is injected in a subcomponent. THIS_IS_A_HACK
+  protected ProjectContext context;
   private final ProjectContextFactory contextFactory;
 
   protected Directive(ProjectContextFactory contextFactory) {
@@ -34,7 +38,9 @@ public abstract class Directive extends MoeOptions {
    * @return the status of performing the Directive, suitable for returning from this process.
    */
   public int perform() throws InvalidProject {
-    this.context = contextFactory.create(configFilename);
+    if (context == null) {
+      this.context = contextFactory.create(configFilename);
+    }
     return performDirectiveBehavior();
   }
 
