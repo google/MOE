@@ -4,10 +4,12 @@ package com.google.devtools.moe.client.directives;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
 import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
 import com.google.devtools.moe.client.testing.DummyRepositoryFactory.DummyCommit;
+import com.google.devtools.moe.client.testing.RecordingUi;
 
 import junit.framework.TestCase;
 
@@ -20,6 +22,7 @@ import java.util.List;
  */
 public class MigrateBranchDirectiveTest extends TestCase {
   private static final String AUTHOR = "foo@foo.com";
+  private final Ui ui = new RecordingUi();
 
   public void testBranchRevision() {
 
@@ -39,7 +42,8 @@ public class MigrateBranchDirectiveTest extends TestCase {
     RevisionHistory branch =
         new DummyRepositoryFactory.DummyRevisionHistory(
             "foo_fork", false, c01, c02, c03, c04, c05, c06, c07, c08);
-    List<Revision> revisions = MigrateBranchDirective.findDescendantRevisions(branch, parentBranch);
+    MigrateBranchDirective directive = new MigrateBranchDirective(null, null, null, ui, null);
+    List<Revision> revisions = directive.findDescendantRevisions(branch, parentBranch);
 
     assertThat(revisions)
         .containsExactly(

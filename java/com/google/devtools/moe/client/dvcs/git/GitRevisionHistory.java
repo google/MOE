@@ -87,6 +87,7 @@ public class GitRevisionHistory extends AbstractRevisionHistory {
               // Ensure one revision only, to be safe.
               "--max-count=1",
               "--format=" + format,
+              "--ignore-missing",
               revision.revId());
     } catch (CommandException e) {
       throw new MoeProblem("Failed git run: %d %s %s", e.returnStatus, e.stdout, e.stderr);
@@ -102,6 +103,9 @@ public class GitRevisionHistory extends AbstractRevisionHistory {
    */
   @VisibleForTesting
   RevisionMetadata parseMetadata(String log) {
+    if (Strings.isNullOrEmpty(log.trim())) {
+      return null;
+    }
     // Split on the log delimiter. Limit to 5 so that it will act correctly
     // even if the log delimiter happens to be in the commit message.
     List<String> split = Splitter.on(LOG_DELIMITER).limit(5).splitToList(log);

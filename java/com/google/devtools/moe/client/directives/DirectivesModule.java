@@ -3,6 +3,11 @@ package com.google.devtools.moe.client.directives;
 
 import static dagger.Provides.Type.MAP;
 
+import com.google.devtools.moe.client.Ui;
+import com.google.devtools.moe.client.github.GithubClient;
+import com.google.devtools.moe.client.project.ProjectContextFactory;
+
+import dagger.Lazy;
 import dagger.MapKey;
 import dagger.Provides;
 
@@ -18,91 +23,101 @@ public class DirectivesModule {
 
   @Provides(type = MAP)
   @StringKey("check_config")
-  Directive checkConfig(CheckConfigDirective directive) {
+  static Directive checkConfig(CheckConfigDirective directive) {
     return directive;
   }
 
   @Provides(type = MAP)
   @StringKey("highest_revision")
-  Directive highestRevision(HighestRevisionDirective directive) {
+  static Directive highestRevision(HighestRevisionDirective directive) {
     return directive;
   }
 
   @Provides(type = MAP)
   @StringKey("create_codebase")
-  Directive createCodebase(CreateCodebaseDirective directive) {
+  static Directive createCodebase(CreateCodebaseDirective directive) {
     return directive;
   }
 
   @Provides(type = MAP)
   @StringKey("change")
-  Directive change(ChangeDirective directive) {
+  static Directive change(ChangeDirective directive) {
     return directive;
   }
 
   @Provides(type = MAP)
   @StringKey("find_equivalence")
-  Directive findEquivalnce(FindEquivalenceDirective directive) {
+  static Directive findEquivalnce(FindEquivalenceDirective directive) {
     return directive;
   }
 
   @Provides(type = MAP)
   @StringKey("note_equivalence")
-  Directive noteEquivalence(NoteEquivalenceDirective directive) {
+  static Directive noteEquivalence(NoteEquivalenceDirective directive) {
     return directive;
   }
 
   @Provides(type = MAP)
   @StringKey("diff_codebases")
-  Directive diffCodebases(DiffCodebasesDirective directive) {
+  static Directive diffCodebases(DiffCodebasesDirective directive) {
     return directive;
   }
 
   @Provides(type = MAP)
   @StringKey("last_equivalence")
-  Directive lastEquivalence(LastEquivalenceDirective directive) {
+  static Directive lastEquivalence(LastEquivalenceDirective directive) {
     return directive;
   }
 
   @Provides(type = MAP)
   @StringKey("determine_metadata")
-  Directive determineMetadata(DetermineMetadataDirective directive) {
+  static Directive determineMetadata(DetermineMetadataDirective directive) {
     return directive;
   }
 
   @Provides(type = MAP)
   @StringKey("determine_migrations")
-  Directive determineMigrations(DetermineMigrationsDirective directive) {
+  static Directive determineMigrations(DetermineMigrationsDirective directive) {
     return directive;
   }
 
   @Provides(type = MAP)
   @StringKey("one_migration")
-  Directive oneMigration(OneMigrationDirective directive) {
+  static Directive oneMigration(OneMigrationDirective directive) {
     return directive;
   }
 
   @Provides(type = MAP)
   @StringKey("migrate_branch")
-  Directive migrateBranch(MigrateBranchDirective directive) {
+  static Directive migrateBranch(MigrateBranchDirective directive) {
     return directive;
   }
 
   @Provides(type = MAP)
   @StringKey("merge_codebases")
-  Directive mergeCodebases(MergeCodebasesDirective directive) {
+  static Directive mergeCodebases(MergeCodebasesDirective directive) {
     return directive;
   }
 
   @Provides(type = MAP)
+  @StringKey("github_pull")
+  static Directive githubPull(
+      ProjectContextFactory contextFactory,
+      Ui ui,
+      GithubClient client,
+      Lazy<MigrateBranchDirective> migrateBranchDirective) {
+    return new GithubPullDirective(contextFactory, ui, client, migrateBranchDirective);
+  }
+
+  @Provides(type = MAP)
   @StringKey("bookkeep")
-  Directive bookkeep(BookkeepingDirective directive) {
+  static Directive bookkeep(BookkeepingDirective directive) {
     return directive;
   }
 
   @Provides(type = MAP)
   @StringKey("magic")
-  Directive magic(MagicDirective directive) {
+  static Directive magic(MagicDirective directive) {
     return directive;
   }
 }

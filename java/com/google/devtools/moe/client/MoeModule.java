@@ -19,6 +19,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 
+import com.squareup.okhttp.OkHttpClient;
+
 import dagger.Module;
 import dagger.Provides;
 
@@ -74,6 +76,12 @@ public class MoeModule {
   @Singleton
   FileDiffer fileDiffer(ConcreteFileDiffer cfd) {
     return cfd;
+  }
+
+  @Provides
+  @Singleton
+  public OkHttpClient okHttpClient() {
+    return new OkHttpClient();
   }
 
   @Provides
