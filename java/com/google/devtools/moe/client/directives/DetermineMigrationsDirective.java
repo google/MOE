@@ -2,15 +2,13 @@
 
 package com.google.devtools.moe.client.directives;
 
-import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.database.Db;
-import com.google.devtools.moe.client.database.FileDb;
 import com.google.devtools.moe.client.migrations.Migration;
 import com.google.devtools.moe.client.migrations.MigrationConfig;
 import com.google.devtools.moe.client.migrations.Migrator;
+import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.project.ProjectContextFactory;
-import com.google.devtools.moe.client.testing.DummyDb;
 
 import org.kohsuke.args4j.Option;
 
@@ -19,7 +17,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 /**
- * Print the results of {@link DetermineMigrationsLogic}.
+ * Print the results of {@link Migrator#determineMigrations(ProjectContext, MigrationConfig, Db)}
  *
  */
 public class DetermineMigrationsDirective extends Directive {
@@ -33,31 +31,22 @@ public class DetermineMigrationsDirective extends Directive {
   @Option(name = "--db", required = true, usage = "Location of MOE database")
   String dbLocation = "";
 
+  private final Db.Factory dbFactory;
   private final Ui ui;
   private final Migrator migrator;
 
   @Inject
   public DetermineMigrationsDirective(
-      ProjectContextFactory contextFactory, Ui ui, Migrator migrator) {
+      ProjectContextFactory contextFactory, Db.Factory dbFactory, Ui ui, Migrator migrator) {
     super(contextFactory); // TODO(cgruber) Inject project context, not its factory
+    this.dbFactory = dbFactory;
     this.ui = ui;
     this.migrator = migrator;
   }
 
   @Override
   protected int performDirectiveBehavior() {
-    Db db;
-    if (dbLocation.equals("dummy")) {
-      db = new DummyDb(true);
-    } else {
-      // TODO(user): also allow for url dbLocation types
-      try {
-        db = FileDb.makeDbFromFile(dbLocation);
-      } catch (MoeProblem e) {
-        ui.error(e, "Error creating DB");
-        return 1;
-      }
-    }
+    Db db = dbFactory.load(dbLocation);
 
     MigrationConfig config = context().migrationConfigs().get(migrationName);
     if (config == null) {

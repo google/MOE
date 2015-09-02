@@ -9,7 +9,6 @@ import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.database.Bookkeeper;
 import com.google.devtools.moe.client.database.Db;
-import com.google.devtools.moe.client.database.FileDb;
 import com.google.devtools.moe.client.database.RepositoryEquivalence;
 import com.google.devtools.moe.client.migrations.Migration;
 import com.google.devtools.moe.client.migrations.MigrationConfig;
@@ -18,7 +17,6 @@ import com.google.devtools.moe.client.parser.Expression;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.project.ProjectContextFactory;
 import com.google.devtools.moe.client.repositories.Revision;
-import com.google.devtools.moe.client.testing.DummyDb;
 import com.google.devtools.moe.client.writer.DraftRevision;
 import com.google.devtools.moe.client.writer.Writer;
 import com.google.devtools.moe.client.writer.WritingError;
@@ -46,14 +44,20 @@ public class MagicDirective extends Directive {
   )
   List<String> migrations = Lists.newArrayList();
 
+  private final Db.Factory dbFactory;
   private final Ui ui;
   private final Migrator migrator;
   private final Bookkeeper bookkeeper;
 
   @Inject
   MagicDirective(
-      ProjectContextFactory contextFactory, Ui ui, Bookkeeper bookkeeper, Migrator migrator) {
+      ProjectContextFactory contextFactory,
+      Db.Factory dbFactory,
+      Ui ui,
+      Bookkeeper bookkeeper,
+      Migrator migrator) {
     super(contextFactory); // TODO(cgruber) Inject project context, not its factory
+    this.dbFactory = dbFactory;
     this.ui = ui;
     this.bookkeeper = bookkeeper;
     this.migrator = migrator;
@@ -61,24 +65,13 @@ public class MagicDirective extends Directive {
 
   @Override
   protected int performDirectiveBehavior() {
-    Db db;
-    if (dbLocation.equals("dummy")) {
-      db = new DummyDb(true);
-    } else {
-      // TODO(user): also allow for url dbLocation types
-      try {
-        db = FileDb.makeDbFromFile(dbLocation);
-      } catch (MoeProblem e) {
-        ui.error(e, "Error creating DB");
-        return 1;
-      }
-    }
+    Db db = dbFactory.load(dbLocation);
 
     List<String> migrationNames =
         ImmutableList.copyOf(
             migrations.isEmpty() ? context().migrationConfigs().keySet() : migrations);
 
-    if (bookkeeper.bookkeep(db, dbLocation, context()) != 0) {
+    if (bookkeeper.bookkeep(db, context()) != 0) {
       // Bookkeeping has failed, so fail here as well.
       return 1;
     }
@@ -119,6 +112,7 @@ public class MagicDirective extends Directive {
       }
 
       DraftRevision dr = null;
+      @SuppressWarnings("unused")
       Revision lastMigratedRevision = null; // TODO(cgruber) determine side effects.
       if (lastEq != null) {
         lastMigratedRevision = lastEq.getRevisionForRepository(migrationConfig.getFromRepository());

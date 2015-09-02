@@ -7,11 +7,11 @@ import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.MoeModule;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.project.EditorConfig;
 import com.google.devtools.moe.client.project.ProjectContext;
-import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 
@@ -140,6 +140,6 @@ public class RenamingEditor implements Editor {
    */
   static Map<String, String> parseJsonMap(JsonObject jsonMappings) {
     Type type = new TypeToken<Map<String, String>>() {}.getType();
-    return new Gson().fromJson(jsonMappings, type);
+    return MoeModule.provideGson().fromJson(jsonMappings, type);
   }
 }

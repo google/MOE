@@ -10,7 +10,9 @@ import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.MoeModule;
 import com.google.devtools.moe.client.database.Bookkeeper;
+import com.google.devtools.moe.client.database.Db;
 import com.google.devtools.moe.client.database.DbStorage;
 import com.google.devtools.moe.client.database.FileDb;
 import com.google.devtools.moe.client.database.RepositoryEquivalence;
@@ -48,7 +50,6 @@ public class BookkeepingDirectiveTest extends TestCase {
   private final RecordingUi ui = new RecordingUi();
   private final IMocksControl control = EasyMock.createControl();
   private final CommandRunner cmd = control.createMock(CommandRunner.class);
-
 
   private static InMemoryProjectContextFactory init(InMemoryProjectContextFactory contextFactory)
       throws Exception {
@@ -99,8 +100,11 @@ public class BookkeepingDirectiveTest extends TestCase {
     InMemoryProjectContextFactory contextFactory =
         init(new InMemoryProjectContextFactory(fileDiffer, cmd, filesystem, ui, repositories));
     Injector.INSTANCE = new Injector(filesystem, cmd, contextFactory, ui);
+    Db.Factory dbFactory = new FileDb.Factory(filesystem, MoeModule.provideGson());
+    Db.Writer dbWriter = new FileDb.Writer(MoeModule.provideGson(), filesystem);
     BookkeepingDirective d =
-        new BookkeepingDirective(contextFactory, ui, new Bookkeeper(codebaseDiffer, ui));
+        new BookkeepingDirective(
+            contextFactory, dbFactory, new Bookkeeper(codebaseDiffer, dbWriter, ui));
     d.setContextFileName("moe_config.txt");
     d.dbLocation = DB_FILE.getAbsolutePath();
 
@@ -111,15 +115,14 @@ public class BookkeepingDirectiveTest extends TestCase {
     control.verify();
 
     // expected db at end of call to bookkeep
-    DbStorage dbStorage = new DbStorage();
-    dbStorage.addEquivalence(
+    DbStorage expectedDb = new DbStorage();
+    expectedDb.addEquivalence(
         RepositoryEquivalence.create(Revision.create(1, "int"), Revision.create(1, "pub")));
-    dbStorage.addMigration(
+    expectedDb.addMigration(
         SubmittedMigration.create(
             Revision.create("migrated_from", "int"), Revision.create("migrated_to", "pub")));
-    FileDb expectedDb = new FileDb(dbStorage);
 
-    assertEquals(expectedDb.toJsonString(), Injector.INSTANCE.fileSystem().fileToString(DB_FILE));
+    assertEquals(MoeModule.provideGson().toJson(expectedDb), filesystem.fileToString(DB_FILE));
   }
 
   /**
@@ -142,8 +145,11 @@ public class BookkeepingDirectiveTest extends TestCase {
     InMemoryProjectContextFactory contextFactory =
         init(new InMemoryProjectContextFactory(fileDiffer, cmd, filesystem, ui, repositories));
     Injector.INSTANCE = new Injector(filesystem, cmd, contextFactory, ui);
+    Db.Factory dbFactory = new FileDb.Factory(filesystem, MoeModule.provideGson());
+    Db.Writer dbWriter = new FileDb.Writer(MoeModule.provideGson(), filesystem);
     BookkeepingDirective d =
-        new BookkeepingDirective(contextFactory, ui, new Bookkeeper(codebaseDiffer, ui));
+        new BookkeepingDirective(
+            contextFactory, dbFactory, new Bookkeeper(codebaseDiffer, dbWriter, ui));
     d.setContextFileName("moe_config.txt");
     d.dbLocation = DB_FILE.getAbsolutePath();
 
@@ -154,13 +160,12 @@ public class BookkeepingDirectiveTest extends TestCase {
     control.verify();
 
     // expected db at end of call to bookkeep
-    DbStorage dbStorage = new DbStorage();
-    dbStorage.addMigration(
+    DbStorage expectedDb = new DbStorage();
+    expectedDb.addMigration(
         SubmittedMigration.create(
             Revision.create("migrated_from", "int"), Revision.create("migrated_to", "pub")));
-    FileDb expectedDb = new FileDb(dbStorage);
 
-    assertEquals(expectedDb.toJsonString(), Injector.INSTANCE.fileSystem().fileToString(DB_FILE));
+    assertEquals(MoeModule.provideGson().toJson(expectedDb), filesystem.fileToString(DB_FILE));
   }
 
   /**
@@ -183,8 +188,11 @@ public class BookkeepingDirectiveTest extends TestCase {
     InMemoryProjectContextFactory contextFactory =
         init(new InMemoryProjectContextFactory(fileDiffer, cmd, filesystem, ui, repositories));
     Injector.INSTANCE = new Injector(filesystem, cmd, contextFactory, ui);
+    Db.Factory dbFactory = new FileDb.Factory(filesystem, MoeModule.provideGson());
+    Db.Writer dbWriter = new FileDb.Writer(MoeModule.provideGson(), filesystem);
     BookkeepingDirective d =
-        new BookkeepingDirective(contextFactory, ui, new Bookkeeper(codebaseDiffer, ui));
+        new BookkeepingDirective(
+            contextFactory, dbFactory, new Bookkeeper(codebaseDiffer, dbWriter, ui));
     d.setContextFileName("moe_config.txt");
     d.dbLocation = DB_FILE.getAbsolutePath();
 
@@ -195,15 +203,14 @@ public class BookkeepingDirectiveTest extends TestCase {
     control.verify();
 
     // expected db at end of call to bookkeep
-    DbStorage dbStorage = new DbStorage();
-    dbStorage.addEquivalence(
+    DbStorage expectedDb = new DbStorage();
+    expectedDb.addEquivalence(
         RepositoryEquivalence.create(
             Revision.create("migrated_from", "int"), Revision.create("migrated_to", "pub")));
-    dbStorage.addMigration(
+    expectedDb.addMigration(
         SubmittedMigration.create(
             Revision.create("migrated_from", "int"), Revision.create("migrated_to", "pub")));
-    FileDb expectedDb = new FileDb(dbStorage);
 
-    assertEquals(expectedDb.toJsonString(), Injector.INSTANCE.fileSystem().fileToString(DB_FILE));
+    assertEquals(MoeModule.provideGson().toJson(expectedDb), filesystem.fileToString(DB_FILE));
   }
 }

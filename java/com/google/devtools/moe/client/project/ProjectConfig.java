@@ -8,18 +8,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
+import com.google.devtools.moe.client.MoeModule;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.migrations.MigrationConfig;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.annotations.SerializedName;
 
-import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -96,25 +91,6 @@ public class ProjectConfig {
     return Collections.unmodifiableList(migrationConfigs);
   }
 
-  /**
-   * Helper class to deserialize raw Json in a config.
-   */
-  static class JsonObjectDeserializer implements JsonDeserializer<JsonObject> {
-    @Override
-    public JsonObject deserialize(
-        JsonElement json, Type typeOfT, JsonDeserializationContext context)
-        throws JsonParseException {
-      return json.getAsJsonObject();
-    }
-  }
-
-  /**
-   * Make a GSON object usable to parse MOE configs.
-   */
-  public static Gson makeGson() {
-    return new GsonBuilder()
-        .registerTypeAdapter(JsonObject.class, new JsonObjectDeserializer()).create();
-  }
 
   public ScrubberConfig findScrubberConfig(String fromRepository, String toRepository) {
     String fromProjectSpace = getRepositoryConfig(fromRepository).getProjectSpace();
@@ -182,7 +158,7 @@ public class ProjectConfig {
   public static ProjectConfig makeProjectConfigFromConfigText(String configText)
       throws InvalidProject {
     try {
-      Gson gson = makeGson();
+      Gson gson = MoeModule.provideGson(); // TODO(user): Remove this static reference.
       ProjectConfig config = gson.fromJson(configText, ProjectConfig.class);
       if (config == null) {
         throw new InvalidProject("Could not parse MOE config");

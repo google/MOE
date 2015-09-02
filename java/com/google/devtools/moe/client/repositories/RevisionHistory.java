@@ -42,7 +42,7 @@ public interface RevisionHistory {
    * Starting at the specified revision, searches the revision history backwards, stopping at
    * matching Revisions. {@link RevisionMatcher#matches(Revision)} is called on the given
    * RevisionMatcher for the starting Revisions, then their parents, then the parents' parents, and
-   * so on. Then, {@link RevisionMatcher#makeResult(java.util.List, java.util.List)} is called with
+   * so on. Then, {@link RevisionMatcher#makeResult(RevisionGraph, java.util.List)} is called with
    * the non-matching (in breadth-first, child-to-parent order) and matching Revisions, and the
    * result is returned.
    *
@@ -62,7 +62,7 @@ public interface RevisionHistory {
    *
    * <p>History is traversed in breadth-first order starting at {@code nonmatch_4}, and doesn't
    * proceed past {@code match_1} or {@code match_2b}. Finally,
-   * {@link RevisionMatcher#makeResult(java.util.List, java.util.List)} is called with a list of
+   * {@link RevisionMatcher#makeResult(RevisionGraph, java.util.List)} is called with a list of
    * the non-matching Revisions (nonmatch_4, nonmatch_3a, nonmatch_3b, and nonmatch_2a in that
    * breadth-first order) and a List of the matching Revisions in the order encountered (in this
    * case, match_2b and match_1). This method returns the (arbitrary) result of that call.

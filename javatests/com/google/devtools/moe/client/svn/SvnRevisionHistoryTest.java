@@ -8,7 +8,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.MoeModule;
 import com.google.devtools.moe.client.NullFileSystemModule;
+import com.google.devtools.moe.client.database.DbStorage;
 import com.google.devtools.moe.client.database.FileDb;
 import com.google.devtools.moe.client.database.RepositoryEquivalence;
 import com.google.devtools.moe.client.database.RepositoryEquivalenceMatcher;
@@ -196,14 +198,14 @@ public class SvnRevisionHistoryTest extends TestCase {
   /**
    * Tests parsing of this SVN log entry:
    *
-   * {@code
+   * <pre>{@code
    * <logentry>
    *   <author>user</author>
    *   <text/>
    *   <date>yyyy-mm-dd</date>
    *   <msg>description</msg>
    * </logentry>
-   * }
+   * }</pre>
    */
   public void testParseMetadataNodeList() throws Exception {
     Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
@@ -355,8 +357,7 @@ public class SvnRevisionHistoryTest extends TestCase {
 
   /**
    * A test for finding the last equivalence for the following history starting
-   * with repo2{4}:
-   *
+   * with repo2{4}:<pre>
    *                                              _____
    *                                             |     |
    *                                             |  4  |
@@ -377,6 +378,7 @@ public class SvnRevisionHistoryTest extends TestCase {
    *                  |____|                     |_____|
    *
    *                   repo1                      repo2
+   * </pre>
    *
    * @throws Exception
    */
@@ -437,7 +439,7 @@ public class SvnRevisionHistoryTest extends TestCase {
 
     control.replay();
 
-    FileDb database = FileDb.makeDbFromDbText(testDb1);
+    FileDb database = new FileDb(null, MoeModule.provideGson().fromJson(testDb1, DbStorage.class));
     SvnRevisionHistory history = new SvnRevisionHistory("repo2", "http://foo/svn/trunk/", util);
 
     Result result =
@@ -467,7 +469,7 @@ public class SvnRevisionHistoryTest extends TestCase {
 
   /**
    * A test for finding the last equivalence for the following history starting
-   * with repo2{2}:
+   * with repo2{2}:<pre>
    *                   ____                       _____
    *                  |    |                     |     |
    *                  |1003|=====================|  3  |
@@ -488,6 +490,7 @@ public class SvnRevisionHistoryTest extends TestCase {
    *                                             |_____|
    *
    *                   repo1                      repo2
+   * </pre>
    *
    * @throws Exception
    */
@@ -542,7 +545,7 @@ public class SvnRevisionHistoryTest extends TestCase {
 
     control.replay();
 
-    FileDb database = FileDb.makeDbFromDbText(testDb2);
+    FileDb database = new FileDb(null, MoeModule.provideGson().fromJson(testDb2, DbStorage.class));
     SvnRevisionHistory history = new SvnRevisionHistory("repo2", "http://foo/svn/trunk/", util);
 
     Result result =

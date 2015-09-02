@@ -8,8 +8,11 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.MoeModule;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.SystemCommandRunner;
+import com.google.devtools.moe.client.database.Db;
+import com.google.devtools.moe.client.database.FileDb;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
@@ -36,6 +39,8 @@ public class NoteEquivalenceDirectiveTest extends TestCase {
       new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(mockFs)));
   private final InMemoryProjectContextFactory contextFactory =
       new InMemoryProjectContextFactory(null, cmd, mockFs, ui, repositories);
+  private final Db.Factory dbFactory = new FileDb.Factory(mockFs, MoeModule.provideGson());
+  private final Db.Writer dbWriter = new FileDb.Writer(MoeModule.provideGson(), mockFs);
 
   NoteEquivalenceDirective d;
 
@@ -51,7 +56,7 @@ public class NoteEquivalenceDirectiveTest extends TestCase {
     // TODO(cgruber): Rip this out when Db.Factory is injected.
     Injector.INSTANCE = new Injector(mockFs, cmd, contextFactory, ui);
 
-    d = new NoteEquivalenceDirective(contextFactory, mockFs, ui);
+    d = new NoteEquivalenceDirective(contextFactory, dbFactory, dbWriter, ui);
     d.setContextFileName("moe_config.txt");
     d.dbLocation = "/foo/db.txt";
   }
@@ -96,8 +101,7 @@ public class NoteEquivalenceDirectiveTest extends TestCase {
                 "    }",
                 "  ],",
                 "  'migrations': []",
-                "}",
-                "")
+                "}")
             .replace('\'', '"'),
         new File("/foo/db.txt"));
 
@@ -129,8 +133,7 @@ public class NoteEquivalenceDirectiveTest extends TestCase {
                 "    }",
                 "  ],",
                 "  'migrations': []",
-                "}",
-                "")
+                "}")
             .replace('\'', '"');
 
     expect(mockFs.exists(new File("/foo/db.txt"))).andReturn(true);
@@ -165,8 +168,7 @@ public class NoteEquivalenceDirectiveTest extends TestCase {
                 "    }%s", // New equivalence is added here.
                 "  ],",
                 "  'migrations': []",
-                "}",
-                "")
+                "}")
             .replace('\'', '"');
 
     String oldDbString = String.format(baseDbString, "");

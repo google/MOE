@@ -1,6 +1,7 @@
 package com.google.devtools.moe.client.project;
 
 
+import com.google.devtools.moe.client.MoeModule;
 
 
 import junit.framework.TestCase;
@@ -21,14 +22,14 @@ public class ScrubberConfigTest extends TestCase {
 
   public void testShouldScrubAuthor_doesntScrubAuthors() throws Exception {
     ScrubberConfig scrubberConfig =
-        ProjectConfig.makeGson()
+        MoeModule.provideGson()
             .fromJson("{\"scrub_authors\":false,\"usernames_file\":null}", ScrubberConfig.class);
     assertFalse(scrubberConfig.shouldScrubAuthor(UNKNOWN_AUTHOR));
   }
 
   public void testShouldScrubAuthor_scrubsUnknownAuthors() throws Exception {
     ScrubberConfig scrubberConfig =
-        ProjectConfig.makeGson()
+        MoeModule.provideGson()
             .fromJson(
                 "{\"scrub_unknown_users\":true,\"usernames_file\":null}", ScrubberConfig.class);
     assertTrue(scrubberConfig.shouldScrubAuthor(UNKNOWN_AUTHOR));
@@ -36,7 +37,7 @@ public class ScrubberConfigTest extends TestCase {
 
   public void testShouldScrubAuthor_scrubsAuthors() throws Exception {
     ScrubberConfig scrubberConfig =
-        ProjectConfig.makeGson()
+        MoeModule.provideGson()
             .fromJson(
                 "{\"usernames_to_scrub\":"
                     + SCRUBBABLE_USERS

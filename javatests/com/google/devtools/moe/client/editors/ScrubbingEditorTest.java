@@ -4,16 +4,16 @@ package com.google.devtools.moe.client.editors;
 
 import static org.easymock.EasyMock.expect;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.MoeModule;
 import com.google.devtools.moe.client.codebase.Codebase;
-import com.google.devtools.moe.client.project.ProjectConfig;
 import com.google.devtools.moe.client.project.ScrubberConfig;
 import com.google.devtools.moe.client.testing.TestingModule;
-import com.google.gson.Gson;
 
 import dagger.Provides;
 
@@ -87,16 +87,20 @@ public class ScrubbingEditorTest extends TestCase {
                     "--output_tar",
                     "/scrubber_run_foo/scrubbed.tar",
                     "--config_data",
-                    "{\"scrub_sensitive_comments\":true,"
-                        + "\"scrub_non_documentation_comments\":false,"
-                        + "\"scrub_all_comments\":false,"
-                        + "\"usernames_to_scrub\":[],"
-                        + "\"usernames_to_publish\":[],"
-                        + "\"scrub_unknown_users\":true,"
-                        + "\"scrub_authors\":true,"
-                        + "\"maximum_blank_lines\":0,"
-                        + "\"scrub_java_testsize_annotations\":false,"
-                        + "\"scrub_proto_comments\":false}",
+                    Joiner.on('\n')
+                        .join(
+                            "{",
+                            "  \"scrub_sensitive_comments\": true,",
+                            "  \"scrub_non_documentation_comments\": false,",
+                            "  \"scrub_all_comments\": false,",
+                            "  \"usernames_to_scrub\": [],",
+                            "  \"usernames_to_publish\": [],",
+                            "  \"scrub_unknown_users\": true,",
+                            "  \"scrub_authors\": true,",
+                            "  \"maximum_blank_lines\": 0,",
+                            "  \"scrub_java_testsize_annotations\": false,",
+                            "  \"scrub_proto_comments\": false",
+                            "}"),
                     "/codebase"),
                 "/scrubber_extraction_foo"))
         .andReturn("");
@@ -111,10 +115,11 @@ public class ScrubbingEditorTest extends TestCase {
         .andReturn("");
     control.replay();
 
-    Gson gson = ProjectConfig.makeGson();
+
     ScrubberConfig scrubberConfig =
-        gson.fromJson(
-            "{\"scrub_unknown_users\":\"true\",\"usernames_file\":null}", ScrubberConfig.class);
+        MoeModule.provideGson()
+            .fromJson(
+                "{\"scrub_unknown_users\":\"true\",\"usernames_file\":null}", ScrubberConfig.class);
 
     new ScrubbingEditor("scrubber", scrubberConfig)
         .edit(

@@ -2,11 +2,9 @@
 
 package com.google.devtools.moe.client.directives;
 
-import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
-import com.google.devtools.moe.client.database.DbStorage;
-import com.google.devtools.moe.client.database.FileDb;
+import com.google.devtools.moe.client.database.Db;
 import com.google.devtools.moe.client.database.RepositoryEquivalence;
 import com.google.devtools.moe.client.parser.Parser;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
@@ -16,8 +14,6 @@ import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.repositories.Revision;
 
 import org.kohsuke.args4j.Option;
-
-import java.io.File;
 
 import javax.inject.Inject;
 
@@ -44,25 +40,22 @@ public class NoteEquivalenceDirective extends Directive {
   )
   String repo2 = "";
 
-  private final FileSystem fileSystem;
+  private final Db.Factory dbFactory;
+  private final Db.Writer dbWriter;
   private final Ui ui;
 
   @Inject
-  NoteEquivalenceDirective(ProjectContextFactory contextFactory, FileSystem fileSystem, Ui ui) {
+  NoteEquivalenceDirective(
+      ProjectContextFactory contextFactory, Db.Factory dbFactory, Db.Writer dbWriter, Ui ui) {
     super(contextFactory); // TODO(cgruber) Inject project context, not its factory
-    this.fileSystem = fileSystem;
+    this.dbFactory = dbFactory;
+    this.dbWriter = dbWriter;
     this.ui = ui;
   }
 
   @Override
   protected int performDirectiveBehavior() {
-    FileDb db;
-    File dbFile = new File(dbLocation);
-    if (fileSystem.exists(dbFile)) {
-      db = FileDb.makeDbFromFile(dbFile.getAbsolutePath());
-    } else {
-      db = new FileDb(new DbStorage());
-    }
+    Db db = dbFactory.load(dbLocation);
 
     RepositoryExpression repoEx1 = null, repoEx2 = null;
     try {
@@ -86,7 +79,7 @@ public class NoteEquivalenceDirective extends Directive {
 
     RepositoryEquivalence newEq = RepositoryEquivalence.create(realRev1, realRev2);
     db.noteEquivalence(newEq);
-    db.writeToLocation(dbLocation);
+    dbWriter.write(db);
 
     ui.info("Noted equivalence: " + newEq);
 
