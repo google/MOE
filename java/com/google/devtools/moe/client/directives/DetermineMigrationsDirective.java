@@ -7,8 +7,8 @@ import com.google.devtools.moe.client.database.Db;
 import com.google.devtools.moe.client.migrations.Migration;
 import com.google.devtools.moe.client.migrations.MigrationConfig;
 import com.google.devtools.moe.client.migrations.Migrator;
-import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.project.ProjectContextFactory;
+import com.google.devtools.moe.client.repositories.RepositoryType;
 
 import org.kohsuke.args4j.Option;
 
@@ -17,7 +17,8 @@ import java.util.List;
 import javax.inject.Inject;
 
 /**
- * Print the results of {@link Migrator#determineMigrations(ProjectContext, MigrationConfig, Db)}
+ * Print the results of
+ * {@link Migrator#findMigrationsFromEquivalency(RepositoryType, MigrationConfig, Db)}
  *
  */
 public class DetermineMigrationsDirective extends Directive {
@@ -54,7 +55,8 @@ public class DetermineMigrationsDirective extends Directive {
       return 1;
     }
 
-    List<Migration> migrations = migrator.determineMigrations(context(), config, db);
+    RepositoryType fromRepo = context.getRepository(config.getFromRepository());
+    List<Migration> migrations = migrator.findMigrationsFromEquivalency(fromRepo, config, db);
     for (Migration migration : migrations) {
       ui.info("Pending migration: " + migration);
     }

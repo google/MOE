@@ -11,14 +11,15 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.devtools.moe.client.Messenger;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.MoeUserProblem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
+import com.google.devtools.moe.client.database.Db;
 import com.google.devtools.moe.client.database.RepositoryEquivalence;
+import com.google.devtools.moe.client.database.RepositoryEquivalenceMatcher.Result;
 import com.google.devtools.moe.client.editors.Editor;
 import com.google.devtools.moe.client.editors.Translator;
 import com.google.devtools.moe.client.editors.TranslatorPath;
@@ -32,12 +33,10 @@ import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.project.ProjectContextFactory;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.project.ScrubberConfig;
-import com.google.devtools.moe.client.repositories.ExactRevisionMatcher;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
-import com.google.devtools.moe.client.repositories.RevisionHistory.SearchType;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.writer.DraftRevision;
 import com.google.devtools.moe.client.writer.Writer;
@@ -64,27 +63,24 @@ import javax.inject.Inject;
  * @author cgruber@google.com (Christian Gruber)
  */
 public class MigrateBranchDirective extends Directive {
+  @Option(name = "--db", required = true, usage = "Location of MOE database")
+  private String dbLocation = "";
+
+  // TODO(cgruber) determine this from implicit signals.
   @Option(name = "--from_repository", required = true, usage = "The label of the source repository")
-  String registeredFromRepository = "";
+  private String registeredFromRepository = "";
 
   @Option(name = "--branch", required = true, usage = "the symbolic name of the imported branch")
-  String branchLabel = "";
+  private String branchLabel = "";
 
   @Option(
     name = "--override_repository_url",
     required = false,
     usage = "the repository url to use in the case that the branch is in a fork of the repository"
   )
-  String overrideUrl = "";
+  private String overrideUrl = "";
 
-  @Option(
-    name = "--branch_root",
-    required = true,
-    usage = "the commit that constitutes the starting point for branch replay."
-  )
-  // TODO(cgruber) turn this into a Revision against the repo in question via an args factory
-  String branchPoint = "";
-
+  private final Db.Factory dbFactory;
   private final Repositories repositories;
   private final Ui ui;
   private final Migrator migrator;
@@ -93,8 +89,13 @@ public class MigrateBranchDirective extends Directive {
 
   @Inject
   MigrateBranchDirective(
-      ProjectContextFactory contextFactory, Repositories repositories, Ui ui, Migrator migrator) {
+      Db.Factory dbFactory,
+      ProjectContextFactory contextFactory,
+      Repositories repositories,
+      Ui ui,
+      Migrator migrator) {
     super(contextFactory);
+    this.dbFactory = dbFactory;
     this.repositories = repositories;
     this.ui = ui;
     this.migrator = migrator;
@@ -102,8 +103,16 @@ public class MigrateBranchDirective extends Directive {
 
   @Override
   protected int performDirectiveBehavior() {
+    return performBranchMigration(dbLocation, registeredFromRepository, branchLabel, overrideUrl);
+  }
+
+  protected int performBranchMigration(
+      String dbLocation, String originalFromRepository, String branchLabel, String overrideUrl) {
+    Db db = dbFactory.load(dbLocation);
+
     MigrationConfig migrationConfig =
-        findMigrationConfigForRepository(registeredFromRepository + "_fork");
+        findMigrationConfigForRepository(
+            overrideUrl, originalFromRepository + "_fork", originalFromRepository);
 
     Ui.Task migrationTask =
         ui.pushTask(
@@ -112,25 +121,30 @@ public class MigrateBranchDirective extends Directive {
             migrationConfig.getName(),
             branchLabel);
 
+    RepositoryConfig baseRepoConfig =
+        context().config().getRepositoryConfig(originalFromRepository);
+    RepositoryType baseRepoType = repositories.create(originalFromRepository, baseRepoConfig);
     RepositoryConfig fromRepoConfig =
         context()
             .config()
-            .getRepositoryConfig(registeredFromRepository)
+            .getRepositoryConfig(originalFromRepository)
             .copyWithBranch(branchLabel)
             .copyWithUrl(overrideUrl);
     RepositoryType fromRepoType =
         repositories.create(migrationConfig.getFromRepository(), fromRepoConfig);
-    RepositoryType toRepoType = context().getRepository(migrationConfig.getToRepository());
 
     List<Migration> migrations =
-        determineMigrations(
+        findMigrationsBetweenBranches(
+            db,
             migrationConfig.getFromRepository(),
             migrationConfig.getToRepository(),
+            baseRepoType.revisionHistory(),
             fromRepoType.revisionHistory(),
-            toRepoType.revisionHistory().findHighestRevision(null),
             !migrationConfig.getSeparateRevisions());
+
     if (migrations.isEmpty()) {
       ui.info("No pending revisions to migrate in branch '%s' (as of %s)", branchLabel, "");
+      ui.popTask(migrationTask, "No migrations to process");
       return 0;
     }
 
@@ -176,7 +190,7 @@ public class MigrateBranchDirective extends Directive {
         throw new MoeProblem(e.getMessage());
       }
       ScrubberConfig scrubber =
-          context.config().findScrubberConfig(registeredFromRepository, migration.toRepository());
+          context.config().findScrubberConfig(originalFromRepository, migration.toRepository());
 
       dr =
           migrator.migrate(
@@ -242,14 +256,16 @@ public class MigrateBranchDirective extends Directive {
    * Looks up the migration config using the configured from repository, returning either
    * that config as-is, or a modified version targetting a repo fork.
    */
-  private MigrationConfig findMigrationConfigForRepository(final String fromRepository) {
+  private MigrationConfig findMigrationConfigForRepository(
+      String overrideUrl, final String fromRepository, final String originalFromRepository) {
+
     List<MigrationConfig> configs =
         FluentIterable.from(context().migrationConfigs().values())
             .filter(
                 new Predicate<MigrationConfig>() {
                   @Override
                   public boolean apply(MigrationConfig input) {
-                    return input.getFromRepository().equals(registeredFromRepository);
+                    return input.getFromRepository().equals(originalFromRepository);
                   }
                 })
             .toList();
@@ -283,32 +299,26 @@ public class MigrateBranchDirective extends Directive {
     return "Updates database and performs all migrations";
   }
 
-  private List<Migration> determineMigrations(
+  private List<Migration> findMigrationsBetweenBranches(
+      Db db,
       String fromRepoName,
       String toRepoName,
+      RevisionHistory baseRevisions,
       RevisionHistory fromRevisions,
-      Revision toHead,
       boolean batchChanges) {
+    Ui.Task determineMigrationsTask = ui.pushTask("determind migrations", "Determine migrations");
+    List<Revision> toMigrate = findDescendantRevisions(fromRevisions, baseRevisions);
+    ui.popTask(determineMigrationsTask, "");
 
-    Revision branchPointRevision = Revision.create(branchPoint, fromRepoName);
+    Result equivMatch = migrator.matchEquivalences(db, baseRevisions, toRepoName);
 
-    ExactRevisionMatcher.Result match =
-        fromRevisions.findRevisions(
-            null, // Start at branch tip.
-            new ExactRevisionMatcher(branchPointRevision),
-            SearchType.LINEAR);
-    // Since the matcher crawls from head, revisions() are in the opposite order from what
-    // we want to replay.
-    List<Revision> toMigrate = Lists.reverse(match.revisions().getBreadthFirstHistory());
-
-    RepositoryEquivalence migrationRoot = RepositoryEquivalence.create(branchPointRevision, toHead);
+    RepositoryEquivalence latestEquivalence = equivMatch.getEquivalences().get(0);
 
     ui.info(
-        "Migrating %d revisions in %s (branch %s) from %s: %s",
+        "Migrating %d revisions in %s (branch %s): %s",
         toMigrate.size(),
         fromRepoName,
         branchLabel,
-        branchPointRevision,
         Joiner.on(", ").join(toMigrate));
     if (!batchChanges) {
       ImmutableList.Builder<Migration> migrations = ImmutableList.builder();
@@ -319,13 +329,13 @@ public class MigrateBranchDirective extends Directive {
                 fromRepoName,
                 toRepoName,
                 ImmutableList.of(fromRev),
-                migrationRoot));
+                latestEquivalence));
       }
       return migrations.build();
     } else {
       return ImmutableList.of(
           Migration.create(
-              "custom_branch_import", fromRepoName, toRepoName, toMigrate, migrationRoot));
+              "custom_branch_import", fromRepoName, toRepoName, toMigrate, latestEquivalence));
     }
   }
 
@@ -347,26 +357,32 @@ public class MigrateBranchDirective extends Directive {
    * there is a window.
    */
   @VisibleForTesting
-  static List<Revision> findDescendantRevisions(
-      RevisionHistory branch, RevisionHistory parentBranch) {
+  List<Revision> findDescendantRevisions(RevisionHistory branch, RevisionHistory parentBranch) {
     Set<String> commitsInParentBranch = new LinkedHashSet<>();
     final String repositoryName = branch.findHighestRevision(null).repositoryName();
     Revision head = parentBranch.findHighestRevision(null);
     String parentRepositoryName = head.repositoryName();
 
+    Ui.Task ancestorTask = ui.pushTask("scan_ancestor_branch", "Gathering ancestor revisions");
     Deque<Revision> revisionsToProcess = new ArrayDeque<>();
     revisionsToProcess.add(head);
+    int count = 0;
     while (!revisionsToProcess.isEmpty()) {
       Revision revision = revisionsToProcess.remove();
-      commitsInParentBranch.add(revision.revId());
-      RevisionMetadata metadata =
-          parentBranch.getMetadata(Revision.create(revision.revId(), parentRepositoryName));
-      if (metadata == null) {
-        throw new MoeProblem("Revision %s did not appear in branch history as expected", revision);
+      if (!commitsInParentBranch.contains(revision.revId())) {
+        commitsInParentBranch.add(revision.revId());
+        RevisionMetadata metadata =
+            parentBranch.getMetadata(Revision.create(revision.revId(), parentRepositoryName));
+        if (metadata == null) {
+          throw new MoeProblem("Could not load revision metadata for %s", revision);
+        }
+        revisionsToProcess.addAll(metadata.parents);
+        count++;
       }
-      revisionsToProcess.addAll(metadata.parents);
     }
+    ui.popTask(ancestorTask, "Scanned revisions: " + count);
 
+    Ui.Task migrationBranchTask = ui.pushTask("scan_target_branch", "Finding mergeable commits");
     LinkedHashSet<String> commitsNotInParentBranch = new LinkedHashSet<>();
     revisionsToProcess = new ArrayDeque<>();
     revisionsToProcess.add(branch.findHighestRevision(null));
@@ -376,12 +392,13 @@ public class MigrateBranchDirective extends Directive {
       if (metadata == null) {
         throw new MoeProblem("Revision %s did not appear in branch history as expected", revision);
       }
-      Revision revisionInParentBranch = Revision.create(revision.revId(), parentRepositoryName);
-      if (parentBranch.getMetadata(revisionInParentBranch) == null) {
+      if (!commitsInParentBranch.contains(revision.revId())) {
         commitsNotInParentBranch.add(revision.revId());
         revisionsToProcess.addAll(metadata.parents);
       }
     }
+    ui.popTask(migrationBranchTask, "");
+
     return FluentIterable.from(commitsNotInParentBranch)
         .transform(
             new Function<String, Revision>() {

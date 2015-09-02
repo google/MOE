@@ -92,7 +92,9 @@ public class MagicDirective extends Directive {
         continue;
       }
 
-      List<Migration> migrations = migrator.determineMigrations(context(), migrationConfig, db);
+      RepositoryType fromRepo = context.getRepository(migrationConfig.getFromRepository());
+      List<Migration> migrations =
+          migrator.findMigrationsFromEquivalency(fromRepo, migrationConfig, db);
 
       if (migrations.isEmpty()) {
         ui.info("No pending revisions to migrate for %s", migrationName);

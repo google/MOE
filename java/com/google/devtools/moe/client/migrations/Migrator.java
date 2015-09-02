@@ -14,7 +14,6 @@ import com.google.devtools.moe.client.database.RepositoryEquivalenceMatcher;
 import com.google.devtools.moe.client.database.RepositoryEquivalenceMatcher.Result;
 import com.google.devtools.moe.client.parser.Expression;
 import com.google.devtools.moe.client.project.InvalidProject;
-import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.project.ScrubberConfig;
 import com.google.devtools.moe.client.repositories.MetadataScrubber;
 import com.google.devtools.moe.client.repositories.MetadataScrubberConfig;
@@ -54,8 +53,8 @@ public class Migrator {
    * @param migration the Migration representing the migration to perform
    * @param repositoryType the RepositoryType of the from repository.
    * @param destination the Writer to put the changes from the Migration into
-   * @param referenceToCodebase the reference to-codebase Expression used in case this Migration is
-   *                            an inverse translation
+   * @param referenceToCodebase the reference to-codebase Expression used in case this Migration
+   *     is an inverse translation
    *
    * @return  a DraftRevision on success, or null on failure
    */
@@ -96,20 +95,11 @@ public class Migrator {
    * @return a list of pending Migrations since last {@link RepositoryEquivalence} per
    *     migrationConfig
    */
-  public List<Migration> determineMigrations(
-      ProjectContext context, MigrationConfig migrationConfig, Db db) {
+  public List<Migration> findMigrationsFromEquivalency(
+      RepositoryType fromRepo, MigrationConfig migrationConfig, Db db) {
 
-    RepositoryType fromRepo = context.getRepository(migrationConfig.getFromRepository());
-    // TODO(user): Decide whether to migrate linear or graph history here. Once DVCS Writers
-    // support writing a graph of Revisions, we'll need to opt for linear or graph history based
-    // on the MigrationConfig (e.g. whether or not the destination repo is linear-only).
     Result equivMatch =
-        fromRepo
-            .revisionHistory()
-            .findRevisions(
-                null, // Start at head.
-                new RepositoryEquivalenceMatcher(migrationConfig.getToRepository(), db),
-                SearchType.LINEAR);
+        matchEquivalences(db, fromRepo.revisionHistory(), migrationConfig.getToRepository());
 
     List<Revision> revisionsSinceEquivalence =
         Lists.reverse(equivMatch.getRevisionsSinceEquivalence().getBreadthFirstHistory());
@@ -151,6 +141,21 @@ public class Migrator {
               revisionsSinceEquivalence,
               lastEq));
     }
+  }
+
+  /**
+   * Returns a result containing the known/discovered equivalences.
+   */
+  public Result matchEquivalences(Db db, RevisionHistory history, String toRepository) {
+    // TODO(user): Decide whether to migrate linear or graph history here. Once DVCS Writers
+    // support writing a graph of Revisions, we'll need to opt for linear or graph history based
+    // on the MigrationConfig (e.g. whether or not the destination repo is linear-only).
+    Result equivMatch =
+        history.findRevisions(
+            null, // Start at head.
+            new RepositoryEquivalenceMatcher(toRepository, db),
+            SearchType.LINEAR);
+    return equivMatch;
   }
 
   /**
