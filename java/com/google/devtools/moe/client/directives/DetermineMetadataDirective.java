@@ -8,6 +8,7 @@ import com.google.devtools.moe.client.parser.Parser;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.project.ProjectContextFactory;
+import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 
@@ -51,7 +52,9 @@ public class DetermineMetadataDirective extends Directive {
     }
 
     List<Revision> revs = Revision.fromRepositoryExpression(repoEx, context());
-    RevisionMetadata rm = migrator.processMetadata(context(), revs, null, null);
+    RepositoryType repositoryType = context.getRepository(repoEx.getRepositoryName());
+    RevisionMetadata rm =
+        migrator.processMetadata(repositoryType.revisionHistory(), revs, null, null);
     ui.info(rm.toString());
     return 0;
   }

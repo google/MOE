@@ -49,9 +49,9 @@ public class ProjectConfig {
    * Returns a mapping of {@link RepositoryConfig} by name in this config. Useful for inspection of
    * this config's contents.
    */
-  Map<String, RepositoryConfig> repositories() {
+  public Map<String, RepositoryConfig> repositories() {
     Preconditions.checkNotNull(repositories);
-    return Collections.unmodifiableMap(repositories);
+    return ImmutableMap.copyOf(repositories);
   }
 
   /**
@@ -92,22 +92,24 @@ public class ProjectConfig {
   }
 
 
-  public ScrubberConfig findScrubberConfig(String fromRepository, String toRepository) {
+  /**
+   * Returns a configuration from one repository to another, if any is configured.
+   */
+  public TranslatorConfig findTranslatorFrom(String fromRepository, String toRepository) {
     String fromProjectSpace = getRepositoryConfig(fromRepository).getProjectSpace();
     String toProjectSpace = getRepositoryConfig(toRepository).getProjectSpace();
     for (TranslatorConfig translator : getTranslators()) {
-      if (translator.getSteps() != null
-          && translator.getFromProjectSpace().equals(fromProjectSpace)
+      if (translator.getFromProjectSpace().equals(fromProjectSpace)
           && translator.getToProjectSpace().equals(toProjectSpace)) {
-        for (StepConfig step : translator.getSteps()) {
-          if (step.getEditorConfig().getType() == EditorType.scrubber) {
-            return step.getEditorConfig().getScrubberConfig();
-          }
-        }
-        break;
+        return translator;
       }
     }
     return null;
+  }
+
+  public ScrubberConfig findScrubberConfig(String fromRepository, String toRepository) {
+    TranslatorConfig translator = findTranslatorFrom(fromRepository, toRepository);
+    return (translator == null) ? null : translator.scrubber();
   }
 
   void validate() throws InvalidProject {

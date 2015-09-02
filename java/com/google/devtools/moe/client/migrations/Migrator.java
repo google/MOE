@@ -5,16 +5,14 @@ package com.google.devtools.moe.client.migrations;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
+import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
-import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.database.Db;
 import com.google.devtools.moe.client.database.RepositoryEquivalence;
 import com.google.devtools.moe.client.database.RepositoryEquivalenceMatcher;
 import com.google.devtools.moe.client.database.RepositoryEquivalenceMatcher.Result;
 import com.google.devtools.moe.client.parser.Expression;
-import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.project.ScrubberConfig;
@@ -22,6 +20,7 @@ import com.google.devtools.moe.client.repositories.MetadataScrubber;
 import com.google.devtools.moe.client.repositories.MetadataScrubberConfig;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.repositories.Revision;
+import com.google.devtools.moe.client.repositories.RevisionHistory;
 import com.google.devtools.moe.client.repositories.RevisionHistory.SearchType;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.writer.DraftRevision;
@@ -38,45 +37,22 @@ import javax.inject.Inject;
  */
 public class Migrator {
   private final DraftRevision.Factory revisionFactory;
+  private final Ui ui;
 
   @Inject
-  public Migrator(DraftRevision.Factory revisionFactory) {
+  public Migrator(DraftRevision.Factory revisionFactory, Ui ui) {
     this.revisionFactory = revisionFactory;
-  }
-
-  /**
-   * Perform a migration from specified source, destination, and specified Revisions
-   *
-   * @param c the Codebase to use as source
-   * @param destination the Writer to put the files from c into
-   * @param revisionsToMigrate  all revisions to include in this migration (the metadata from the
-   *                            Revisions in revisionsToMigrate determines the metadata for the
-   *                            change)
-   * @param context the context to evaluate in
-   *
-   * @return  a DraftRevision on success, or null on failure
-   */
-  public DraftRevision migrate(
-      Codebase c,
-      Writer destination,
-      List<Revision> revisionsToMigrate,
-      ProjectContext context,
-      Revision fromRevision,
-      String fromRepository,
-      String toRepository) {
-    RevisionMetadata metadata = processMetadata(context, revisionsToMigrate, null, fromRevision);
-    metadata = scrubAuthors(metadata, context, fromRepository, toRepository);
-    return revisionFactory.create(c, destination, metadata);
+    this.ui = ui;
   }
 
   /**
    * Perform a migration from a Migration object. Includes metadata scrubbing.
    *
-   * The DraftRevision is created at the revision of last equivalence, or from the head/tip of the
-   * repository if no Equivalence could be found.
+   * <p>The DraftRevision is created at the revision of last equivalence, or from the head/tip
+   * of the repository if no Equivalence could be found.
    *
    * @param migration the Migration representing the migration to perform
-   * @param context the context to evaluate in
+   * @param repositoryType the RepositoryType of the from repository.
    * @param destination the Writer to put the changes from the Migration into
    * @param referenceToCodebase the reference to-codebase Expression used in case this Migration is
    *                            an inverse translation
@@ -85,52 +61,25 @@ public class Migrator {
    */
   public DraftRevision migrate(
       Migration migration,
-      ProjectContext context,
+      RepositoryType repositoryType,
+      Codebase fromCodebase,
+      Revision mostRecentFromRev,
+      MetadataScrubberConfig metadataScrubberConfig,
+      ScrubberConfig scrubber,
       Writer destination,
       Expression referenceToCodebase) {
 
-    Revision mostRecentFromRev = migration.fromRevisions.get(migration.fromRevisions.size() - 1);
-
-    Codebase fromCodebase;
-    try {
-      String toProjectSpace =
-          context
-              .config()
-              .getRepositoryConfig(migration.config.getToRepository())
-              .getProjectSpace();
-
-      fromCodebase =
-          new RepositoryExpression(migration.config.getFromRepository())
-              .atRevision(mostRecentFromRev.revId())
-              .translateTo(toProjectSpace)
-              .withReferenceToCodebase(referenceToCodebase)
-              .createCodebase(context);
-
-    } catch (CodebaseCreationError e) {
-      throw new MoeProblem(e.getMessage());
-    }
-
-    MetadataScrubberConfig sc = migration.config.getMetadataScrubberConfig();
+    RevisionHistory revisionHistory = repositoryType.revisionHistory();
     RevisionMetadata metadata =
-        processMetadata(context, migration.fromRevisions, sc, mostRecentFromRev);
+        processMetadata(
+            revisionHistory, migration.fromRevisions(), metadataScrubberConfig, mostRecentFromRev);
 
-    metadata =
-        scrubAuthors(
-            metadata,
-            context,
-            migration.config.getFromRepository(),
-            migration.config.getToRepository());
-
-    return revisionFactory.create(fromCodebase, destination, metadata);
+    return revisionFactory.create(
+        fromCodebase, destination, possiblyScrubAuthors(metadata, scrubber));
   }
 
-  private RevisionMetadata scrubAuthors(
-      RevisionMetadata metadata,
-      ProjectContext context,
-      String fromRepository,
-      String toRepository) {
+  public RevisionMetadata possiblyScrubAuthors(RevisionMetadata metadata, ScrubberConfig scrubber) {
     try {
-      ScrubberConfig scrubber = context.config().findScrubberConfig(fromRepository, toRepository);
       if (scrubber != null && scrubber.shouldScrubAuthor(metadata.author)) {
         return new RevisionMetadata(
             metadata.id, null /* author */, metadata.date, metadata.description, metadata.parents);
@@ -166,34 +115,41 @@ public class Migrator {
         Lists.reverse(equivMatch.getRevisionsSinceEquivalence().getBreadthFirstHistory());
 
     if (revisionsSinceEquivalence.isEmpty()) {
-      Injector.INSTANCE
-          .ui()
-          .info(
-              "No revisions found since last equivalence for migration '"
-                  + migrationConfig.getName()
-                  + "'");
+      ui.info(
+          "No revisions found since last equivalence for migration '%s'",
+          migrationConfig.getName());
       return ImmutableList.of();
     }
 
     // TODO(user): Figure out how to report all equivalences.
     RepositoryEquivalence lastEq = equivMatch.getEquivalences().get(0);
-    Injector.INSTANCE
-        .ui()
-        .info(
-            "Found %d revisions in %s since equivalence (%s): %s",
-            revisionsSinceEquivalence.size(),
-            migrationConfig.getFromRepository(),
-            lastEq,
-            Joiner.on(", ").join(revisionsSinceEquivalence));
+    ui.info(
+        "Found %d revisions in %s since equivalence (%s): %s",
+        revisionsSinceEquivalence.size(),
+        migrationConfig.getFromRepository(),
+        lastEq,
+        Joiner.on(", ").join(revisionsSinceEquivalence));
 
     if (migrationConfig.getSeparateRevisions()) {
       ImmutableList.Builder<Migration> migrations = ImmutableList.builder();
       for (Revision fromRev : revisionsSinceEquivalence) {
-        migrations.add(new Migration(migrationConfig, ImmutableList.of(fromRev), lastEq));
+        migrations.add(
+            Migration.create(
+                migrationConfig.getName(),
+                migrationConfig.getFromRepository(),
+                migrationConfig.getToRepository(),
+                ImmutableList.of(fromRev),
+                lastEq));
       }
       return migrations.build();
     } else {
-      return ImmutableList.of(new Migration(migrationConfig, revisionsSinceEquivalence, lastEq));
+      return ImmutableList.of(
+          Migration.create(
+              migrationConfig.getName(),
+              migrationConfig.getFromRepository(),
+              migrationConfig.getToRepository(),
+              revisionsSinceEquivalence,
+              lastEq));
     }
   }
 
@@ -201,7 +157,7 @@ public class Migrator {
    * Get and scrub RevisionMetadata based on the given MetadataScrubberConfig.
    */
   public RevisionMetadata processMetadata(
-      ProjectContext context,
+      RevisionHistory revisionHistory,
       List<Revision> revs,
       @Nullable MetadataScrubberConfig sc,
       @Nullable Revision fromRevision) {
@@ -210,8 +166,7 @@ public class Migrator {
         (sc == null) ? ImmutableList.<MetadataScrubber>of() : sc.getScrubbers();
 
     for (Revision rev : revs) {
-      RevisionMetadata rm =
-          context.getRepository(rev.repositoryName()).revisionHistory().getMetadata(rev);
+      RevisionMetadata rm = revisionHistory.getMetadata(rev);
       for (MetadataScrubber scrubber : scrubbers) {
         rm = scrubber.scrub(rm);
       }

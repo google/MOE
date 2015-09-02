@@ -42,6 +42,17 @@ public class TranslatorConfig {
     return isInverse;
   }
 
+  public ScrubberConfig scrubber() {
+    if (getSteps() != null) {
+      for (StepConfig step : getSteps()) {
+        if (step.getEditorConfig().getType() == EditorType.scrubber) {
+          return step.getEditorConfig().getScrubberConfig();
+        }
+      }
+    }
+    return null;
+  }
+
   void validate() throws InvalidProject {
     InvalidProject.assertNotEmpty(fromProjectSpace, "Translator requires from_project_space");
     InvalidProject.assertNotEmpty(toProjectSpace, "Translator requires to_project_space");
