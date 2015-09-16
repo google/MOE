@@ -16,7 +16,11 @@
 
 package com.google.devtools.moe.client;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.nio.file.Files.walkFileTree;
+
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
@@ -30,7 +34,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -177,16 +183,42 @@ public class SystemFileSystem implements FileSystem {
 
   @Override
   public void deleteRecursively(File file) throws IOException {
-    Path directory = Paths.get(file.toURI());
-    java.nio.file.Files.walkFileTree(directory, new SimpleFileVisitor<Path>() {
+    deleteRecursively(file.toPath());
+  }
+
+  private void deleteRecursively(final Path path) throws IOException {
+    // Note, this does not attempt to perform the action securely and is vulnerable to a
+    // racey replacement of a directory about to be deleted with a symlink which can lead to
+    // files outside the parent directory to be deleted.
+    final List<IOException> exceptions = new ArrayList<>();
+    walkFileTree(path, new SimpleFileVisitor<Path>() {
       @Override
-      public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-        java.nio.file.Files.delete(file);
+      public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+        try {
+          java.nio.file.Files.delete(file);
+        } catch (IOException e) {
+          exceptions.add(e);
+        }
         return FileVisitResult.CONTINUE;
       }
       @Override
-      public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-        java.nio.file.Files.delete(dir);
+      public FileVisitResult postVisitDirectory(Path dir, IOException ignore) throws IOException {
+        // Since we're collecting exceptions in visitFile and never throwing, ignore the exception.
+        try {
+          java.nio.file.Files.delete(dir);
+        } catch (IOException e) {
+          exceptions.add(e);
+          switch (exceptions.size()) {
+            case 1:
+              throw Iterables.getOnlyElement(exceptions);
+            default:
+              IOException wrapper = new IOException("Errors recursively deleting " + path);
+              for (IOException exception : exceptions) {
+                wrapper.addSuppressed(exception);
+              }
+              throw wrapper;
+          }
+        }
         return FileVisitResult.CONTINUE;
       }
     });
