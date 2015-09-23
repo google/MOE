@@ -46,7 +46,7 @@ public class Moe {
   /**
    * a main() that works with the new Task framework.
    */
-  public static void main(String[] args) {
+  public static void main(String... args) {
     ConsoleHandler sysErrHandler = new ConsoleHandler();
     sysErrHandler.setLevel(Level.WARNING);
     allMoeLogger.addHandler(sysErrHandler);

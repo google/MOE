@@ -32,14 +32,12 @@ public class OptionsParser {
     this.debug = debugFlagPresent(preprocessedArgs);
   }
 
-  // TODO(cgruber) Rip this out when we can process multiple args sets.
-  private static boolean debugFlagPresent(String[] preprocessedArgs) {
-    for (String opt : preprocessedArgs) {
-      if (opt.equals("--debug")) {
-        return true;
-      }
-    }
-    return false;
+  /**
+   * An ultra-thin pre-options-parser to check for the debug flag, in order to allow debug logging
+   * before the graph (and options-parser) is initialized.
+   */
+  public static boolean debugFlagPresent(String[] preprocessedArgs) {
+    return Arrays.asList(preprocessedArgs).contains("--debug");
   }
 
   public boolean debug() {
