@@ -40,9 +40,23 @@ public class RepositoryConfig {
    * List of filepath regexes to ignore in this repo, e.g. files specific to this repo that are
    * not to be considered in translation b/w codebases.
    */
+  @SerializedName("ignore_file_patterns")
+  private List<String> ignoreFilePatterns = ImmutableList.of();
+
+  /**
+   * Legacy name for {@code ignore_file_patterns} which was always regular expression patterns.
+   */
+  @Deprecated
   @SerializedName("ignore_file_res")
   private List<String> ignoreFileRes = ImmutableList.of();
 
+  @SerializedName("executable_file_patterns")
+  private List<String> executableFilePatterns = ImmutableList.of();
+
+  /**
+   * Legacy name for {@code executable_file_patterns} which was always regular expression patterns.
+   */
+  @Deprecated
   @SerializedName("executable_file_res")
   private List<String> executableFileRes = ImmutableList.of();
 
@@ -86,7 +100,19 @@ public class RepositoryConfig {
   }
 
 
-  public List<String> getIgnoreFileRes() {
+  /**
+   * Returns a list of regular expression patterns whose matching files will be ignored when
+   * calculating the relevant file set to compare codebases.
+   */
+  public List<String> getIgnoreFilePatterns() {
+    if (!ignoreFilePatterns.isEmpty()) {
+      if (!ignoreFileRes.isEmpty()) {
+        throw new InvalidProject(
+            "ignore_file_res is a deprecated configuration field.  it is replaced with "
+                + "ignore_file_patterns. Only one of these should be set.");
+      }
+      return ignoreFilePatterns;
+    }
     return ignoreFileRes;
   }
 
@@ -103,12 +129,20 @@ public class RepositoryConfig {
   }
 
   /**
-   * Returns a list of regexes for file paths that should be marked executable. For version control
-   * or build systems that don't support the executable bit, use these regexes to indicate which
-   * files should be marked executable. Any files that don't match one of these regexes will be
-   * marked non-executable.
+   * Returns a list of pattern strings for file paths that should be marked executable. For version
+   * control or build systems that don't support the executable bit, use these patterns to indicate
+   * which files should be marked executable. Any files that don't match one of these patterns will
+   * be marked non-executable.
    */
-  public List<String> getExecutableFileRes() {
+  public List<String> getExecutableFilePatterns() {
+    if (!executableFilePatterns.isEmpty()) {
+      if (!executableFileRes.isEmpty()) {
+        throw new InvalidProject(
+            "executable_file_res is a deprecated configuration field.  it is replaced with "
+                + "executable_file_patterns. Only one of these should be set.");
+      }
+      return executableFilePatterns;
+    }
     return executableFileRes;
   }
 

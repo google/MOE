@@ -65,7 +65,7 @@ public class SvnWriter implements Writer {
     // config's ignore_file_res.
     List<String> ignoreFilePatterns =
         ImmutableList.<String>builder()
-            .addAll(config.getIgnoreFileRes())
+            .addAll(config.getIgnoreFilePatterns())
             .add("(^|.*/)\\.svn(/.*|$)")
             .build();
 

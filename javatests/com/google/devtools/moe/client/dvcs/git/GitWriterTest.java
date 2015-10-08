@@ -80,7 +80,7 @@ public class GitWriterTest extends TestCase {
   }
 
   public void testPutCodebase_emptyCodebase() throws Exception {
-    expect(mockRepoConfig.getIgnoreFileRes()).andReturn(ImmutableList.<String>of());
+    expect(mockRepoConfig.getIgnoreFilePatterns()).andReturn(ImmutableList.<String>of());
     // Define the files in the codebase and in the writer (git repo).
     expect(mockFs.findFiles(codebaseRoot)).andReturn(ImmutableSet.<File>of());
     expect(mockFs.findFiles(writerRoot))
@@ -102,7 +102,7 @@ public class GitWriterTest extends TestCase {
   }
 
   public void testPutCodebase_addFile() throws Exception {
-    expect(mockRepoConfig.getIgnoreFileRes()).andReturn(ImmutableList.<String>of());
+    expect(mockRepoConfig.getIgnoreFilePatterns()).andReturn(ImmutableList.<String>of());
 
     expect(mockFs.findFiles(codebaseRoot))
         .andReturn(ImmutableSet.<File>of(new File(codebaseRoot, "file1")));
@@ -124,7 +124,7 @@ public class GitWriterTest extends TestCase {
   }
 
   public void testPutCodebase_editFile() throws Exception {
-    expect(mockRepoConfig.getIgnoreFileRes()).andReturn(ImmutableList.<String>of());
+    expect(mockRepoConfig.getIgnoreFilePatterns()).andReturn(ImmutableList.<String>of());
 
     expect(mockFs.findFiles(codebaseRoot))
         .andReturn(ImmutableSet.<File>of(new File(codebaseRoot, "file1")));
@@ -147,7 +147,7 @@ public class GitWriterTest extends TestCase {
   }
 
   public void testPutCodebase_removeFile() throws Exception {
-    expect(mockRepoConfig.getIgnoreFileRes()).andReturn(ImmutableList.<String>of());
+    expect(mockRepoConfig.getIgnoreFilePatterns()).andReturn(ImmutableList.<String>of());
 
     expect(mockFs.findFiles(codebaseRoot)).andReturn(ImmutableSet.<File>of());
     expect(mockFs.findFiles(writerRoot))
@@ -167,7 +167,8 @@ public class GitWriterTest extends TestCase {
   }
 
   public void testPutCodebase_ignoreFilesRes() throws Exception {
-    expect(mockRepoConfig.getIgnoreFileRes()).andReturn(ImmutableList.of("^.*ignored_\\w+\\.txt$"));
+    expect(mockRepoConfig.getIgnoreFilePatterns())
+        .andReturn(ImmutableList.of("^.*ignored_\\w+\\.txt$"));
 
     expect(mockFs.findFiles(codebaseRoot)).andReturn(ImmutableSet.<File>of());
     expect(mockFs.findFiles(writerRoot))

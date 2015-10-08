@@ -66,7 +66,7 @@ public class SvnWriterCreatorTest extends TestCase {
     RepositoryConfig mockConfig = control.createMock(RepositoryConfig.class);
     expect(mockConfig.getUrl()).andReturn("http://foo/svn/trunk/").anyTimes();
     expect(mockConfig.getProjectSpace()).andReturn("internal").anyTimes();
-    expect(mockConfig.getIgnoreFileRes()).andReturn(ImmutableList.<String>of()).anyTimes();
+    expect(mockConfig.getIgnoreFilePatterns()).andReturn(ImmutableList.<String>of()).anyTimes();
 
     Revision result = Revision.create(45, "");
     expect(fileSystem.getTemporaryDirectory("svn_writer_45_"))

@@ -48,7 +48,7 @@ public abstract class AbstractDvcsWriter<T extends LocalWorkspace> implements Wr
 
   /**
    * Returns the regexes, a la
-   * {@link com.google.devtools.moe.client.project.RepositoryConfig#getIgnoreFileRes()},
+   * {@link com.google.devtools.moe.client.project.RepositoryConfig#getIgnoreFilePatterns()},
    * of filepaths to ignore in this Writer. For example, an Hg implementation of this method would
    * return the getIgnoreFileRes() in its RepositoryConfig along with any Hg-specific paths in its
    * LocalClone, such as "^.hg/.*". Otherwise, this Writer would attempt to modify hg-metadata

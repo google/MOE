@@ -28,7 +28,7 @@ public class GitWriter extends AbstractDvcsWriter<GitClonedRepository> {
   @Override
   protected List<String> getIgnoreFilePatterns() {
     return ImmutableList.<String>builder()
-        .addAll(revClone.getConfig().getIgnoreFileRes())
+        .addAll(revClone.getConfig().getIgnoreFilePatterns())
         .add("^\\.git.*")
         .build();
   }

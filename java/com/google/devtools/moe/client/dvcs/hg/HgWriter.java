@@ -28,7 +28,7 @@ public class HgWriter extends AbstractDvcsWriter<HgClonedRepository> {
   @Override
   protected List<String> getIgnoreFilePatterns() {
     return ImmutableList.<String>builder()
-        .addAll(revClone.getConfig().getIgnoreFileRes())
+        .addAll(revClone.getConfig().getIgnoreFilePatterns())
         .add("^\\.hg.*")
         .build();
   }

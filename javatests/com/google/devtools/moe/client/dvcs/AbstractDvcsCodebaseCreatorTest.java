@@ -77,7 +77,7 @@ public class AbstractDvcsCodebaseCreatorTest extends TestCase {
             .context();
 
     expect(mockRepo.getConfig()).andReturn(mockRepoConfig).anyTimes();
-    expect(mockRepoConfig.getIgnoreFileRes()).andReturn(ImmutableList.<String>of());
+    expect(mockRepoConfig.getIgnoreFilePatterns()).andReturn(ImmutableList.<String>of());
     expect(mockRepo.getRepositoryName()).andReturn(MOCK_REPO_NAME);
   }
 

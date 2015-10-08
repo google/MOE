@@ -73,7 +73,7 @@ public class SvnWriterTest extends TestCase {
 
     expect(mockConfig.getUrl()).andReturn("http://foo/svn/trunk/").anyTimes();
     expect(mockConfig.getProjectSpace()).andReturn("public").anyTimes();
-    expect(mockConfig.getIgnoreFileRes()).andReturn(ImmutableList.<String>of()).anyTimes();
+    expect(mockConfig.getIgnoreFilePatterns()).andReturn(ImmutableList.<String>of()).anyTimes();
   }
 
   private void expectSvnCommand(

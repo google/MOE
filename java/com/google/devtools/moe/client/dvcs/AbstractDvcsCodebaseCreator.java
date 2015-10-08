@@ -82,7 +82,7 @@ public abstract class AbstractDvcsCodebaseCreator implements CodebaseCreator {
 
     // Filter files in the codebase by RepositoryConfig#ignoreFileRes.
     Predicate<CharSequence> nonIgnoredFilePred =
-        Utils.nonMatchingPredicateFromRes(headClone.getConfig().getIgnoreFileRes());
+        Utils.nonMatchingPredicateFromRes(headClone.getConfig().getIgnoreFilePatterns());
     Utils.filterFiles(archiveLocation, nonIgnoredFilePred);
 
     return new Codebase(

@@ -88,7 +88,7 @@ public class HgWriterTest extends TestCase {
 
     expect(mockRevClone.getLocalTempDir()).andReturn(WRITER_ROOT).anyTimes();
     expect(mockRevClone.getConfig()).andReturn(mockRepoConfig).anyTimes();
-    expect(mockRepoConfig.getIgnoreFileRes()).andReturn(ImmutableList.<String>of()).anyTimes();
+    expect(mockRepoConfig.getIgnoreFilePatterns()).andReturn(ImmutableList.<String>of()).anyTimes();
     expect(mockRepoConfig.getProjectSpace()).andReturn(PROJECT_SPACE).anyTimes();
   }
 
