@@ -26,7 +26,6 @@ import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory.SearchType;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.testing.DummyDb;
-import com.google.devtools.moe.client.testing.MoeAsserts;
 import com.google.devtools.moe.client.testing.TestingModule;
 
 import junit.framework.TestCase;
@@ -149,7 +148,7 @@ public class GitRevisionHistoryTest extends TestCase {
     RevisionMetadata result = rh.getMetadata(Revision.create(1, "mockrepo"));
     assertEquals("1", result.id);
     assertEquals("foo@google.com", result.author);
-    MoeAsserts.assertSameDate(DATE, result.date);
+    assertThat(result.date).isEquivalentAccordingToCompareTo(DATE);
     assertEquals("description\n", result.description);
     assertThat(result.parents)
         .containsExactly(Revision.create(2, repositoryName), Revision.create(3, repositoryName))
@@ -175,7 +174,7 @@ public class GitRevisionHistoryTest extends TestCase {
 
     assertEquals("1", rm.id);
     assertEquals("foo@google.com", rm.author);
-    MoeAsserts.assertSameDate(DATE, rm.date);
+    assertThat(rm.date).isEquivalentAccordingToCompareTo(DATE);
     assertEquals("desc with \n\nmultiple lines\n", rm.description);
     assertThat(rm.parents)
         .containsExactly(Revision.create(2, repositoryName), Revision.create(3, repositoryName))

@@ -2,6 +2,7 @@
 
 package com.google.devtools.moe.client.dvcs.hg;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.easymock.EasyMock.expect;
 
 import com.google.common.base.Suppliers;
@@ -22,7 +23,6 @@ import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory.SearchType;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.testing.DummyDb;
-import com.google.devtools.moe.client.testing.MoeAsserts;
 import com.google.devtools.moe.client.testing.TestingModule;
 
 import dagger.Provides;
@@ -166,7 +166,7 @@ public class HgRevisionHistoryTest extends TestCase {
     RevisionMetadata result = revHistory.getMetadata(Revision.create(2, "mockrepo"));
     assertEquals("2", result.id);
     assertEquals("uid@google.com", result.author);
-    MoeAsserts.assertSameDate(DATE, result.date);
+    assertThat(result.date).isEquivalentAccordingToCompareTo(DATE);
     assertEquals("description", result.description);
     assertEquals(
         ImmutableList.of(
@@ -200,7 +200,7 @@ public class HgRevisionHistoryTest extends TestCase {
     RevisionMetadata result = revHistory.getMetadata(Revision.create(2, "mockrepo"));
     assertEquals("2", result.id);
     assertEquals("u<id@google.com", result.author);
-    MoeAsserts.assertSameDate(DATE, result.date);
+    assertThat(result.date).isEquivalentAccordingToCompareTo(DATE);
     assertEquals(">description&amp", result.description);
     assertEquals(ImmutableList.of(Revision.create("parent", MOCK_REPO_NAME)), result.parents);
 
@@ -217,7 +217,7 @@ public class HgRevisionHistoryTest extends TestCase {
         rh.parseMetadata("1 < foo@google.com < " + HG_COMMIT_DATE + " < foo < 1:p1 -1:p2\n");
     assertEquals("1", rm.id);
     assertEquals("foo@google.com", rm.author);
-    MoeAsserts.assertSameDate(DATE, rm.date);
+    assertThat(rm.date).isEquivalentAccordingToCompareTo(DATE);
     assertEquals("foo", rm.description);
     assertEquals(ImmutableList.of(Revision.create("p1", MOCK_REPO_NAME)), rm.parents);
 

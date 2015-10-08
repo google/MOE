@@ -2,6 +2,7 @@
 
 package com.google.devtools.moe.client.svn;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.easymock.EasyMock.expect;
 
 import com.google.common.collect.ImmutableList;
@@ -19,7 +20,6 @@ import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory.SearchType;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.testing.DummyDb;
-import com.google.devtools.moe.client.testing.MoeAsserts;
 import com.google.devtools.moe.client.testing.TestingModule;
 
 import dagger.Provides;
@@ -142,12 +142,12 @@ public class SvnRevisionHistoryTest extends TestCase {
     assertEquals(2, rs.size());
     assertEquals("2", rs.get(0).id);
     assertEquals("uid@google.com", rs.get(0).author);
-    MoeAsserts.assertSameDate(DATE, rs.get(0).date);
+    assertThat(rs.get(0).date).isEquivalentAccordingToCompareTo(DATE);
     assertEquals("description", rs.get(0).description);
     assertEquals(ImmutableList.of(Revision.create(1, "internal_svn")), rs.get(0).parents);
     assertEquals("1", rs.get(1).id);
     assertEquals("user@google.com", rs.get(1).author);
-    MoeAsserts.assertSameDate(DATE, rs.get(1).date);
+    assertThat(rs.get(1).date).isEquivalentAccordingToCompareTo(DATE);
     assertEquals("message", rs.get(1).description);
     assertEquals(ImmutableList.of(), rs.get(1).parents);
   }
@@ -189,7 +189,7 @@ public class SvnRevisionHistoryTest extends TestCase {
     RevisionMetadata result = history.getMetadata(Revision.create(3, "internal_svn"));
     assertEquals("3", result.id);
     assertEquals("uid@google.com", result.author);
-    MoeAsserts.assertSameDate(DATE, result.date);
+    assertThat(result.date).isEquivalentAccordingToCompareTo(DATE);
     assertEquals("message", result.description);
     assertEquals(ImmutableList.of(Revision.create(2, "internal_svn")), result.parents);
     control.verify();
