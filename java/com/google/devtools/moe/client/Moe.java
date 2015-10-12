@@ -96,14 +96,14 @@ public class Moe {
       if (debug) {
         StringWriter sw = new StringWriter();
         e.printStackTrace(new PrintWriter(sw));
-        ui.info(sw.getBuffer().toString());
+        ui.info("%s", sw.getBuffer());
       }
     } catch (MoeProblem m) {
       ui.error(m, "Moe encountered a problem; look above for explanation");
       if (debug) {
         StringWriter sw = new StringWriter();
         m.printStackTrace(new PrintWriter(sw));
-        ui.error(sw.getBuffer().toString());
+        ui.error("%s", sw.getBuffer());
       }
     }
     return 1;
