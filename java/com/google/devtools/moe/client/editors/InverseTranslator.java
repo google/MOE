@@ -76,7 +76,6 @@ import java.util.Map;
  * <p>We call the codebase being merged onto the "reference from-codebase". The codebase beside
  * the input being merged in is called the "reference to-codebase". In these diamonds,
  * the ref. from-codebase is the top, and the ref. to-codebase is the left.
- *
  */
 public class InverseTranslator implements Translator {
 

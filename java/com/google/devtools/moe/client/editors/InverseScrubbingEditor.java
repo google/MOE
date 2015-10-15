@@ -41,7 +41,6 @@ import java.util.Map;
  *
  * <p>The result of 'merge internal(x) public(y) public(y+1)' is the combined addition of scrubbed
  * content and the new public change. This merge produces internal(x+1).
- *
  */
 public class InverseScrubbingEditor implements InverseEditor {
   private final FileDiffer differ;

@@ -20,7 +20,6 @@ import java.util.List;
 
 /**
  * This MetadataScrubber replaces any of the target usernames with the replacement string.
- *
  */
 public class MetadataUsernameScrubber extends MetadataScrubber {
 

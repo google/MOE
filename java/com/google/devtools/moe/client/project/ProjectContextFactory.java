@@ -50,8 +50,6 @@ import javax.annotation.Nullable;
 
 /**
  * Creates a {@link ProjectContext} given a context file name.
- *
- * @author dbentley@google.com (Daniel Bentley)
  */
 // TODO(cgruber): Move most of the create logic to ProjectConfig, since they're basically accessors
 public abstract class ProjectContextFactory {

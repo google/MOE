@@ -39,8 +39,6 @@ import java.util.Map;
 
 import javax.inject.Singleton;
 
-/**
- */
 public class PatchingEditorTest extends TestCase {
   private final IMocksControl control = EasyMock.createControl();
   private final FileSystem fileSystem = control.createMock(FileSystem.class);

@@ -38,7 +38,6 @@ import java.util.regex.Pattern;
 
 /**
  * The renaming editor reorganizes the project's hierarchy.
- *
  */
 public class RenamingEditor implements Editor {
 

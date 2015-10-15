@@ -31,9 +31,6 @@ import org.joda.time.DateTime;
 
 import java.util.List;
 
-/**
- * @author dbentley@google.com (Daniel Bentley)
- */
 public class MigrateBranchDirectiveTest extends TestCase {
   private static final String AUTHOR = "foo@foo.com";
   private final Ui ui = new RecordingUi();

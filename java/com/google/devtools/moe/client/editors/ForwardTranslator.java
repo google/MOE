@@ -27,8 +27,6 @@ import java.util.Map;
 /**
  * A Translator that translates a Codebase from one project space to another by calling its
  * constituent Editors in turn in translate().
- *
- * @author dbentley@google.com (Daniel Bentley)
  */
 public class ForwardTranslator implements Translator {
 

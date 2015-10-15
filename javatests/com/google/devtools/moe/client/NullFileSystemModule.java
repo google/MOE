@@ -21,9 +21,6 @@ import dagger.Provides;
 
 import javax.annotation.Nullable;
 
-/**
- * @author cgruber@google.com (Christian Gruber)
- */
 @Module
 public class NullFileSystemModule {
   @Provides

@@ -62,7 +62,6 @@ import java.util.List;
  *
  *                    internalrepo                 publicrepo
  * </pre>
- *
  */
 public class CodebaseMergerTest extends TestCase {
   private final RecordingUi ui = new RecordingUi();

@@ -30,8 +30,6 @@ import java.util.Map;
 
 /**
  * {@link WriterCreator} for svn.
- *
- * @author dbentley@google.com (Daniel Bentley)
  */
 public class SvnWriterCreator implements WriterCreator {
 

@@ -53,10 +53,6 @@ import java.util.List;
 
 import javax.inject.Singleton;
 
-/**
- * Unit tests for HgRevisionHistory: that 'hg log' calls are as expected and parsed correctly.
- *
- */
 public class HgRevisionHistoryTest extends TestCase {
   private static final String HG_COMMIT_DATE = "2012-07-09 06:00 -0700";
   private static final DateTime DATE =

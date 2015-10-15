@@ -21,8 +21,6 @@ import com.google.gson.annotations.SerializedName;
 
 /**
  * Configuration for a MOE Editor.
- *
- * @author dbentley@google.com (Dan Bentley)
  */
 public class EditorConfig {
 

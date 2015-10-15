@@ -26,7 +26,7 @@ import junit.framework.TestCase;
 import java.io.File;
 
 /**
- * @author dbentley@google.com (Daniel Bentley)
+ * Tests for {@link Codebase}
  */
 public class CodebaseTest extends TestCase {
 

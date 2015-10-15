@@ -25,9 +25,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 /**
- * Ui that records what was Info'ed
- *
- * @author dbentley@google.com (Daniel Bentley)
+ * Ui that records what was reported to the user interface under the "info" level.
  */
 public class RecordingUi extends SystemUi {
   public String lastInfo;

@@ -31,8 +31,8 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 /**
- *
- * @author dbentley@google.com (Daniel Bentley)
+ * An implementation of {@link CommandRunner} that executes external programs via the
+ * standard java ProcessBuilder, capturing console and error output and return status.
  */
 @Singleton
 public class SystemCommandRunner implements CommandRunner {

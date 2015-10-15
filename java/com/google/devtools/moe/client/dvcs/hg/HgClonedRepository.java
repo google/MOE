@@ -36,7 +36,6 @@ import java.io.IOException;
 
 /**
  * Hg implementation of LocalClone, i.e. an 'hg clone' to local disk.
- *
  */
 public class HgClonedRepository implements LocalWorkspace {
 

@@ -35,7 +35,6 @@ import javax.inject.Inject;
 /**
  * Combines the metadata for the given revisions into one consolidated metadata. Useful for when
  * multiple revisions in one repository need to be exported as one revision in the other.
- *
  */
 public class DetermineMetadataDirective extends Directive {
   @Option(

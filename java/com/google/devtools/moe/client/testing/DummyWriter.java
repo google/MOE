@@ -25,8 +25,7 @@ import com.google.devtools.moe.client.writer.WritingError;
 import java.io.File;
 
 /**
- *
- * @author dbentley@google.com (Daniel Bentley)
+ * Dummy codebase writer
  */
 public class DummyWriter implements Writer {
 

@@ -19,8 +19,7 @@ package com.google.devtools.moe.client.testing;
 import com.google.devtools.moe.client.writer.DraftRevision;
 
 /**
- *
- * @author dbentley@google.com (Daniel Bentley)
+ * Draft revision in a dummy repository.
  */
 public class DummyDraftRevision implements DraftRevision {
 

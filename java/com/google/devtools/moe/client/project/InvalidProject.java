@@ -19,8 +19,7 @@ package com.google.devtools.moe.client.project;
 import com.google.common.base.Strings;
 
 /**
- *
- * @author dbentley@google.com (Daniel Bentley)
+ * An error thrown in the case of an invalid project definition or configuration.
  */
 public class InvalidProject extends RuntimeException {
   public InvalidProject(String explanationTemplate, Object... args) {

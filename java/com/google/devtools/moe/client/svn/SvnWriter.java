@@ -40,8 +40,6 @@ import javax.annotation.Nullable;
 
 /**
  * {@link Writer} for svn.
- *
- * @author dbentley@google.com (Daniel Bentley)
  */
 public class SvnWriter implements Writer {
 

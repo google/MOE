@@ -20,8 +20,6 @@ import com.google.gson.annotations.SerializedName;
 
 /**
  * Configuration for a MOE Step.
- *
- * @author dbentley@google.com (Dan Bentley)
  */
 public class StepConfig {
 

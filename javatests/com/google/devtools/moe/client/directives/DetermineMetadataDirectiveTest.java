@@ -33,10 +33,6 @@ import junit.framework.TestCase;
 
 import org.joda.time.DateTime;
 
-/**
- * Test to ensure the DetermineMetadataDirective produces the expected output.
- *
- */
 public class DetermineMetadataDirectiveTest extends TestCase {
   private final RecordingUi ui = new RecordingUi();
   private final SystemCommandRunner cmd = new SystemCommandRunner(ui);

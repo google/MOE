@@ -27,8 +27,6 @@ import java.util.List;
 
 /**
  * Configuration for a MOE Repository.
- *
- * @author nicksantos@google.com (Nick Santos)
  */
 public class RepositoryConfig {
   private String type;

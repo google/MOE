@@ -35,8 +35,6 @@ import java.util.Map;
 
 /**
  * Configuration for a MOE Project
- *
- * @author dbentley@google.com (Daniel Bentley)
  */
 public class ProjectConfig {
   private String name;

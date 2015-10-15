@@ -52,10 +52,6 @@ import java.util.List;
 import javax.inject.Singleton;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-/**
- * @author dbentley@google.com
- *
- */
 public class SvnRevisionHistoryTest extends TestCase {
   // Svn actually follows the spec!
   private static final String SVN_COMMIT_DATE = "2012-07-09T13:00:00.000000Z";

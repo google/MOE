@@ -30,7 +30,6 @@ import com.google.devtools.moe.client.project.ProjectContext;
  * application of a {@link Translator}. For example,
  * new RepositoryExpression("myRepo").translateTo("public")
  * returns a TranslateExpression for "myRepo>public".
- *
  */
 public class TranslateExpression extends AbstractExpression {
 

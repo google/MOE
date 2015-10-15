@@ -44,10 +44,6 @@ import java.util.Collections;
 
 import javax.inject.Singleton;
 
-/**
- * Tests for AbstractDvcsCodebaseCreator, esp. that create() archives at the right revision.
- *
- */
 public class AbstractDvcsCodebaseCreatorTest extends TestCase {
   private static final String MOCK_REPO_NAME = "mockrepo";
 

@@ -26,7 +26,6 @@ import java.util.List;
 
 /**
  * A Migration represents a change to be ported from one {@link RepositoryType} to another.
- *
  */
 @AutoValue
 public abstract class Migration {

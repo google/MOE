@@ -22,8 +22,6 @@ import java.util.List;
 
 /**
  * Configuration for a MOE Translator
- *
- * @author dbentley@google.com (Daniel Bentley)
  */
 public class TranslatorConfig {
 

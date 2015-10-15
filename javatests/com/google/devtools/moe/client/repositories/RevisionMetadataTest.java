@@ -22,10 +22,6 @@ import junit.framework.TestCase;
 
 import org.joda.time.DateTime;
 
-/**
- * Tests for RevisionMetadata operations.
- *
- */
 public class RevisionMetadataTest extends TestCase {
 
   public void testConcatenate_singleMetadata() {

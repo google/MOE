@@ -27,7 +27,6 @@ import com.google.devtools.moe.client.repositories.RevisionHistory;
 
 /**
  * Git implementation of AbstractDvcsCodebaseCreator to handle local cloning.
- *
  */
 public class GitCodebaseCreator extends AbstractDvcsCodebaseCreator {
 

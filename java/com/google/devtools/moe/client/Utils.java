@@ -33,9 +33,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Utilties (all pure functions!) to make writing MOE easier.
- *
- * @author dbentley@google.com (Daniel Bentley)
+ * Random utilities and shared code.
  */
 public class Utils {
 

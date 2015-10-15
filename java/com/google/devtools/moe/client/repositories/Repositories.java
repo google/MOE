@@ -37,8 +37,6 @@ import javax.inject.Inject;
 /**
  * Creates a {@link RepositoryType} of the given kind, acting as a routing object between
  * various kinds of repository types and their factories.
- *
- * @author cgruber@google.com (Christian Gruber)
  */
 public class Repositories implements RepositoryType.Factory {
   // TODO(cgruber): Make this less of a holder, and more of a thing (Law of Demeter, folks...)

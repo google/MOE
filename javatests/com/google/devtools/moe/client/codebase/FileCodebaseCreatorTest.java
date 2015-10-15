@@ -44,7 +44,6 @@ import java.util.List;
 
 /**
  * Tests for the FileCodebaseCreator class.
- *
  */
 public class FileCodebaseCreatorTest extends TestCase {
   private final RecordingUi ui = new RecordingUi();

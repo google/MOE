@@ -18,9 +18,6 @@ package com.google.devtools.moe.client;
 
 import junit.framework.TestCase;
 
-/**
- * @author dbentley@google.com (Daniel Bentley)
- */
 public class UiTest extends TestCase {
 
   class NoOpUi extends Ui {

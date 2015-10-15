@@ -41,7 +41,6 @@ import javax.annotation.Nullable;
  * commit.
  *
  * @param <T> the type of LocalClone, so that subclasses can use its native methods
- *
  */
 // TODO(user): Make this usable for SVN as well.
 public abstract class AbstractDvcsWriter<T extends LocalWorkspace> implements Writer {

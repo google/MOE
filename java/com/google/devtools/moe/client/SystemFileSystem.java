@@ -41,8 +41,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * A {@link FileSystem} using the real local filesystem via operations in {@link File}.
- *
- * @author dbentley@google.com (Daniel Bentley)
  */
 @Singleton
 public class SystemFileSystem implements FileSystem {

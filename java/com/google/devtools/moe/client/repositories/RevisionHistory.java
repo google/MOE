@@ -20,8 +20,6 @@ import javax.annotation.Nullable;
 
 /**
  * An abstraction of a Repository's Revision History.
- *
- * @author dbentley@google.com (Daniel Bentley)
  */
 public interface RevisionHistory {
 

@@ -20,9 +20,6 @@ import junit.framework.TestCase;
 
 import java.io.File;
 
-/**
- * @author dbentley@google.com (Daniel Bentley)
- */
 public class SvnDraftRevisionTest extends TestCase {
 
   public void testGetLocation() throws Exception {

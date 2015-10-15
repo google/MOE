@@ -28,9 +28,6 @@ import javax.inject.Singleton;
  * <p>This class is slated to be replaced more directly by a dagger component once
  * more elements of the code have eliminated the static reference and task-scope
  * is implemented.
- *
- * @author dbentley@google.com (Daniel Bentley)
- * @author cgruber@google.com (Christian Gruber)
  */
 @Singleton
 public class Injector {

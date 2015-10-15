@@ -20,8 +20,6 @@ package com.google.devtools.moe.client;
  * A type used to wrap logging.
  *
  * TODO(cgruber): Replace with fluent logger when it is released (go/flogger)
- *
- * @author cgruber@google.com (Christian Gruber)
  */
 public interface Messenger {
 

@@ -39,10 +39,6 @@ import java.io.File;
 
 import javax.inject.Singleton;
 
-/**
- * Unit tests for HgClonedRepository: verify that Hg cloning works as expected.
- *
- */
 public class HgClonedRepositoryTest extends TestCase {
   private final IMocksControl control = EasyMock.createControl();
   private final FileSystem mockFS = control.createMock(FileSystem.class);

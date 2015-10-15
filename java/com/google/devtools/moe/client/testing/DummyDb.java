@@ -32,7 +32,6 @@ import javax.inject.Inject;
 
 /**
  * Db for testing
- *
  */
 public class DummyDb implements Db {
 

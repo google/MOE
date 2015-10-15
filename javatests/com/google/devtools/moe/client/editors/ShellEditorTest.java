@@ -38,9 +38,6 @@ import java.util.List;
 
 import javax.inject.Singleton;
 
-/**
- *
- */
 public class ShellEditorTest extends TestCase {
   private final IMocksControl control = EasyMock.createControl();
   private final FileSystem fileSystem = control.createMock(FileSystem.class);

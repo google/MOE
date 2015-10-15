@@ -17,7 +17,6 @@ package com.google.devtools.moe.client.editors;
 
 /**
  * One step in inverse-translating from one project space to another.
- *
  */
 public class InverseTranslatorStep {
 

@@ -36,8 +36,7 @@ import java.util.List;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 /**
- *
- * @author dbentley@google.com (Daniel Bentley)
+ * A revision history backed by a subversion repository
  */
 public class SvnRevisionHistory extends AbstractRevisionHistory {
 

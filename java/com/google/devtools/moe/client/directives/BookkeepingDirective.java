@@ -26,7 +26,6 @@ import javax.inject.Inject;
 
 /**
  * Perform the necessary checks to update MOE's db.
- *
  */
 public class BookkeepingDirective extends Directive {
   @Option(name = "--db", required = true, usage = "Location of MOE database")

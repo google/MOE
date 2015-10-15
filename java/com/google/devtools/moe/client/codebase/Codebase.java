@@ -29,8 +29,6 @@ import java.util.Set;
  *
  * <p>We also want the Metadata of what project space it is in, how to make it again,
  * and where it came from.
- *
- * @author dbentley@google.com (Daniel Bentley)
  */
 public class Codebase {
 

@@ -29,8 +29,6 @@ import com.google.devtools.moe.client.writer.DraftRevision;
 
 import junit.framework.TestCase;
 
-/**
- */
 public class OneMigrationDirectiveTest extends TestCase {
   private final RecordingUi ui = new RecordingUi();
   private final SystemCommandRunner cmd = new SystemCommandRunner(ui);

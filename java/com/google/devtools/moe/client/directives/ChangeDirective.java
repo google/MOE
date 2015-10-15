@@ -33,8 +33,6 @@ import javax.inject.Inject;
 
 /**
  * Create a Change in a source control system using command line flags.
- *
- * @author dbentley@google.com (Daniel Bentley)
  */
 public class ChangeDirective extends Directive {
   @Option(name = "--codebase", required = true, usage = "Codebase expression to evaluate")

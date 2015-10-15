@@ -26,9 +26,7 @@ import java.util.Map;
 /**
  * A Term in the MOE Expression Language.
  *
- * An identifier with optional parameters. E.g., "foo" or "internal(revision=45)"
- *
- * @author dbentley@google.com (Daniel Bentley)
+ * <p>An identifier with optional parameters. E.g., "foo" or "internal(revision=45)"
  */
 public class Term {
 

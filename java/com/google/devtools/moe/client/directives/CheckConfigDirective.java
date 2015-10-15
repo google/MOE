@@ -22,8 +22,6 @@ import javax.inject.Inject;
 
 /**
  * Reads a MOE Project's configuration and reads it, checking for errors.
- *
- * @author dbentley@google.com (Daniel Bentley)
  */
 public class CheckConfigDirective extends Directive {
   @Inject

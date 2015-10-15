@@ -24,8 +24,6 @@ import java.util.Map;
 
 /**
  * An IdentityEditor returns the same Codebase.
- *
- * @author dbentley@google.com (Daniel Bentley)
  */
 public class IdentityEditor implements Editor, InverseEditor {
 

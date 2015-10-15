@@ -22,10 +22,6 @@ import junit.framework.TestCase;
 
 import org.joda.time.DateTime;
 
-/**
- * Unit test for the MetadataUsernameScrubber.
- *
- */
 public class MetadataUsernameScrubberTest extends TestCase {
 
   public void testScrubOnOneUser() throws Exception {

@@ -22,11 +22,10 @@ import com.google.devtools.moe.client.repositories.Revision;
 import com.google.gson.annotations.JsonAdapter;
 
 /**
- * A SubmittedMigration holds information about a completed migration.
+ * A {@code SubmittedMigration} holds information about a completed migration.
  *
- * It differs from an Equivalence in that a SubmittedMigration has a direction associated with its
- * Revisions.
- *
+ * <p>It differs from an {@code Equivalence} in that a {@code SubmittedMigration} has a
+ * direction associated with its Revisions.
  */
 @AutoValue
 @JsonAdapter(AutoValueGsonAdapter.class)

@@ -27,7 +27,6 @@ import java.util.Set;
 /**
  * {@link RevisionMatcher} that matches on {@link Revision}s for which there is an
  * {@link RepositoryEquivalence} in the given {@link Db}.
- *
  */
 public class RepositoryEquivalenceMatcher
     implements RevisionMatcher<RepositoryEquivalenceMatcher.Result> {

@@ -21,7 +21,6 @@ import com.google.devtools.moe.client.writer.DraftRevision;
 
 /**
  * A DraftRevision for DVCSes, i.e. a clone to disk with locally staged or committed changes.
- *
  */
 public class DvcsDraftRevision implements DraftRevision {
 

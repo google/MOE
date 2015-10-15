@@ -52,9 +52,6 @@ import java.util.Map;
 import javax.annotation.Nullable;
 import javax.inject.Singleton;
 
-/**
- * @author dbentley@google.com (Daniel Bentley)
- */
 public class ExpressionTest extends TestCase {
   private static final Map<String, String> EMPTY_MAP = ImmutableMap.of();
 

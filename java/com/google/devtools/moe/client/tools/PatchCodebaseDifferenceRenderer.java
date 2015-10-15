@@ -22,8 +22,6 @@ import java.io.File;
 
 /**
  * Renders a CodebaseDifference into a patch file.
- *
- * @author dbentley@google.com (Daniel Bentley)
  */
 public class PatchCodebaseDifferenceRenderer implements CodebaseDifferenceRenderer {
 

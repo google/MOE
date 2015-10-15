@@ -29,8 +29,6 @@ import junit.framework.TestCase;
 
 /**
  * Tests for {@link ChangeDirective}.
- *
- * @author dbentley@google.com (Daniel Bentley)
  */
 public class ChangeDirectiveTest extends TestCase {
   private final RecordingUi ui = new RecordingUi();

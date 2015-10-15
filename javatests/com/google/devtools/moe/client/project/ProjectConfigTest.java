@@ -18,9 +18,6 @@ package com.google.devtools.moe.client.project;
 
 import junit.framework.TestCase;
 
-/**
- * @author dbentley@google.com (Daniel Bentley)
- */
 public class ProjectConfigTest extends TestCase {
 
   public void testValidConfig() throws Exception {

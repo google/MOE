@@ -33,7 +33,6 @@ import javax.inject.Inject;
 /**
  * Print the results of
  * {@link Migrator#findMigrationsFromEquivalency(RepositoryType, MigrationConfig, Db)}
- *
  */
 public class DetermineMigrationsDirective extends Directive {
   @Option(

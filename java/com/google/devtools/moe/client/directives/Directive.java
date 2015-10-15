@@ -25,8 +25,6 @@ import com.google.devtools.moe.client.project.ProjectContextFactory;
 
 /**
  * A Directive is what MOE should do in this run.
- *
- * @author dbentley@google.com (Daniel Bentley)
  */
 // TODO(cgruber) Remove MoeOptions once JCommander is in and we can handle multiple options objects.
 public abstract class Directive extends MoeOptions {

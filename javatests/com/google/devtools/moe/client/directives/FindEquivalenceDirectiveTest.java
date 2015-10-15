@@ -28,8 +28,6 @@ import com.google.devtools.moe.client.testing.RecordingUi;
 
 import junit.framework.TestCase;
 
-/**
- */
 public class FindEquivalenceDirectiveTest extends TestCase {
   private final RecordingUi ui = new RecordingUi();
   private final SystemCommandRunner cmd = new SystemCommandRunner(ui);

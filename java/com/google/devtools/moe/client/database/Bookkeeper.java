@@ -41,7 +41,6 @@ import javax.inject.Inject;
 
 /**
  * Logic behind keeping MOE db up to date (moe bookkeeping)
- *
  */
 public class Bookkeeper {
   /** The regex for MOE-migrated changes, as found in the changelog of the to-repo. */

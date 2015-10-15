@@ -30,9 +30,6 @@ import java.io.IOException;
 
 import javax.inject.Singleton;
 
-/**
- * @author dbentley@google.com (Daniel Bentley)
- */
 public class SystemFileSystemTest extends TestCase {
 
   public void testFindFiles() throws Exception {

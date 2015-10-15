@@ -20,8 +20,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- *
- * @author dbentley@google.com (Daniel Bentley)
+ * A wrapper around call-outs to out-of-process executable programs.
  */
 public interface CommandRunner {
 

@@ -24,7 +24,6 @@ import java.util.List;
  * Revisions found.
  *
  * @param <T> the type of result returned when all matching Revisions are found and crawling ends
- *
  */
 public interface RevisionMatcher<T> {
 

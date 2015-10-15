@@ -25,8 +25,6 @@ import javax.inject.Inject;
 
 /**
  * A DraftRevision encapsulates a Revision that was created by MOE.
- *
- * @author dbentley@google.com (Daniel Bentley)
  */
 public interface DraftRevision {
 
@@ -41,7 +39,6 @@ public interface DraftRevision {
 
   /**
    * Creates a {@link DraftRevision} in a given {@link Codebase}.
-   *
    */
   public static class Factory {
     private final Ui ui;

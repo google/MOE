@@ -29,7 +29,6 @@ import java.util.Map;
 
 /**
  * Stores the Revisions found by crawling a repository history with a {@link RevisionMatcher}.
- *
  */
 public class RevisionGraph {
 

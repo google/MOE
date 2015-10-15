@@ -23,10 +23,6 @@ import junit.framework.TestCase;
 
 import org.joda.time.DateTime;
 
-/**
- * Tests for PublicSectionMetadataScrubber.
- *
- */
 public class PublicSectionMetadataScrubberTest extends TestCase {
 
   private static RevisionMetadata makeWithDescription(String... desc) {

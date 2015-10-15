@@ -43,8 +43,6 @@ import javax.inject.Singleton;
 
 /**
  * Module to register bindings for MOE.
- *
- * @author cgruber@google.com (Christian Gruber)
  */
 @Module(
   includes = {

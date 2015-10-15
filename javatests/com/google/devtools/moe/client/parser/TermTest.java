@@ -20,9 +20,6 @@ import com.google.common.collect.ImmutableMap;
 
 import junit.framework.TestCase;
 
-/**
- * @author dbentley@google.com (Daniel Bentley)
- */
 public class TermTest extends TestCase {
 
   public void testToString() throws Exception {

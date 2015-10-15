@@ -24,9 +24,6 @@ import junit.framework.TestCase;
 
 import java.io.File;
 
-/**
- * @author dbentley@google.com (Daniel Bentley)
- */
 public class PatchCodebaseDifferenceRendererTest extends TestCase {
 
   private static Codebase makeCodebase(String name) throws Exception {

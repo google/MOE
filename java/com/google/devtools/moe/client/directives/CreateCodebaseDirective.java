@@ -35,8 +35,6 @@ import javax.inject.Inject;
 
 /**
  * Print the head revision of a repository.
- *
- * @author dbentley@google.com (Daniel Bentley)
  */
 public class CreateCodebaseDirective extends Directive {
   @Option(name = "--codebase", required = true, usage = "Codebase expression to evaluate")

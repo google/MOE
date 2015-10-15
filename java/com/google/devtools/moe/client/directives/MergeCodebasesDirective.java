@@ -33,7 +33,6 @@ import javax.inject.Inject;
 
 /**
  * Merge three codebases into one.
- *
  */
 public class MergeCodebasesDirective extends Directive {
   @Option(

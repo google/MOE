@@ -20,7 +20,6 @@ import com.google.devtools.moe.client.FileSystem.Lifetime;
 
 /**
  * Static utility methods that return common {@link Lifetime}s.
- *
  */
 public final class Lifetimes {
 

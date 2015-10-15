@@ -29,9 +29,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 /**
- * Ui that outputs to System.out and System.err
- *
- * @author dbentley@google.com (Daniel Bentley)
+ * Ui that outputs to {@code System.out} and {@code System.err}.
  */
 @Singleton
 public class SystemUi extends Ui {

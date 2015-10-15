@@ -46,7 +46,6 @@ import javax.inject.Inject;
 
 /**
  * Perform the one_migration and migrate directives
- *
  */
 public class Migrator {
   private final DraftRevision.Factory revisionFactory;

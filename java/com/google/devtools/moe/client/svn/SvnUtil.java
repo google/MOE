@@ -25,8 +25,6 @@ import javax.inject.Inject;
 
 /**
  * Utilities shared among Subversion client objects.
- *
- * @author cgruber@google.com (Christian Gruber)
  */
 public class SvnUtil {
 

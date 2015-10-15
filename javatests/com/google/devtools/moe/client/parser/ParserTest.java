@@ -25,9 +25,6 @@ import junit.framework.TestCase;
 import java.util.List;
 import java.util.Map;
 
-/**
- * @author dbentley@google.com (Daniel Bentley)
- */
 public class ParserTest extends TestCase {
 
   private static final Map<String, String> EMPTY_MAP = ImmutableMap.<String, String>of();

@@ -38,7 +38,6 @@ import java.util.Map;
  *                     \                   /
  *                     referenceTo + changes
  * </pre>
- *
  */
 public interface InverseEditor {
 

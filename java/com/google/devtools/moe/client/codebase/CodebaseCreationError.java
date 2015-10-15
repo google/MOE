@@ -18,8 +18,6 @@ package com.google.devtools.moe.client.codebase;
 
 /**
  * An error occurred while creating a Codebase.
- *
- * @author dbentley@google.com (Daniel Bentley)
  */
 public class CodebaseCreationError extends Exception {
 

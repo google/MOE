@@ -23,8 +23,6 @@ import java.util.Set;
 
 /**
  * Describes the difference between two Codebases.
- *
- * @author dbentley@google.com (Daniel Bentley)
  */
 public class CodebaseDifference {
 

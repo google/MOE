@@ -23,7 +23,6 @@ import com.google.gson.annotations.SerializedName;
 
 /**
  * Configuration for a MOE migration.
- *
  */
 public class MigrationConfig {
   private String name;

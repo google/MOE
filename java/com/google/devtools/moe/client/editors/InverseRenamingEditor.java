@@ -59,7 +59,6 @@ import java.util.Set;
  * by the first mapping, and {@code public/src/NewClass.java} is renamed to
  * {@code internal/mylib/java/NewClass.java} by the second mapping. If no mapping is found, the
  * whole file path is used without modification.
- *
  */
 public class InverseRenamingEditor implements InverseEditor {
 

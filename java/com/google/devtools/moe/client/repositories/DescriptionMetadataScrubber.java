@@ -35,7 +35,6 @@ import org.joda.time.format.DateTimeFormatter;
  * <p>{date} Original revision date
  * <p>{description} Original revision changelog
  * <p>{parents} Original revision's parent revision numbers
- *
  */
 public class DescriptionMetadataScrubber extends MetadataScrubber {
   private static final DateTimeFormatter DATE_FMT = DateTimeFormat.forPattern("yyyy/MM/dd");

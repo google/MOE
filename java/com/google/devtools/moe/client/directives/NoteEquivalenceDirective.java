@@ -34,7 +34,6 @@ import javax.inject.Inject;
 /**
  * Note an equivalence from the command line in the database file at the given path, or create a
  * database file at that path with the new equivalence.
- *
  */
 public class NoteEquivalenceDirective extends Directive {
   @Option(name = "--db", required = true, usage = "Path of MOE database file to update or create")

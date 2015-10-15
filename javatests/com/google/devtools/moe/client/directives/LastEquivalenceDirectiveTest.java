@@ -27,10 +27,6 @@ import com.google.devtools.moe.client.testing.RecordingUi;
 
 import junit.framework.TestCase;
 
-/**
- * Unit test for LastEquivalenceDirective.
- *
- */
 public class LastEquivalenceDirectiveTest extends TestCase {
   private final RecordingUi ui = new RecordingUi();
   private final SystemCommandRunner cmd = new SystemCommandRunner(ui);

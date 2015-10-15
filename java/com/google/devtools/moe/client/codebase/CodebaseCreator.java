@@ -22,8 +22,6 @@ import java.util.Map;
  * A CodebaseCreator allows us to create Codebases.
  *
  * This may bundle an existing codebase, or check it out from source control.
- *
- * @author dbentley@google.com (Daniel Bentley)
  */
 public interface CodebaseCreator {
 

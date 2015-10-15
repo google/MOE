@@ -43,6 +43,7 @@ import org.easymock.IMocksControl;
 import java.io.File;
 
 /**
+ * Tests for the FileDb
  */
 public class FileDbTest extends TestCase {
   private final RecordingUi ui = new RecordingUi();

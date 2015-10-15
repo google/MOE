@@ -27,9 +27,6 @@ import com.google.devtools.moe.client.testing.RecordingUi;
 
 import junit.framework.TestCase;
 
-/**
- * @author dbentley@google.com (Daniel Bentley)
- */
 public class CheckConfigDirectiveTest extends TestCase {
   private final RecordingUi ui = new RecordingUi();
   private final SystemCommandRunner cmd = new SystemCommandRunner(ui);

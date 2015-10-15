@@ -25,8 +25,6 @@ import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
 
 import junit.framework.TestCase;
 
-/**
- */
 public class RepositoryExpressionTest extends TestCase {
 
   public void testMakeWriter_NonexistentRepository() throws Exception {

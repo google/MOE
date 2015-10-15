@@ -39,8 +39,6 @@ import javax.inject.Singleton;
 
 /**
  * A project context factory maintains a set of project configurations in memory.
- *
- * @author dbentley@google.com (Daniel Bentley)
  */
 public class InMemoryProjectContextFactory extends ProjectContextFactory {
   // TODO(cgruber): Stop with the visible non-final property.

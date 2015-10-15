@@ -41,7 +41,6 @@ import javax.inject.Inject;
 
 /**
  * Perform a single migration using command line flags.
- *
  */
 public class OneMigrationDirective extends Directive {
   @Option(

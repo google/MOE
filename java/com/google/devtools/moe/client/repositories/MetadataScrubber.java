@@ -21,7 +21,6 @@ import java.util.List;
  * Abstract superclass defining what any MetadataScrubber should be able to do. A MetadataScrubber
  * is an object that can take in a RevisionMetadata object and then return a new one which has been
  * "scrubbed" of any undesirable information.
- *
  */
 public abstract class MetadataScrubber {
 

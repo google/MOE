@@ -27,7 +27,6 @@ import java.util.Map;
 
 /**
  * An Hg implementation of WriterCreator, which modifies a local {@link HgClonedRepository}.
- *
  */
 public class HgWriterCreator implements WriterCreator {
 

@@ -57,8 +57,6 @@ import java.util.Map;
  * parseTermCompletely
  * tokenize
  *
- *
- * @author dbentley@google.com (Daniel Bentley)
  */
 public class Parser {
 

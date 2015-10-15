@@ -22,8 +22,6 @@ import java.util.Set;
 
 /**
  * Interface for MOE to interact with the local filesystem.
- *
- * @author dbentley@google.com (Daniel Bentley)
  */
 public interface FileSystem {
 

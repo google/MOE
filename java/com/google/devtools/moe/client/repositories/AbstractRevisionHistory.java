@@ -27,7 +27,6 @@ import java.util.Set;
 
 /**
  * A skeletal implementation of {@link RevisionHistory} with common logic.
- *
  */
 public abstract class AbstractRevisionHistory implements RevisionHistory {
 

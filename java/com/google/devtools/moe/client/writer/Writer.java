@@ -25,8 +25,6 @@ import javax.annotation.Nullable;
 
 /**
  * An Writer is the interface to create a revision in MOE.
- *
- * @author dbentley@google.com (Daniel Bentley)
  */
 public interface Writer {
   /**

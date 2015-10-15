@@ -23,8 +23,6 @@ import java.util.Map;
 
 /**
  * An Editor takes one Codebase and returns an edited Codebase.
- *
- * @author dbentley@google.com (Daniel Bentley)
  */
 public interface Editor {
 

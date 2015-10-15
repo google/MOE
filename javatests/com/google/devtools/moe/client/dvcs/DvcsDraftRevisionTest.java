@@ -27,8 +27,6 @@ import org.easymock.IMocksControl;
 
 import java.io.File;
 
-/**
- */
 public class DvcsDraftRevisionTest extends TestCase {
 
   public void testGetLocation() {

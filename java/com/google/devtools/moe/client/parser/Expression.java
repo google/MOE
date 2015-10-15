@@ -30,7 +30,6 @@ import java.util.Map;
  * {@link RepositoryExpression#createWriter(ProjectContext)}. Expressions should be immutable, and
  * all implementations of the transformations below should return new Expressions leaving the given
  * ones (this) unchanged.
- *
  */
 public interface Expression {
 

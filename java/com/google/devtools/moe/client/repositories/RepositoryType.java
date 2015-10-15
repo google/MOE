@@ -28,8 +28,6 @@ import com.google.devtools.moe.client.writer.WriterCreator;
  * <p>A {@code RepositoryType} implies a single revision history, and so is specific to a single
  * branch.  Two branches from the same repository will be represented by two distinct
  * {@code RepositoryType} instances.
- *
- * @author cgruber@google.com (Christian Gruber)
  */
 @AutoValue
 public abstract class RepositoryType {

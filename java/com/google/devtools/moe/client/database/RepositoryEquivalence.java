@@ -37,7 +37,6 @@ import java.util.Iterator;
  * in different repositories
  *
  * <p>Two Revisions are equivalent when an Equivalence contains both in any order
- *
  */
 @AutoValue
 public abstract class RepositoryEquivalence {

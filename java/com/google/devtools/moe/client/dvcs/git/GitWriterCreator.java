@@ -27,7 +27,6 @@ import java.util.Map;
 
 /**
  * A Git implementation of WriterCreator, which modifies a local {@link GitClonedRepository}.
- *
  */
 public class GitWriterCreator implements WriterCreator {
 

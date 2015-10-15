@@ -21,9 +21,6 @@ import com.google.devtools.moe.client.CommandRunner.CommandException;
 
 import junit.framework.TestCase;
 
-/**
- * @author dbentley@google.com (Daniel Bentley)
- */
 public class SystemCommandRunnerTest extends TestCase {
 
   SystemCommandRunner c;

@@ -39,7 +39,6 @@ import javax.annotation.Nullable;
 
 /**
  * An Hg implementation of {@link AbstractRevisionHistory}.
- *
  */
 public class HgRevisionHistory extends AbstractRevisionHistory {
   private static final DateTimeFormatter HG_DATE_FMT =

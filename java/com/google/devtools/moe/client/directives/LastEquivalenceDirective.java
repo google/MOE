@@ -38,7 +38,6 @@ import javax.inject.Inject;
 
 /**
  * Get the last Equivalence between two repositories.
- *
  */
 public class LastEquivalenceDirective extends Directive {
   @Option(name = "--db", required = true, usage = "Location of MOE database")

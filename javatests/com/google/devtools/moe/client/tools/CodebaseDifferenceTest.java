@@ -29,11 +29,6 @@ import org.easymock.IMocksControl;
 
 import java.io.File;
 
-/**
- * Tests CodebaseDifference by actually invoking diff.
- * Tests FileDifference in the process.
- * @author dbentley@google.com (Daniel Bentley)
- */
 public class CodebaseDifferenceTest extends TestCase {
 
   public void testSame() throws Exception {

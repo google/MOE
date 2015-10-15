@@ -18,8 +18,6 @@ package com.google.devtools.moe.client.parser;
 
 /**
  * Operators in the MOE Codebase Expression Language.
- *
- * @author dbentley@google.com (Daniel Bentley)
  */
 public enum Operator {
   EDIT('|'),

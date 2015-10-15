@@ -40,10 +40,6 @@ import org.easymock.IMocksControl;
 
 import java.io.File;
 
-/**
- * Tests for NoteEquivalenceDirective.
- *
- */
 public class NoteEquivalenceDirectiveTest extends TestCase {
   public final RecordingUi ui = new RecordingUi();
   private final IMocksControl control = EasyMock.createControl();

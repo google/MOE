@@ -40,8 +40,6 @@ import javax.inject.Singleton;
  * by default unless you programmatically set a handler on com.google.devtools.moe.
  *
  * Errors are SEVERE logs written to STDERR.
- *
- * @author dbentley@google.com (Daniel Bentley)
  */
 public class Moe {
   static final Logger allMoeLogger = Logger.getLogger("com.google.devtools.moe");

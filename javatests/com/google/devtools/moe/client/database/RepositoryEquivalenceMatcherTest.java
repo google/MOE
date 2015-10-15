@@ -30,8 +30,7 @@ import org.joda.time.DateTime;
 import java.util.List;
 
 /**
- * Unit tests for EquivalenceMatcher.
- *
+ * Unit tests for EquivalenceMatcher
  */
 public class RepositoryEquivalenceMatcherTest extends TestCase {
 

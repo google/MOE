@@ -41,10 +41,6 @@ import java.io.IOException;
 
 import javax.inject.Singleton;
 
-/**
- * Unit tests for inverse renaming
- *
- */
 public class InverseRenamingEditorTest extends TestCase {
 
   private final IMocksControl control = EasyMock.createControl();

@@ -31,8 +31,6 @@ import javax.inject.Inject;
 
 /**
  * Print the head revision of a repository.
- *
- * @author dbentley@google.com (Daniel Bentley)
  */
 public class HighestRevisionDirective extends Directive {
   @Option(

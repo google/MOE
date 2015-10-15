@@ -35,9 +35,6 @@ import java.util.List;
 
 import javax.inject.Singleton;
 
-/**
- * @author dbentley@google.com (Daniel Bentley)
- */
 public class UtilsTest extends TestCase {
 
   private final IMocksControl control = EasyMock.createControl();

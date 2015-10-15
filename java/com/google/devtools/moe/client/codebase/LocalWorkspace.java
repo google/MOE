@@ -26,7 +26,6 @@ import javax.annotation.Nullable;
 /**
  * Operations for objects encapsulating a local workspace/clone/client of a repository
  * (e.g. {@code hg clone}, {@code git clone}, {@code svn checkout}).
- *
  */
 public interface LocalWorkspace {
 

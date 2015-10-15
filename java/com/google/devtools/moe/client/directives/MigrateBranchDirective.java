@@ -73,8 +73,6 @@ import javax.inject.Inject;
  *
  * <p>This is effectively works like the {@link MagicDirective} except that it only passes in one
  * direction, and does no bookkeeping.
- *
- * @author cgruber@google.com (Christian Gruber)
  */
 public class MigrateBranchDirective extends Directive {
   @Option(name = "--db", required = true, usage = "Location of MOE database")

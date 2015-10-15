@@ -49,7 +49,6 @@ import javax.inject.Inject;
  * Update the MOE db then perform all migration(s) specified in the MOE config. Repeated
  * invocations, then, will result in a state of all pending migrations performed, and all performed
  * migrations and new equivalences stored in the db.
- *
  */
 public class MagicDirective extends Directive {
   @Option(name = "--db", required = true, usage = "Location of MOE database")

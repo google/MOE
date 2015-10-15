@@ -21,6 +21,7 @@ import com.google.devtools.moe.client.repositories.Revision;
 import junit.framework.TestCase;
 
 /**
+ * Tests for {@link RepositoryEquivalence}
  */
 public class RepositoryEquivalenceTest extends TestCase {
 

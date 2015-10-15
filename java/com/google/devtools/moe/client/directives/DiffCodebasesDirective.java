@@ -32,8 +32,6 @@ import javax.inject.Inject;
 
 /**
  * Print the diff of two Codebases.
- *
- * @author dbentley@google.com (Daniel Bentley)
  */
 public class DiffCodebasesDirective extends Directive {
   private static final PatchCodebaseDifferenceRenderer RENDERER =

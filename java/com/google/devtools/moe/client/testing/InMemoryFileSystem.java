@@ -37,7 +37,6 @@ import javax.inject.Singleton;
 
 /**
  * An in-memory {@link FileSystem} for use in testing.
- *
  */
 public class InMemoryFileSystem implements FileSystem {
   private static final Splitter SEP_SPLITTER = Splitter.on(File.separator).omitEmptyStrings();

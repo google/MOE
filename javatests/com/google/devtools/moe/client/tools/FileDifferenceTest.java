@@ -37,9 +37,6 @@ import java.io.File;
 
 import javax.inject.Singleton;
 
-/**
- * @author dbentley@google.com (Daniel Bentley)
- */
 public class FileDifferenceTest extends TestCase {
 
   private final IMocksControl control = EasyMock.createControl();

@@ -28,8 +28,6 @@ import javax.inject.Qualifier;
 
 /**
  * Manages the collection of available directives.
- *
- * @author cgruber@google.com (Christian Gruber)
  */
 public class Directives {
 

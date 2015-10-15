@@ -36,7 +36,6 @@ import java.util.Map;
  *
  * <p>Note: this command string can and probably will be a
  * concatenation e.g. "command1 && command2 && command3..."
- *
  */
 public class ShellEditor implements Editor {
 

@@ -29,7 +29,6 @@ import com.google.devtools.moe.client.project.ProjectContext;
  * application of an {@link Editor}. For example,
  * new RepositoryExpression("myRepo").editWith("myEditor", { "option1": "foo" })
  * returns an EditExpression for "myRepo|myEditor(option1=foo)".
- *
  */
 public class EditExpression extends AbstractExpression {
 

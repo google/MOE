@@ -21,8 +21,7 @@ import com.google.devtools.moe.client.writer.DraftRevision;
 import java.io.File;
 
 /**
- *
- * @author dbentley@google.com (Daniel Bentley)
+ * Draft revision in a subversion workspace
  */
 public class SvnDraftRevision implements DraftRevision {
 

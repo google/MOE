@@ -30,8 +30,6 @@ import javax.inject.Singleton;
 
 /**
  * A simple Dagger module to provide some nearly-universally-used in-memory test fakes.
- *
- * @author cgruber@google.com (Christian Gruber)
  */
 @Module
 public class TestingModule {

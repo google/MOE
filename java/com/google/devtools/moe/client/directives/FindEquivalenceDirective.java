@@ -34,7 +34,6 @@ import javax.inject.Inject;
 
 /**
  * Finds revisions in a repository that are equivalent to a given revision.
- *
  */
 public class FindEquivalenceDirective extends Directive {
   @Option(name = "--db", required = true, usage = "Location of MOE database")

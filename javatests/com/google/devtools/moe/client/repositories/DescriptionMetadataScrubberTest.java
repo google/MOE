@@ -22,10 +22,6 @@ import junit.framework.TestCase;
 
 import org.joda.time.DateTime;
 
-/**
- * Testing for DescriptionMetadataScrubber (changelog transformations).
- *
- */
 public class DescriptionMetadataScrubberTest extends TestCase {
 
   public void testScrub() {

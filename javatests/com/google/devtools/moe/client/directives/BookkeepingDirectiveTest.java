@@ -57,7 +57,6 @@ import java.io.File;
  * /dummy/codebase/{int/migrated_from,pub/migrated_to} -- is implicitly determined by
  * existence/nonexistence of corresponding files in the {@code FileSystem} and <em>not</em> by the
  * output of the "diff" command, which is merely stubbed in.
- *
  */
 public class BookkeepingDirectiveTest extends TestCase {
   private static final File DB_FILE = new File("/path/to/db");

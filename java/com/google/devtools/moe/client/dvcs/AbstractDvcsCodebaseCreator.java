@@ -36,7 +36,6 @@ import java.util.Map;
 
 /**
  * CodebaseCreator for DVCSes, implemented by cloning a LocalClone to disk.
- *
  */
 public abstract class AbstractDvcsCodebaseCreator implements CodebaseCreator {
 

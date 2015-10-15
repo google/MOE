@@ -34,7 +34,6 @@ import java.util.Map;
 
 /**
  * A PatchingEditor invokes the command patch
- *
  */
 public class PatchingEditor implements Editor {
 

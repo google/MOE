@@ -29,9 +29,7 @@ import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 /**
- * User Interface interface for MOE.
- *
- * @author dbentley@google.com (Daniel Bentley)
+ * Represents the command-line user interface for MOE.
  */
 public abstract class Ui implements Messenger {
 

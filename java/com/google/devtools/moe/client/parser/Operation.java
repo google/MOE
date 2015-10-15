@@ -19,9 +19,7 @@ package com.google.devtools.moe.client.parser;
 /**
  * An Operation in the MOE Expression Language is an operator followed by a term.
  *
- * E.g., |patch(file="/path/to/path.txt") or >public
- *
- * @author dbentley@google.com (Daniel Bentley)
+ * <P>E.g., |patch(file="/path/to/path.txt") or >public
  */
 // TODO(cgruber): Convert this to an autovalue or at least fix the hashcode/equals issue.
 public class Operation {

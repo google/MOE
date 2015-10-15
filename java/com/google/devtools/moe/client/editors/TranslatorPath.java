@@ -18,8 +18,6 @@ package com.google.devtools.moe.client.editors;
 
 /**
  * The Path a Translator should take.
- *
- * @author dbentley@google.com (Daniel Bentley)
  */
 // TODO(cgruber) @AutoValue
 public class TranslatorPath {

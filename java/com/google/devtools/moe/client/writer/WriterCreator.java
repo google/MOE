@@ -21,8 +21,6 @@ import java.util.Map;
 /**
  * An WriterCreator is the interface for creating changes in a Repository.
  * It allows us to create an Writer (which is good for creating one revision).
- *
- * @author dbentley@google.com (Daniel Bentley)
  */
 public interface WriterCreator {
 

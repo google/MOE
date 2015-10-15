@@ -26,9 +26,6 @@ import com.google.devtools.moe.client.testing.RecordingUi;
 
 import junit.framework.TestCase;
 
-/**
- * @author dbentley@google.com (Daniel Bentley)
- */
 public class CreateCodebaseDirectiveTest extends TestCase {
   public final RecordingUi ui = new RecordingUi();
   public final SystemCommandRunner cmd = new SystemCommandRunner(ui);

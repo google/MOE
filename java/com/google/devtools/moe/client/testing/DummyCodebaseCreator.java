@@ -28,8 +28,7 @@ import java.io.File;
 import java.util.Map;
 
 /**
- *
- * @author dbentley@google.com (Daniel Bentley)
+ * CodebaseCreator backed by a dummy repository
  */
 public class DummyCodebaseCreator implements CodebaseCreator {
   private final FileSystem filesystem;

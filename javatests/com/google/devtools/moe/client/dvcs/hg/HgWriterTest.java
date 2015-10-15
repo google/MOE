@@ -46,10 +46,6 @@ import java.io.File;
 
 import javax.inject.Singleton;
 
-/**
- * Test HgWriter by expect()ing file system calls and hg commands to add/remove files.
- *
- */
 // TODO(user): Create a FakeFileSystem to replace explicit mocked calls.
 public class HgWriterTest extends TestCase {
   private static final File CODEBASE_ROOT = new File("/codebase");

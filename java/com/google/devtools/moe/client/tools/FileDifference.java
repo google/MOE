@@ -30,8 +30,6 @@ import javax.inject.Inject;
 
 /**
  * Describes the difference between a file in two Codebases.
- *
- * @author dbentley@google.com (Daniel Bentley)
  */
 @AutoValue
 public abstract class FileDifference {

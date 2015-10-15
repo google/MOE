@@ -16,15 +16,14 @@
 
 package com.google.devtools.moe.client.testing;
 
-import com.google.devtools.moe.client.writer.WritingError;
 import com.google.devtools.moe.client.writer.Writer;
 import com.google.devtools.moe.client.writer.WriterCreator;
+import com.google.devtools.moe.client.writer.WritingError;
 
 import java.util.Map;
 
 /**
- *
- * @author dbentley@google.com (Daniel Bentley)
+ * Factory for a dummy-repository writer.
  */
 public class DummyWriterCreator implements WriterCreator {
 

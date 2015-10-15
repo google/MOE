@@ -30,10 +30,6 @@ import java.io.File;
 
 import javax.inject.Singleton;
 
-/**
- * Unit tests for {@link InMemoryFileSystem}.
- *
- */
 public class InMemoryFileSystemTest extends TestCase {
   // TODO(cgruber): Rework these when statics aren't inherent in the design.
   @dagger.Component(

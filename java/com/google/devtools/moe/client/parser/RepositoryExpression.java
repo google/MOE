@@ -33,7 +33,6 @@ import com.google.devtools.moe.client.writer.WritingError;
  * An {@link Expression} describing a repository checkout. This is the starting point for building
  * Expressions, e.g.:
  * new RepositoryExpression("myGitRepo").atRevision("a983ef").translateTo("public").
- *
  */
 public class RepositoryExpression extends AbstractExpression {
 

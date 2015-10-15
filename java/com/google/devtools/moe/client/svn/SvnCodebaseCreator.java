@@ -34,8 +34,6 @@ import java.util.Map;
 
 /**
  * {@link CodebaseCreator} for svn.
- *
- * @author dbentley@google.com (Daniel Bentley)
  */
 public class SvnCodebaseCreator implements CodebaseCreator {
 

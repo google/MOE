@@ -25,7 +25,6 @@ import java.util.regex.Pattern;
 /**
  * Scrubs a {@code RevisionMetadata} by replacing the description with just the "Public:" section if
  * one exists.
- *
  */
 public class PublicSectionMetadataScrubber extends MetadataScrubber {
 

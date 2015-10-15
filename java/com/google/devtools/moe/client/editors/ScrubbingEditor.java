@@ -36,8 +36,6 @@ import java.util.Map;
 
 /**
  * A ScrubbingEditor invokes the MOE scrubber on a Codebase.
- *
- * @author dbentley@google.com (Daniel Bentley)
  */
 public class ScrubbingEditor implements Editor {
 

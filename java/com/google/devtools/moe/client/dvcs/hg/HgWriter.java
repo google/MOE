@@ -31,7 +31,6 @@ import java.util.List;
 /**
  * Hg implementation of {@link AbstractDvcsWriter}. For migrations, local commits are made on the
  * default branch from last equivalence revision, potentially creating a new head in default.
- *
  */
 public class HgWriter extends AbstractDvcsWriter<HgClonedRepository> {
 
