@@ -18,6 +18,7 @@ package com.google.devtools.moe.client.directives;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
@@ -41,7 +42,9 @@ import com.google.devtools.moe.client.writer.WritingError;
 
 import org.kohsuke.args4j.Option;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import javax.inject.Inject;
 
@@ -60,6 +63,13 @@ public class MagicDirective extends Directive {
     usage = "Migrations to perform; can include multiple --migration options"
   )
   List<String> migrations = Lists.newArrayList();
+
+  @Option(
+    name = "--skip_revision",
+    required = false,
+    usage = "Revisions to skip; can include multiple --skip_revision options"
+  )
+  List<String> skipRevisions = new ArrayList<>();
 
   private final Db.Factory dbFactory;
   private final Ui ui;
@@ -87,6 +97,8 @@ public class MagicDirective extends Directive {
     List<String> migrationNames =
         ImmutableList.copyOf(
             migrations.isEmpty() ? context().migrationConfigs().keySet() : migrations);
+
+    Set<String> skipRevisions = ImmutableSet.copyOf(this.skipRevisions);
 
     if (bookkeeper.bookkeep(db, context()) != 0) {
       // Bookkeeping has failed, so fail here as well.
@@ -133,6 +145,28 @@ public class MagicDirective extends Directive {
       DraftRevision dr = null;
       int currentlyPerformedMigration = 1; // To display to users.
       for (Migration migration : migrations) {
+
+        // First check if we should even do this migration at all.
+        int skipped = 0;
+        for (Revision revision : migration.fromRevisions()) {
+          if (skipRevisions.contains(revision.toString())) {
+            skipped++;
+          }
+        }
+        if (skipped > 0) {
+          if (skipped != migration.fromRevisions().size()) {
+            throw new MoeProblem(
+                "Cannot skip subset of revisions in a single migration: " + migration);
+          }
+          ui.info(
+              String.format(
+                  "Skipping %s/%s migration `%s`",
+                  currentlyPerformedMigration++,
+                  migrations.size(),
+                  migration));
+          continue;
+        }
+
         // For each migration, the reference to-codebase for inverse translation is the Writer,
         // since it contains the latest changes (i.e. previous migrations) to the to-repository.
         Expression referenceToCodebase =
