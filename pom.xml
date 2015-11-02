@@ -74,7 +74,17 @@
   </dependencies>
   <build>
     <sourceDirectory>java</sourceDirectory>
+    <resources>
+      <resource>
+        <directory>java</directory>
+      </resource>
+    </resources>
     <testSourceDirectory>javatests</testSourceDirectory>
+    <testResources>
+      <testResource>
+        <directory>javatests</directory>
+      </testResource>
+    </testResources>
     <plugins>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
