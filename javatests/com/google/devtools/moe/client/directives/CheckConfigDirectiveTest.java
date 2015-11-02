@@ -1,11 +1,23 @@
-// Copyright 2011 The MOE Authors All Rights Reserved.
+/*
+ * Copyright (c) 2011 Google, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package com.google.devtools.moe.client.directives;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.SystemCommandRunner;
-import com.google.devtools.moe.client.SystemFileSystem;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.svn.SvnRepositoryFactory;
@@ -15,25 +27,16 @@ import com.google.devtools.moe.client.testing.RecordingUi;
 
 import junit.framework.TestCase;
 
-/**
- * @author dbentley@google.com (Daniel Bentley)
- */
 public class CheckConfigDirectiveTest extends TestCase {
   private final RecordingUi ui = new RecordingUi();
   private final SystemCommandRunner cmd = new SystemCommandRunner(ui);
   private final Repositories repositories =
       new Repositories(
           ImmutableSet.of(
-              new DummyRepositoryFactory(),
-              new SvnRepositoryFactory(null)));
+              new DummyRepositoryFactory(null),
+              new SvnRepositoryFactory(null, null)));
   private final InMemoryProjectContextFactory contextFactory =
-      new InMemoryProjectContextFactory(repositories);
-
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    Injector.INSTANCE = new Injector(new SystemFileSystem(), cmd, contextFactory, ui);
-  }
+      new InMemoryProjectContextFactory(null, cmd, null, ui, repositories);
 
   public void testEmptyConfigFilenameThrows() throws Exception {
     contextFactory.projectConfigs.put("moe_config.txt", "");

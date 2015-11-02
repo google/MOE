@@ -1,4 +1,18 @@
-// Copyright 2011 The MOE Authors All Rights Reserved.
+/*
+ * Copyright (c) 2011 Google, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package com.google.devtools.moe.client.svn;
 
@@ -22,10 +36,10 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
+import javax.annotation.Nullable;
+
 /**
  * {@link Writer} for svn.
- *
- * @author dbentley@google.com (Daniel Bentley)
  */
 public class SvnWriter implements Writer {
 
@@ -56,15 +70,14 @@ public class SvnWriter implements Writer {
   }
 
   // TODO(user): Handle separate_revisions! (an 'svn commit' per exported change)
-  @Override
-  public DraftRevision putCodebase(Codebase c) throws WritingError {
+  private DraftRevision putCodebase(Codebase c) {
     c.checkProjectSpace(config.getProjectSpace());
 
     // Filter out files that either start with .svn or have .svn after a slash, plus the repo
     // config's ignore_file_res.
     List<String> ignoreFilePatterns =
         ImmutableList.<String>builder()
-            .addAll(config.getIgnoreFileRes())
+            .addAll(config.getIgnoreFilePatterns())
             .add("(^|.*/)\\.svn(/.*|$)")
             .build();
 
@@ -84,21 +97,24 @@ public class SvnWriter implements Writer {
   }
 
   @Override
-  public DraftRevision putCodebase(Codebase c, RevisionMetadata rm) throws WritingError {
+  public DraftRevision putCodebase(Codebase c, @Nullable RevisionMetadata rm) throws WritingError {
     DraftRevision dr = putCodebase(c);
-    // Generate a shell script to commit repo with author and description
-    String script =
-        String.format(
-            "svn update%n"
-                + "svn commit -m \"%s\"%n"
-                + "svn propset -r HEAD svn:author \"%s\" --revprop",
-            rm.description,
-            rm.author);
-    Utils.makeShellScript(script, rootDirectory.getAbsolutePath() + "/svn_commit.sh");
+    if (rm != null) {
+      // Generate a shell script to commit repo with author and description
+      String script =
+          String.format(
+              "svn update%n"
+                  + "svn commit -m \"%s\"%n"
+                  + "svn propset -r HEAD svn:author \"%s\" --revprop",
+              rm.description,
+              rm.author);
+      Utils.makeShellScript(script, rootDirectory.getAbsolutePath() + "/svn_commit.sh");
 
-    Injector.INSTANCE
-        .ui()
-        .info("To submit, run: cd %s && ./svn_commit.sh && cd -", rootDirectory.getAbsolutePath());
+      Injector.INSTANCE
+          .ui()
+          .info(
+              "To submit, run: cd %s && ./svn_commit.sh && cd -", rootDirectory.getAbsolutePath());
+    }
     return dr;
   }
 

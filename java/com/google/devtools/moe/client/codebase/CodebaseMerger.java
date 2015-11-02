@@ -1,4 +1,18 @@
-// Copyright 2011 The MOE Authors All Rights Reserved.
+/*
+ * Copyright (c) 2011 Google, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package com.google.devtools.moe.client.codebase;
 
@@ -6,39 +20,92 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.FileSystem;
-import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
+import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.parser.Term;
-import com.google.devtools.moe.client.tools.FileDifference;
+import com.google.devtools.moe.client.tools.FileDifference.FileDiffer;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Set;
 
 /**
- * Once constructed with three codebases, this class can call merge() which will merge the three
- * codebases into one. A CodebaseMerger keeps track of the names of files that either merged
- * successfully or conflicted.
+ * Merges all changes that lead from {@code originalCodebase} to {@code modifiedCodebase} into
+ * destinationCodebase when its {@link #merge()} method is invoked.
  *
+ * <p>Here is a description of the UNIX merge(1) tool from its man page:
+ * <pre>{@code
+ *
+ *   merge [ options ] file1 file2 file3
+ *
+ *   merge incorporates all changes that lead from file2 to file3 into file1.  The result
+ *   ordinarily goes into file1.  merge is useful for combining separate changes to an original.
+ *   Suppose file2 is the original, and both file1 and file3 are modifications of file2.  Then
+ *   merge combines both changes.
+ *
+ * }</pre>
+ *
+ * <p>{@link CodebaseMerger#merge()} performs this type of merge on each file in the three
+ * codebases. In {@link CodebaseMerger#merge}, {@code originalCodebase} is analogous to
+ * {@code file2}, {@code modifiedCodebase} is analogous to {@code file3}, and
+ * {@code destinationCodebase} is analogous to {@code file1}. The output of
+ * {@link CodebaseMerger#merge()} is a codebase that incorporates the changes that both
+ * {@code modifiedCodebase} and {@code destinationCodebase} made on the {@code originalCodebase}.
+ * The differences between {@code modifiedCodebase} and the {@code originalCodebase} are brought
+ * into a copy of {@code destinationCodebase}. The result is the merged codebase.
+ *
+ * <p>This is useful when bringing changes to the public repository into the internal repository.
+ * For example, say you run:
+ *
+ * <pre>{@code
+ *    merge_codebases --originalCodebase "publicrepo(revision=142)"
+ *                    --modifiedCodebase "publicrepo(revision=143)"
+ *                    --destinationCodebase "internalrepo(revision=74)"
+ * }</pre>
+ *
+ * <p>Let internalrepo(revision=74) be in equivalence with publicrepo(revision=142). That is, let
+ * publicrepo(revision=142) represent the same state of the code as internalrepo(revision=74)
+ * minus any confidential code that may have been scrubbed during translation. That means that
+ * publicrepo(revision=143) is a change to the public repository which has yet to be brought to
+ * the internal repository. By running the above merge_codebases, the changes from the public
+ * revision 142 to 143 will be merged into a copy of internal revision 74. The result is an
+ * internal revision 75 which has the new public changes and still has the confidential code that
+ * a public revision wouldn't have. Thus, internal revision 75 would be equivalent with public
+ * revision 143 assuming there were no conflicts when merging.
  */
+// TODO(cgruber) AutoFactory or split out a MergeResult object with metadata/reporting.
 public class CodebaseMerger {
-
+  private final Ui ui;
+  private final FileSystem filesystem;
+  private final CommandRunner cmd;
+  private final FileDiffer differ;
   private final Codebase originalCodebase, destinationCodebase, modifiedCodebase, mergedCodebase;
   private final Set<String> mergedFiles, failedToMergeFiles;
 
   public CodebaseMerger(
-      Codebase originalCodebase, Codebase modifiedCodebase, Codebase destinationCodebase) {
+      Ui ui,
+      FileSystem filesystem,
+      CommandRunner cmd,
+      FileDiffer differ,
+      Codebase originalCodebase,
+      Codebase modifiedCodebase,
+      Codebase destinationCodebase) {
+    this.ui = ui;
+    this.filesystem = filesystem;
+    this.cmd = cmd;
+    this.differ = differ;
     this.originalCodebase = originalCodebase;
     this.modifiedCodebase = modifiedCodebase;
     this.destinationCodebase = destinationCodebase;
 
-    File mergedDir = Injector.INSTANCE.fileSystem().getTemporaryDirectory("merged_codebase_");
+    File mergedDir = filesystem.getTemporaryDirectory("merged_codebase_");
     RepositoryExpression mergedExpression =
         new RepositoryExpression(new Term("merged", ImmutableMap.<String, String>of()));
-    this.mergedCodebase = new Codebase(mergedDir, "merged", mergedExpression);
+    this.mergedCodebase = new Codebase(filesystem, mergedDir, "merged", mergedExpression);
 
     mergedFiles = Sets.newHashSet();
     failedToMergeFiles = Sets.newHashSet();
@@ -73,21 +140,17 @@ public class CodebaseMerger {
    * Print the results of a merge to the UI.
    */
   public void report() {
-    Injector.INSTANCE
-        .ui()
-        .info("Merged codebase generated at: %s", mergedCodebase.getPath().getAbsolutePath());
-    Injector.INSTANCE
-        .ui()
-        .info(
-            "%d files merged successfully\n%d files have merge "
-                + "conflicts. Edit the following files to resolve conflicts:\n%s",
-            mergedFiles.size(),
-            failedToMergeFiles.size(),
-            failedToMergeFiles);
+    ui.info("Merged codebase generated at: %s", mergedCodebase.getPath().getAbsolutePath());
+    ui.info(
+        "%d files merged successfully\n%d files have merge "
+            + "conflicts. Edit the following files to resolve conflicts:\n%s",
+        mergedFiles.size(),
+        failedToMergeFiles.size(),
+        failedToMergeFiles);
   }
 
-  private static boolean areDifferent(String filename, File x, File y) {
-    return FileDifference.CONCRETE_FILE_DIFFER.diffFiles(filename, x, y).isDifferent();
+  private boolean areDifferent(String filename, File x, File y) {
+    return differ.diffFiles(filename, x, y).isDifferent();
   }
 
   /**
@@ -95,11 +158,10 @@ public class CodebaseMerger {
    * written to.
    */
   private File copyToMergedCodebase(String filename, File destFile) {
-    FileSystem fs = Injector.INSTANCE.fileSystem();
     File mergedFile = mergedCodebase.getFile(filename);
     try {
-      fs.makeDirsForFile(mergedFile);
-      fs.copyFile(destFile, mergedFile);
+      filesystem.makeDirsForFile(mergedFile);
+      filesystem.copyFile(destFile, mergedFile);
       return mergedFile;
     } catch (IOException e) {
       throw new MoeProblem(e.getMessage());
@@ -112,24 +174,22 @@ public class CodebaseMerger {
    * merged codebase. Any conflicts that occurred during merging will appear in the merged codebase
    * file for the user to resolve.
    *
-   * In the case where the file specified by the given filename exists in the original codebase and
-   * in either the modified codebase or the destination codebase (but not both) and if the file
+   * <p>In the case where the file specified by the given filename exists in the original codebase
+   * and in either the modified codebase or the destination codebase (but not both) and if the file
    * is unchanged between those codebases, then a file in the merged codebase will NOT be created
    * and this method will return leaving the merged codebase unchanged.
    *
    * @param filename the name of the file to merge
    */
   public void generateMergedFile(String filename) {
-    FileSystem fs = Injector.INSTANCE.fileSystem();
-
     File origFile = originalCodebase.getFile(filename);
-    boolean origExists = fs.exists(origFile);
+    boolean origExists = filesystem.exists(origFile);
 
     File destFile = destinationCodebase.getFile(filename);
-    boolean destExists = fs.exists(destFile);
+    boolean destExists = filesystem.exists(destFile);
 
     File modFile = modifiedCodebase.getFile(filename);
-    boolean modExists = fs.exists(modFile);
+    boolean modExists = filesystem.exists(modFile);
 
     if (!destExists && !modExists) {
       // This should never be thrown since generateMergedFile(...) is only called on filesToMerge
@@ -167,20 +227,14 @@ public class CodebaseMerger {
 
     File mergedFile = copyToMergedCodebase(filename, destFile);
 
-    String mergeOutput;
     try {
       // Merges the changes that lead from origFile to modFile into mergedFile (which is a copy
       // of destFile). After, mergedFile will have the combined changes of modFile and destFile.
-      mergeOutput =
-          Injector.INSTANCE
-              .cmd()
-              .runCommand(
-                  "merge",
-                  ImmutableList.of(
-                      mergedFile.getAbsolutePath(),
-                      origFile.getAbsolutePath(),
-                      modFile.getAbsolutePath()),
-                  this.mergedCodebase.getPath().getAbsolutePath());
+      cmd.runCommand(
+          "merge",
+          ImmutableList.of(
+              mergedFile.getAbsolutePath(), origFile.getAbsolutePath(), modFile.getAbsolutePath()),
+          this.mergedCodebase.getPath().getAbsolutePath());
       // Return status was 0 and the merge was successful. Note it.
       mergedFiles.add(mergedFile.getAbsolutePath());
     } catch (CommandException e) {

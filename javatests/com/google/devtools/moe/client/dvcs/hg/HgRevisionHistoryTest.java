@@ -1,7 +1,22 @@
-// Copyright 2011 The MOE Authors All Rights Reserved.
+/*
+ * Copyright (c) 2011 Google, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package com.google.devtools.moe.client.dvcs.hg;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.easymock.EasyMock.expect;
 
 import com.google.common.base.Suppliers;
@@ -9,8 +24,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.MoeModule;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.NullFileSystemModule;
+import com.google.devtools.moe.client.database.DbStorage;
 import com.google.devtools.moe.client.database.FileDb;
 import com.google.devtools.moe.client.database.RepositoryEquivalence;
 import com.google.devtools.moe.client.database.RepositoryEquivalenceMatcher;
@@ -20,7 +37,6 @@ import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory.SearchType;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.testing.DummyDb;
-import com.google.devtools.moe.client.testing.MoeAsserts;
 import com.google.devtools.moe.client.testing.TestingModule;
 
 import dagger.Provides;
@@ -37,10 +53,6 @@ import java.util.List;
 
 import javax.inject.Singleton;
 
-/**
- * Unit tests for HgRevisionHistory: that 'hg log' calls are as expected and parsed correctly.
- *
- */
 public class HgRevisionHistoryTest extends TestCase {
   private static final String HG_COMMIT_DATE = "2012-07-09 06:00 -0700";
   private static final DateTime DATE =
@@ -164,7 +176,7 @@ public class HgRevisionHistoryTest extends TestCase {
     RevisionMetadata result = revHistory.getMetadata(Revision.create(2, "mockrepo"));
     assertEquals("2", result.id);
     assertEquals("uid@google.com", result.author);
-    MoeAsserts.assertSameDate(DATE, result.date);
+    assertThat(result.date).isEquivalentAccordingToCompareTo(DATE);
     assertEquals("description", result.description);
     assertEquals(
         ImmutableList.of(
@@ -198,7 +210,7 @@ public class HgRevisionHistoryTest extends TestCase {
     RevisionMetadata result = revHistory.getMetadata(Revision.create(2, "mockrepo"));
     assertEquals("2", result.id);
     assertEquals("u<id@google.com", result.author);
-    MoeAsserts.assertSameDate(DATE, result.date);
+    assertThat(result.date).isEquivalentAccordingToCompareTo(DATE);
     assertEquals(">description&amp", result.description);
     assertEquals(ImmutableList.of(Revision.create("parent", MOCK_REPO_NAME)), result.parents);
 
@@ -215,7 +227,7 @@ public class HgRevisionHistoryTest extends TestCase {
         rh.parseMetadata("1 < foo@google.com < " + HG_COMMIT_DATE + " < foo < 1:p1 -1:p2\n");
     assertEquals("1", rm.id);
     assertEquals("foo@google.com", rm.author);
-    MoeAsserts.assertSameDate(DATE, rm.date);
+    assertThat(rm.date).isEquivalentAccordingToCompareTo(DATE);
     assertEquals("foo", rm.description);
     assertEquals(ImmutableList.of(Revision.create("p1", MOCK_REPO_NAME)), rm.parents);
 
@@ -312,7 +324,7 @@ public class HgRevisionHistoryTest extends TestCase {
 
   /**
    * A test for finding the last equivalence for the following history starting
-   * with repo2{4}:
+   * with repo2{4}:<pre>
    *                                         _____
    *                                        |     |
    *                                        |  4  |
@@ -333,6 +345,7 @@ public class HgRevisionHistoryTest extends TestCase {
    *             |____|                     |_____|
    *
    *              repo1                      repo2
+   * </pre>
    *
    * @throws Exception
    */
@@ -388,7 +401,7 @@ public class HgRevisionHistoryTest extends TestCase {
 
     control.replay();
 
-    FileDb database = FileDb.makeDbFromDbText(testDb1);
+    FileDb database = new FileDb(null, MoeModule.provideGson().fromJson(testDb1, DbStorage.class));
 
     HgRevisionHistory history = new HgRevisionHistory(Suppliers.ofInstance(mockRepo));
 
@@ -415,8 +428,7 @@ public class HgRevisionHistoryTest extends TestCase {
 
   /**
    * A test for finding the last equivalence for the following history starting
-   * with repo2{4}:
-   *
+   * with repo2{4}:<pre>
    *              ____                       _____
    *             |    |                     |     |
    *             |1005|=====================|  5  |
@@ -444,6 +456,7 @@ public class HgRevisionHistoryTest extends TestCase {
    *                                        |_____|
    *
    *              repo1                      repo2
+   * <pre>
    *
    * @throws Exception
    */
@@ -505,7 +518,7 @@ public class HgRevisionHistoryTest extends TestCase {
 
     control.replay();
 
-    FileDb database = FileDb.makeDbFromDbText(testDb2);
+    FileDb database = new FileDb(null, MoeModule.provideGson().fromJson(testDb2, DbStorage.class));
 
     HgRevisionHistory history = new HgRevisionHistory(Suppliers.ofInstance(mockRepo));
     Result result =

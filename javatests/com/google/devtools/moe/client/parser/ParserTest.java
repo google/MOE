@@ -1,21 +1,30 @@
-// Copyright 2011 The MOE Authors All Rights Reserved.
-
+/*
+ * Copyright (c) 2011 Google, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.google.devtools.moe.client.parser;
 
 import static com.google.devtools.moe.client.parser.Parser.tokenize;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
-import com.google.devtools.moe.client.testing.MoeAsserts;
 
 import junit.framework.TestCase;
 
 import java.util.List;
 import java.util.Map;
 
-/**
- * @author dbentley@google.com (Daniel Bentley)
- */
 public class ParserTest extends TestCase {
 
   private static final Map<String, String> EMPTY_MAP = ImmutableMap.<String, String>of();
@@ -61,13 +70,11 @@ public class ParserTest extends TestCase {
       Map<String, String> actual = Parser.parseOptions(tokenize(s));
       assertEquals(expected, actual);
     } catch (Parser.ParseError e) {
-      MoeAsserts.fail("Could not parse %s: %s", s, e);
+      fail("Could not parse " + s + ": " + e);
     }
   }
 
   public void testParseOptions() throws Exception {
-    Map<String, String> r;
-
     assertOptionsResult("", ImmutableMap.<String, String>of());
     assertOptionsResult(">public", ImmutableMap.<String, String>of());
     assertOptionsResult("()>public", ImmutableMap.<String, String>of());
@@ -94,8 +101,13 @@ public class ParserTest extends TestCase {
   public void assertParseTermCompletelyFails(String input, String errorMessage) {
     try {
       Term r = Parser.parseTermCompletely(input);
-      MoeAsserts.fail(
-          "Successfully parsed invalid string: %s into %s and %s", input, r.identifier, r.options);
+      fail(
+          "Successfully parsed invalid string: "
+              + input
+              + " into "
+              + r.identifier
+              + " and "
+              + r.options);
     } catch (Parser.ParseError e) {
       assertEquals("Cannot parse: " + errorMessage, e.getMessage());
     }
@@ -131,8 +143,13 @@ public class ParserTest extends TestCase {
   public void assertParseTermFails(String input, String errorMessage) {
     try {
       Term r = Parser.parseTerm(Parser.tokenize(input));
-      MoeAsserts.fail(
-          "Successfully parsed invalid string: %s into %s and %s", input, r.identifier, r.options);
+      fail(
+          "Successfully parsed invalid string: "
+              + input
+              + " into "
+              + r.identifier
+              + " and "
+              + r.options);
     } catch (Parser.ParseError e) {
       assertEquals("Cannot parse: " + errorMessage, e.getMessage());
     }

@@ -1,16 +1,34 @@
-// Copyright 2011 The MOE Authors All Rights Reserved.
+/*
+ * Copyright (c) 2011 Google, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package com.google.devtools.moe.client.codebase;
 
 import static org.easymock.EasyMock.expect;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.SystemCommandRunner;
+import com.google.devtools.moe.client.repositories.Repositories;
+import com.google.devtools.moe.client.repositories.RepositoryType;
+import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
 import com.google.devtools.moe.client.testing.FileCodebaseCreator;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
 import com.google.devtools.moe.client.testing.RecordingUi;
@@ -26,14 +44,16 @@ import java.util.List;
 
 /**
  * Tests for the FileCodebaseCreator class.
- *
  */
 public class FileCodebaseCreatorTest extends TestCase {
-  private final InMemoryProjectContextFactory contextFactory = new InMemoryProjectContextFactory();
   private final RecordingUi ui = new RecordingUi();
   private final SystemCommandRunner cmd = new SystemCommandRunner(ui);
   private final IMocksControl control = EasyMock.createControl();
   private final FileSystem mockfs = control.createMock(FileSystem.class);
+  private final Repositories repositories =
+      new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(mockfs)));
+  private final InMemoryProjectContextFactory contextFactory =
+      new InMemoryProjectContextFactory(null, cmd, mockfs, ui, repositories);
 
   @Override
   public void setUp() throws Exception {
@@ -56,10 +76,9 @@ public class FileCodebaseCreatorTest extends TestCase {
    * @throws CodebaseCreationError
    */
   public void testValidationCreate() throws Exception {
-    FileCodebaseCreator cc = new FileCodebaseCreator();
+    FileCodebaseCreator cc = new FileCodebaseCreator(mockfs);
 
     // Validate parameters.
-    ImmutableMap<String, String> s;
     try {
       cc.create(ImmutableMap.<String, String>of());
       fail("Method does not check for required options.");
@@ -83,7 +102,7 @@ public class FileCodebaseCreatorTest extends TestCase {
     expectDirCopy(fileFolder, new File("/tmp/copy"));
 
     control.replay();
-    FileCodebaseCreator cc = new FileCodebaseCreator();
+    FileCodebaseCreator cc = new FileCodebaseCreator(mockfs);
     Codebase codebase = cc.create(ImmutableMap.<String, String>of("path", folder));
     assertNotNull(codebase);
     assertEquals("public", codebase.getProjectSpace());
@@ -101,7 +120,7 @@ public class FileCodebaseCreatorTest extends TestCase {
     expectDirCopy(fileFolder, new File("/tmp/copy"));
 
     control.replay();
-    FileCodebaseCreator cc = new FileCodebaseCreator();
+    FileCodebaseCreator cc = new FileCodebaseCreator(mockfs);
     Codebase codebase =
         cc.create(ImmutableMap.<String, String>of("path", folder, "projectspace", "internal"));
     control.verify();
@@ -122,7 +141,6 @@ public class FileCodebaseCreatorTest extends TestCase {
     expectDirCopy(fileFolder, copyLocation);
 
     control.replay();
-    FileCodebaseCreator cc = new FileCodebaseCreator();
     File newPath = FileCodebaseCreator.getCodebasePath(fileFolder);
     control.verify();
 

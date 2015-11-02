@@ -1,4 +1,18 @@
-// Copyright 2011 The MOE Authors All Rights Reserved.
+/*
+ * Copyright (c) 2011 Google, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package com.google.devtools.moe.client.dvcs.hg;
 
@@ -8,9 +22,10 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
+import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.FileSystem.Lifetime;
-import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.Lifetimes;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.codebase.LocalWorkspace;
@@ -21,10 +36,11 @@ import java.io.IOException;
 
 /**
  * Hg implementation of LocalClone, i.e. an 'hg clone' to local disk.
- *
  */
 public class HgClonedRepository implements LocalWorkspace {
 
+  private final CommandRunner cmd;
+  private final FileSystem filesystem;
   private final String repositoryName;
   private final RepositoryConfig repositoryConfig;
 
@@ -39,12 +55,22 @@ public class HgClonedRepository implements LocalWorkspace {
   private boolean updatedToRev = false;
   private String branch = null;
 
-  public HgClonedRepository(String repositoryName, RepositoryConfig repositoryConfig) {
-    this(repositoryName, repositoryConfig, repositoryConfig.getUrl());
+  public HgClonedRepository(
+      CommandRunner cmd,
+      FileSystem filesystem,
+      String repositoryName,
+      RepositoryConfig repositoryConfig) {
+    this(cmd, filesystem, repositoryName, repositoryConfig, repositoryConfig.getUrl());
   }
 
   HgClonedRepository(
-      String repositoryName, RepositoryConfig repositoryConfig, String repositoryUrl) {
+      CommandRunner cmd,
+      FileSystem filesystem,
+      String repositoryName,
+      RepositoryConfig repositoryConfig,
+      String repositoryUrl) {
+    this.cmd = cmd;
+    this.filesystem = filesystem;
     this.repositoryName = repositoryName;
     this.repositoryConfig = repositoryConfig;
     this.repositoryUrl = repositoryUrl;
@@ -78,8 +104,7 @@ public class HgClonedRepository implements LocalWorkspace {
     Preconditions.checkState(!clonedLocally);
 
     String tempDirName = "hg_clone_" + repositoryName + "_";
-    localCloneTempDir =
-        Injector.INSTANCE.fileSystem().getTemporaryDirectory(tempDirName, cloneLifetime);
+    localCloneTempDir = filesystem.getTemporaryDirectory(tempDirName, cloneLifetime);
 
     try {
       Optional<String> branchName = repositoryConfig.getBranch();
@@ -116,10 +141,8 @@ public class HgClonedRepository implements LocalWorkspace {
   public File archiveAtRevision(String revId) {
     Preconditions.checkState(clonedLocally);
     File archiveLocation =
-        Injector.INSTANCE
-            .fileSystem()
-            .getTemporaryDirectory(
-                String.format("hg_archive_%s_%s_", repositoryName, revId), Lifetimes.currentTask());
+        filesystem.getTemporaryDirectory(
+            String.format("hg_archive_%s_%s_", repositoryName, revId), Lifetimes.currentTask());
     try {
       ImmutableList.Builder<String> archiveArgs = ImmutableList.<String>builder();
       archiveArgs.add("archive", archiveLocation.getAbsolutePath());
@@ -127,9 +150,7 @@ public class HgClonedRepository implements LocalWorkspace {
         archiveArgs.add("--rev=" + revId);
       }
       HgRepositoryFactory.runHgCommand(archiveArgs.build(), localCloneTempDir.getAbsolutePath());
-      Injector.INSTANCE
-          .fileSystem()
-          .deleteRecursively(new File(archiveLocation, ".hg_archival.txt"));
+      filesystem.deleteRecursively(new File(archiveLocation, ".hg_archival.txt"));
     } catch (CommandException e) {
       throw new MoeProblem(
           "Could not archive hg clone at " + localCloneTempDir.getAbsolutePath() + ": " + e.stderr);
@@ -152,11 +173,7 @@ public class HgClonedRepository implements LocalWorkspace {
    * @return the stdout output of the command
    */
   String runHgCommand(String... args) throws CommandException {
-    return Injector.INSTANCE
-        .cmd()
-        .runCommand(
-            "hg",
-            ImmutableList.copyOf(args),
-            getLocalTempDir().getAbsolutePath() /*workingDirectory*/);
+    return cmd.runCommand(
+        "hg", ImmutableList.copyOf(args), getLocalTempDir().getAbsolutePath() /*workingDirectory*/);
   }
 }

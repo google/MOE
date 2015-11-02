@@ -1,16 +1,31 @@
-// Copyright 2011 The MOE Authors All Rights Reserved.
+/*
+ * Copyright (c) 2011 Google, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package com.google.devtools.moe.client.editors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableMap;
+import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.MoeModule;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.project.EditorConfig;
 import com.google.devtools.moe.client.project.ProjectContext;
-import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 
@@ -23,12 +38,13 @@ import java.util.regex.Pattern;
 
 /**
  * The renaming editor reorganizes the project's hierarchy.
- *
  */
 public class RenamingEditor implements Editor {
 
   /** CharMatcher for trimming leading and trailing file path separators. */
   private static final CharMatcher SEP_CHAR_MATCHER = CharMatcher.is(File.separatorChar);
+
+  private final FileSystem filesystem = Injector.INSTANCE.fileSystem(); // TODO(cgruber) @Inject
 
   private final String editorName;
   private final Map<Pattern, String> regexMappings;
@@ -62,8 +78,8 @@ public class RenamingEditor implements Editor {
    */
   @VisibleForTesting
   void copyDirectoryAndRename(File srcFile, File srcFolder, File destFolder) throws IOException {
-    if (Injector.INSTANCE.fileSystem().isDirectory(srcFile)) {
-      File[] files = Injector.INSTANCE.fileSystem().listFiles(srcFile);
+    if (filesystem.isDirectory(srcFile)) {
+      File[] files = filesystem.listFiles(srcFile);
       for (File subFile : files) {
         copyDirectoryAndRename(subFile, srcFolder, destFolder);
       }
@@ -71,8 +87,8 @@ public class RenamingEditor implements Editor {
       // "/srcFolder/path/to/file" -> "path/to/file"
       String relativePath = srcFolder.toURI().relativize(srcFile.toURI()).getPath();
       File renamedFile = new File(destFolder, renameFile(relativePath));
-      Injector.INSTANCE.fileSystem().makeDirsForFile(renamedFile);
-      Injector.INSTANCE.fileSystem().copyFile(srcFile, renamedFile);
+      filesystem.makeDirsForFile(renamedFile);
+      filesystem.copyFile(srcFile, renamedFile);
     }
   }
 
@@ -110,7 +126,7 @@ public class RenamingEditor implements Editor {
    */
   @Override
   public Codebase edit(Codebase input, ProjectContext context, Map<String, String> options) {
-    File tempDir = Injector.INSTANCE.fileSystem().getTemporaryDirectory("rename_run_");
+    File tempDir = filesystem.getTemporaryDirectory("rename_run_");
     try {
       copyDirectoryAndRename(
           input.getPath().getAbsoluteFile(),
@@ -119,7 +135,7 @@ public class RenamingEditor implements Editor {
     } catch (IOException e) {
       throw new MoeProblem(e.getMessage());
     }
-    return new Codebase(tempDir, input.getProjectSpace(), input.getExpression());
+    return new Codebase(filesystem, tempDir, input.getProjectSpace(), input.getExpression());
   }
 
   public static RenamingEditor makeRenamingEditor(String editorName, EditorConfig config) {
@@ -137,6 +153,6 @@ public class RenamingEditor implements Editor {
    */
   static Map<String, String> parseJsonMap(JsonObject jsonMappings) {
     Type type = new TypeToken<Map<String, String>>() {}.getType();
-    return new Gson().fromJson(jsonMappings, type);
+    return MoeModule.provideGson().fromJson(jsonMappings, type);
   }
 }

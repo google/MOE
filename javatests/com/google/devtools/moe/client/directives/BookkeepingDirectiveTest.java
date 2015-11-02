@@ -1,4 +1,18 @@
-// Copyright 2011 The MOE Authors All Rights Reserved.
+/*
+ * Copyright (c) 2011 Google, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package com.google.devtools.moe.client.directives;
 
@@ -6,16 +20,27 @@ import static org.easymock.EasyMock.expect;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.CommandRunner;
+import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.MoeModule;
+import com.google.devtools.moe.client.database.Bookkeeper;
+import com.google.devtools.moe.client.database.Db;
 import com.google.devtools.moe.client.database.DbStorage;
 import com.google.devtools.moe.client.database.FileDb;
 import com.google.devtools.moe.client.database.RepositoryEquivalence;
 import com.google.devtools.moe.client.database.SubmittedMigration;
+import com.google.devtools.moe.client.repositories.Repositories;
+import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.repositories.Revision;
+import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
 import com.google.devtools.moe.client.testing.InMemoryFileSystem;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
 import com.google.devtools.moe.client.testing.RecordingUi;
+import com.google.devtools.moe.client.tools.CodebaseDiffer;
+import com.google.devtools.moe.client.tools.FileDifference.ConcreteFileDiffer;
+import com.google.devtools.moe.client.tools.FileDifference.FileDiffer;
 
 import junit.framework.TestCase;
 
@@ -32,18 +57,15 @@ import java.io.File;
  * /dummy/codebase/{int/migrated_from,pub/migrated_to} -- is implicitly determined by
  * existence/nonexistence of corresponding files in the {@code FileSystem} and <em>not</em> by the
  * output of the "diff" command, which is merely stubbed in.
- *
  */
 public class BookkeepingDirectiveTest extends TestCase {
   private static final File DB_FILE = new File("/path/to/db");
-  private final InMemoryProjectContextFactory contextFactory = new InMemoryProjectContextFactory();
   private final RecordingUi ui = new RecordingUi();
   private final IMocksControl control = EasyMock.createControl();
   private final CommandRunner cmd = control.createMock(CommandRunner.class);
 
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
+  private static InMemoryProjectContextFactory init(InMemoryProjectContextFactory contextFactory)
+      throws Exception {
     contextFactory.projectConfigs.put(
         "moe_config.txt",
         "{\"name\":\"foo\",\"repositories\":{"
@@ -54,6 +76,7 @@ public class BookkeepingDirectiveTest extends TestCase {
             + "\"editor\":{\"type\":\"identity\"}}]}],"
             + "\"migrations\":[{\"name\":\"test\",\"from_repository\":\"int\","
             + "\"to_repository\":\"pub\"}]}");
+    return contextFactory;
   }
 
   private void expectDiffs() throws Exception {
@@ -81,8 +104,20 @@ public class BookkeepingDirectiveTest extends TestCase {
             "/dummy/codebase/pub/1/file", "1 (equivalent)",
             "/dummy/codebase/int/migrated_from/file", "migrated_from",
             "/dummy/codebase/pub/migrated_to/", "dir (different)");
-    Injector.INSTANCE = new Injector(new InMemoryFileSystem(files), cmd, contextFactory, ui);
-    BookkeepingDirective d = new BookkeepingDirective(contextFactory, ui);
+    FileSystem filesystem = new InMemoryFileSystem(files);
+    FileDiffer fileDiffer = new ConcreteFileDiffer(cmd, filesystem);
+    CodebaseDiffer codebaseDiffer = new CodebaseDiffer(fileDiffer);
+    Repositories repositories =
+        new Repositories(
+            ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(filesystem)));
+    InMemoryProjectContextFactory contextFactory =
+        init(new InMemoryProjectContextFactory(fileDiffer, cmd, filesystem, ui, repositories));
+    Injector.INSTANCE = new Injector(filesystem, cmd, contextFactory, ui);
+    Db.Factory dbFactory = new FileDb.Factory(filesystem, MoeModule.provideGson());
+    Db.Writer dbWriter = new FileDb.Writer(MoeModule.provideGson(), filesystem);
+    BookkeepingDirective d =
+        new BookkeepingDirective(
+            contextFactory, dbFactory, new Bookkeeper(codebaseDiffer, dbWriter, ui));
     d.setContextFileName("moe_config.txt");
     d.dbLocation = DB_FILE.getAbsolutePath();
 
@@ -93,15 +128,14 @@ public class BookkeepingDirectiveTest extends TestCase {
     control.verify();
 
     // expected db at end of call to bookkeep
-    DbStorage dbStorage = new DbStorage();
-    dbStorage.addEquivalence(
+    DbStorage expectedDb = new DbStorage();
+    expectedDb.addEquivalence(
         RepositoryEquivalence.create(Revision.create(1, "int"), Revision.create(1, "pub")));
-    dbStorage.addMigration(
+    expectedDb.addMigration(
         SubmittedMigration.create(
             Revision.create("migrated_from", "int"), Revision.create("migrated_to", "pub")));
-    FileDb expectedDb = new FileDb(dbStorage);
 
-    assertEquals(expectedDb.toJsonString(), Injector.INSTANCE.fileSystem().fileToString(DB_FILE));
+    assertEquals(MoeModule.provideGson().toJson(expectedDb), filesystem.fileToString(DB_FILE));
   }
 
   /**
@@ -115,8 +149,20 @@ public class BookkeepingDirectiveTest extends TestCase {
             "/dummy/codebase/pub/1/", "empty dir (different)",
             "/dummy/codebase/int/migrated_from/file", "migrated_from",
             "/dummy/codebase/pub/migrated_to/", "empty dir (different)");
-    Injector.INSTANCE = new Injector(new InMemoryFileSystem(files), cmd, contextFactory, ui);
-    BookkeepingDirective d = new BookkeepingDirective(contextFactory, ui);
+    FileSystem filesystem = new InMemoryFileSystem(files);
+    FileDiffer fileDiffer = new ConcreteFileDiffer(cmd, filesystem);
+    CodebaseDiffer codebaseDiffer = new CodebaseDiffer(fileDiffer);
+    Repositories repositories =
+        new Repositories(
+            ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(filesystem)));
+    InMemoryProjectContextFactory contextFactory =
+        init(new InMemoryProjectContextFactory(fileDiffer, cmd, filesystem, ui, repositories));
+    Injector.INSTANCE = new Injector(filesystem, cmd, contextFactory, ui);
+    Db.Factory dbFactory = new FileDb.Factory(filesystem, MoeModule.provideGson());
+    Db.Writer dbWriter = new FileDb.Writer(MoeModule.provideGson(), filesystem);
+    BookkeepingDirective d =
+        new BookkeepingDirective(
+            contextFactory, dbFactory, new Bookkeeper(codebaseDiffer, dbWriter, ui));
     d.setContextFileName("moe_config.txt");
     d.dbLocation = DB_FILE.getAbsolutePath();
 
@@ -127,13 +173,12 @@ public class BookkeepingDirectiveTest extends TestCase {
     control.verify();
 
     // expected db at end of call to bookkeep
-    DbStorage dbStorage = new DbStorage();
-    dbStorage.addMigration(
+    DbStorage expectedDb = new DbStorage();
+    expectedDb.addMigration(
         SubmittedMigration.create(
             Revision.create("migrated_from", "int"), Revision.create("migrated_to", "pub")));
-    FileDb expectedDb = new FileDb(dbStorage);
 
-    assertEquals(expectedDb.toJsonString(), Injector.INSTANCE.fileSystem().fileToString(DB_FILE));
+    assertEquals(MoeModule.provideGson().toJson(expectedDb), filesystem.fileToString(DB_FILE));
   }
 
   /**
@@ -147,8 +192,20 @@ public class BookkeepingDirectiveTest extends TestCase {
             "/dummy/codebase/pub/1/", "empty dir (different)",
             "/dummy/codebase/int/migrated_from/file", "migrated_from",
             "/dummy/codebase/pub/migrated_to/file", "migrated_to (equivalent)");
-    Injector.INSTANCE = new Injector(new InMemoryFileSystem(files), cmd, contextFactory, ui);
-    BookkeepingDirective d = new BookkeepingDirective(contextFactory, ui);
+    FileSystem filesystem = new InMemoryFileSystem(files);
+    FileDiffer fileDiffer = new ConcreteFileDiffer(cmd, filesystem);
+    CodebaseDiffer codebaseDiffer = new CodebaseDiffer(fileDiffer);
+    Repositories repositories =
+        new Repositories(
+            ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(filesystem)));
+    InMemoryProjectContextFactory contextFactory =
+        init(new InMemoryProjectContextFactory(fileDiffer, cmd, filesystem, ui, repositories));
+    Injector.INSTANCE = new Injector(filesystem, cmd, contextFactory, ui);
+    Db.Factory dbFactory = new FileDb.Factory(filesystem, MoeModule.provideGson());
+    Db.Writer dbWriter = new FileDb.Writer(MoeModule.provideGson(), filesystem);
+    BookkeepingDirective d =
+        new BookkeepingDirective(
+            contextFactory, dbFactory, new Bookkeeper(codebaseDiffer, dbWriter, ui));
     d.setContextFileName("moe_config.txt");
     d.dbLocation = DB_FILE.getAbsolutePath();
 
@@ -159,15 +216,14 @@ public class BookkeepingDirectiveTest extends TestCase {
     control.verify();
 
     // expected db at end of call to bookkeep
-    DbStorage dbStorage = new DbStorage();
-    dbStorage.addEquivalence(
+    DbStorage expectedDb = new DbStorage();
+    expectedDb.addEquivalence(
         RepositoryEquivalence.create(
             Revision.create("migrated_from", "int"), Revision.create("migrated_to", "pub")));
-    dbStorage.addMigration(
+    expectedDb.addMigration(
         SubmittedMigration.create(
             Revision.create("migrated_from", "int"), Revision.create("migrated_to", "pub")));
-    FileDb expectedDb = new FileDb(dbStorage);
 
-    assertEquals(expectedDb.toJsonString(), Injector.INSTANCE.fileSystem().fileToString(DB_FILE));
+    assertEquals(MoeModule.provideGson().toJson(expectedDb), filesystem.fileToString(DB_FILE));
   }
 }

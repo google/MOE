@@ -1,4 +1,18 @@
-// Copyright 2011 The MOE Authors All Rights Reserved.
+/*
+ * Copyright (c) 2011 Google, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package com.google.devtools.moe.client.tools;
 
@@ -10,13 +24,10 @@ import junit.framework.TestCase;
 
 import java.io.File;
 
-/**
- * @author dbentley@google.com (Daniel Bentley)
- */
 public class PatchCodebaseDifferenceRendererTest extends TestCase {
 
   private static Codebase makeCodebase(String name) throws Exception {
-    return new Codebase(new File("/" + name), "public", new RepositoryExpression(name));
+    return new Codebase(null, new File("/" + name), "public", new RepositoryExpression(name));
   }
 
   public void testRender() throws Exception {
@@ -27,7 +38,7 @@ public class PatchCodebaseDifferenceRendererTest extends TestCase {
     ImmutableSet.Builder<FileDifference> diffs = ImmutableSet.builder();
 
     diffs.add(
-        new FileDifference(
+        FileDifference.create(
             "foo",
             new File("/c1/foo"),
             new File("/c2/foo"),
@@ -36,7 +47,7 @@ public class PatchCodebaseDifferenceRendererTest extends TestCase {
             "> foo"));
 
     diffs.add(
-        new FileDifference(
+        FileDifference.create(
             "bar",
             new File("/c1/bar"),
             new File("/c2/bar"),
@@ -45,7 +56,7 @@ public class PatchCodebaseDifferenceRendererTest extends TestCase {
             null));
 
     diffs.add(
-        new FileDifference(
+        FileDifference.create(
             "baz",
             new File("/c1/baz"),
             new File("/c2/baz"),
@@ -54,7 +65,7 @@ public class PatchCodebaseDifferenceRendererTest extends TestCase {
             null));
 
     diffs.add(
-        new FileDifference(
+        FileDifference.create(
             "quux",
             new File("/c1/quux"),
             new File("/c2/quux"),
@@ -63,7 +74,7 @@ public class PatchCodebaseDifferenceRendererTest extends TestCase {
             "> quux"));
 
     diffs.add(
-        new FileDifference(
+        FileDifference.create(
             "fuzzy",
             new File("/c1/fuzzy"),
             new File("/c2/fuzzy"),

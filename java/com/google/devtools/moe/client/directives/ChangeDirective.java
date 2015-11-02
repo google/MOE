@@ -1,4 +1,18 @@
-// Copyright 2011 The MOE Authors All Rights Reserved.
+/*
+ * Copyright (c) 2011 Google, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package com.google.devtools.moe.client.directives;
 
@@ -6,7 +20,6 @@ import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.Ui.Task;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
-import com.google.devtools.moe.client.logic.ChangeLogic;
 import com.google.devtools.moe.client.parser.Parser;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
 import com.google.devtools.moe.client.project.ProjectContextFactory;
@@ -20,8 +33,6 @@ import javax.inject.Inject;
 
 /**
  * Create a Change in a source control system using command line flags.
- *
- * @author dbentley@google.com (Daniel Bentley)
  */
 public class ChangeDirective extends Directive {
   @Option(name = "--codebase", required = true, usage = "Codebase expression to evaluate")
@@ -31,11 +42,14 @@ public class ChangeDirective extends Directive {
   String destination = "";
 
   private final Ui ui;
+  private final DraftRevision.Factory revisionFactory;
 
   @Inject
-  ChangeDirective(ProjectContextFactory contextFactory, Ui ui) {
+  ChangeDirective(
+      ProjectContextFactory contextFactory, Ui ui, DraftRevision.Factory revisionFactory) {
     super(contextFactory); // TODO(cgruber) Inject project context, not its factory
     this.ui = ui;
+    this.revisionFactory = revisionFactory;
   }
 
   @Override
@@ -69,7 +83,7 @@ public class ChangeDirective extends Directive {
       return 1;
     }
 
-    DraftRevision r = ChangeLogic.change(c, writer);
+    DraftRevision r = revisionFactory.create(c, writer, null);
     if (r == null) {
       return 1;
     }

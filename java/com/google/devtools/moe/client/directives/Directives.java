@@ -1,8 +1,23 @@
-// Copyright 2011 The MOE Authors All Rights Reserved.
+/*
+ * Copyright (c) 2011 Google, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package com.google.devtools.moe.client.directives;
 
-import com.google.devtools.moe.client.Ui;
+import com.google.devtools.moe.client.Messenger;
+import com.google.devtools.moe.client.MoeUserProblem;
 
 import java.util.Map;
 
@@ -13,10 +28,7 @@ import javax.inject.Qualifier;
 
 /**
  * Manages the collection of available directives.
- *
- * @author cgruber@google.com (Christian Gruber)
  */
-
 public class Directives {
 
   /** JSR-330 qualifier to distinguish a binding for the String representing the selection */
@@ -42,14 +54,15 @@ public class Directives {
   }
 
   /** Thrown when an invalid directive name is selected. */
-  public class NoSuchDirectiveException extends Exception {
-    public void reportTo(Ui ui) {
+  public class NoSuchDirectiveException extends MoeUserProblem {
+    @Override
+    public void reportTo(Messenger messenger) {
       // Bad input, print all possible directives
-      ui.info(directiveName + " is not a valid directive. Must be one of: ");
+      messenger.info(directiveName + " is not a valid directive. Must be one of: ");
 
       for (Map.Entry<String, Provider<Directive>> entry : directives.entrySet()) {
         // TODO(cgruber): make this a table map so this isn't needed.
-        ui.info("* " + entry.getKey() + ": " + entry.getValue().get().getDescription());
+        messenger.info("* " + entry.getKey() + ": " + entry.getValue().get().getDescription());
       }
     }
   }

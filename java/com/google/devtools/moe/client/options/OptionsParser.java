@@ -1,9 +1,24 @@
-// Copyright 2015 The MOE Authors All Rights Reserved.
+/*
+ * Copyright (c) 2015 Google, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.google.devtools.moe.client.options;
 
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -18,6 +33,7 @@ public class OptionsParser {
   private static final Logger logger = Logger.getLogger(OptionsParser.class.getName());
 
   private final String[] preprocessedArgs;
+  private final boolean debug;
 
   /**
    * Creates the OptionsParser
@@ -28,6 +44,19 @@ public class OptionsParser {
   @Inject
   OptionsParser(String[] preprocessedArgs) {
     this.preprocessedArgs = preprocessedArgs;
+    this.debug = debugFlagPresent(preprocessedArgs);
+  }
+
+  /**
+   * An ultra-thin pre-options-parser to check for the debug flag, in order to allow debug logging
+   * before the graph (and options-parser) is initialized.
+   */
+  public static boolean debugFlagPresent(String[] preprocessedArgs) {
+    return Arrays.asList(preprocessedArgs).contains("--debug");
+  }
+
+  public boolean debug() {
+    return debug;
   }
 
   /**
@@ -44,7 +73,7 @@ public class OptionsParser {
       }
       return true;
     } catch (CmdLineException e) {
-      logger.log(Level.SEVERE, "Failure", e);
+      logger.log(Level.SEVERE, e.getMessage());
       parser.printUsage(System.err);
       return false;
     }

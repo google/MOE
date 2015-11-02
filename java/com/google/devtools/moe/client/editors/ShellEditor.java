@@ -1,9 +1,24 @@
-// Copyright 2011 The MOE Authors All Rights Reserved.
+/*
+ * Copyright (c) 2011 Google, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package com.google.devtools.moe.client.editors;
 
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.CommandRunner;
+import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Utils;
@@ -19,13 +34,16 @@ import java.util.Map;
  * An editor that will run the shell command specified in the
  * commandString field.
  *
- * Note: this command string can and probably will be a
+ * <p>Note: this command string can and probably will be a
  * concatenation e.g. "command1 && command2 && command3..."
- *
  */
 public class ShellEditor implements Editor {
 
-  private final String name, commandString;
+  private final CommandRunner cmd = Injector.INSTANCE.cmd(); // TODO(cgruber) @Inject
+  private final FileSystem filesystem = Injector.INSTANCE.fileSystem(); // TODO(cgruber) @Inject
+
+  private final String name;
+  private final String commandString;
 
   ShellEditor(String editorName, String commandString) {
     name = editorName;
@@ -50,23 +68,18 @@ public class ShellEditor implements Editor {
    */
   @Override
   public Codebase edit(Codebase input, ProjectContext context, Map<String, String> options) {
-    File tempDir = Injector.INSTANCE.fileSystem().getTemporaryDirectory("shell_run_");
+    File tempDir = filesystem.getTemporaryDirectory("shell_run_");
     try {
       Utils.copyDirectory(input.getPath(), tempDir);
-    } catch (IOException e) {
-      throw new MoeProblem(e.getMessage());
-    } catch (CommandRunner.CommandException e) {
+    } catch (IOException | CommandRunner.CommandException e) {
       throw new MoeProblem(e.getMessage());
     }
     try {
-      Injector.INSTANCE
-          .cmd()
-          .runCommand(
-              "bash", ImmutableList.of("-c", this.commandString), tempDir.getAbsolutePath());
+      cmd.runCommand("bash", ImmutableList.of("-c", this.commandString), tempDir.getAbsolutePath());
     } catch (CommandRunner.CommandException e) {
       throw new MoeProblem(e.getMessage());
     }
-    return new Codebase(tempDir, input.getProjectSpace(), input.getExpression());
+    return new Codebase(filesystem, tempDir, input.getProjectSpace(), input.getExpression());
   }
 
   public static ShellEditor makeShellEditor(String editorName, EditorConfig config) {

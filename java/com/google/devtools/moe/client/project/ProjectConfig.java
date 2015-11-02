@@ -1,4 +1,18 @@
-// Copyright 2011 The MOE Authors All Rights Reserved.
+/*
+ * Copyright (c) 2011 Google, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package com.google.devtools.moe.client.project;
 
@@ -8,26 +22,19 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
+import com.google.devtools.moe.client.MoeModule;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.migrations.MigrationConfig;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.annotations.SerializedName;
 
-import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 /**
  * Configuration for a MOE Project
- *
- * @author dbentley@google.com (Daniel Bentley)
  */
 public class ProjectConfig {
   private String name;
@@ -54,9 +61,9 @@ public class ProjectConfig {
    * Returns a mapping of {@link RepositoryConfig} by name in this config. Useful for inspection of
    * this config's contents.
    */
-  Map<String, RepositoryConfig> getRepositoryConfigs() {
+  public Map<String, RepositoryConfig> repositories() {
     Preconditions.checkNotNull(repositories);
-    return Collections.unmodifiableMap(repositories);
+    return ImmutableMap.copyOf(repositories);
   }
 
   /**
@@ -96,42 +103,25 @@ public class ProjectConfig {
     return Collections.unmodifiableList(migrationConfigs);
   }
 
-  /**
-   * Helper class to deserialize raw Json in a config.
-   */
-  static class JsonObjectDeserializer implements JsonDeserializer<JsonObject> {
-    @Override
-    public JsonObject deserialize(
-        JsonElement json, Type typeOfT, JsonDeserializationContext context)
-        throws JsonParseException {
-      return json.getAsJsonObject();
-    }
-  }
 
   /**
-   * Make a GSON object usable to parse MOE configs.
+   * Returns a configuration from one repository to another, if any is configured.
    */
-  public static Gson makeGson() {
-    return new GsonBuilder()
-        .registerTypeAdapter(JsonObject.class, new JsonObjectDeserializer()).create();
-  }
-
-  public ScrubberConfig findScrubberConfig(String fromRepository, String toRepository) {
+  public TranslatorConfig findTranslatorFrom(String fromRepository, String toRepository) {
     String fromProjectSpace = getRepositoryConfig(fromRepository).getProjectSpace();
     String toProjectSpace = getRepositoryConfig(toRepository).getProjectSpace();
     for (TranslatorConfig translator : getTranslators()) {
-      if (translator.getSteps() != null
-          && translator.getFromProjectSpace().equals(fromProjectSpace)
+      if (translator.getFromProjectSpace().equals(fromProjectSpace)
           && translator.getToProjectSpace().equals(toProjectSpace)) {
-        for (StepConfig step : translator.getSteps()) {
-          if (step.getEditorConfig().getType() == EditorType.scrubber) {
-            return step.getEditorConfig().getScrubberConfig();
-          }
-        }
-        break;
+        return translator;
       }
     }
     return null;
+  }
+
+  public ScrubberConfig findScrubberConfig(String fromRepository, String toRepository) {
+    TranslatorConfig translator = findTranslatorFrom(fromRepository, toRepository);
+    return (translator == null) ? null : translator.scrubber();
   }
 
   void validate() throws InvalidProject {
@@ -160,7 +150,7 @@ public class ProjectConfig {
     }
 
     InvalidProject.assertFalse(Strings.isNullOrEmpty(getName()), "Must specify a name");
-    InvalidProject.assertFalse(getRepositoryConfigs().isEmpty(), "Must specify repositories");
+    InvalidProject.assertFalse(repositories().isEmpty(), "Must specify repositories");
 
     for (RepositoryConfig r : repositories.values()) {
       r.validate();
@@ -182,7 +172,7 @@ public class ProjectConfig {
   public static ProjectConfig makeProjectConfigFromConfigText(String configText)
       throws InvalidProject {
     try {
-      Gson gson = makeGson();
+      Gson gson = MoeModule.provideGson(); // TODO(user): Remove this static reference.
       ProjectConfig config = gson.fromJson(configText, ProjectConfig.class);
       if (config == null) {
         throw new InvalidProject("Could not parse MOE config");

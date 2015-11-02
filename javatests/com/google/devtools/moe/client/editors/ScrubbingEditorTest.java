@@ -1,19 +1,33 @@
-// Copyright 2011 The MOE Authors All Rights Reserved.
+/*
+ * Copyright (c) 2011 Google, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package com.google.devtools.moe.client.editors;
 
 import static org.easymock.EasyMock.expect;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.MoeModule;
 import com.google.devtools.moe.client.codebase.Codebase;
-import com.google.devtools.moe.client.project.ProjectConfig;
 import com.google.devtools.moe.client.project.ScrubberConfig;
 import com.google.devtools.moe.client.testing.TestingModule;
-import com.google.gson.Gson;
 
 import dagger.Provides;
 
@@ -26,9 +40,6 @@ import java.io.File;
 
 import javax.inject.Singleton;
 
-/**
- * @author dbentley@google.com (Daniel Bentley)
- */
 public class ScrubbingEditorTest extends TestCase {
   private final IMocksControl control = EasyMock.createControl();
   private final FileSystem fileSystem = control.createMock(FileSystem.class);
@@ -61,12 +72,15 @@ public class ScrubbingEditorTest extends TestCase {
     File scrubberTemp = new File("/scrubber_extraction_foo");
     File scrubberBin = new File(scrubberTemp, "scrubber.par");
     File scrubberRun = new File("/scrubber_run_foo");
-    File outputTar = new File(scrubberRun, "scrubbed.tar");
     File codebaseFile = new File("/codebase");
     File expandedDir = new File("/expanded_tar_foo");
 
     Codebase codebase =
-        new Codebase(codebaseFile, "internal", null /* CodebaseExpression is not needed here. */);
+        new Codebase(
+            fileSystem,
+            codebaseFile,
+            "internal",
+            null /* CodebaseExpression is not needed here. */);
 
 
     expect(fileSystem.getResourceAsFile("/devtools/moe/scrubber/scrubber.par"))
@@ -84,16 +98,20 @@ public class ScrubbingEditorTest extends TestCase {
                     "--output_tar",
                     "/scrubber_run_foo/scrubbed.tar",
                     "--config_data",
-                    "{\"scrub_sensitive_comments\":true,"
-                        + "\"scrub_non_documentation_comments\":false,"
-                        + "\"scrub_all_comments\":false,"
-                        + "\"usernames_to_scrub\":[],"
-                        + "\"usernames_to_publish\":[],"
-                        + "\"scrub_unknown_users\":true,"
-                        + "\"scrub_authors\":true,"
-                        + "\"maximum_blank_lines\":0,"
-                        + "\"scrub_java_testsize_annotations\":false,"
-                        + "\"scrub_proto_comments\":false}",
+                    Joiner.on('\n')
+                        .join(
+                            "{",
+                            "  \"scrub_sensitive_comments\": true,",
+                            "  \"scrub_non_documentation_comments\": false,",
+                            "  \"scrub_all_comments\": false,",
+                            "  \"usernames_to_scrub\": [],",
+                            "  \"usernames_to_publish\": [],",
+                            "  \"scrub_unknown_users\": true,",
+                            "  \"scrub_authors\": true,",
+                            "  \"maximum_blank_lines\": 0,",
+                            "  \"scrub_java_testsize_annotations\": false,",
+                            "  \"scrub_proto_comments\": false",
+                            "}"),
                     "/codebase"),
                 "/scrubber_extraction_foo"))
         .andReturn("");
@@ -108,10 +126,11 @@ public class ScrubbingEditorTest extends TestCase {
         .andReturn("");
     control.replay();
 
-    Gson gson = ProjectConfig.makeGson();
+
     ScrubberConfig scrubberConfig =
-        gson.fromJson(
-            "{\"scrub_unknown_users\":\"true\",\"usernames_file\":null}", ScrubberConfig.class);
+        MoeModule.provideGson()
+            .fromJson(
+                "{\"scrub_unknown_users\":\"true\",\"usernames_file\":null}", ScrubberConfig.class);
 
     new ScrubbingEditor("scrubber", scrubberConfig)
         .edit(

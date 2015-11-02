@@ -1,14 +1,31 @@
-// Copyright 2011 The MOE Authors All Rights Reserved.
+/*
+ * Copyright (c) 2011 Google, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package com.google.devtools.moe.client.svn;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.easymock.EasyMock.expect;
 
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.MoeModule;
 import com.google.devtools.moe.client.NullFileSystemModule;
+import com.google.devtools.moe.client.database.DbStorage;
 import com.google.devtools.moe.client.database.FileDb;
 import com.google.devtools.moe.client.database.RepositoryEquivalence;
 import com.google.devtools.moe.client.database.RepositoryEquivalenceMatcher;
@@ -17,7 +34,6 @@ import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory.SearchType;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.testing.DummyDb;
-import com.google.devtools.moe.client.testing.MoeAsserts;
 import com.google.devtools.moe.client.testing.TestingModule;
 
 import dagger.Provides;
@@ -36,10 +52,6 @@ import java.util.List;
 import javax.inject.Singleton;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-/**
- * @author dbentley@google.com
- *
- */
 public class SvnRevisionHistoryTest extends TestCase {
   // Svn actually follows the spec!
   private static final String SVN_COMMIT_DATE = "2012-07-09T13:00:00.000000Z";
@@ -140,12 +152,12 @@ public class SvnRevisionHistoryTest extends TestCase {
     assertEquals(2, rs.size());
     assertEquals("2", rs.get(0).id);
     assertEquals("uid@google.com", rs.get(0).author);
-    MoeAsserts.assertSameDate(DATE, rs.get(0).date);
+    assertThat(rs.get(0).date).isEquivalentAccordingToCompareTo(DATE);
     assertEquals("description", rs.get(0).description);
     assertEquals(ImmutableList.of(Revision.create(1, "internal_svn")), rs.get(0).parents);
     assertEquals("1", rs.get(1).id);
     assertEquals("user@google.com", rs.get(1).author);
-    MoeAsserts.assertSameDate(DATE, rs.get(1).date);
+    assertThat(rs.get(1).date).isEquivalentAccordingToCompareTo(DATE);
     assertEquals("message", rs.get(1).description);
     assertEquals(ImmutableList.of(), rs.get(1).parents);
   }
@@ -187,7 +199,7 @@ public class SvnRevisionHistoryTest extends TestCase {
     RevisionMetadata result = history.getMetadata(Revision.create(3, "internal_svn"));
     assertEquals("3", result.id);
     assertEquals("uid@google.com", result.author);
-    MoeAsserts.assertSameDate(DATE, result.date);
+    assertThat(result.date).isEquivalentAccordingToCompareTo(DATE);
     assertEquals("message", result.description);
     assertEquals(ImmutableList.of(Revision.create(2, "internal_svn")), result.parents);
     control.verify();
@@ -196,14 +208,14 @@ public class SvnRevisionHistoryTest extends TestCase {
   /**
    * Tests parsing of this SVN log entry:
    *
-   * {@code
+   * <pre>{@code
    * <logentry>
    *   <author>user</author>
    *   <text/>
    *   <date>yyyy-mm-dd</date>
    *   <msg>description</msg>
    * </logentry>
-   * }
+   * }</pre>
    */
   public void testParseMetadataNodeList() throws Exception {
     Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
@@ -355,8 +367,7 @@ public class SvnRevisionHistoryTest extends TestCase {
 
   /**
    * A test for finding the last equivalence for the following history starting
-   * with repo2{4}:
-   *
+   * with repo2{4}:<pre>
    *                                              _____
    *                                             |     |
    *                                             |  4  |
@@ -377,6 +388,7 @@ public class SvnRevisionHistoryTest extends TestCase {
    *                  |____|                     |_____|
    *
    *                   repo1                      repo2
+   * </pre>
    *
    * @throws Exception
    */
@@ -437,7 +449,7 @@ public class SvnRevisionHistoryTest extends TestCase {
 
     control.replay();
 
-    FileDb database = FileDb.makeDbFromDbText(testDb1);
+    FileDb database = new FileDb(null, MoeModule.provideGson().fromJson(testDb1, DbStorage.class));
     SvnRevisionHistory history = new SvnRevisionHistory("repo2", "http://foo/svn/trunk/", util);
 
     Result result =
@@ -467,7 +479,7 @@ public class SvnRevisionHistoryTest extends TestCase {
 
   /**
    * A test for finding the last equivalence for the following history starting
-   * with repo2{2}:
+   * with repo2{2}:<pre>
    *                   ____                       _____
    *                  |    |                     |     |
    *                  |1003|=====================|  3  |
@@ -488,6 +500,7 @@ public class SvnRevisionHistoryTest extends TestCase {
    *                                             |_____|
    *
    *                   repo1                      repo2
+   * </pre>
    *
    * @throws Exception
    */
@@ -542,7 +555,7 @@ public class SvnRevisionHistoryTest extends TestCase {
 
     control.replay();
 
-    FileDb database = FileDb.makeDbFromDbText(testDb2);
+    FileDb database = new FileDb(null, MoeModule.provideGson().fromJson(testDb2, DbStorage.class));
     SvnRevisionHistory history = new SvnRevisionHistory("repo2", "http://foo/svn/trunk/", util);
 
     Result result =

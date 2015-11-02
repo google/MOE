@@ -1,4 +1,18 @@
-// Copyright 2011 The MOE Authors All Rights Reserved.
+/*
+ * Copyright (c) 2011 Google, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package com.google.devtools.moe.client.dvcs.git;
 
@@ -41,7 +55,7 @@ public class GitWriterTest extends TestCase {
   private final String projectSpace = "public";
   private final RepositoryExpression cExp =
       new RepositoryExpression(new Term(projectSpace, ImmutableMap.<String, String>of()));
-  private final Codebase codebase = new Codebase(codebaseRoot, projectSpace, cExp);
+  private final Codebase codebase = new Codebase(mockFs, codebaseRoot, projectSpace, cExp);
   private final GitClonedRepository mockRevClone = control.createMock(GitClonedRepository.class);
   private final RepositoryConfig mockRepoConfig = control.createMock(RepositoryConfig.class);
 
@@ -80,7 +94,7 @@ public class GitWriterTest extends TestCase {
   }
 
   public void testPutCodebase_emptyCodebase() throws Exception {
-    expect(mockRepoConfig.getIgnoreFileRes()).andReturn(ImmutableList.<String>of());
+    expect(mockRepoConfig.getIgnoreFilePatterns()).andReturn(ImmutableList.<String>of());
     // Define the files in the codebase and in the writer (git repo).
     expect(mockFs.findFiles(codebaseRoot)).andReturn(ImmutableSet.<File>of());
     expect(mockFs.findFiles(writerRoot))
@@ -94,7 +108,7 @@ public class GitWriterTest extends TestCase {
     control.replay();
 
     GitWriter w = new GitWriter(mockRevClone);
-    DraftRevision dr = w.putCodebase(codebase);
+    DraftRevision dr = w.putCodebase(codebase, null);
 
     control.verify();
 
@@ -102,7 +116,7 @@ public class GitWriterTest extends TestCase {
   }
 
   public void testPutCodebase_addFile() throws Exception {
-    expect(mockRepoConfig.getIgnoreFileRes()).andReturn(ImmutableList.<String>of());
+    expect(mockRepoConfig.getIgnoreFilePatterns()).andReturn(ImmutableList.<String>of());
 
     expect(mockFs.findFiles(codebaseRoot))
         .andReturn(ImmutableSet.<File>of(new File(codebaseRoot, "file1")));
@@ -118,13 +132,13 @@ public class GitWriterTest extends TestCase {
     control.replay();
 
     GitWriter w = new GitWriter(mockRevClone);
-    DraftRevision dr = w.putCodebase(codebase);
+    w.putCodebase(codebase, null);
 
     control.verify();
   }
 
   public void testPutCodebase_editFile() throws Exception {
-    expect(mockRepoConfig.getIgnoreFileRes()).andReturn(ImmutableList.<String>of());
+    expect(mockRepoConfig.getIgnoreFilePatterns()).andReturn(ImmutableList.<String>of());
 
     expect(mockFs.findFiles(codebaseRoot))
         .andReturn(ImmutableSet.<File>of(new File(codebaseRoot, "file1")));
@@ -141,13 +155,13 @@ public class GitWriterTest extends TestCase {
     control.replay();
 
     GitWriter w = new GitWriter(mockRevClone);
-    DraftRevision dr = w.putCodebase(codebase);
+    w.putCodebase(codebase, null);
 
     control.verify();
   }
 
   public void testPutCodebase_removeFile() throws Exception {
-    expect(mockRepoConfig.getIgnoreFileRes()).andReturn(ImmutableList.<String>of());
+    expect(mockRepoConfig.getIgnoreFilePatterns()).andReturn(ImmutableList.<String>of());
 
     expect(mockFs.findFiles(codebaseRoot)).andReturn(ImmutableSet.<File>of());
     expect(mockFs.findFiles(writerRoot))
@@ -161,13 +175,14 @@ public class GitWriterTest extends TestCase {
     control.replay();
 
     GitWriter w = new GitWriter(mockRevClone);
-    DraftRevision dr = w.putCodebase(codebase);
+    w.putCodebase(codebase, null);
 
     control.verify();
   }
 
   public void testPutCodebase_ignoreFilesRes() throws Exception {
-    expect(mockRepoConfig.getIgnoreFileRes()).andReturn(ImmutableList.of("^.*ignored_\\w+\\.txt$"));
+    expect(mockRepoConfig.getIgnoreFilePatterns())
+        .andReturn(ImmutableList.of("^.*ignored_\\w+\\.txt$"));
 
     expect(mockFs.findFiles(codebaseRoot)).andReturn(ImmutableSet.<File>of());
     expect(mockFs.findFiles(writerRoot))
@@ -185,7 +200,7 @@ public class GitWriterTest extends TestCase {
     control.replay();
 
     GitWriter w = new GitWriter(mockRevClone);
-    DraftRevision dr = w.putCodebase(codebase);
+    DraftRevision dr = w.putCodebase(codebase, null);
 
     control.verify();
 

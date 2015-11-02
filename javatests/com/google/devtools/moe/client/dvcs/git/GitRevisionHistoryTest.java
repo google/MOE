@@ -1,7 +1,22 @@
-// Copyright 2011 The MOE Authors All Rights Reserved.
+/*
+ * Copyright (c) 2011 Google, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package com.google.devtools.moe.client.dvcs.git;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.devtools.moe.client.repositories.RevisionHistory.SearchType.BRANCHED;
 import static org.easymock.EasyMock.expect;
 
@@ -11,9 +26,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.MoeModule;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.NullFileSystemModule;
 import com.google.devtools.moe.client.SystemCommandRunner;
+import com.google.devtools.moe.client.database.DbStorage;
 import com.google.devtools.moe.client.database.FileDb;
 import com.google.devtools.moe.client.database.RepositoryEquivalence;
 import com.google.devtools.moe.client.database.RepositoryEquivalenceMatcher;
@@ -23,7 +40,6 @@ import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory.SearchType;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.testing.DummyDb;
-import com.google.devtools.moe.client.testing.MoeAsserts;
 import com.google.devtools.moe.client.testing.TestingModule;
 
 import junit.framework.TestCase;
@@ -82,6 +98,13 @@ public class GitRevisionHistoryTest extends TestCase {
     return mockRepo;
   }
 
+  private IExpectationSetters<String> expectLogCommandIgnoringMissing(
+      GitClonedRepository mockRepo, String logFormat, String revName) throws CommandException {
+    return expect(
+        mockRepo.runGitCommand(
+            "log", "--max-count=1", "--format=" + logFormat, "--ignore-missing", revName));
+  }
+
   private IExpectationSetters<String> expectLogCommand(
       GitClonedRepository mockRepo, String logFormat, String revName) throws CommandException {
     return expect(mockRepo.runGitCommand("log", "--max-count=1", "--format=" + logFormat, revName));
@@ -129,10 +152,9 @@ public class GitRevisionHistoryTest extends TestCase {
   public void testGetMetadata() throws Exception {
     GitClonedRepository mockRepo = mockClonedRepo(repositoryName);
 
-    expectLogCommand(mockRepo, LOG_FORMAT_ALL_METADATA, "1")
+    expectLogCommandIgnoringMissing(mockRepo, LOG_FORMAT_ALL_METADATA, "1")
         .andReturn(
-            METADATA_JOINER.join(
-                "1", "foo@google.com", GIT_COMMIT_DATE, "2 3", "description\n"));
+            METADATA_JOINER.join("1", "foo@google.com", GIT_COMMIT_DATE, "2 3", "description\n"));
 
     control.replay();
 
@@ -140,12 +162,11 @@ public class GitRevisionHistoryTest extends TestCase {
     RevisionMetadata result = rh.getMetadata(Revision.create(1, "mockrepo"));
     assertEquals("1", result.id);
     assertEquals("foo@google.com", result.author);
-    MoeAsserts.assertSameDate(DATE, result.date);
+    assertThat(result.date).isEquivalentAccordingToCompareTo(DATE);
     assertEquals("description\n", result.description);
-    assertEquals(
-        ImmutableList.of(
-            Revision.create(2, repositoryName), Revision.create(3, repositoryName)),
-        result.parents);
+    assertThat(result.parents)
+        .containsExactly(Revision.create(2, repositoryName), Revision.create(3, repositoryName))
+        .inOrder();
 
     control.verify();
   }
@@ -167,12 +188,11 @@ public class GitRevisionHistoryTest extends TestCase {
 
     assertEquals("1", rm.id);
     assertEquals("foo@google.com", rm.author);
-    MoeAsserts.assertSameDate(DATE, rm.date);
+    assertThat(rm.date).isEquivalentAccordingToCompareTo(DATE);
     assertEquals("desc with \n\nmultiple lines\n", rm.description);
-    assertEquals(
-        ImmutableList.of(
-            Revision.create(2, repositoryName), Revision.create(3, repositoryName)),
-        rm.parents);
+    assertThat(rm.parents)
+        .containsExactly(Revision.create(2, repositoryName), Revision.create(3, repositoryName))
+        .inOrder();
   }
 
   /**
@@ -190,16 +210,16 @@ public class GitRevisionHistoryTest extends TestCase {
     DummyDb db = new DummyDb(false);
 
     // Breadth-first search order.
-    expectLogCommand(mockRepo, LOG_FORMAT_ALL_METADATA, "head")
+    expectLogCommandIgnoringMissing(mockRepo, LOG_FORMAT_ALL_METADATA, "head")
         .andReturn(
             METADATA_JOINER.join(
                 "head", "uid@google.com", GIT_COMMIT_DATE, "parent1 parent2", "description"));
 
-    expectLogCommand(mockRepo, LOG_FORMAT_ALL_METADATA, "parent1")
+    expectLogCommandIgnoringMissing(mockRepo, LOG_FORMAT_ALL_METADATA, "parent1")
         .andReturn(
             METADATA_JOINER.join("parent1", "uid@google.com", GIT_COMMIT_DATE, "", "description"));
 
-    expectLogCommand(mockRepo, LOG_FORMAT_ALL_METADATA, "parent2")
+    expectLogCommandIgnoringMissing(mockRepo, LOG_FORMAT_ALL_METADATA, "parent2")
         .andReturn(
             METADATA_JOINER.join("parent2", "uid@google.com", GIT_COMMIT_DATE, "", "description"));
 
@@ -211,7 +231,7 @@ public class GitRevisionHistoryTest extends TestCase {
             .getRevisionsSinceEquivalence()
             .getBreadthFirstHistory();
 
-    assertEquals(3, newRevisions.size());
+    assertThat(newRevisions).hasSize(3);
     assertEquals(repositoryName, newRevisions.get(0).repositoryName());
     assertEquals("head", newRevisions.get(0).revId());
     assertEquals(repositoryName, newRevisions.get(1).repositoryName());
@@ -241,12 +261,12 @@ public class GitRevisionHistoryTest extends TestCase {
         };
 
     // Breadth-first search order.
-    expectLogCommand(mockRepo, LOG_FORMAT_ALL_METADATA, "head")
+    expectLogCommandIgnoringMissing(mockRepo, LOG_FORMAT_ALL_METADATA, "head")
         .andReturn(
             METADATA_JOINER.join(
                 "head", "uid@google.com", GIT_COMMIT_DATE, "parent1 parent2", "description"));
 
-    expectLogCommand(mockRepo, LOG_FORMAT_ALL_METADATA, "parent2")
+    expectLogCommandIgnoringMissing(mockRepo, LOG_FORMAT_ALL_METADATA, "parent2")
         .andReturn(
             METADATA_JOINER.join("parent2", "uid@google.com", GIT_COMMIT_DATE, "", "description"));
 
@@ -259,7 +279,7 @@ public class GitRevisionHistoryTest extends TestCase {
             .getBreadthFirstHistory();
 
     // parent1 should not be traversed.
-    assertEquals(2, newRevisions.size());
+    assertThat(newRevisions).hasSize(2);
     assertEquals("head", newRevisions.get(0).revId());
     assertEquals("parent2", newRevisions.get(1).revId());
 
@@ -277,7 +297,7 @@ public class GitRevisionHistoryTest extends TestCase {
 
   /**
    * A test for finding the last equivalence for the following history starting
-   * with repo2{4}:
+   * with repo2{4}:<pre>
    *                                         _____
    *                                        |     |
    *                                        |  4  |
@@ -298,24 +318,25 @@ public class GitRevisionHistoryTest extends TestCase {
    *             |____|                     |_____|
    *
    *              repo1                      repo2
+   * </pre>
    *
    * @throws Exception
    */
   public void testFindLastEquivalence() throws Exception {
     GitClonedRepository mockRepo = mockClonedRepo("repo2");
 
-    expectLogCommand(mockRepo, LOG_FORMAT_ALL_METADATA, "4")
+    expectLogCommandIgnoringMissing(mockRepo, LOG_FORMAT_ALL_METADATA, "4")
         .andReturn(METADATA_JOINER.join("4", "author", GIT_COMMIT_DATE, "3a 3b", "description"));
 
-    expectLogCommand(mockRepo, LOG_FORMAT_ALL_METADATA, "3a")
+    expectLogCommandIgnoringMissing(mockRepo, LOG_FORMAT_ALL_METADATA, "3a")
         .andReturn(METADATA_JOINER.join("3a", "author", GIT_COMMIT_DATE, "2", "description"));
 
-    expectLogCommand(mockRepo, LOG_FORMAT_ALL_METADATA, "3b")
+    expectLogCommandIgnoringMissing(mockRepo, LOG_FORMAT_ALL_METADATA, "3b")
         .andReturn(METADATA_JOINER.join("3b", "author", GIT_COMMIT_DATE, "2", "description"));
 
     control.replay();
 
-    FileDb database = FileDb.makeDbFromDbText(testDb1);
+    FileDb database = new FileDb(null, MoeModule.provideGson().fromJson(testDb1, DbStorage.class));
 
     GitRevisionHistory history = new GitRevisionHistory(Suppliers.ofInstance(mockRepo));
 
@@ -329,7 +350,7 @@ public class GitRevisionHistoryTest extends TestCase {
         RepositoryEquivalence.create(
             Revision.create(1002, "repo1"), Revision.create(2, "repo2"));
 
-    assertEquals(1, result.getEquivalences().size());
+    assertThat(result.getEquivalences()).hasSize(1);
     assertEquals(expectedEq, result.getEquivalences().get(0));
 
     control.verify();
@@ -346,8 +367,7 @@ public class GitRevisionHistoryTest extends TestCase {
 
   /**
    * A test for finding the last equivalence for the following history starting
-   * with repo2{4}:
-   *
+   * with repo2{4}:<pre>
    *              ____                       _____
    *             |    |                     |     |
    *             |1005|=====================|  5  |
@@ -375,27 +395,29 @@ public class GitRevisionHistoryTest extends TestCase {
    *                                        |_____|
    *
    *              repo1                      repo2
+   * </pre>
    *
    * @throws Exception
    */
   public void testFindLastEquivalenceNull() throws Exception {
     GitClonedRepository mockRepo = mockClonedRepo("repo2");
 
-    expectLogCommand(mockRepo, LOG_FORMAT_ALL_METADATA, "4")
+    expectLogCommandIgnoringMissing(mockRepo, LOG_FORMAT_ALL_METADATA, "4")
         .andReturn(METADATA_JOINER.join("4", "author", GIT_COMMIT_DATE, "3a 3b", "description"));
 
-    expectLogCommand(mockRepo, LOG_FORMAT_ALL_METADATA, "3a")
+    expectLogCommandIgnoringMissing(mockRepo, LOG_FORMAT_ALL_METADATA, "3a")
         .andReturn(METADATA_JOINER.join("3a", "author", GIT_COMMIT_DATE, "2", "description"));
 
-    expectLogCommand(mockRepo, LOG_FORMAT_ALL_METADATA, "3b")
+    expectLogCommandIgnoringMissing(mockRepo, LOG_FORMAT_ALL_METADATA, "3b")
         .andReturn(METADATA_JOINER.join("3b", "author", GIT_COMMIT_DATE, "2", "description"));
 
-    expectLogCommand(mockRepo, LOG_FORMAT_ALL_METADATA, "2")
+    expectLogCommandIgnoringMissing(mockRepo, LOG_FORMAT_ALL_METADATA, "2")
         .andReturn(METADATA_JOINER.join("2", "author", GIT_COMMIT_DATE, "", "description"));
 
     control.replay();
 
-    FileDb database = FileDb.makeDbFromDbText(testDb2);
+    FileDb database = new FileDb(null, MoeModule.provideGson().fromJson(testDb2, DbStorage.class));
+
     GitRevisionHistory history = new GitRevisionHistory(Suppliers.ofInstance(mockRepo));
 
     Result result =
@@ -404,7 +426,7 @@ public class GitRevisionHistoryTest extends TestCase {
             new RepositoryEquivalenceMatcher("repo1", database),
             SearchType.BRANCHED);
 
-    assertEquals(0, result.getEquivalences().size());
+    assertThat(result.getEquivalences()).isEmpty();
 
     control.verify();
   }
@@ -412,7 +434,7 @@ public class GitRevisionHistoryTest extends TestCase {
   /**
    * A test for finding the last equivalence for the following history starting
    * with repo2{4} and <em>only searching linear history</em> instead of following multi-parent
-   * commits:
+   * commits:<pre>
    *
    *                                         _____
    *                                        |     |
@@ -434,23 +456,24 @@ public class GitRevisionHistoryTest extends TestCase {
    *             |____|                     |_____|
    *
    *              repo1                      repo2
+   * </pre>
    *
    * @throws Exception
    */
   public void testFindLastEquivalence_linearSearch() throws Exception {
     GitClonedRepository mockRepo = mockClonedRepo("repo2");
 
-    expectLogCommand(mockRepo, LOG_FORMAT_ALL_METADATA, "4")
+    expectLogCommandIgnoringMissing(mockRepo, LOG_FORMAT_ALL_METADATA, "4")
         .andReturn(METADATA_JOINER.join("4", "author", GIT_COMMIT_DATE, "3a 3b", "description"));
 
-    expectLogCommand(mockRepo, LOG_FORMAT_ALL_METADATA, "3a")
+    expectLogCommandIgnoringMissing(mockRepo, LOG_FORMAT_ALL_METADATA, "3a")
         .andReturn(METADATA_JOINER.join("3a", "author", GIT_COMMIT_DATE, "2", "description"));
 
     // Note revision 3b is <em>not</em> expected here for a linear history search.
 
     control.replay();
 
-    FileDb database = FileDb.makeDbFromDbText(testDb1);
+    FileDb database = new FileDb(null, MoeModule.provideGson().fromJson(testDb1, DbStorage.class));
 
     GitRevisionHistory history = new GitRevisionHistory(Suppliers.ofInstance(mockRepo));
 
@@ -464,10 +487,10 @@ public class GitRevisionHistoryTest extends TestCase {
         RepositoryEquivalence.create(
             Revision.create(1002, "repo1"), Revision.create(2, "repo2"));
 
-    assertEquals(
-        ImmutableList.of(Revision.create(4, "repo2"), Revision.create("3a", "repo2")),
-        result.getRevisionsSinceEquivalence().getBreadthFirstHistory());
-    assertEquals(ImmutableList.of(expectedEq), result.getEquivalences());
+    assertThat(result.getRevisionsSinceEquivalence().getBreadthFirstHistory())
+        .containsExactly(Revision.create(4, "repo2"), Revision.create("3a", "repo2"))
+        .inOrder();
+    assertThat(result.getEquivalences()).containsExactly(expectedEq);
 
     control.verify();
   }

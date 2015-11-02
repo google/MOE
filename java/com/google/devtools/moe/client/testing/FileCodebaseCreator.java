@@ -1,10 +1,25 @@
-// Copyright 2011 The MOE Authors All Rights Reserved.
+/*
+ * Copyright (c) 2011 Google, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package com.google.devtools.moe.client.testing;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
+import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.Utils;
 import com.google.devtools.moe.client.codebase.Codebase;
@@ -25,6 +40,12 @@ public class FileCodebaseCreator implements CodebaseCreator {
   private static final String PATH_OPTION = "path";
   private static final String PROJECT_SPACE_OPTION = "projectspace";
 
+  private final FileSystem filesystem;
+
+  public FileCodebaseCreator(FileSystem filesystem) {
+    this.filesystem = filesystem;
+  }
+
   @Override
   public Codebase create(Map<String, String> options) throws CodebaseCreationError {
     // Validate that the options passed are valid.
@@ -42,7 +63,7 @@ public class FileCodebaseCreator implements CodebaseCreator {
     String projectSpace =
         options.containsKey(PROJECT_SPACE_OPTION) ? options.get(PROJECT_SPACE_OPTION) : "public";
     RepositoryExpression expression = new RepositoryExpression(new Term("file", options));
-    return new Codebase(codebasePath, projectSpace, expression);
+    return new Codebase(filesystem, codebasePath, projectSpace, expression);
   }
 
   /**

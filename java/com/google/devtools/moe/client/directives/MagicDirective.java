@@ -1,32 +1,50 @@
-// Copyright 2011 The MOE Authors All Rights Reserved.
+/*
+ * Copyright (c) 2011 Google, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package com.google.devtools.moe.client.directives;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
+import com.google.devtools.moe.client.codebase.Codebase;
+import com.google.devtools.moe.client.codebase.CodebaseCreationError;
+import com.google.devtools.moe.client.database.Bookkeeper;
 import com.google.devtools.moe.client.database.Db;
-import com.google.devtools.moe.client.database.FileDb;
 import com.google.devtools.moe.client.database.RepositoryEquivalence;
-import com.google.devtools.moe.client.logic.BookkeepingLogic;
-import com.google.devtools.moe.client.logic.DetermineMigrationsLogic;
-import com.google.devtools.moe.client.logic.OneMigrationLogic;
 import com.google.devtools.moe.client.migrations.Migration;
 import com.google.devtools.moe.client.migrations.MigrationConfig;
+import com.google.devtools.moe.client.migrations.Migrator;
 import com.google.devtools.moe.client.parser.Expression;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.project.ProjectContextFactory;
+import com.google.devtools.moe.client.project.ScrubberConfig;
+import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.repositories.Revision;
-import com.google.devtools.moe.client.testing.DummyDb;
 import com.google.devtools.moe.client.writer.DraftRevision;
 import com.google.devtools.moe.client.writer.Writer;
 import com.google.devtools.moe.client.writer.WritingError;
 
 import org.kohsuke.args4j.Option;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import javax.inject.Inject;
 
@@ -34,7 +52,6 @@ import javax.inject.Inject;
  * Update the MOE db then perform all migration(s) specified in the MOE config. Repeated
  * invocations, then, will result in a state of all pending migrations performed, and all performed
  * migrations and new equivalences stored in the db.
- *
  */
 public class MagicDirective extends Directive {
   @Option(name = "--db", required = true, usage = "Location of MOE database")
@@ -47,34 +64,43 @@ public class MagicDirective extends Directive {
   )
   List<String> migrations = Lists.newArrayList();
 
+  @Option(
+    name = "--skip_revision",
+    required = false,
+    usage = "Revisions to skip; can include multiple --skip_revision options"
+  )
+  List<String> skipRevisions = new ArrayList<>();
+
+  private final Db.Factory dbFactory;
   private final Ui ui;
+  private final Migrator migrator;
+  private final Bookkeeper bookkeeper;
 
   @Inject
-  MagicDirective(ProjectContextFactory contextFactory, Ui ui) {
+  MagicDirective(
+      ProjectContextFactory contextFactory,
+      Db.Factory dbFactory,
+      Ui ui,
+      Bookkeeper bookkeeper,
+      Migrator migrator) {
     super(contextFactory); // TODO(cgruber) Inject project context, not its factory
+    this.dbFactory = dbFactory;
     this.ui = ui;
+    this.bookkeeper = bookkeeper;
+    this.migrator = migrator;
   }
 
   @Override
   protected int performDirectiveBehavior() {
-    Db db;
-    if (dbLocation.equals("dummy")) {
-      db = new DummyDb(true);
-    } else {
-      // TODO(user): also allow for url dbLocation types
-      try {
-        db = FileDb.makeDbFromFile(dbLocation);
-      } catch (MoeProblem e) {
-        ui.error(e, "Error creating DB");
-        return 1;
-      }
-    }
+    Db db = dbFactory.load(dbLocation);
 
     List<String> migrationNames =
         ImmutableList.copyOf(
-            migrations.isEmpty() ? context().migrationConfigs.keySet() : migrations);
+            migrations.isEmpty() ? context().migrationConfigs().keySet() : migrations);
 
-    if (BookkeepingLogic.bookkeep(db, dbLocation, context()) != 0) {
+    Set<String> skipRevisions = ImmutableSet.copyOf(this.skipRevisions);
+
+    if (bookkeeper.bookkeep(db, context()) != 0) {
       // Bookkeeping has failed, so fail here as well.
       return 1;
     }
@@ -85,21 +111,22 @@ public class MagicDirective extends Directive {
       Ui.Task migrationTask =
           ui.pushTask("perform_migration", "Performing migration '%s'", migrationName);
 
-      MigrationConfig migrationConfig = context().migrationConfigs.get(migrationName);
+      MigrationConfig migrationConfig = context().migrationConfigs().get(migrationName);
       if (migrationConfig == null) {
         ui.error("No migration found with name %s", migrationName);
         continue;
       }
 
+      RepositoryType fromRepo = context.getRepository(migrationConfig.getFromRepository());
       List<Migration> migrations =
-          DetermineMigrationsLogic.determineMigrations(context(), migrationConfig, db);
+          migrator.findMigrationsFromEquivalency(fromRepo, migrationConfig, db);
 
       if (migrations.isEmpty()) {
         ui.info("No pending revisions to migrate for %s", migrationName);
         continue;
       }
 
-      RepositoryEquivalence lastEq = migrations.get(0).sinceEquivalence;
+      RepositoryEquivalence lastEq = migrations.get(0).sinceEquivalence();
       // toRe represents toRepo at the revision of last equivalence with fromRepo.
       RepositoryExpression toRe = new RepositoryExpression(migrationConfig.getToRepository());
       if (lastEq != null) {
@@ -116,13 +143,30 @@ public class MagicDirective extends Directive {
       }
 
       DraftRevision dr = null;
-      Revision lastMigratedRevision = null; // TODO(cgruber) determine side effects.
-      if (lastEq != null) {
-        lastMigratedRevision = lastEq.getRevisionForRepository(migrationConfig.getFromRepository());
-      }
-
       int currentlyPerformedMigration = 1; // To display to users.
-      for (Migration m : migrations) {
+      for (Migration migration : migrations) {
+
+        // First check if we should even do this migration at all.
+        int skipped = 0;
+        for (Revision revision : migration.fromRevisions()) {
+          if (skipRevisions.contains(revision.toString())) {
+            skipped++;
+          }
+        }
+        if (skipped > 0) {
+          if (skipped != migration.fromRevisions().size()) {
+            throw new MoeProblem(
+                "Cannot skip subset of revisions in a single migration: " + migration);
+          }
+          ui.info(
+              String.format(
+                  "Skipping %s/%s migration `%s`",
+                  currentlyPerformedMigration++,
+                  migrations.size(),
+                  migration));
+          continue;
+        }
+
         // For each migration, the reference to-codebase for inverse translation is the Writer,
         // since it contains the latest changes (i.e. previous migrations) to the to-repository.
         Expression referenceToCodebase =
@@ -135,10 +179,41 @@ public class MagicDirective extends Directive {
                 "Performing %s/%s migration '%s'",
                 currentlyPerformedMigration++,
                 migrations.size(),
-                m);
-        dr = OneMigrationLogic.migrate(m, context(), toWriter, referenceToCodebase);
+                migration);
 
-        lastMigratedRevision = m.fromRevisions.get(m.fromRevisions.size() - 1);
+        Revision mostRecentFromRev =
+            migration.fromRevisions().get(migration.fromRevisions().size() - 1);
+        Codebase fromCodebase;
+        try {
+          String toProjectSpace =
+              context.config().getRepositoryConfig(migration.toRepository()).getProjectSpace();
+          fromCodebase =
+              new RepositoryExpression(migration.fromRepository())
+                  .atRevision(mostRecentFromRev.revId())
+                  .translateTo(toProjectSpace)
+                  .withReferenceToCodebase(referenceToCodebase)
+                  .createCodebase(context);
+
+        } catch (CodebaseCreationError e) {
+          throw new MoeProblem(e.getMessage());
+        }
+
+        RepositoryType fromRepoType = context().getRepository(migrationConfig.getFromRepository());
+        ScrubberConfig scrubber =
+            context
+                .config()
+                .findScrubberConfig(migration.fromRepository(), migration.toRepository());
+        dr =
+            migrator.migrate(
+                migration,
+                fromRepoType,
+                fromCodebase,
+                mostRecentFromRev,
+                migrationConfig.getMetadataScrubberConfig(),
+                scrubber,
+                toWriter,
+                referenceToCodebase);
+
         ui.popTask(oneMigrationTask, "");
       }
 

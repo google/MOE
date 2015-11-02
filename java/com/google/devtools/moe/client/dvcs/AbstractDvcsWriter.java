@@ -1,4 +1,18 @@
-// Copyright 2011 The MOE Authors All Rights Reserved.
+/*
+ * Copyright (c) 2011 Google, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package com.google.devtools.moe.client.dvcs;
 
@@ -20,12 +34,13 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
+import javax.annotation.Nullable;
+
 /**
  * A Writer for DVCSes. Subclasses should implement file modification commands such as add, rm, and
  * commit.
  *
  * @param <T> the type of LocalClone, so that subclasses can use its native methods
- *
  */
 // TODO(user): Make this usable for SVN as well.
 public abstract class AbstractDvcsWriter<T extends LocalWorkspace> implements Writer {
@@ -46,7 +61,7 @@ public abstract class AbstractDvcsWriter<T extends LocalWorkspace> implements Wr
 
   /**
    * Returns the regexes, a la
-   * {@link com.google.devtools.moe.client.project.RepositoryConfig#getIgnoreFileRes()},
+   * {@link com.google.devtools.moe.client.project.RepositoryConfig#getIgnoreFilePatterns()},
    * of filepaths to ignore in this Writer. For example, an Hg implementation of this method would
    * return the getIgnoreFileRes() in its RepositoryConfig along with any Hg-specific paths in its
    * LocalClone, such as "^.hg/.*". Otherwise, this Writer would attempt to modify hg-metadata
@@ -54,8 +69,7 @@ public abstract class AbstractDvcsWriter<T extends LocalWorkspace> implements Wr
    */
   protected abstract List<String> getIgnoreFilePatterns();
 
-  @Override
-  public DraftRevision putCodebase(Codebase incomingChangeCodebase) throws WritingError {
+  private DraftRevision putCodebase(Codebase incomingChangeCodebase) {
     incomingChangeCodebase.checkProjectSpace(revClone.getConfig().getProjectSpace());
 
     Set<String> codebaseFiles = incomingChangeCodebase.getRelativeFilenames();
@@ -149,11 +163,11 @@ public abstract class AbstractDvcsWriter<T extends LocalWorkspace> implements Wr
   protected abstract void commitChanges(RevisionMetadata revMetaData) throws CommandException;
 
   @Override
-  public DraftRevision putCodebase(Codebase incomingChangeCodebase, RevisionMetadata revMetaData)
-      throws WritingError {
+  public DraftRevision putCodebase(
+      Codebase incomingChangeCodebase, @Nullable RevisionMetadata revMetaData) throws WritingError {
     DraftRevision draftRevision = putCodebase(incomingChangeCodebase);
 
-    if (hasPendingChanges()) {
+    if (revMetaData != null && hasPendingChanges()) {
       try {
         commitChanges(revMetaData);
         Injector.INSTANCE

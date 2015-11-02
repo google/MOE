@@ -1,4 +1,18 @@
-// Copyright 2011 The MOE Authors All Rights Reserved.
+/*
+ * Copyright (c) 2011 Google, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package com.google.devtools.moe.client.editors;
 
@@ -8,7 +22,9 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.Messenger;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.project.EditorConfig;
@@ -43,12 +59,14 @@ import java.util.Set;
  * by the first mapping, and {@code public/src/NewClass.java} is renamed to
  * {@code internal/mylib/java/NewClass.java} by the second mapping. If no mapping is found, the
  * whole file path is used without modification.
- *
  */
 public class InverseRenamingEditor implements InverseEditor {
 
   private static final Joiner FILE_SEP_JOINER = Joiner.on(File.separator);
   private static final Splitter FILE_SEP_SPLITTER = Splitter.on(File.separator);
+
+  private final FileSystem filesystem = Injector.INSTANCE.fileSystem(); // TODO(cgruber) @Inject
+  private final Messenger messenger = Injector.INSTANCE.ui(); // TODO(cgruber) @Inject
 
   public static InverseRenamingEditor makeInverseRenamingEditor(
       String editorName, EditorConfig config) {
@@ -70,9 +88,10 @@ public class InverseRenamingEditor implements InverseEditor {
       Codebase referenceTo,
       ProjectContext context,
       Map<String, String> options) {
-    File tempDir = Injector.INSTANCE.fileSystem().getTemporaryDirectory("inverse_rename_run_");
+    File tempDir = filesystem.getTemporaryDirectory("inverse_rename_run_");
     inverseRenameAndCopy(input, tempDir, referenceTo);
-    return new Codebase(tempDir, referenceTo.getProjectSpace(), referenceTo.getExpression());
+    return new Codebase(
+        filesystem, tempDir, referenceTo.getProjectSpace(), referenceTo.getExpression());
   }
 
   private void inverseRenameAndCopy(Codebase input, File destination, Codebase reference) {
@@ -107,10 +126,10 @@ public class InverseRenamingEditor implements InverseEditor {
     File inputFile = new File(inputRoot, inputFilename);
     File destFile = new File(destRoot, destFilename);
     try {
-      Injector.INSTANCE.fileSystem().makeDirsForFile(destFile);
-      Injector.INSTANCE.fileSystem().copyFile(inputFile, destFile);
+      filesystem.makeDirsForFile(destFile);
+      filesystem.copyFile(inputFile, destFile);
     } catch (IOException e) {
-      Injector.INSTANCE.ui().error(e, e.getMessage());
+      messenger.error(e, e.getMessage());
       throw new MoeProblem(e.getMessage());
     }
   }

@@ -1,9 +1,25 @@
-// Copyright 2015 The MOE Authors All Rights Reserved.
+/*
+ * Copyright (c) 2015 Google, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package com.google.devtools.moe.client.repositories;
 
 import com.google.auto.value.AutoValue;
+import com.google.devtools.moe.client.Messenger;
 import com.google.devtools.moe.client.MoeProblem;
+import com.google.devtools.moe.client.MoeUserProblem;
 import com.google.devtools.moe.client.database.RepositoryEquivalenceMatcher;
 
 import java.util.List;
@@ -38,8 +54,18 @@ public class ExactRevisionMatcher implements RevisionMatcher<ExactRevisionMatche
       makeResult(RevisionGraph nonMatching, List<Revision> matching) {
     switch (matching.size()) {
       case 0:
-        throw new MoeProblem(
-            "No matching revisions in history. The branch may have no commits or be mislabeled.");
+        throw new MoeUserProblem() {
+          @Override
+          public void reportTo(Messenger ui) {
+            ui.error(
+                "No matching revisions in history. "
+                    + "The branch may have no commits, be mislabeled, or not be branched "
+                    + "from revision %s.  Consider merging with the main line to ensure "
+                    + "that this branch is valid for importing into the synced target repository.",
+                branchPointRevision);
+          }
+        };
+
       case 1:
         return Result.create(nonMatching);
       default:

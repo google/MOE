@@ -1,4 +1,18 @@
-// Copyright 2011 The MOE Authors All Rights Reserved.
+/*
+ * Copyright (c) 2011 Google, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package com.google.devtools.moe.client.svn;
 
@@ -8,6 +22,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.CommandRunner;
+import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
@@ -33,9 +48,6 @@ import java.util.List;
 
 import javax.inject.Singleton;
 
-/**
- * @author dbentley@google.com (Daniel Bentley)
- */
 public class SvnWriterTest extends TestCase {
 
   private final IMocksControl control = EasyMock.createControl();
@@ -72,17 +84,15 @@ public class SvnWriterTest extends TestCase {
 
     expect(mockConfig.getUrl()).andReturn("http://foo/svn/trunk/").anyTimes();
     expect(mockConfig.getProjectSpace()).andReturn("public").anyTimes();
-    expect(mockConfig.getIgnoreFileRes()).andReturn(ImmutableList.<String>of()).anyTimes();
+    expect(mockConfig.getIgnoreFilePatterns()).andReturn(ImmutableList.<String>of()).anyTimes();
   }
 
   private void expectSvnCommand(
-      List<String> args, String workingDirectory, String result, CommandRunner cmd) {
-    ImmutableList.Builder<String> withAuthArgs = new ImmutableList.Builder<String>();
+      List<String> args, String workingDirectory, String result, CommandRunner cmd)
+          throws CommandException {
+    ImmutableList.Builder<String> withAuthArgs = new ImmutableList.Builder<>();
     withAuthArgs.add("--no-auth-cache").addAll(args);
-    try {
-      expect(cmd.runCommand("svn", withAuthArgs.build(), workingDirectory)).andReturn(result);
-    } catch (Exception e) {
-    }
+    expect(cmd.runCommand("svn", withAuthArgs.build(), workingDirectory)).andReturn(result);
   }
 
   private File f(String filename) {
@@ -100,21 +110,26 @@ public class SvnWriterTest extends TestCase {
 
     control.replay();
     Codebase c =
-        new Codebase(f("/codebase"), "public", e("public", ImmutableMap.<String, String>of()));
+        new Codebase(
+            fileSystem, f("/codebase"), "public", e("public", ImmutableMap.<String, String>of()));
     SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"), null);
-    DraftRevision r = e.putCodebase(c);
+    DraftRevision r = e.putCodebase(c, null);
     control.verify();
     assertEquals("/writer", r.getLocation());
   }
 
   public void testWrongProjectSpace() throws Exception {
     Codebase c =
-        new Codebase(f("/codebase"), "internal", e("internal", ImmutableMap.<String, String>of()));
+        new Codebase(
+            fileSystem,
+            f("/codebase"),
+            "internal",
+            e("internal", ImmutableMap.<String, String>of()));
     SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"), null);
     try {
-      DraftRevision r = e.putCodebase(c);
+      e.putCodebase(c, null);
       fail();
-    } catch (MoeProblem p) {
+    } catch (MoeProblem expected) {
     }
   }
 
@@ -127,7 +142,8 @@ public class SvnWriterTest extends TestCase {
     expectSvnCommand(ImmutableList.of("rm", "foo"), "/writer", "", cmd);
     control.replay();
     Codebase c =
-        new Codebase(f("/codebase"), "public", e("public", ImmutableMap.<String, String>of()));
+        new Codebase(
+            fileSystem, f("/codebase"), "public", e("public", ImmutableMap.<String, String>of()));
     SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"), util);
     e.putFile("foo", c);
     control.verify();
@@ -143,7 +159,8 @@ public class SvnWriterTest extends TestCase {
     fileSystem.copyFile(f("/codebase/foo"), f("/writer/foo"));
     control.replay();
     Codebase c =
-        new Codebase(f("/codebase"), "public", e("public", ImmutableMap.<String, String>of()));
+        new Codebase(
+            fileSystem, f("/codebase"), "public", e("public", ImmutableMap.<String, String>of()));
     SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"), null);
     e.putFile("foo", c);
     control.verify();
@@ -160,7 +177,8 @@ public class SvnWriterTest extends TestCase {
     expectSvnCommand(ImmutableList.of("add", "--parents", "foo"), "/writer", "", cmd);
     control.replay();
     Codebase c =
-        new Codebase(f("/codebase"), "public", e("public", ImmutableMap.<String, String>of()));
+        new Codebase(
+            fileSystem, f("/codebase"), "public", e("public", ImmutableMap.<String, String>of()));
     SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"), util);
     e.putFile("foo", c);
     control.verify();
@@ -180,7 +198,8 @@ public class SvnWriterTest extends TestCase {
     control.replay();
 
     Codebase c =
-        new Codebase(f("/codebase"), "public", e("public", ImmutableMap.<String, String>of()));
+        new Codebase(
+            fileSystem, f("/codebase"), "public", e("public", ImmutableMap.<String, String>of()));
     SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"), util);
     e.putFile("test.html", c);
     control.verify();
@@ -197,7 +216,8 @@ public class SvnWriterTest extends TestCase {
     expectSvnCommand(ImmutableList.of("propset", "svn:executable", "*", "foo"), "/writer", "", cmd);
     control.replay();
     Codebase c =
-        new Codebase(f("/codebase"), "public", e("public", ImmutableMap.<String, String>of()));
+        new Codebase(
+            fileSystem, f("/codebase"), "public", e("public", ImmutableMap.<String, String>of()));
     SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"), util);
     e.putFile("foo", c);
     control.verify();
@@ -214,7 +234,8 @@ public class SvnWriterTest extends TestCase {
     expectSvnCommand(ImmutableList.of("propdel", "svn:executable", "foo"), "/writer", "", cmd);
     control.replay();
     Codebase c =
-        new Codebase(f("/codebase"), "public", e("public", ImmutableMap.<String, String>of()));
+        new Codebase(
+            fileSystem, f("/codebase"), "public", e("public", ImmutableMap.<String, String>of()));
     SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"), util);
     e.putFile("foo", c);
     control.verify();
@@ -235,7 +256,8 @@ public class SvnWriterTest extends TestCase {
 
     control.replay();
     Codebase c =
-        new Codebase(f("/codebase"), "public", e("public", ImmutableMap.<String, String>of()));
+        new Codebase(
+            fileSystem, f("/codebase"), "public", e("public", ImmutableMap.<String, String>of()));
     RevisionMetadata rm =
         new RevisionMetadata(
             "rev1", "author", new DateTime(1L), "desc", ImmutableList.<Revision>of());

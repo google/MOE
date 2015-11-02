@@ -1,10 +1,26 @@
-// Copyright 2011 The MOE Authors All Rights Reserved.
+/*
+ * Copyright (c) 2011 Google, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package com.google.devtools.moe.client.dvcs;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
+import com.google.devtools.moe.client.CommandRunner;
+import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Utils;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
@@ -20,13 +36,14 @@ import java.util.Map;
 
 /**
  * CodebaseCreator for DVCSes, implemented by cloning a LocalClone to disk.
- *
  */
 public abstract class AbstractDvcsCodebaseCreator implements CodebaseCreator {
 
   private final Supplier<? extends LocalWorkspace> headCloneSupplier;
   private final RevisionHistory revisionHistory;
   private final String projectSpace;
+  protected final CommandRunner cmd;
+  protected final FileSystem filesystem;
 
   /**
    * @param headCloneSupplier  a Supplier of the LocalClone that's archived to create a codebase
@@ -38,9 +55,13 @@ public abstract class AbstractDvcsCodebaseCreator implements CodebaseCreator {
   // TODO(user): Find a better semantics for when a Supplier provides a new clone every time,
   // or just one clone via memoization, so that the meaning of headCloneSupplier.get() is clearer.
   public AbstractDvcsCodebaseCreator(
+      CommandRunner cmd,
+      FileSystem filesystem,
       Supplier<? extends LocalWorkspace> headCloneSupplier,
       RevisionHistory revisionHistory,
       String projectSpace) {
+    this.cmd = cmd;
+    this.filesystem = filesystem;
     this.headCloneSupplier = headCloneSupplier;
     this.revisionHistory = revisionHistory;
     this.projectSpace = projectSpace;
@@ -74,10 +95,11 @@ public abstract class AbstractDvcsCodebaseCreator implements CodebaseCreator {
 
     // Filter files in the codebase by RepositoryConfig#ignoreFileRes.
     Predicate<CharSequence> nonIgnoredFilePred =
-        Utils.nonMatchingPredicateFromRes(headClone.getConfig().getIgnoreFileRes());
+        Utils.nonMatchingPredicateFromRes(headClone.getConfig().getIgnoreFilePatterns());
     Utils.filterFiles(archiveLocation, nonIgnoredFilePred);
 
     return new Codebase(
+        filesystem,
         archiveLocation,
         projectSpace,
         new RepositoryExpression(new Term(headClone.getRepositoryName(), options)));

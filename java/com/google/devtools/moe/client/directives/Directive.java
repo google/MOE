@@ -1,4 +1,18 @@
-// Copyright 2011 The MOE Authors All Rights Reserved.
+/*
+ * Copyright (c) 2011 Google, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package com.google.devtools.moe.client.directives;
 
@@ -11,12 +25,14 @@ import com.google.devtools.moe.client.project.ProjectContextFactory;
 
 /**
  * A Directive is what MOE should do in this run.
- *
- * @author dbentley@google.com (Daniel Bentley)
  */
 // TODO(cgruber) Remove MoeOptions once JCommander is in and we can handle multiple options objects.
 public abstract class Directive extends MoeOptions {
-  private ProjectContext context; // TODO(cgruber): Inject this.
+  // TODO(cgruber): Inject this.
+  // This is only accessible by children so the same context can be shared by dependent
+  // directives (otherwise they clean up each others' files as if they were temporary). This
+  // will go away as soon as ProjectContext is injected in a subcomponent. THIS_IS_A_HACK
+  protected ProjectContext context;
   private final ProjectContextFactory contextFactory;
 
   protected Directive(ProjectContextFactory contextFactory) {
@@ -34,7 +50,9 @@ public abstract class Directive extends MoeOptions {
    * @return the status of performing the Directive, suitable for returning from this process.
    */
   public int perform() throws InvalidProject {
-    this.context = contextFactory.create(configFilename);
+    if (context == null) {
+      this.context = contextFactory.create(configFilename);
+    }
     return performDirectiveBehavior();
   }
 

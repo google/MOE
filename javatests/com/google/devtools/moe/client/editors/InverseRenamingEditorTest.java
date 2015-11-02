@@ -1,4 +1,18 @@
-// Copyright 2011 The MOE Authors All Rights Reserved.
+/*
+ * Copyright (c) 2011 Google, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package com.google.devtools.moe.client.editors;
 
@@ -11,6 +25,7 @@ import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
+import com.google.devtools.moe.client.project.FakeProjectContext;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.testing.TestingModule;
 
@@ -26,10 +41,6 @@ import java.io.IOException;
 
 import javax.inject.Singleton;
 
-/**
- * Unit tests for inverse renaming
- *
- */
 public class InverseRenamingEditorTest extends TestCase {
 
   private final IMocksControl control = EasyMock.createControl();
@@ -58,16 +69,18 @@ public class InverseRenamingEditorTest extends TestCase {
   }
 
   public void testEdit() throws Exception {
-    ProjectContext context = ProjectContext.builder().build();
+    ProjectContext context = new FakeProjectContext();
 
     InverseRenamingEditor inverseRenamey =
         new InverseRenamingEditor(
             new RenamingEditor(
                 "renamey", ImmutableMap.of("internal_root", "public_root"), false /*useRegex*/));
 
-    Codebase input = new Codebase(new File("/input"), "public", new RepositoryExpression("input"));
+    Codebase input =
+        new Codebase(mockFs, new File("/input"), "public", new RepositoryExpression("input"));
     Codebase destination =
-        new Codebase(new File("/destination"), "public", new RepositoryExpression("destination"));
+        new Codebase(
+            mockFs, new File("/destination"), "public", new RepositoryExpression("destination"));
 
     expect(mockFs.getTemporaryDirectory("inverse_rename_run_")).andReturn(new File("/output"));
 

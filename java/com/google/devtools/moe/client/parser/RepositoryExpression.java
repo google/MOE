@@ -1,4 +1,18 @@
-// Copyright 2011 The MOE Authors All Rights Reserved.
+/*
+ * Copyright (c) 2011 Google, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package com.google.devtools.moe.client.parser;
 
@@ -9,7 +23,7 @@ import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.codebase.CodebaseCreator;
 import com.google.devtools.moe.client.project.ProjectContext;
-import com.google.devtools.moe.client.repositories.Repository;
+import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.testing.FileCodebaseCreator;
 import com.google.devtools.moe.client.writer.Writer;
 import com.google.devtools.moe.client.writer.WriterCreator;
@@ -19,7 +33,6 @@ import com.google.devtools.moe.client.writer.WritingError;
  * An {@link Expression} describing a repository checkout. This is the starting point for building
  * Expressions, e.g.:
  * new RepositoryExpression("myGitRepo").atRevision("a983ef").translateTo("public").
- *
  */
 public class RepositoryExpression extends AbstractExpression {
 
@@ -62,9 +75,9 @@ public class RepositoryExpression extends AbstractExpression {
     String repositoryName = term.identifier;
     CodebaseCreator cc;
     if (repositoryName.equals("file")) {
-      cc = new FileCodebaseCreator();
+      cc = new FileCodebaseCreator(Injector.INSTANCE.fileSystem());
     } else {
-      Repository repo = context.getRepository(repositoryName);
+      RepositoryType repo = context.getRepository(repositoryName);
       cc = repo.codebaseCreator();
     }
 
@@ -83,7 +96,7 @@ public class RepositoryExpression extends AbstractExpression {
    * @throws WritingError
    */
   public Writer createWriter(ProjectContext context) throws WritingError {
-    Repository r = context.getRepository(term.identifier);
+    RepositoryType r = context.getRepository(term.identifier);
     WriterCreator wc = r.writerCreator();
 
     Ui.Task t = Injector.INSTANCE.ui().pushTask("create_writer", "Creating Writer \"%s\"", term);

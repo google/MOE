@@ -1,14 +1,35 @@
-// Copyright 2011 The MOE Authors All Rights Reserved.
+/*
+ * Copyright (c) 2011 Google, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package com.google.devtools.moe.client.directives;
 
 import static org.easymock.EasyMock.expect;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.MoeModule;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.SystemCommandRunner;
+import com.google.devtools.moe.client.database.Db;
+import com.google.devtools.moe.client.database.FileDb;
+import com.google.devtools.moe.client.repositories.Repositories;
+import com.google.devtools.moe.client.repositories.RepositoryType;
+import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
 import com.google.devtools.moe.client.testing.RecordingUi;
 
@@ -19,30 +40,33 @@ import org.easymock.IMocksControl;
 
 import java.io.File;
 
-/**
- * Tests for NoteEquivalenceDirective.
- *
- */
 public class NoteEquivalenceDirectiveTest extends TestCase {
-  public final InMemoryProjectContextFactory contextFactory = new InMemoryProjectContextFactory();
   public final RecordingUi ui = new RecordingUi();
   private final IMocksControl control = EasyMock.createControl();
   private final FileSystem mockFs = control.createMock(FileSystem.class);
   private final SystemCommandRunner cmd = new SystemCommandRunner(ui);
+  private final Repositories repositories =
+      new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(mockFs)));
+  private final InMemoryProjectContextFactory contextFactory =
+      new InMemoryProjectContextFactory(null, cmd, mockFs, ui, repositories);
+  private final Db.Factory dbFactory = new FileDb.Factory(mockFs, MoeModule.provideGson());
+  private final Db.Writer dbWriter = new FileDb.Writer(MoeModule.provideGson(), mockFs);
 
   NoteEquivalenceDirective d;
 
   @Override
   public void setUp() throws Exception {
+    super.setUp();
     contextFactory.projectConfigs.put(
         "moe_config.txt",
         "{'name': 'foo', 'repositories': {"
             + "  'internal': {'type': 'dummy'}, 'public': {'type': 'dummy'}"
             + "}}");
     super.setUp();
+    // TODO(cgruber): Rip this out when Db.Factory is injected.
     Injector.INSTANCE = new Injector(mockFs, cmd, contextFactory, ui);
 
-    d = new NoteEquivalenceDirective(contextFactory, mockFs, ui);
+    d = new NoteEquivalenceDirective(contextFactory, dbFactory, dbWriter, ui);
     d.setContextFileName("moe_config.txt");
     d.dbLocation = "/foo/db.txt";
   }
@@ -87,8 +111,7 @@ public class NoteEquivalenceDirectiveTest extends TestCase {
                 "    }",
                 "  ],",
                 "  'migrations': []",
-                "}",
-                "")
+                "}")
             .replace('\'', '"'),
         new File("/foo/db.txt"));
 
@@ -120,8 +143,7 @@ public class NoteEquivalenceDirectiveTest extends TestCase {
                 "    }",
                 "  ],",
                 "  'migrations': []",
-                "}",
-                "")
+                "}")
             .replace('\'', '"');
 
     expect(mockFs.exists(new File("/foo/db.txt"))).andReturn(true);
@@ -156,8 +178,7 @@ public class NoteEquivalenceDirectiveTest extends TestCase {
                 "    }%s", // New equivalence is added here.
                 "  ],",
                 "  'migrations': []",
-                "}",
-                "")
+                "}")
             .replace('\'', '"');
 
     String oldDbString = String.format(baseDbString, "");

@@ -1,4 +1,18 @@
-// Copyright 2011 The MOE Authors All Rights Reserved.
+/*
+ * Copyright (c) 2011 Google, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package com.google.devtools.moe.client.dvcs.hg;
 
@@ -32,10 +46,6 @@ import java.io.File;
 
 import javax.inject.Singleton;
 
-/**
- * Test HgWriter by expect()ing file system calls and hg commands to add/remove files.
- *
- */
 // TODO(user): Create a FakeFileSystem to replace explicit mocked calls.
 public class HgWriterTest extends TestCase {
   private static final File CODEBASE_ROOT = new File("/codebase");
@@ -48,7 +58,8 @@ public class HgWriterTest extends TestCase {
   private final FileSystem mockFs = control.createMock(FileSystem.class);
   private final CommandRunner mockCmd = control.createMock(CommandRunner.class);
   private final RepositoryConfig mockRepoConfig = control.createMock(RepositoryConfig.class);
-  private final Codebase codebase = new Codebase(CODEBASE_ROOT, PROJECT_SPACE, CODEBASE_EXPR);
+  private final Codebase codebase =
+      new Codebase(mockFs, CODEBASE_ROOT, PROJECT_SPACE, CODEBASE_EXPR);
   private final HgClonedRepository mockRevClone = control.createMock(HgClonedRepository.class);
 
   /* Helper methods */
@@ -87,7 +98,7 @@ public class HgWriterTest extends TestCase {
 
     expect(mockRevClone.getLocalTempDir()).andReturn(WRITER_ROOT).anyTimes();
     expect(mockRevClone.getConfig()).andReturn(mockRepoConfig).anyTimes();
-    expect(mockRepoConfig.getIgnoreFileRes()).andReturn(ImmutableList.<String>of()).anyTimes();
+    expect(mockRepoConfig.getIgnoreFilePatterns()).andReturn(ImmutableList.<String>of()).anyTimes();
     expect(mockRepoConfig.getProjectSpace()).andReturn(PROJECT_SPACE).anyTimes();
   }
 
@@ -108,7 +119,7 @@ public class HgWriterTest extends TestCase {
     control.replay();
 
     HgWriter writer = new HgWriter(mockRevClone);
-    DraftRevision draftRevision = writer.putCodebase(codebase);
+    DraftRevision draftRevision = writer.putCodebase(codebase, null);
 
     control.verify();
 
@@ -131,7 +142,7 @@ public class HgWriterTest extends TestCase {
     control.replay();
 
     HgWriter writer = new HgWriter(mockRevClone);
-    DraftRevision draftRevision = writer.putCodebase(codebase);
+    DraftRevision draftRevision = writer.putCodebase(codebase, null);
 
     control.verify();
 
@@ -154,7 +165,7 @@ public class HgWriterTest extends TestCase {
     control.replay();
 
     HgWriter writer = new HgWriter(mockRevClone);
-    DraftRevision draftRevision = writer.putCodebase(codebase);
+    DraftRevision draftRevision = writer.putCodebase(codebase, null);
 
     control.verify();
 
@@ -175,7 +186,7 @@ public class HgWriterTest extends TestCase {
     control.replay();
 
     HgWriter writer = new HgWriter(mockRevClone);
-    DraftRevision draftRevision = writer.putCodebase(codebase);
+    DraftRevision draftRevision = writer.putCodebase(codebase, null);
 
     control.verify();
 

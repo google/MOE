@@ -1,10 +1,28 @@
-// Copyright 2011 The MOE Authors All Rights Reserved.
+/*
+ * Copyright (c) 2011 Google, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package com.google.devtools.moe.client.editors;
 
+import com.google.devtools.moe.client.CommandRunner;
+import com.google.devtools.moe.client.FileSystem;
+import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseMerger;
 import com.google.devtools.moe.client.project.ProjectContext;
+import com.google.devtools.moe.client.tools.FileDifference.FileDiffer;
 
 import java.util.Map;
 
@@ -23,15 +41,20 @@ import java.util.Map;
  *
  * <p>The result of 'merge internal(x) public(y) public(y+1)' is the combined addition of scrubbed
  * content and the new public change. This merge produces internal(x+1).
- *
  */
 public class InverseScrubbingEditor implements InverseEditor {
+  private final FileDiffer differ;
+  private final CommandRunner cmd;
+  private final FileSystem filesystem;
+  private final Ui ui;
 
-  public static InverseScrubbingEditor makeInverseScrubbingEditor() {
-    return new InverseScrubbingEditor();
+  public InverseScrubbingEditor(
+      FileDiffer differ, CommandRunner cmd, FileSystem filesystem, Ui ui) {
+    this.differ = differ;
+    this.cmd = cmd;
+    this.filesystem = filesystem;
+    this.ui = ui;
   }
-
-  private InverseScrubbingEditor() {}
 
   @Override
   public Codebase inverseEdit(
@@ -40,7 +63,8 @@ public class InverseScrubbingEditor implements InverseEditor {
       Codebase referenceTo,
       ProjectContext context,
       Map<String, String> options) {
-    CodebaseMerger merger = new CodebaseMerger(referenceFrom, input, referenceTo);
+    CodebaseMerger merger =
+        new CodebaseMerger(ui, filesystem, cmd, differ, referenceFrom, input, referenceTo);
     return merger.merge();
   }
 }

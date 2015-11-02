@@ -1,4 +1,18 @@
-// Copyright 2011 The MOE Authors All Rights Reserved.
+/*
+ * Copyright (c) 2011 Google, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package com.google.devtools.moe.client.repositories.noop;
 
@@ -8,7 +22,7 @@ import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.codebase.CodebaseCreator;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.RepositoryConfig;
-import com.google.devtools.moe.client.repositories.Repository;
+import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
 import com.google.devtools.moe.client.repositories.RevisionMatcher;
@@ -22,9 +36,9 @@ import java.util.Map;
 import javax.inject.Inject;
 
 /**
- * Creates a simple {@link Repository} for testing.
+ * Creates a simple {@link RepositoryType} for testing.
  */
-public class NoopRepositoryFactory implements Repository.Factory {
+public class NoopRepositoryFactory implements RepositoryType.Factory {
   private static final String NOOP_NOT_VALID =
       "No-op repository \"none\" invalid for directives "
           + "that expect to interact with a real repository";
@@ -57,8 +71,8 @@ public class NoopRepositoryFactory implements Repository.Factory {
   }
 
   @Override
-  public Repository create(String name, RepositoryConfig config) throws InvalidProject {
-    return Repository.create(
+  public RepositoryType create(String name, RepositoryConfig config) throws InvalidProject {
+    return RepositoryType.create(
         name,
         new NoOpRevisionHistory(),
         new CodebaseCreator() {
