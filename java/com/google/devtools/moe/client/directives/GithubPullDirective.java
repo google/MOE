@@ -146,8 +146,8 @@ public class GithubPullDirective extends Directive {
   static boolean isGithubRepositoryUrl(String url, PullRequestUrl unused) {
     // TODO(cgruber) validate against req using pattern capture groups.
     return url != null
-        && (url.trim().matches("https?+://github[.]com/[a-zA-Z0-9_-]*/[a-zA-Z0-9_-]*[.]git")
-            || url.trim().matches("git@github[.]com:[a-zA-Z0-9_-]*/[a-zA-Z0-9_-]*[.]git"));
+        && (url.trim().matches("https?+://github[.]com/[a-zA-Z0-9_-]*/[a-zA-Z0-9_-]*([.]git)?")
+            || url.trim().matches("git@github[.]com:[a-zA-Z0-9_-]*/[a-zA-Z0-9_-]*([.]git)?"));
   }
 
   @Override

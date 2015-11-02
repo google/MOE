@@ -31,11 +31,15 @@ public class GithubPullDirectiveTest extends TestCase {
     assertThat(isGithubRepositoryUrl("https://github.com/google/MOE.git", null)).isTrue();
     assertThat(isGithubRepositoryUrl("http://github.com/google/MOE.git", null)).isTrue();
     assertThat(isGithubRepositoryUrl("git@github.com:google/MOE.git", null)).isTrue();
+    assertThat(isGithubRepositoryUrl("git@github.com:google/MOE", null)).isTrue();
     assertThat(isGithubRepositoryUrl("https://github.com/google/closure-compiler.git", null))
+        .isTrue();
+    assertThat(isGithubRepositoryUrl("https://github.com/google/closure-compiler", null))
         .isTrue();
     assertThat(isGithubRepositoryUrl("https://github.com/foo/closure_compiler.git", null)).isTrue();
     assertThat(isGithubRepositoryUrl("https://github.com/truth0/plan9.git", null)).isTrue();
-    assertThat(isGithubRepositoryUrl("https://github.com/google/MOE", null)).isFalse();
+    assertThat(isGithubRepositoryUrl("https://github.com/google/MOE", null)).isTrue();
+    assertThat(isGithubRepositoryUrl("http://github.com/google/MOE", null)).isTrue();
     assertThat(isGithubRepositoryUrl("https://bitbucket.com/google/MOE.git", null)).isFalse();
   }
 }
