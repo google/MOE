@@ -22,10 +22,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
-import com.google.devtools.moe.client.MoeModule;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Utils;
 import com.google.devtools.moe.client.codebase.Codebase;
+import com.google.devtools.moe.client.gson.GsonModule;
 import com.google.devtools.moe.client.project.EditorConfig;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.project.ScrubberConfig;
@@ -105,7 +105,7 @@ public class ScrubbingEditor implements Editor {
               outputTar.getAbsolutePath(),
               // TODO(dbentley): allow configuring the scrubber config
               "--config_data",
-              (scrubberConfig == null) ? "{}" : MoeModule.provideGson().toJson(scrubberConfig),
+              (scrubberConfig == null) ? "{}" : GsonModule.provideGson().toJson(scrubberConfig),
               // TODO(cgruber): Eliminate this static gson method reference.
               input.getPath().getAbsolutePath()),
           SCRUBBER_BINARY_SUPPLIER.get().getParentFile().getPath());
@@ -122,6 +122,6 @@ public class ScrubbingEditor implements Editor {
   }
 
   public static ScrubbingEditor makeScrubbingEditor(String editorName, EditorConfig config) {
-    return new ScrubbingEditor(editorName, config.getScrubberConfig());
+    return new ScrubbingEditor(editorName, config.scrubberConfig());
   }
 }

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.devtools.moe.client;
+package com.google.devtools.moe.client.gson;
 
 import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;
@@ -25,22 +25,29 @@ import java.lang.reflect.Modifier;
 /**
  * A Gson {@link TypeAdapterFactory} to support {@code @AutoValue}
  */
-
 public final class AutoValueGsonAdapter implements TypeAdapterFactory {
-  @SuppressWarnings("unchecked")
-  @Override public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> typeToken) {
+  private static final String AUTOVALUE_PREFIX = ".AutoValue_";
+
+  @Override
+  public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> typeToken) {
     Class<?> type = typeToken.getRawType();
     if (!Modifier.isAbstract(type.getModifiers())) {
       return null; // AutoValues are never concrete types.
     }
-    String packageName = type.getPackage().getName();
-    String className = type.getName().substring(packageName.length() + 1).replace('$', '_');
-    String implementation = packageName + ".AutoValue_" + className;
     try {
-      Class<?> autoValueType = Class.forName(implementation);
-      return (TypeAdapter<T>) gson.getAdapter(autoValueType);
-    } catch (ClassNotFoundException e) {
+      Class<?> implType = Class.forName(implementationName(type));
+      @SuppressWarnings("unchecked")
+      TypeAdapter<T> reflectiveDelegate = (TypeAdapter<T>) gson.getAdapter(implType);
+      // TODO(cgruber) Discover a builder and supply a builder-aware adapter.
+      return new AutoValueTypeAdapter<T>(gson, reflectiveDelegate, implType);
+    } catch (ClassNotFoundException | NoClassDefFoundError e) {
       return null; // Not an AutoValue or no AutoValue implementation class was generated.
     }
+  }
+
+  private static String implementationName(Class<?> type) {
+    String packageName = type.getPackage().getName();
+    String className = type.getName().substring(packageName.length() + 1).replace('$', '_');
+    return packageName + AUTOVALUE_PREFIX + className;
   }
 }

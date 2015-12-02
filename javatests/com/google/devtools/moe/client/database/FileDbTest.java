@@ -24,9 +24,9 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
-import com.google.devtools.moe.client.MoeModule;
 import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.SystemFileSystem;
+import com.google.devtools.moe.client.gson.GsonModule;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.repositories.RepositoryType;
@@ -53,7 +53,7 @@ public class FileDbTest extends TestCase {
   private final InMemoryProjectContextFactory contextFactory =
       new InMemoryProjectContextFactory(null, cmd, null, ui, repositories);
   private final FileSystem filesystem = new SystemFileSystem();
-  private final Db.Factory factory = new FileDb.Factory(filesystem, MoeModule.provideGson());
+  private final Db.Factory factory = new FileDb.Factory(filesystem, GsonModule.provideGson());
 
   @Override
   public void setUp() throws Exception {
@@ -150,7 +150,7 @@ public class FileDbTest extends TestCase {
   public void testMakeDbFromFile() throws Exception {
     IMocksControl control = EasyMock.createControl();
     FileSystem filesystem = control.createMock(FileSystem.class);
-    FileDb.Factory factory = new FileDb.Factory(filesystem, MoeModule.provideGson());
+    FileDb.Factory factory = new FileDb.Factory(filesystem, GsonModule.provideGson());
     File dbFile = new File("/path/to/db");
     String dbText =
         Joiner.on("\n")
@@ -184,7 +184,7 @@ public class FileDbTest extends TestCase {
   public void testWriteDbToFile() throws Exception {
     IMocksControl control = EasyMock.createControl();
     FileSystem filesystem = control.createMock(FileSystem.class);
-    Db.Writer writer = new FileDb.Writer(MoeModule.provideGson(), filesystem);
+    Db.Writer writer = new FileDb.Writer(GsonModule.provideGson(), filesystem);
     File dbFile = new File("/path/to/db");
     String dbText = "{\n  \"equivalences\": [],\n  \"migrations\": []\n}";
     Db db = factory.parseJson(dbText);

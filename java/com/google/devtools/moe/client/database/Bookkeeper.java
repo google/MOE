@@ -182,7 +182,7 @@ public class Bookkeeper {
       String fromRepo, String toRepo, ProjectContext context) {
     String fromProjectSpace = context.config().getRepositoryConfig(fromRepo).getProjectSpace();
     String toProjectSpace = context.config().getRepositoryConfig(toRepo).getProjectSpace();
-    List<TranslatorConfig> transConfigs = context.config().getTranslators();
+    List<TranslatorConfig> transConfigs = context.config().translators();
     for (TranslatorConfig transConfig : transConfigs) {
       if (transConfig.getFromProjectSpace().equals(fromProjectSpace)
           && transConfig.getToProjectSpace().equals(toProjectSpace)) {

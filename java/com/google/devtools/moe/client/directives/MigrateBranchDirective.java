@@ -63,6 +63,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -240,7 +241,7 @@ public class MigrateBranchDirective extends Directive {
           }
 
           @Override
-          public ImmutableMap<String, RepositoryType> repositories() {
+          public Map<String, RepositoryType> repositories() {
             return ImmutableMap.<String, RepositoryType>builder()
                 .putAll(context.repositories())
                 .put(name, repoType)
@@ -248,17 +249,17 @@ public class MigrateBranchDirective extends Directive {
           }
 
           @Override
-          public ImmutableMap<String, Editor> editors() {
+          public Map<String, Editor> editors() {
             return context.editors();
           }
 
           @Override
-          public ImmutableMap<TranslatorPath, Translator> translators() {
+          public Map<TranslatorPath, Translator> translators() {
             return context.translators();
           }
 
           @Override
-          public ImmutableMap<String, MigrationConfig> migrationConfigs() {
+          public Map<String, MigrationConfig> migrationConfigs() {
             return context.migrationConfigs();
           }
         };

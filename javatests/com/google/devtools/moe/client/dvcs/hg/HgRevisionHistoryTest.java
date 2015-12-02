@@ -24,7 +24,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.Injector;
-import com.google.devtools.moe.client.MoeModule;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.NullFileSystemModule;
 import com.google.devtools.moe.client.database.DbStorage;
@@ -32,6 +31,7 @@ import com.google.devtools.moe.client.database.FileDb;
 import com.google.devtools.moe.client.database.RepositoryEquivalence;
 import com.google.devtools.moe.client.database.RepositoryEquivalenceMatcher;
 import com.google.devtools.moe.client.database.RepositoryEquivalenceMatcher.Result;
+import com.google.devtools.moe.client.gson.GsonModule;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory.SearchType;
@@ -401,7 +401,7 @@ public class HgRevisionHistoryTest extends TestCase {
 
     control.replay();
 
-    FileDb database = new FileDb(null, MoeModule.provideGson().fromJson(testDb1, DbStorage.class));
+    FileDb database = new FileDb(null, GsonModule.provideGson().fromJson(testDb1, DbStorage.class));
 
     HgRevisionHistory history = new HgRevisionHistory(Suppliers.ofInstance(mockRepo));
 
@@ -518,7 +518,7 @@ public class HgRevisionHistoryTest extends TestCase {
 
     control.replay();
 
-    FileDb database = new FileDb(null, MoeModule.provideGson().fromJson(testDb2, DbStorage.class));
+    FileDb database = new FileDb(null, GsonModule.provideGson().fromJson(testDb2, DbStorage.class));
 
     HgRevisionHistory history = new HgRevisionHistory(Suppliers.ofInstance(mockRepo));
     Result result =

@@ -19,24 +19,15 @@ package com.google.devtools.moe.client.migrations;
 import com.google.devtools.moe.client.Utils;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.repositories.MetadataScrubberConfig;
-import com.google.gson.annotations.SerializedName;
 
 /**
  * Configuration for a MOE migration.
  */
 public class MigrationConfig {
   private String name;
-
-  @SerializedName("separate_revisions")
   private boolean separateRevisions;
-
-  @SerializedName("from_repository")
   private String fromRepository;
-
-  @SerializedName("to_repository")
   private String toRepository;
-
-  @SerializedName("metadata_scrubber_config")
   private MetadataScrubberConfig metadataScrubberConfig;
 
   public MigrationConfig() {} // Constructed by gson

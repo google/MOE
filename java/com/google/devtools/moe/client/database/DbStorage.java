@@ -26,7 +26,6 @@ import java.util.List;
  * lower revisions to those between higher revisions.
  *
  * <p>This class is used for serialization of a database file.
- *
  */
 public class DbStorage {
 
@@ -38,11 +37,11 @@ public class DbStorage {
     migrations = Lists.newArrayList();
   } // Constructed by gson.
 
-  public List<RepositoryEquivalence> getEquivalences() {
+  public List<RepositoryEquivalence> equivalences() {
     return ImmutableList.copyOf(equivalences);
   }
 
-  public List<SubmittedMigration> getMigrations() {
+  public List<SubmittedMigration> migrations() {
     return ImmutableList.copyOf(migrations);
   }
 

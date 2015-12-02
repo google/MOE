@@ -16,8 +16,6 @@
 
 package com.google.devtools.moe.client.project;
 
-import com.google.gson.annotations.SerializedName;
-
 import java.util.List;
 
 /**
@@ -25,16 +23,10 @@ import java.util.List;
  */
 public class TranslatorConfig {
 
-  @SerializedName("from_project_space")
   private String fromProjectSpace;
-
-  @SerializedName("to_project_space")
   private String toProjectSpace;
-
   private List<StepConfig> steps;
-
-  @SerializedName("inverse")
-  private boolean isInverse;
+  private boolean inverse;
 
   public TranslatorConfig() {} // Constructed by gson
 
@@ -51,14 +43,14 @@ public class TranslatorConfig {
   }
 
   public boolean isInverse() {
-    return isInverse;
+    return inverse;
   }
 
   public ScrubberConfig scrubber() {
     if (getSteps() != null) {
       for (StepConfig step : getSteps()) {
-        if (step.getEditorConfig().getType() == EditorType.scrubber) {
-          return step.getEditorConfig().getScrubberConfig();
+        if (step.getEditorConfig().type() == EditorType.scrubber) {
+          return step.getEditorConfig().scrubberConfig();
         }
       }
     }
@@ -68,7 +60,7 @@ public class TranslatorConfig {
   void validate() throws InvalidProject {
     InvalidProject.assertNotEmpty(fromProjectSpace, "Translator requires from_project_space");
     InvalidProject.assertNotEmpty(toProjectSpace, "Translator requires to_project_space");
-    if (isInverse) {
+    if (inverse) {
       InvalidProject.assertTrue(steps == null, "Inverse translator can't have steps");
     } else {
       InvalidProject.assertTrue(steps != null, "Translator requires steps");

@@ -22,11 +22,11 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
-import com.google.devtools.moe.client.MoeModule;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.database.Db;
 import com.google.devtools.moe.client.database.FileDb;
+import com.google.devtools.moe.client.gson.GsonModule;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
@@ -49,8 +49,8 @@ public class NoteEquivalenceDirectiveTest extends TestCase {
       new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(mockFs)));
   private final InMemoryProjectContextFactory contextFactory =
       new InMemoryProjectContextFactory(null, cmd, mockFs, ui, repositories);
-  private final Db.Factory dbFactory = new FileDb.Factory(mockFs, MoeModule.provideGson());
-  private final Db.Writer dbWriter = new FileDb.Writer(MoeModule.provideGson(), mockFs);
+  private final Db.Factory dbFactory = new FileDb.Factory(mockFs, GsonModule.provideGson());
+  private final Db.Writer dbWriter = new FileDb.Writer(GsonModule.provideGson(), mockFs);
 
   NoteEquivalenceDirective d;
 
@@ -101,12 +101,12 @@ public class NoteEquivalenceDirectiveTest extends TestCase {
                 "  'equivalences': [",
                 "    {",
                 "      'rev1': {",
-                "        'revId': '1',",
-                "        'repositoryName': 'internal'",
+                "        'repository_name': 'internal',",
+                "        'rev_id': '1'",
                 "      },",
                 "      'rev2': {",
-                "        'revId': '4',",
-                "        'repositoryName': 'public'",
+                "        'repository_name': 'public',",
+                "        'rev_id': '4'",
                 "      }",
                 "    }",
                 "  ],",
@@ -133,12 +133,12 @@ public class NoteEquivalenceDirectiveTest extends TestCase {
                 "  'equivalences': [",
                 "    {",
                 "      'rev1': {",
-                "        'revId': '1',",
-                "        'repositoryName': 'internal'",
+                "        'repository_name': 'internal',",
+                "        'rev_id': '1'",
                 "      },",
                 "      'rev2': {",
-                "        'revId': '4',",
-                "        'repositoryName': 'public'",
+                "        'repository_name': 'public',",
+                "        'rev_id': '4'",
                 "      }",
                 "    }",
                 "  ],",
@@ -168,12 +168,12 @@ public class NoteEquivalenceDirectiveTest extends TestCase {
                 "  'equivalences': [",
                 "    {",
                 "      'rev1': {",
-                "        'revId': '0',",
-                "        'repositoryName': 'internal'",
+                "        'repository_name': 'internal',",
+                "        'rev_id': '0'",
                 "      },",
                 "      'rev2': {",
-                "        'revId': '3',",
-                "        'repositoryName': 'public'",
+                "        'repository_name': 'public',",
+                "        'rev_id': '3'",
                 "      }",
                 "    }%s", // New equivalence is added here.
                 "  ],",
@@ -190,12 +190,12 @@ public class NoteEquivalenceDirectiveTest extends TestCase {
                         ",",
                         "    {",
                         "      'rev1': {",
-                        "        'revId': '1',",
-                        "        'repositoryName': 'internal'",
+                        "        'repository_name': 'internal',",
+                        "        'rev_id': '1'",
                         "      },",
                         "      'rev2': {",
-                        "        'revId': '4',",
-                        "        'repositoryName': 'public'",
+                        "        'repository_name': 'public',",
+                        "        'rev_id': '4'",
                         "      }",
                         "    }"))
             .replace('\'', '"');

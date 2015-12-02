@@ -16,54 +16,63 @@
 
 package com.google.devtools.moe.client.project;
 
-import com.google.common.base.Preconditions;
+import com.google.auto.value.AutoValue;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Maps;
-import com.google.devtools.moe.client.MoeModule;
 import com.google.devtools.moe.client.MoeProblem;
+import com.google.devtools.moe.client.gson.AutoValueGsonAdapter;
+import com.google.devtools.moe.client.gson.GsonModule;
 import com.google.devtools.moe.client.migrations.MigrationConfig;
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
-import com.google.gson.annotations.SerializedName;
+import com.google.gson.annotations.JsonAdapter;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 /**
  * Configuration for a MOE Project
  */
-public class ProjectConfig {
-  private String name;
-  private Map<String, RepositoryConfig> repositories;
-  private Map<String, EditorConfig> editors;
-  private List<TranslatorConfig> translators;
+@AutoValue
+@JsonAdapter(AutoValueGsonAdapter.class)
+public abstract class ProjectConfig {
 
-  @SerializedName("migrations")
-  private List<MigrationConfig> migrationConfigs;
+  public abstract String name();
 
-  @SerializedName("internal_repository")
-  private RepositoryConfig internalRepository;
+  public abstract Map<String, EditorConfig> editors();
 
-  @SerializedName("public_repository")
-  private RepositoryConfig publicRepository;
+  public abstract ImmutableList<MigrationConfig> migrations();
 
-  private ProjectConfig() {} // Constructed by gson
+  public abstract Map<String, RepositoryConfig> repositories();
 
-  public String getName() {
-    return name;
+  public abstract ImmutableList<TranslatorConfig> translators();
+
+  public static Builder builder() {
+    Builder builder = new AutoValue_ProjectConfig.Builder();
+    builder.editors(ImmutableMap.<String, EditorConfig>of()); // default empty list.
+    builder.migrations(ImmutableList.<MigrationConfig>of()); // default empty list.
+    builder.repositories(ImmutableMap.<String, RepositoryConfig>of()); // default empty list.
+    builder.translators(ImmutableList.<TranslatorConfig>of()); // default empty list.
+    return builder;
   }
 
   /**
-   * Returns a mapping of {@link RepositoryConfig} by name in this config. Useful for inspection of
-   * this config's contents.
+   * A standard builder pattern object to create a ProjectConfig.
    */
-  public Map<String, RepositoryConfig> repositories() {
-    Preconditions.checkNotNull(repositories);
-    return ImmutableMap.copyOf(repositories);
+  @AutoValue.Builder
+  public abstract static class Builder {
+    public abstract Builder name(String name);
+
+    public abstract Builder editors(Map<String, EditorConfig> editors);
+
+    public abstract Builder migrations(ImmutableList<MigrationConfig> migrations);
+
+    public abstract Builder repositories(Map<String, RepositoryConfig> repositories);
+
+    public abstract Builder translators(ImmutableList<TranslatorConfig> translators);
+
+    public abstract ProjectConfig build();
   }
 
   /**
@@ -72,37 +81,15 @@ public class ProjectConfig {
    * @throws MoeProblem if no such repository with the given name exists
    */
   public RepositoryConfig getRepositoryConfig(String repositoryName) {
-    if (!repositories.containsKey(repositoryName)) {
+    if (!repositories().containsKey(repositoryName)) {
       throw new MoeProblem(
           "No such repository '"
               + repositoryName
               + "' in the config. Found: "
-              + ImmutableSortedSet.copyOf(repositories.keySet()));
+              + ImmutableSortedSet.copyOf(repositories().keySet()));
     }
-    return repositories.get(repositoryName);
+    return repositories().get(repositoryName);
   }
-
-  public Map<String, EditorConfig> getEditorConfigs() {
-    if (editors == null) {
-      editors = ImmutableMap.<String, EditorConfig>of();
-    }
-    return Collections.unmodifiableMap(editors);
-  }
-
-  public List<TranslatorConfig> getTranslators() {
-    if (translators == null) {
-      translators = ImmutableList.of();
-    }
-    return Collections.unmodifiableList(translators);
-  }
-
-  public List<MigrationConfig> getMigrationConfigs() {
-    if (migrationConfigs == null) {
-      migrationConfigs = ImmutableList.of();
-    }
-    return Collections.unmodifiableList(migrationConfigs);
-  }
-
 
   /**
    * Returns a configuration from one repository to another, if any is configured.
@@ -110,7 +97,7 @@ public class ProjectConfig {
   public TranslatorConfig findTranslatorFrom(String fromRepository, String toRepository) {
     String fromProjectSpace = getRepositoryConfig(fromRepository).getProjectSpace();
     String toProjectSpace = getRepositoryConfig(toRepository).getProjectSpace();
-    for (TranslatorConfig translator : getTranslators()) {
+    for (TranslatorConfig translator : translators()) {
       if (translator.getFromProjectSpace().equals(fromProjectSpace)
           && translator.getToProjectSpace().equals(toProjectSpace)) {
         return translator;
@@ -125,54 +112,26 @@ public class ProjectConfig {
   }
 
   void validate() throws InvalidProject {
-    if (repositories == null) {
-      repositories = Maps.newHashMap();
-    }
-
-    if (internalRepository != null) {
-      // For backwards compatibility with old MOE configs,
-      // normalize the internal repostiory.
-      InvalidProject.assertTrue(
-          repositories.put("internal", internalRepository) == null,
-          "Internal repository specified twice");
-
-      internalRepository = null;
-    }
-
-    if (publicRepository != null) {
-      // For backwards compatibility with old MOE configs,
-      // normalize the public repostiory.
-      InvalidProject.assertTrue(
-          repositories.put("public", publicRepository) == null,
-          "Public repository specified twice");
-
-      publicRepository = null;
-    }
-
-    InvalidProject.assertFalse(Strings.isNullOrEmpty(getName()), "Must specify a name");
+    InvalidProject.assertFalse(Strings.isNullOrEmpty(name()), "Must specify a name");
     InvalidProject.assertFalse(repositories().isEmpty(), "Must specify repositories");
 
-    for (RepositoryConfig r : repositories.values()) {
+    for (RepositoryConfig r : repositories().values()) {
       r.validate();
     }
-
-    for (EditorConfig e : getEditorConfigs().values()) {
+    for (EditorConfig e : editors().values()) {
       e.validate();
     }
-
-    for (TranslatorConfig t : getTranslators()) {
+    for (TranslatorConfig t : translators()) {
       t.validate();
     }
-
-    for (MigrationConfig m : getMigrationConfigs()) {
+    for (MigrationConfig m : migrations()) {
       m.validate();
     }
   }
 
-  public static ProjectConfig makeProjectConfigFromConfigText(String configText)
-      throws InvalidProject {
+  public static ProjectConfig parse(String configText) throws InvalidProject {
     try {
-      Gson gson = MoeModule.provideGson(); // TODO(user): Remove this static reference.
+      Gson gson = GsonModule.provideGson(); // TODO(user): Remove this static reference.
       ProjectConfig config = gson.fromJson(configText, ProjectConfig.class);
       if (config == null) {
         throw new InvalidProject("Could not parse MOE config");

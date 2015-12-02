@@ -22,9 +22,8 @@ public class ProjectConfigTest extends TestCase {
 
   public void testValidConfig() throws Exception {
     ProjectConfig p =
-        ProjectConfig.makeProjectConfigFromConfigText(
-            "{\"name\": \"foo\", \"repositories\": {\"public\": {}}}");
-    assertEquals(p.getName(), "foo");
+        ProjectConfig.parse("{\"name\": \"foo\", \"repositories\": {\"public\": {}}}");
+    assertEquals(p.name(), "foo");
   }
 
   public void testInvalidConfig() throws Exception {
@@ -126,7 +125,7 @@ public class ProjectConfigTest extends TestCase {
 
   private void assertInvalidConfig(String text, String error) {
     try {
-      ProjectConfig.makeProjectConfigFromConfigText(text);
+      ProjectConfig.parse(text);
       fail("Expected error");
     } catch (InvalidProject e) {
       assertEquals(error, e.getMessage());
@@ -145,7 +144,7 @@ public class ProjectConfigTest extends TestCase {
   public void testConfigWithScrubberConfig() throws Exception {
     // The scrubber config should not be parsed.
     ProjectConfig p =
-        ProjectConfig.makeProjectConfigFromConfigText(
+        ProjectConfig.parse(
             "{\"name\": \"foo\","
                 + " \"scrubber_config\": {\"a\": 1, \"b\": 2},"
                 + " \"repositories\": {\"internal\": {\"type\":\"svn\"}}"

@@ -57,7 +57,7 @@ public class FileDb implements Db, HasDbStorage {
    * @return all Equivalences stored in the database
    */
   public Set<RepositoryEquivalence> getEquivalences() {
-    return ImmutableSet.copyOf(dbStorage.getEquivalences());
+    return ImmutableSet.copyOf(dbStorage.equivalences());
   }
 
   @Override
@@ -68,7 +68,7 @@ public class FileDb implements Db, HasDbStorage {
   @Override
   public Set<Revision> findEquivalences(Revision revision, String otherRepository) {
     ImmutableSet.Builder<Revision> equivalentToRevision = ImmutableSet.builder();
-    for (RepositoryEquivalence e : dbStorage.getEquivalences()) {
+    for (RepositoryEquivalence e : dbStorage.equivalences()) {
       if (e.hasRevision(revision)) {
         Revision otherRevision = e.getOtherRevision(revision);
         if (otherRevision.repositoryName().equals(otherRepository)) {
@@ -83,7 +83,7 @@ public class FileDb implements Db, HasDbStorage {
    * @return all {@link SubmittedMigration} objects stored in the database
    */
   public Set<SubmittedMigration> getMigrations() {
-    return ImmutableSet.copyOf(dbStorage.getMigrations());
+    return ImmutableSet.copyOf(dbStorage.migrations());
   }
 
   @Override

@@ -112,7 +112,7 @@ public abstract class ProjectContextFactory {
 
   private ImmutableMap<String, Editor> buildEditors(ProjectConfig config) throws InvalidProject {
     ImmutableMap.Builder<String, Editor> builder = ImmutableMap.builder();
-    for (Map.Entry<String, EditorConfig> entry : config.getEditorConfigs().entrySet()) {
+    for (Map.Entry<String, EditorConfig> entry : config.editors().entrySet()) {
       builder.put(entry.getKey(), makeEditorFromConfig(entry.getKey(), entry.getValue()));
     }
     return builder.build();
@@ -121,7 +121,7 @@ public abstract class ProjectContextFactory {
   private ImmutableMap<TranslatorPath, Translator> buildTranslators(ProjectConfig config)
       throws InvalidProject {
     ImmutableMap.Builder<TranslatorPath, Translator> builder = ImmutableMap.builder();
-    for (TranslatorConfig translatorConfig : config.getTranslators()) {
+    for (TranslatorConfig translatorConfig : config.translators()) {
       Translator t = makeTranslatorFromConfig(translatorConfig, config);
 
       TranslatorPath tPath =
@@ -134,14 +134,14 @@ public abstract class ProjectContextFactory {
 
   private ImmutableMap<String, MigrationConfig> buildMigrationConfigs(ProjectConfig config) {
     ImmutableMap.Builder<String, MigrationConfig> builder = ImmutableMap.builder();
-    for (MigrationConfig migrationConfig : config.getMigrationConfigs()) {
+    for (MigrationConfig migrationConfig : config.migrations()) {
       builder.put(migrationConfig.getName(), migrationConfig);
     }
     return builder.build();
   }
 
   Editor makeEditorFromConfig(String editorName, EditorConfig config) throws InvalidProject {
-    switch (config.getType()) {
+    switch (config.type()) {
       case identity:
         return IdentityEditor.makeIdentityEditor(editorName, config);
       case scrubber:
@@ -153,7 +153,7 @@ public abstract class ProjectContextFactory {
       case renamer:
         return RenamingEditor.makeRenamingEditor(editorName, config);
       default:
-        throw new InvalidProject("Invalid editor type: \"%s\"", config.getType());
+        throw new InvalidProject("Invalid editor type: \"%s\"", config.type());
     }
   }
 
@@ -194,7 +194,7 @@ public abstract class ProjectContextFactory {
 
   private TranslatorConfig findInverseTranslatorConfig(
       TranslatorConfig transConfig, ProjectConfig projConfig) throws InvalidProject {
-    List<TranslatorConfig> otherTranslators = projConfig.getTranslators();
+    List<TranslatorConfig> otherTranslators = projConfig.translators();
     for (TranslatorConfig otherTrans : otherTranslators) {
       if (otherTrans.getToProjectSpace().equals(transConfig.getFromProjectSpace())
           && otherTrans.getFromProjectSpace().equals(transConfig.getToProjectSpace())) {
@@ -212,7 +212,7 @@ public abstract class ProjectContextFactory {
 
   private InverseEditor makeInverseEditorFromConfig(String editorName, EditorConfig originalConfig)
       throws InvalidProject {
-    switch (originalConfig.getType()) {
+    switch (originalConfig.type()) {
       case identity:
         return IdentityEditor.makeIdentityEditor(editorName, originalConfig);
       case renamer:
@@ -220,7 +220,7 @@ public abstract class ProjectContextFactory {
       case scrubber:
         return new InverseScrubbingEditor(differ, cmd, filesystem, ui);
       default:
-        throw new InvalidProject("Non-invertible editor type: " + originalConfig.getType());
+        throw new InvalidProject("Non-invertible editor type: " + originalConfig.type());
     }
   }
 }

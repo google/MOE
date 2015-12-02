@@ -16,7 +16,7 @@
 
 package com.google.devtools.moe.client.testing;
 
-import static com.google.devtools.moe.client.project.ProjectConfig.makeProjectConfigFromConfigText;
+import static com.google.devtools.moe.client.project.ProjectConfig.parse;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.devtools.moe.client.CommandRunner;
@@ -57,7 +57,7 @@ public class InMemoryProjectContextFactory extends ProjectContextFactory {
 
   @Override
   public ProjectConfig loadConfiguration(String configFilename) throws InvalidProject {
-    return makeProjectConfigFromConfigText(projectConfigs.get(configFilename));
+    return parse(projectConfigs.get(configFilename));
   }
 
   /** A Dagger module for binding this implementation of {@link ProjectContextFactory}. */

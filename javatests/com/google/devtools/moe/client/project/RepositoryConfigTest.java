@@ -19,7 +19,7 @@ package com.google.devtools.moe.client.project;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.base.Joiner;
-import com.google.devtools.moe.client.MoeModule;
+import com.google.devtools.moe.client.gson.GsonModule;
 
 import junit.framework.TestCase;
 
@@ -43,7 +43,7 @@ public class RepositoryConfigTest extends TestCase {
                 "  ]",
                 "}")
             .replace('\'', '\n');
-    RepositoryConfig config = MoeModule.provideGson().fromJson(json, RepositoryConfig.class);
+    RepositoryConfig config = GsonModule.provideGson().fromJson(json, RepositoryConfig.class);
     assertThat((Iterable<String>) get(config, "ignoreFilePatterns")).isNotEmpty();
     assertThat((Iterable<String>) get(config, "ignoreFileRes")).isNotEmpty();
     try {
@@ -69,7 +69,7 @@ public class RepositoryConfigTest extends TestCase {
                 "  ]",
                 "}")
             .replace('\'', '\n');
-    RepositoryConfig config = MoeModule.provideGson().fromJson(json, RepositoryConfig.class);
+    RepositoryConfig config = GsonModule.provideGson().fromJson(json, RepositoryConfig.class);
     assertThat((Iterable<String>) get(config, "executableFilePatterns")).isNotEmpty();
     assertThat((Iterable<String>) get(config, "executableFileRes")).isNotEmpty();
     try {

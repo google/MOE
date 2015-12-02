@@ -1,7 +1,5 @@
 package com.google.devtools.moe.client.project;
 
-import com.google.gson.annotations.SerializedName;
-
 import java.util.List;
 
 /**
@@ -9,10 +7,7 @@ import java.util.List;
  */
 public class UsernamesConfig {
 
-  @SerializedName("scrubbable_usernames")
   private List<String> scrubbableUsernames;
-
-  @SerializedName("publishable_usernames")
   private List<String> publishableUsernames;
 
   private UsernamesConfig() {}

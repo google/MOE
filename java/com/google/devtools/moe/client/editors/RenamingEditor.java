@@ -21,9 +21,9 @@ import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
-import com.google.devtools.moe.client.MoeModule;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.codebase.Codebase;
+import com.google.devtools.moe.client.gson.GsonModule;
 import com.google.devtools.moe.client.project.EditorConfig;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.gson.JsonObject;
@@ -139,11 +139,11 @@ public class RenamingEditor implements Editor {
   }
 
   public static RenamingEditor makeRenamingEditor(String editorName, EditorConfig config) {
-    if (config.getMappings() == null) {
+    if (config.mappings() == null) {
       throw new MoeProblem("No mappings object found in the config for editor %s", editorName);
     }
     return new RenamingEditor(
-        editorName, RenamingEditor.parseJsonMap(config.getMappings()), config.getUseRegex());
+        editorName, RenamingEditor.parseJsonMap(config.mappings()), config.useRegex());
   }
 
   /**
@@ -153,6 +153,6 @@ public class RenamingEditor implements Editor {
    */
   static Map<String, String> parseJsonMap(JsonObject jsonMappings) {
     Type type = new TypeToken<Map<String, String>>() {}.getType();
-    return MoeModule.provideGson().fromJson(jsonMappings, type);
+    return GsonModule.provideGson().fromJson(jsonMappings, type);
   }
 }

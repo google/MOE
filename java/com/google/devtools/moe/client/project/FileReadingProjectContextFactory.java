@@ -55,7 +55,7 @@ public class FileReadingProjectContextFactory extends ProjectContextFactory {
       } catch (IOException e) {
         throw new InvalidProject("Config File \"" + configFilename + "\" not accessible.");
       }
-      return ProjectConfig.makeProjectConfigFromConfigText(configText);
+      return ProjectConfig.parse(configText);
     } finally {
       ui.popTask(task, "");
     }

@@ -17,7 +17,7 @@
 package com.google.devtools.moe.client.database;
 
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.moe.client.MoeModule;
+import com.google.devtools.moe.client.gson.GsonModule;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionGraph;
@@ -52,7 +52,7 @@ public class RepositoryEquivalenceMatcherTest extends TestCase {
   @Override
   public void setUp() {
     try {
-      database = (FileDb) new FileDb.Factory(null, MoeModule.provideGson()).parseJson(testDb1);
+      database = (FileDb) new FileDb.Factory(null, GsonModule.provideGson()).parseJson(testDb1);
     } catch (InvalidProject e) {
       e.printStackTrace();
     }

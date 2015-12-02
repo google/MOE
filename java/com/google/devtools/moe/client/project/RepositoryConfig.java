@@ -30,23 +30,14 @@ import java.util.List;
  */
 public class RepositoryConfig {
   private String type;
-
   private String url;
-
-  @SerializedName("project_space")
   private String projectSpace = "public";
-
-  @SerializedName("build_target")
   private String buildTarget;
-
   @SerializedName("package")
   private String buildTargetPackage;
-
-  @SerializedName("preserve_authors")
   private boolean preserveAuthors;
-
-
   private List<String> paths;
+
 
   /**
    * List of filepath regexes to ignore in this repo, e.g. files specific to this repo that are

@@ -83,6 +83,6 @@ public class ShellEditor implements Editor {
   }
 
   public static ShellEditor makeShellEditor(String editorName, EditorConfig config) {
-    return new ShellEditor(editorName, config.getCommandString());
+    return new ShellEditor(editorName, config.commandString());
   }
 }

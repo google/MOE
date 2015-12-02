@@ -16,28 +16,19 @@
 package com.google.devtools.moe.client;
 
 import com.google.devtools.moe.client.database.FileDb;
-import com.google.devtools.moe.client.database.RepositoryEquivalence;
 import com.google.devtools.moe.client.directives.DirectivesModule;
+import com.google.devtools.moe.client.gson.GsonModule;
 import com.google.devtools.moe.client.options.OptionsModule;
 import com.google.devtools.moe.client.project.FileReadingProjectContextFactory;
 import com.google.devtools.moe.client.project.ProjectContextFactory;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.tools.FileDifference.ConcreteFileDiffer;
 import com.google.devtools.moe.client.tools.FileDifference.FileDiffer;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
 
 import com.squareup.okhttp.OkHttpClient;
 
 import dagger.Module;
 import dagger.Provides;
-
-import java.lang.reflect.Type;
 
 import javax.inject.Singleton;
 
@@ -49,7 +40,8 @@ import javax.inject.Singleton;
     Repositories.Defaults.class,
     OptionsModule.class,
     DirectivesModule.class,
-    FileDb.Module.class
+    FileDb.Module.class,
+    GsonModule.class
   }
 )
 public class MoeModule {
@@ -93,28 +85,5 @@ public class MoeModule {
   @Singleton
   public OkHttpClient okHttpClient() {
     return new OkHttpClient();
-  }
-
-  @Provides
-  @Singleton
-  public static Gson provideGson() {
-    return new GsonBuilder()
-        .setPrettyPrinting()
-        .registerTypeHierarchyAdapter(
-            RepositoryEquivalence.class, new RepositoryEquivalence.Serializer())
-        .registerTypeAdapter(JsonObject.class, new JsonObjectDeserializer())
-        .create();
-  }
-
-  /**
-   * Helper class to deserialize raw Json in a config.
-   */
-  static class JsonObjectDeserializer implements JsonDeserializer<JsonObject> {
-    @Override
-    public JsonObject deserialize(
-        JsonElement json, Type typeOfT, JsonDeserializationContext context)
-        throws JsonParseException {
-      return json.getAsJsonObject();
-    }
   }
 }

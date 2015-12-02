@@ -17,7 +17,6 @@
 package com.google.devtools.moe.client.project;
 
 import com.google.auto.value.AutoValue;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.editors.Editor;
@@ -25,6 +24,8 @@ import com.google.devtools.moe.client.editors.Translator;
 import com.google.devtools.moe.client.editors.TranslatorPath;
 import com.google.devtools.moe.client.migrations.MigrationConfig;
 import com.google.devtools.moe.client.repositories.RepositoryType;
+
+import java.util.Map;
 
 /**
  * Represents the fully interpreted project, its textual configurations realized into
@@ -34,13 +35,13 @@ import com.google.devtools.moe.client.repositories.RepositoryType;
 public abstract class ProjectContext {
   public abstract ProjectConfig config();
 
-  public abstract ImmutableMap<String, RepositoryType> repositories();
+  public abstract Map<String, RepositoryType> repositories();
 
-  public abstract ImmutableMap<String, Editor> editors();
+  public abstract Map<String, Editor> editors();
 
-  public abstract ImmutableMap<TranslatorPath, Translator> translators();
+  public abstract Map<TranslatorPath, Translator> translators();
 
-  public abstract ImmutableMap<String, MigrationConfig> migrationConfigs();
+  public abstract Map<String, MigrationConfig> migrationConfigs();
 
   /**
    * Returns the {@link RepositoryType} in this context with the given name.

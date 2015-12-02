@@ -16,10 +16,18 @@
 
 package com.google.devtools.moe.client.database;
 
+import static com.google.devtools.moe.client.gson.GsonUtil.getPropertyOrLegacy;
+
 import com.google.auto.value.AutoValue;
-import com.google.devtools.moe.client.AutoValueGsonAdapter;
+import com.google.devtools.moe.client.gson.AutoValueGsonAdapter;
 import com.google.devtools.moe.client.repositories.Revision;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
 import com.google.gson.annotations.JsonAdapter;
+
+import java.lang.reflect.Type;
 
 /**
  * A {@code SubmittedMigration} holds information about a completed migration.
@@ -30,10 +38,6 @@ import com.google.gson.annotations.JsonAdapter;
 @AutoValue
 @JsonAdapter(AutoValueGsonAdapter.class)
 public abstract class SubmittedMigration {
-  public static SubmittedMigration create(Revision fromRevision, Revision toRevision) {
-    return new AutoValue_SubmittedMigration(fromRevision, toRevision);
-  }
-
   /** The {@link Revision} that represents the source of this migrated commit */
   public abstract Revision fromRevision();
 
@@ -43,5 +47,40 @@ public abstract class SubmittedMigration {
   @Override
   public String toString() {
     return fromRevision() + " ==> " + toRevision();
+  }
+
+  @AutoValue.Builder
+  interface Builder {
+    Builder fromRevision(Revision r);
+
+    Builder toRevision(Revision r);
+
+    SubmittedMigration build();
+  }
+
+  public static Builder builder() {
+    return new AutoValue_SubmittedMigration.Builder();
+  }
+
+  public static SubmittedMigration create(Revision fromRevision, Revision toRevision) {
+    return builder().fromRevision(fromRevision).toRevision(toRevision).build();
+  }
+
+  /**
+   * Since legacy {@link Revision} sections in the MOE Db use camelCase field names,
+   * {@link Revision} must be deserialized in a way that honors the legacy name.
+   */
+  public static final class Deserializer implements JsonDeserializer<SubmittedMigration> {
+    @Override
+    public SubmittedMigration deserialize(
+        JsonElement json, Type typeOfT, JsonDeserializationContext context)
+        throws JsonParseException {
+      Builder builder = SubmittedMigration.builder();
+      builder.fromRevision(
+          getPropertyOrLegacy(context, Revision.class, json, "from_revision", "fromRevision"));
+      builder.toRevision(
+          getPropertyOrLegacy(context, Revision.class, json, "to_revision", "toRevision"));
+      return builder.build();
+    }
   }
 }

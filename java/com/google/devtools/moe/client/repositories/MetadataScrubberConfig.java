@@ -16,7 +16,6 @@
 package com.google.devtools.moe.client.repositories;
 
 import com.google.common.collect.ImmutableList;
-import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
 
@@ -25,20 +24,14 @@ import java.util.List;
  */
 public class MetadataScrubberConfig {
 
-  @SerializedName("usernames_to_scrub")
   private List<String> usernamesToScrub;
-
-  @SerializedName("scrub_confidential_words")
   private boolean scrubConfidentialWords = true;
-
-  @SerializedName("sensitive_res")
   private List<String> sensitiveRes = ImmutableList.of();
 
   /**
    * Formatting for changelog adapted from fromRepository for commits in toRepository. See
    * {@link DescriptionMetadataScrubber}.
    */
-  @SerializedName("log_format")
   private String logFormat = "{description}\n\tChange on {date} by {author}";
 
   public MetadataScrubberConfig() {} // Constructed by gson

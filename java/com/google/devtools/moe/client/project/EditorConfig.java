@@ -16,53 +16,37 @@
 
 package com.google.devtools.moe.client.project;
 
+import com.google.auto.value.AutoValue;
+import com.google.devtools.moe.client.gson.AutoValueGsonAdapter;
 import com.google.gson.JsonObject;
-import com.google.gson.annotations.SerializedName;
+import com.google.gson.annotations.JsonAdapter;
 
 /**
  * Configuration for a MOE Editor.
  */
-public class EditorConfig {
+@AutoValue
+@JsonAdapter(AutoValueGsonAdapter.class)
+public abstract class EditorConfig {
+  public abstract EditorType type();
 
-  private EditorType type;
+  public abstract ScrubberConfig scrubberConfig();
 
-  //only used for scrubbing editors
-  @SerializedName("scrubber_config")
-  private ScrubberConfig scrubberConfig;
+  public abstract String commandString();
 
-  //only used for shell editors
-  @SerializedName("command_string")
-  private String commandString;
+  public abstract JsonObject mappings();
 
-  //only used for renaming editors
-  private JsonObject mappings;
-
-  @SerializedName("use_regex")
-  private boolean useRegex = false;
-
-  private EditorConfig() {} // Constructed by gson
-
-  public EditorType getType() {
-    return type;
-  }
-
-  public ScrubberConfig getScrubberConfig() {
-    return scrubberConfig;
-  }
-
-  public String getCommandString() {
-    return commandString;
-  }
-
-  public JsonObject getMappings() {
-    return mappings;
-  }
-
-  public boolean getUseRegex() {
-    return useRegex;
-  }
+  public abstract boolean useRegex();
 
   void validate() throws InvalidProject {
-    InvalidProject.assertNotNull(type, "Missing type in editor");
+    InvalidProject.assertNotNull(type(), "Missing type in editor");
+  }
+
+  public static EditorConfig create(
+      EditorType type,
+      ScrubberConfig scrubberConfig,
+      String commandString,
+      JsonObject mappings,
+      boolean useRegex) {
+    return new AutoValue_EditorConfig(type, scrubberConfig, commandString, mappings, useRegex);
   }
 }

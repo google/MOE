@@ -24,13 +24,13 @@ import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
-import com.google.devtools.moe.client.MoeModule;
 import com.google.devtools.moe.client.database.Bookkeeper;
 import com.google.devtools.moe.client.database.Db;
 import com.google.devtools.moe.client.database.DbStorage;
 import com.google.devtools.moe.client.database.FileDb;
 import com.google.devtools.moe.client.database.RepositoryEquivalence;
 import com.google.devtools.moe.client.database.SubmittedMigration;
+import com.google.devtools.moe.client.gson.GsonModule;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.repositories.Revision;
@@ -113,8 +113,8 @@ public class BookkeepingDirectiveTest extends TestCase {
     InMemoryProjectContextFactory contextFactory =
         init(new InMemoryProjectContextFactory(fileDiffer, cmd, filesystem, ui, repositories));
     Injector.INSTANCE = new Injector(filesystem, cmd, contextFactory, ui);
-    Db.Factory dbFactory = new FileDb.Factory(filesystem, MoeModule.provideGson());
-    Db.Writer dbWriter = new FileDb.Writer(MoeModule.provideGson(), filesystem);
+    Db.Factory dbFactory = new FileDb.Factory(filesystem, GsonModule.provideGson());
+    Db.Writer dbWriter = new FileDb.Writer(GsonModule.provideGson(), filesystem);
     BookkeepingDirective d =
         new BookkeepingDirective(
             contextFactory, dbFactory, new Bookkeeper(codebaseDiffer, dbWriter, ui));
@@ -135,7 +135,7 @@ public class BookkeepingDirectiveTest extends TestCase {
         SubmittedMigration.create(
             Revision.create("migrated_from", "int"), Revision.create("migrated_to", "pub")));
 
-    assertEquals(MoeModule.provideGson().toJson(expectedDb), filesystem.fileToString(DB_FILE));
+    assertEquals(GsonModule.provideGson().toJson(expectedDb), filesystem.fileToString(DB_FILE));
   }
 
   /**
@@ -158,8 +158,8 @@ public class BookkeepingDirectiveTest extends TestCase {
     InMemoryProjectContextFactory contextFactory =
         init(new InMemoryProjectContextFactory(fileDiffer, cmd, filesystem, ui, repositories));
     Injector.INSTANCE = new Injector(filesystem, cmd, contextFactory, ui);
-    Db.Factory dbFactory = new FileDb.Factory(filesystem, MoeModule.provideGson());
-    Db.Writer dbWriter = new FileDb.Writer(MoeModule.provideGson(), filesystem);
+    Db.Factory dbFactory = new FileDb.Factory(filesystem, GsonModule.provideGson());
+    Db.Writer dbWriter = new FileDb.Writer(GsonModule.provideGson(), filesystem);
     BookkeepingDirective d =
         new BookkeepingDirective(
             contextFactory, dbFactory, new Bookkeeper(codebaseDiffer, dbWriter, ui));
@@ -178,7 +178,7 @@ public class BookkeepingDirectiveTest extends TestCase {
         SubmittedMigration.create(
             Revision.create("migrated_from", "int"), Revision.create("migrated_to", "pub")));
 
-    assertEquals(MoeModule.provideGson().toJson(expectedDb), filesystem.fileToString(DB_FILE));
+    assertEquals(GsonModule.provideGson().toJson(expectedDb), filesystem.fileToString(DB_FILE));
   }
 
   /**
@@ -201,8 +201,8 @@ public class BookkeepingDirectiveTest extends TestCase {
     InMemoryProjectContextFactory contextFactory =
         init(new InMemoryProjectContextFactory(fileDiffer, cmd, filesystem, ui, repositories));
     Injector.INSTANCE = new Injector(filesystem, cmd, contextFactory, ui);
-    Db.Factory dbFactory = new FileDb.Factory(filesystem, MoeModule.provideGson());
-    Db.Writer dbWriter = new FileDb.Writer(MoeModule.provideGson(), filesystem);
+    Db.Factory dbFactory = new FileDb.Factory(filesystem, GsonModule.provideGson());
+    Db.Writer dbWriter = new FileDb.Writer(GsonModule.provideGson(), filesystem);
     BookkeepingDirective d =
         new BookkeepingDirective(
             contextFactory, dbFactory, new Bookkeeper(codebaseDiffer, dbWriter, ui));
@@ -224,6 +224,6 @@ public class BookkeepingDirectiveTest extends TestCase {
         SubmittedMigration.create(
             Revision.create("migrated_from", "int"), Revision.create("migrated_to", "pub")));
 
-    assertEquals(MoeModule.provideGson().toJson(expectedDb), filesystem.fileToString(DB_FILE));
+    assertEquals(GsonModule.provideGson().toJson(expectedDb), filesystem.fileToString(DB_FILE));
   }
 }

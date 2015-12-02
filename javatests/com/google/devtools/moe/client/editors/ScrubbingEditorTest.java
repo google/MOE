@@ -24,8 +24,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
-import com.google.devtools.moe.client.MoeModule;
 import com.google.devtools.moe.client.codebase.Codebase;
+import com.google.devtools.moe.client.gson.GsonModule;
 import com.google.devtools.moe.client.project.ScrubberConfig;
 import com.google.devtools.moe.client.testing.TestingModule;
 
@@ -128,7 +128,7 @@ public class ScrubbingEditorTest extends TestCase {
 
 
     ScrubberConfig scrubberConfig =
-        MoeModule.provideGson()
+        GsonModule.provideGson()
             .fromJson(
                 "{\"scrub_unknown_users\":\"true\",\"usernames_file\":null}", ScrubberConfig.class);
 

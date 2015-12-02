@@ -16,7 +16,7 @@
 package com.google.devtools.moe.client.github;
 
 import com.google.auto.value.AutoValue;
-import com.google.devtools.moe.client.AutoValueGsonAdapter;
+import com.google.devtools.moe.client.gson.AutoValueGsonAdapter;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 
@@ -33,11 +33,7 @@ public final class GithubAPI {
 
     public abstract String url();
 
-    abstract String html_url();
-
-    public String htmlUrl() {
-      return html_url();
-    }
+    public abstract String htmlUrl();
 
     public abstract String title();
 
@@ -51,11 +47,8 @@ public final class GithubAPI {
 
     public abstract boolean merged();
 
-    abstract MergeableState mergeable_state();
+    public abstract MergeableState mergeableState();
 
-    public MergeableState mergeableState() {
-      return mergeable_state();
-    }
   }
 
   /** Represents the metadata from a commit on github.com. */
@@ -83,11 +76,7 @@ public final class GithubAPI {
 
     public abstract User owner();
 
-    abstract String clone_url(); // gson-naming
-
-    public String cloneUrl() {
-      return clone_url();
-    }
+    public abstract String cloneUrl();
   }
 
   /** Represents the metadata for a user on github.com. */
@@ -100,7 +89,7 @@ public final class GithubAPI {
   }
 
   /**
-   * The current status of the pull request issue (open, closd)
+   * The current status of the pull request issue (open, closed)
    */
   public enum IssueState {
     @SerializedName("open")
