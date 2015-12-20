@@ -47,16 +47,16 @@ public class DescriptionMetadataScrubberTest extends TestCase {
 
     // Test various formats.
     assertEquals(
-        "some changes on 1969/12/31",
+        "some changes on 1970/01/01",
         new DescriptionMetadataScrubber("{description} on {date}").scrub(rm).description);
 
     assertEquals(
-        "some changes on 1969/12/31\nby: author@google.com",
+        "some changes on 1970/01/01\nby: author@google.com",
         new DescriptionMetadataScrubber("{description} on {date}\nby: {author}")
             .scrub(rm).description);
 
     assertEquals(
-        "1969/12/31 saw the birth of commit_number",
+        "1970/01/01 saw the birth of commit_number",
         new DescriptionMetadataScrubber("{date} saw the birth of {id}").scrub(rm).description);
 
     assertEquals(
