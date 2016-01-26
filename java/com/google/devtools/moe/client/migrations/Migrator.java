@@ -125,7 +125,14 @@ public class Migrator {
     }
 
     // TODO(user): Figure out how to report all equivalences.
-    RepositoryEquivalence lastEq = equivMatch.getEquivalences().get(0);
+    List<RepositoryEquivalence> equivalences = equivMatch.getEquivalences();
+    if (equivalences.isEmpty()) {
+      // Occurs if Moe magic is used on an empty target repo.
+      throw new IllegalStateException(
+           "Cannot migrate to an empty repository.  "
+           + "Follow the steps in \"Make the Initial Push.\"");
+    }
+    RepositoryEquivalence lastEq = equivalences.get(0);
     ui.info(
         "Found %d revisions in %s since equivalence (%s): %s",
         revisionsSinceEquivalence.size(),
