@@ -26,7 +26,6 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
 
 /**
  * Represents the command-line user interface for MOE.
@@ -34,7 +33,12 @@ import javax.inject.Inject;
 public abstract class Ui implements Messenger {
 
   //TODO(cgruber): Make this not nullable (No-Op filesystem for testing perhaps?)
-  @Inject @Nullable protected FileSystem fileSystem;
+  @Nullable
+  protected final FileSystem fileSystem;
+
+  protected Ui(@Nullable FileSystem fileSystem) {
+    this.fileSystem = fileSystem;
+  }
 
   /**
    * The name of the Task pushed to the Ui for clean-up when MOE is about to exit. This name is

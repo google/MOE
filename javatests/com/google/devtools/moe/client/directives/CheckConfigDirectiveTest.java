@@ -18,6 +18,7 @@ package com.google.devtools.moe.client.directives;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.SystemCommandRunner;
+import com.google.devtools.moe.client.dvcs.git.GitRepositoryFactory;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.svn.SvnRepositoryFactory;
@@ -34,6 +35,7 @@ public class CheckConfigDirectiveTest extends TestCase {
       new Repositories(
           ImmutableSet.of(
               new DummyRepositoryFactory(null),
+              new GitRepositoryFactory(cmd, null),
               new SvnRepositoryFactory(null, null)));
   private final InMemoryProjectContextFactory contextFactory =
       new InMemoryProjectContextFactory(null, cmd, null, ui, repositories);

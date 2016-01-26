@@ -40,8 +40,8 @@ public class SystemUi extends Ui {
   Ui.Task currentOutput;
 
   @Inject
-  public SystemUi() {
-    super();
+  public SystemUi(FileSystem fileSystem) {
+    super(fileSystem);
     currentOutput = null;
   }
 

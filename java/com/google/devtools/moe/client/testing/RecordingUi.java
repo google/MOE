@@ -16,11 +16,13 @@
 
 package com.google.devtools.moe.client.testing;
 
+import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.SystemUi;
 import com.google.devtools.moe.client.Ui;
 
 import dagger.Provides;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -32,8 +34,13 @@ public class RecordingUi extends SystemUi {
   public String lastError;
   public String lastTaskResult;
 
-  @Inject
   public RecordingUi() {
+    this(null);
+  }
+
+  @Inject
+  public RecordingUi(@Nullable FileSystem fileSystem) {
+    super(fileSystem);
     lastInfo = null;
     lastError = null;
   }

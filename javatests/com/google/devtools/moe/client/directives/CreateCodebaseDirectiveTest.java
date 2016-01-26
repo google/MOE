@@ -17,6 +17,7 @@
 package com.google.devtools.moe.client.directives;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.repositories.RepositoryType;
@@ -33,6 +34,11 @@ public class CreateCodebaseDirectiveTest extends TestCase {
       new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(null)));
   private final InMemoryProjectContextFactory contextFactory =
       new InMemoryProjectContextFactory(null, cmd, null, ui, repositories);
+
+  @Override
+  public void setUp() {
+    Injector.INSTANCE = new Injector(null, cmd, contextFactory, ui);
+  }
 
   public void testCreateCodebase() throws Exception {
     contextFactory.projectConfigs.put(

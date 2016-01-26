@@ -30,7 +30,7 @@ public class SystemCommandRunnerTest extends TestCase {
     super.setUp();
     c =
         new SystemCommandRunner(
-            new SystemUi() {
+            new SystemUi(null) {
               @Override
               public void debug(String msg, Object... args) {}
             });

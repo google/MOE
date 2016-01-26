@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Google, Inc.
+ * Copyright (c) 2016 Google, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,19 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.google.devtools.moe.client;
-
-import dagger.Module;
-import dagger.Provides;
 
 import javax.annotation.Nullable;
 
-@Module
-public class NullFileSystemModule {
-  @Provides
-  @Nullable
-  public FileSystem filesystem() {
-    return null;
+public final class NoOpUi extends Ui {
+  public NoOpUi(@Nullable FileSystem fileSystem) {
+    super(fileSystem);
   }
+
+  @Override
+  public void info(String msg, Object... args) {}
+
+  @Override
+  public void error(String msg, Object... args) {}
+
+  @Override
+  public void error(Throwable e, String msg, Object... args) {}
+
+  @Override
+  public void debug(String msg, Object... args) {}
 }

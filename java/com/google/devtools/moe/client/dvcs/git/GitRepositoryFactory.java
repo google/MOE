@@ -40,7 +40,7 @@ public class GitRepositoryFactory implements RepositoryType.Factory {
   private final FileSystem filesystem;
 
   @Inject
-  GitRepositoryFactory(CommandRunner cmd, FileSystem filesystem) {
+  public GitRepositoryFactory(CommandRunner cmd, FileSystem filesystem) {
     this.cmd = cmd;
     this.filesystem = filesystem;
   }
