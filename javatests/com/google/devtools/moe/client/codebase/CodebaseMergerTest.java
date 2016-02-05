@@ -113,7 +113,7 @@ public class CodebaseMergerTest extends TestCase {
 
     expect(cmd.runCommand(
             "diff",
-            ImmutableList.of("-N", origFile.getAbsolutePath(), modFile.getAbsolutePath()),
+            ImmutableList.of("-N", "-u", origFile.getAbsolutePath(), modFile.getAbsolutePath()),
             ""))
         .andReturn(null);
 

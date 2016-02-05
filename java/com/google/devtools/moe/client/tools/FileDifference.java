@@ -151,7 +151,7 @@ public abstract class FileDifference {
         cmd.runCommand(
             "diff",
             // -N treats absent files as empty.
-            ImmutableList.of("-N", file1.getAbsolutePath(), file2.getAbsolutePath()),
+            ImmutableList.of("-N", "-u", file1.getAbsolutePath(), file2.getAbsolutePath()),
             "");
       } catch (CommandRunner.CommandException e) {
         if (e.returnStatus != DIFF_ERROR_CODE_FILES_DIFFERENT

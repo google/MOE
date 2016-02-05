@@ -84,12 +84,13 @@ public class BookkeepingDirectiveTest extends TestCase {
     ImmutableList<String> args =
         ImmutableList.of(
             "-N",
+            "-u",
             "/dummy/codebase/int/migrated_from/file",
             "/dummy/codebase/pub/migrated_to/file");
     expect(cmd.runCommand("diff", args, "")).andReturn("unused");
 
     // updateHeadEquivalence
-    args = ImmutableList.of("-N", "/dummy/codebase/int/1/file", "/dummy/codebase/pub/1/file");
+    args = ImmutableList.of("-N", "-u", "/dummy/codebase/int/1/file", "/dummy/codebase/pub/1/file");
     expect(cmd.runCommand("diff", args, "")).andReturn("unused");
   }
 
