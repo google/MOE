@@ -27,6 +27,8 @@ public abstract class MoeUserProblem extends RuntimeException {
    * A method which allows the user-visible message to be reported appropriately to the
    * {@link Ui} class.  Implementers should override this message and log any user output
    * relevant to the error.
+   * 
+   * @param ui  messenger to receive a message.
    */
   public abstract void reportTo(Messenger ui);
 }
