@@ -16,7 +16,7 @@
 
 package com.google.devtools.moe.client;
 
-import com.google.devtools.moe.client.FileSystem.Lifetime;
+import com.google.devtools.moe.client.Lifetime;
 
 /**
  * Static utility methods that return common {@link Lifetime}s.

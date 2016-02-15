@@ -16,7 +16,7 @@
 
 package com.google.devtools.moe.client.codebase;
 
-import com.google.devtools.moe.client.FileSystem.Lifetime;
+import com.google.devtools.moe.client.Lifetime;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 
 import java.io.File;

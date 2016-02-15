@@ -22,6 +22,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.devtools.moe.client.FileSystem;
+import com.google.devtools.moe.client.Lifetime;
 import com.google.devtools.moe.client.Lifetimes;
 
 import dagger.Provides;

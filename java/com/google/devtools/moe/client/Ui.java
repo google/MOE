@@ -18,7 +18,7 @@ package com.google.devtools.moe.client;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
-import com.google.devtools.moe.client.FileSystem.Lifetime;
+import com.google.devtools.moe.client.Lifetime;
 
 import java.io.File;
 import java.io.IOException;
@@ -153,7 +153,7 @@ public abstract class Ui implements Messenger {
    */
   private class TaskLifetime implements Lifetime {
 
-    private final Task task;
+    final Task task;
 
     TaskLifetime(Task task) {
       this.task = task;
