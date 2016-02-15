@@ -52,7 +52,7 @@ public class EditExpression extends AbstractExpression {
 
     Ui.Task editTask =
         Injector.INSTANCE
-            .ui()
+            .getUi()
             .pushTask(
                 "edit",
                 "Editing %s with editor %s",
@@ -61,7 +61,7 @@ public class EditExpression extends AbstractExpression {
 
     Codebase editedCodebase = editor.edit(codebaseToEdit, context, editOp.term.options);
 
-    Injector.INSTANCE.ui().popTaskAndPersist(editTask, editedCodebase.getPath());
+    Injector.INSTANCE.getUi().popTaskAndPersist(editTask, editedCodebase.getPath());
     return editedCodebase.copyWithExpression(this);
   }
 

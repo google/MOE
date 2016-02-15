@@ -86,7 +86,7 @@ public class SvnWriter implements Writer {
     Set<String> writerFiles =
         Utils.filterByRegEx(
             Utils.makeFilenamesRelative(
-                Injector.INSTANCE.fileSystem().findFiles(rootDirectory), rootDirectory),
+                Injector.INSTANCE.getFileSystem().findFiles(rootDirectory), rootDirectory),
             ignoreFilePatterns);
     Set<String> union = Sets.union(codebaseFiles, writerFiles);
 
@@ -112,7 +112,7 @@ public class SvnWriter implements Writer {
       Utils.makeShellScript(script, rootDirectory.getAbsolutePath() + "/svn_commit.sh");
 
       Injector.INSTANCE
-          .ui()
+          .getUi()
           .info(
               "To submit, run: cd %s && ./svn_commit.sh && cd -", rootDirectory.getAbsolutePath());
     }
@@ -127,7 +127,7 @@ public class SvnWriter implements Writer {
    */
   void putFile(String relativePath, Codebase codebase) {
     try {
-      FileSystem fs = Injector.INSTANCE.fileSystem();
+      FileSystem fs = Injector.INSTANCE.getFileSystem();
       File dest = new File(rootDirectory.getAbsolutePath(), relativePath);
       File src = codebase.getFile(relativePath);
       boolean srcExists = fs.exists(src);
@@ -167,7 +167,7 @@ public class SvnWriter implements Writer {
         } catch (CommandException e) {
           // If the mime type setting fails, it's not really a big deal.
           // Just log it and keep going.
-          Injector.INSTANCE.ui().info("Error setting mime-type for %s", relativePath);
+          Injector.INSTANCE.getUi().info("Error setting mime-type for %s", relativePath);
         }
       }
 

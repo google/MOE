@@ -94,7 +94,7 @@ public class AbstractDvcsCodebaseCreatorTest extends TestCase {
   public void testCreate_noGivenRev() throws Exception {
     String archiveTempDir = "/tmp/git_archive_mockrepo_head";
     // Short-circuit Utils.filterFilesByPredicate(ignore_files_re).
-    expect(Injector.INSTANCE.fileSystem().findFiles(new File(archiveTempDir)))
+    expect(Injector.INSTANCE.getFileSystem().findFiles(new File(archiveTempDir)))
         .andReturn(ImmutableSet.<File>of());
 
     expect(mockRevHistory.findHighestRevision(null))
@@ -117,7 +117,7 @@ public class AbstractDvcsCodebaseCreatorTest extends TestCase {
     String givenRev = "givenrev";
     String archiveTempDir = "/tmp/git_reclone_mockrepo_head_" + givenRev;
     // Short-circuit Utils.filterFilesByPredicate(ignore_files_re).
-    expect(Injector.INSTANCE.fileSystem().findFiles(new File(archiveTempDir)))
+    expect(Injector.INSTANCE.getFileSystem().findFiles(new File(archiveTempDir)))
         .andReturn(ImmutableSet.<File>of());
 
     expect(mockRevHistory.findHighestRevision(givenRev))

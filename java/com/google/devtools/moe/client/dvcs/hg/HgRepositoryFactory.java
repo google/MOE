@@ -105,6 +105,6 @@ public class HgRepositoryFactory implements RepositoryType.Factory {
   }
 
   static String runHgCommand(List<String> args, String workingDirectory) throws CommandException {
-    return Injector.INSTANCE.cmd().runCommand("hg", args, workingDirectory);
+    return Injector.INSTANCE.getCommand().runCommand("hg", args, workingDirectory);
   }
 }

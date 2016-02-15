@@ -77,7 +77,7 @@ public class Moe {
         DaggerMoe_Component.builder().optionsModule(new OptionsModule(args)).build();
     boolean debug = component.optionsParser().debug();
     Injector.INSTANCE = component.context();
-    Ui ui = component.context().ui();
+    Ui ui = component.context().getUi();
 
     try {
       Directive directive = component.directives().getSelectedDirective();
@@ -93,7 +93,7 @@ public class Moe {
       int result = directive.perform();
       Ui.Task terminateTask = ui.pushTask(MOE_TERMINATION_TASK_NAME, "Final clean-up");
       try {
-        component.context().fileSystem().cleanUpTempDirs();
+        component.context().getFileSystem().cleanUpTempDirs();
       } catch (IOException e) {
         ui.info(
             "WARNING: Moe enocuntered a problem cleaning up temporary directories: %s",

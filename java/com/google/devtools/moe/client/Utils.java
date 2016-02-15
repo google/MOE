@@ -72,7 +72,7 @@ public class Utils {
 
   /** Applies the given Function to all files under baseDir. */
   public static void doToFiles(File baseDir, Function<File, Void> doFunction) {
-    for (File file : Injector.INSTANCE.fileSystem().findFiles(baseDir)) {
+    for (File file : Injector.INSTANCE.getFileSystem().findFiles(baseDir)) {
       doFunction.apply(file);
     }
   }
@@ -87,7 +87,7 @@ public class Utils {
           public Void apply(File file) {
             if (!positiveFilter.apply(baseUri.relativize(file.toURI()).getPath())) {
               try {
-                Injector.INSTANCE.fileSystem().deleteRecursively(file);
+                Injector.INSTANCE.getFileSystem().deleteRecursively(file);
               } catch (IOException e) {
                 throw new MoeProblem("Error deleting file: " + file);
               }
@@ -122,15 +122,15 @@ public class Utils {
   }
 
   public static File expandTar(File tar) throws IOException, CommandException {
-    File expandedDir = Injector.INSTANCE.fileSystem().getTemporaryDirectory("expanded_tar_");
-    Injector.INSTANCE.fileSystem().makeDirs(expandedDir);
+    File expandedDir = Injector.INSTANCE.getFileSystem().getTemporaryDirectory("expanded_tar_");
+    Injector.INSTANCE.getFileSystem().makeDirs(expandedDir);
     try {
       Injector.INSTANCE
-          .cmd()
+          .getCommand()
           .runCommand(
               "tar", ImmutableList.of("-xf", tar.getAbsolutePath()), expandedDir.getAbsolutePath());
     } catch (CommandException e) {
-      Injector.INSTANCE.fileSystem().deleteRecursively(expandedDir);
+      Injector.INSTANCE.getFileSystem().deleteRecursively(expandedDir);
       throw e;
     }
     return expandedDir;
@@ -140,20 +140,20 @@ public class Utils {
     if (src == null) {
       return;
     }
-    Injector.INSTANCE.fileSystem().makeDirsForFile(dest);
-    if (Injector.INSTANCE.fileSystem().isFile(src)) {
-      Injector.INSTANCE.fileSystem().copyFile(src, dest);
+    Injector.INSTANCE.getFileSystem().makeDirsForFile(dest);
+    if (Injector.INSTANCE.getFileSystem().isFile(src)) {
+      Injector.INSTANCE.getFileSystem().copyFile(src, dest);
       return;
     }
-    File[] files = Injector.INSTANCE.fileSystem().listFiles(src);
+    File[] files = Injector.INSTANCE.getFileSystem().listFiles(src);
     if (files != null) {
       for (File subFile : files) {
-        File newFile = new File(dest, Injector.INSTANCE.fileSystem().getName(subFile));
-        if (Injector.INSTANCE.fileSystem().isDirectory(subFile)) {
+        File newFile = new File(dest, Injector.INSTANCE.getFileSystem().getName(subFile));
+        if (Injector.INSTANCE.getFileSystem().isDirectory(subFile)) {
           copyDirectory(subFile, newFile);
         } else {
-          Injector.INSTANCE.fileSystem().makeDirsForFile(newFile);
-          Injector.INSTANCE.fileSystem().copyFile(subFile, newFile);
+          Injector.INSTANCE.getFileSystem().makeDirsForFile(newFile);
+          Injector.INSTANCE.getFileSystem().copyFile(subFile, newFile);
         }
       }
     }
@@ -169,8 +169,8 @@ public class Utils {
   public static void makeShellScript(String content, String name) {
     try {
       File script = new File(name);
-      Injector.INSTANCE.fileSystem().write("#!/bin/sh -e\n" + content, script);
-      Injector.INSTANCE.fileSystem().setExecutable(script);
+      Injector.INSTANCE.getFileSystem().write("#!/bin/sh -e\n" + content, script);
+      Injector.INSTANCE.getFileSystem().setExecutable(script);
     } catch (IOException e) {
       throw new MoeProblem("Could not generate shell script: " + e);
     }

@@ -41,10 +41,10 @@ public class ForwardTranslator implements Translator {
       Codebase toTranslate, Map<String, String> options, ProjectContext context) {
     Codebase translated = toTranslate;
     for (TranslatorStep s : steps) {
-      Ui.Task editTask = Injector.INSTANCE.ui().pushTask("edit", "Translation editor: " + s.name);
+      Ui.Task editTask = Injector.INSTANCE.getUi().pushTask("edit", "Translation editor: " + s.name);
       // Pass the translation options to each editor.
       translated = s.editor.edit(translated, context, options);
-      Injector.INSTANCE.ui().popTaskAndPersist(editTask, translated.getPath());
+      Injector.INSTANCE.getUi().popTaskAndPersist(editTask, translated.getPath());
     }
     return translated;
   }

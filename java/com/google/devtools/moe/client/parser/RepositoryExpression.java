@@ -75,16 +75,16 @@ public class RepositoryExpression extends AbstractExpression {
     String repositoryName = term.identifier;
     CodebaseCreator cc;
     if (repositoryName.equals("file")) {
-      cc = new FileCodebaseCreator(Injector.INSTANCE.fileSystem());
+      cc = new FileCodebaseCreator(Injector.INSTANCE.getFileSystem());
     } else {
       RepositoryType repo = context.getRepository(repositoryName);
       cc = repo.codebaseCreator();
     }
 
     Ui.Task createTask =
-        Injector.INSTANCE.ui().pushTask("create_codebase", "Creating from '%s'", this);
+        Injector.INSTANCE.getUi().pushTask("create_codebase", "Creating from '%s'", this);
     Codebase c = cc.create(term.options);
-    Injector.INSTANCE.ui().popTaskAndPersist(createTask, c.getPath());
+    Injector.INSTANCE.getUi().popTaskAndPersist(createTask, c.getPath());
     return c;
   }
 
@@ -99,13 +99,13 @@ public class RepositoryExpression extends AbstractExpression {
     RepositoryType r = context.getRepository(term.identifier);
     WriterCreator wc = r.writerCreator();
 
-    Ui.Task t = Injector.INSTANCE.ui().pushTask("create_writer", "Creating Writer \"%s\"", term);
+    Ui.Task t = Injector.INSTANCE.getUi().pushTask("create_writer", "Creating Writer \"%s\"", term);
     try {
       Writer writer = wc.create(term.options);
-      Injector.INSTANCE.ui().popTaskAndPersist(t, writer.getRoot());
+      Injector.INSTANCE.getUi().popTaskAndPersist(t, writer.getRoot());
       return writer;
     } catch (WritingError e) {
-      Injector.INSTANCE.ui().error(e, "Error creating writer");
+      Injector.INSTANCE.getUi().error(e, "Error creating writer");
       throw e;
     }
   }

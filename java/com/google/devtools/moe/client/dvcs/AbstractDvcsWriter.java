@@ -76,7 +76,7 @@ public abstract class AbstractDvcsWriter<T extends LocalWorkspace> implements Wr
     Set<String> writerRepoFiles =
         Utils.filterByRegEx(
             Utils.makeFilenamesRelative(
-                Injector.INSTANCE.fileSystem().findFiles(getRoot()), getRoot()),
+                Injector.INSTANCE.getFileSystem().findFiles(getRoot()), getRoot()),
             getIgnoreFilePatterns());
 
     Set<String> filesToUpdate = Sets.union(codebaseFiles, writerRepoFiles);
@@ -115,7 +115,7 @@ public abstract class AbstractDvcsWriter<T extends LocalWorkspace> implements Wr
 
   private void putFile(String relativeFilename, Codebase incomingChangeCodebase)
       throws CommandException {
-    FileSystem fs = Injector.INSTANCE.fileSystem();
+    FileSystem fs = Injector.INSTANCE.getFileSystem();
     File src = incomingChangeCodebase.getFile(relativeFilename);
     File dest = new File(getRoot().getAbsolutePath(), relativeFilename);
     boolean srcExists = fs.exists(src);
@@ -171,7 +171,7 @@ public abstract class AbstractDvcsWriter<T extends LocalWorkspace> implements Wr
       try {
         commitChanges(revMetaData);
         Injector.INSTANCE
-            .ui()
+            .getUi()
             .info("Converted draft revision to writer at " + getRoot().getAbsolutePath());
       } catch (CommandException e) {
         throw new WritingError("Error committing: " + e);

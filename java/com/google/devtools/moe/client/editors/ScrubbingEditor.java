@@ -40,8 +40,8 @@ import java.util.Map;
  */
 public class ScrubbingEditor implements Editor {
 
-  private final CommandRunner cmd = Injector.INSTANCE.cmd(); // TODO(cgruber) @Inject
-  private final FileSystem filesystem = Injector.INSTANCE.fileSystem(); // TODO(cgruber) @Inject
+  private final CommandRunner cmd = Injector.INSTANCE.getCommand(); // TODO(cgruber) @Inject
+  private final FileSystem filesystem = Injector.INSTANCE.getFileSystem(); // TODO(cgruber) @Inject
 
   /**
    * A {@code Supplier} that extracts the scrubber binary. We use a Supplier because we don't want
@@ -59,12 +59,12 @@ public class ScrubbingEditor implements Editor {
                 // TODO(dbentley): what will this resource be under ant?
                 File scrubberBinary =
                     Injector.INSTANCE
-                        .fileSystem()
+                        .getFileSystem()
                         .getResourceAsFile("/devtools/moe/scrubber/scrubber.par");
-                Injector.INSTANCE.fileSystem().setExecutable(scrubberBinary);
+                Injector.INSTANCE.getFileSystem().setExecutable(scrubberBinary);
                 return scrubberBinary;
               } catch (IOException ioEx) {
-                Injector.INSTANCE.ui().error(ioEx, "Error extracting scrubber");
+                Injector.INSTANCE.getUi().error(ioEx, "Error extracting scrubber");
                 throw new MoeProblem("Error extracting scrubber: " + ioEx.getMessage());
               }
             }

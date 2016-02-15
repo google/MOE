@@ -38,8 +38,8 @@ import java.util.Map;
  */
 public class PatchingEditor implements Editor {
 
-  private final CommandRunner cmd = Injector.INSTANCE.cmd(); // TODO(cgruber) @Inject
-  private final FileSystem filesystem = Injector.INSTANCE.fileSystem(); // TODO(cgruber) @Inject
+  private final CommandRunner cmd = Injector.INSTANCE.getCommand(); // TODO(cgruber) @Inject
+  private final FileSystem filesystem = Injector.INSTANCE.getFileSystem(); // TODO(cgruber) @Inject
   private final String name;
 
   PatchingEditor(String editorName) {

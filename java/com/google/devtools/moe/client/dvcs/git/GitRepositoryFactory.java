@@ -110,6 +110,6 @@ public class GitRepositoryFactory implements RepositoryType.Factory {
    */
   static String runGitCommand(List<String> args, String workingDirectory)
       throws CommandException {
-    return Injector.INSTANCE.cmd().runCommand("git", args, workingDirectory);
+    return Injector.INSTANCE.getCommand().runCommand("git", args, workingDirectory);
   }
 }

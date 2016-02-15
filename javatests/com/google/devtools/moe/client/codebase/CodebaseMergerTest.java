@@ -81,7 +81,7 @@ public class CodebaseMergerTest extends TestCase {
   @Override
   public void setUp() throws Exception {
     super.setUp();
-    //Injector.INSTANCE = new Injector(fileSystem, cmd, contextFactory, ui);
+    //Injector.INSTANCE = new Injector(getFileSystem, getCommand, getContextFactory, getUi);
     orig = control.createMock(Codebase.class);
     dest = control.createMock(Codebase.class);
     mod = control.createMock(Codebase.class);
