@@ -19,6 +19,7 @@ package com.google.devtools.moe.client.editors;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.devtools.moe.client.CommandException;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
@@ -109,13 +110,13 @@ public class ScrubbingEditor implements Editor {
               // TODO(cgruber): Eliminate this static gson method reference.
               input.getPath().getAbsolutePath()),
           SCRUBBER_BINARY_SUPPLIER.get().getParentFile().getPath());
-    } catch (CommandRunner.CommandException e) {
+    } catch (CommandException e) {
       throw new MoeProblem(e.getMessage());
     }
     File expandedDir = null;
     try {
       expandedDir = Utils.expandTar(outputTar);
-    } catch (IOException | CommandRunner.CommandException e) {
+    } catch (IOException | CommandException e) {
       throw new MoeProblem(e.getMessage());
     }
     return new Codebase(filesystem, expandedDir, input.getProjectSpace(), input.getExpression());

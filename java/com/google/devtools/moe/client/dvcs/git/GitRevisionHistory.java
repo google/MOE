@@ -22,7 +22,7 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.moe.client.CommandRunner.CommandException;
+import com.google.devtools.moe.client.CommandException;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.repositories.AbstractRevisionHistory;
 import com.google.devtools.moe.client.repositories.Revision;
@@ -69,7 +69,7 @@ public class GitRevisionHistory extends AbstractRevisionHistory {
     try {
       hashID = headClone.runGitCommand("log", "--max-count=1", "--format=%H", revId).trim();
     } catch (CommandException e) {
-      throw new MoeProblem("Failed git log run: %d %s %s", e.returnStatus, e.stdout, e.stderr);
+      throw new MoeProblem("Failed git log run: %d %s %s", e.RETURN_STATUS, e.STDOUT, e.STDERR);
     }
     return Revision.create(hashID, headClone.getRepositoryName());
   }
@@ -104,7 +104,7 @@ public class GitRevisionHistory extends AbstractRevisionHistory {
               "--ignore-missing",
               revision.revId());
     } catch (CommandException e) {
-      throw new MoeProblem("Failed git run: %d %s %s", e.returnStatus, e.stdout, e.stderr);
+      throw new MoeProblem("Failed git run: %d %s %s", e.RETURN_STATUS, e.STDOUT, e.STDERR);
     }
 
     return parseMetadata(log);

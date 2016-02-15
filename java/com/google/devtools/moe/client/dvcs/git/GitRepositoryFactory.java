@@ -20,6 +20,7 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import com.google.devtools.moe.client.CommandException;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
@@ -108,7 +109,7 @@ public class GitRepositoryFactory implements RepositoryType.Factory {
    * Run git with the specified args in the specified directory.
    */
   static String runGitCommand(List<String> args, String workingDirectory)
-      throws CommandRunner.CommandException {
+      throws CommandException {
     return Injector.INSTANCE.cmd().runCommand("git", args, workingDirectory);
   }
 }

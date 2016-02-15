@@ -17,6 +17,7 @@
 package com.google.devtools.moe.client.editors;
 
 import com.google.common.collect.ImmutableList;
+import com.google.devtools.moe.client.CommandException;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
@@ -71,12 +72,12 @@ public class ShellEditor implements Editor {
     File tempDir = filesystem.getTemporaryDirectory("shell_run_");
     try {
       Utils.copyDirectory(input.getPath(), tempDir);
-    } catch (IOException | CommandRunner.CommandException e) {
+    } catch (IOException | CommandException e) {
       throw new MoeProblem(e.getMessage());
     }
     try {
       cmd.runCommand("bash", ImmutableList.of("-c", this.commandString), tempDir.getAbsolutePath());
-    } catch (CommandRunner.CommandException e) {
+    } catch (CommandException e) {
       throw new MoeProblem(e.getMessage());
     }
     return new Codebase(filesystem, tempDir, input.getProjectSpace(), input.getExpression());

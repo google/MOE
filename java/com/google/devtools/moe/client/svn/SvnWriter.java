@@ -18,6 +18,7 @@ package com.google.devtools.moe.client.svn;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
+import com.google.devtools.moe.client.CommandException;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
@@ -64,8 +65,8 @@ public class SvnWriter implements Writer {
     try {
       util.runSvnCommand(
           "co", "-r", revision.revId(), config.getUrl(), rootDirectory.getAbsolutePath());
-    } catch (CommandRunner.CommandException e) {
-      throw new MoeProblem("Could not check out from svn: " + e.stderr);
+    } catch (CommandException e) {
+      throw new MoeProblem("Could not check out from svn: " + e.STDERR);
     }
   }
 
@@ -163,7 +164,7 @@ public class SvnWriter implements Writer {
         try {
           util.runSvnCommandWithWorkingDirectory(
               rootDirectory.getAbsolutePath(), "propset", "svn:mime-type", mimeType, relativePath);
-        } catch (CommandRunner.CommandException e) {
+        } catch (CommandException e) {
           // If the mime type setting fails, it's not really a big deal.
           // Just log it and keep going.
           Injector.INSTANCE.ui().info("Error setting mime-type for %s", relativePath);
@@ -179,8 +180,8 @@ public class SvnWriter implements Writer {
               rootDirectory.getAbsolutePath(), "propdel", "svn:executable", relativePath);
         }
       }
-    } catch (CommandRunner.CommandException e) {
-      throw new MoeProblem("problem occurred while running svn: " + e.stderr);
+    } catch (CommandException e) {
+      throw new MoeProblem("problem occurred while running svn: " + e.STDERR);
     }
   }
 

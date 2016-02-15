@@ -17,7 +17,7 @@
 package com.google.devtools.moe.client.dvcs;
 
 import com.google.common.collect.Sets;
-import com.google.devtools.moe.client.CommandRunner.CommandException;
+import com.google.devtools.moe.client.CommandException;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
@@ -86,11 +86,11 @@ public abstract class AbstractDvcsWriter<T extends LocalWorkspace> implements Wr
         putFile(filename, incomingChangeCodebase);
       } catch (CommandException e) {
         StringBuilder sb = new StringBuilder("Problem occurred while running '");
-        sb.append(e.cmd);
-        for (String arg : e.args) {
+        sb.append(e.COMMAND);
+        for (String arg : e.ARGS) {
           sb.append(" ").append(arg);
         }
-        sb.append("': ").append(e.stderr);
+        sb.append("': ").append(e.STDERR);
         throw new MoeProblem(sb.toString());
       }
     }

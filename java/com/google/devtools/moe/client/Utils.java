@@ -22,7 +22,6 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.gson.Gson;
 
 import java.io.File;
@@ -130,7 +129,7 @@ public class Utils {
           .cmd()
           .runCommand(
               "tar", ImmutableList.of("-xf", tar.getAbsolutePath()), expandedDir.getAbsolutePath());
-    } catch (CommandRunner.CommandException e) {
+    } catch (CommandException e) {
       Injector.INSTANCE.fileSystem().deleteRecursively(expandedDir);
       throw e;
     }

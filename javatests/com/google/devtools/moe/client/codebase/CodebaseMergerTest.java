@@ -21,6 +21,7 @@ import static org.easymock.EasyMock.expect;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.devtools.moe.client.CommandException;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
@@ -266,7 +267,7 @@ public class CodebaseMergerTest extends TestCase {
             mergedFile.getAbsolutePath(), origFile.getAbsolutePath(), modFile.getAbsolutePath());
 
     expect(cmd.runCommand("merge", mergeArgs, mergedCodebaseLocation.getAbsolutePath()))
-        .andThrow(new CommandRunner.CommandException("merge", mergeArgs, "", "", 1));
+        .andThrow(new CommandException("merge", mergeArgs, "", "", 1));
 
     control.replay();
 
@@ -389,7 +390,7 @@ public class CodebaseMergerTest extends TestCase {
             mergedFile.getAbsolutePath(), origFile.getAbsolutePath(), modFile.getAbsolutePath());
 
     expect(cmd.runCommand("merge", mergeArgs, mergedCodebaseLocation.getAbsolutePath()))
-        .andThrow(new CommandRunner.CommandException("merge", mergeArgs, "", "", 1));
+        .andThrow(new CommandException("merge", mergeArgs, "", "", 1));
 
     control.replay();
 
