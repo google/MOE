@@ -16,8 +16,6 @@
 
 package com.google.devtools.moe.client;
 
-import com.google.devtools.moe.client.Lifetime;
-
 /**
  * Static utility methods that return common {@link Lifetime}s.
  */
@@ -34,23 +32,30 @@ public final class Lifetimes {
       };
 
   /**
-   * Returns a {@code Lifetime} for a temp dir that should be cleaned up when the current
-   * {@link Ui.Task} is completed.
+   * Gets the current {@code Lifetime} for a temporary directory that should be 
+   * cleaned up when the current {@link Ui.Task} is completed.
+   * 
+   * @return the current task lifetime.
    */
   public static final Lifetime currentTask() {
     return Injector.INSTANCE.getUi().currentTaskLifetime();
   }
 
   /**
-   * Returns a {@code Lifetime} for a temp dir that should only be cleaned up when MOE terminates.
+   * Gets a {@code Lifetime} for a temporary directory that should only be 
+   * cleaned up when MOE terminates.
+   * 
+   * @return the lifetime for the MOE execution.
    */
   public static final Lifetime moeExecution() {
     return Injector.INSTANCE.getUi().moeExecutionLifetime();
   }
 
   /**
-   * Returns a {@code Lifetime} for a temp dir that should never be cleaned up, even when MOE
-   * terminates.
+   * Returns a {@code Lifetime} for a temporary directory that should never be 
+   * cleaned up, even when MOE terminates.
+   * 
+   * @return the lifetime for the MOE execution.
    */
   public static final Lifetime persistent() {
     return PERSISTENT;
