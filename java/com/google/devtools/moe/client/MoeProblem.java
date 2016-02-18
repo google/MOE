@@ -23,18 +23,17 @@ package com.google.devtools.moe.client;
 public class MoeProblem extends RuntimeException {
   // https://www.youtube.com/watch?v=xZ4tNmnuMgQ
 
-  // TODO(cgruber): Figure out why this is public mutable and fix.
-  public String explanation;
+  private final String explanationFmt;
   private final Object[] args;
 
   // TODO(cgruber): Check not null and ensure no one is calling it that way.
-  public MoeProblem(String explanation, Object... args) {
-    this.explanation = explanation;
+  public MoeProblem(String explanationFmt, Object... args) {
+    this.explanationFmt = explanationFmt;
     this.args = args;
   }
 
   @Override
   public String getMessage() {
-    return String.format(explanation, args);
+    return String.format(explanationFmt, args);
   }
 }
