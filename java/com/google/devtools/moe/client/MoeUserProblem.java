@@ -16,6 +16,8 @@
 
 package com.google.devtools.moe.client;
 
+import com.google.devtools.moe.client.testing.RecordingUi;
+
 /**
  * A problem that we expect to routinely happen, and which should be reported cleanly to the
  * CLI upon catching.
@@ -29,4 +31,14 @@ public abstract class MoeUserProblem extends RuntimeException {
    * relevant to the error.
    */
   public abstract void reportTo(Messenger ui);
+
+  @Override
+  public String getMessage() {
+    // This is typically never directly called - this exception is thrown away after it
+    // reports its error, but to preserve reasonable functioning during tests, this
+    // override provides the string that would otherwise be reported.
+    RecordingUi ui = new RecordingUi();
+    reportTo(ui);
+    return ui.lastError;
+  }
 }

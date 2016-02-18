@@ -32,6 +32,8 @@ import dagger.Lazy;
 import org.kohsuke.args4j.Option;
 
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Extracts branch metadata from a github pull request and uses this information to
@@ -104,10 +106,12 @@ public class GithubPullDirective extends Directive {
     // Override context to avoid re-creating it from files.
     delegate.context = context;
 
+    String repoConfigName = findRepoConfig(context().config().repositories(), metadata);
+    ui.info("Using '%s' as the source repository.", repoConfigName);
     int result =
         delegate.performBranchMigration(
             dbLocation,
-            findRepoConfig(metadata),
+            repoConfigName,
             metadata.head().ref(),
             metadata.head().repo().cloneUrl());
     if (delegate.resultDirectory != null) {
@@ -122,32 +126,53 @@ public class GithubPullDirective extends Directive {
    * Finds a repository configuration from among the configured repositories that match the
    * supplied pull request metadata, if any.
    */
-  private String findRepoConfig(PullRequest metadata) {
+  @VisibleForTesting
+  static String findRepoConfig(
+      final Map<String, RepositoryConfig> repositories, final PullRequest metadata) {
     PullRequestUrl id = PullRequestUrl.create(metadata.htmlUrl());
-    for (Map.Entry<String, RepositoryConfig> entry : context().config().repositories().entrySet()) {
+    for (Map.Entry<String, RepositoryConfig> entry : repositories.entrySet()) {
       if (isGithubRepositoryUrl(entry.getValue().getUrl(), id)) {
-        ui.info("Using '%s' as the source repository.", entry.getKey());
         return entry.getKey();
       }
     }
     throw new MoeUserProblem() {
       @Override
       public void reportTo(Messenger messenger) {
-        messenger.error("None of the configured repositories is a github repository.");
-        for (Map.Entry<String, RepositoryConfig> entry :
-            context().config().repositories().entrySet()) {
-          messenger.info("    name: %s url: %s", entry.getKey(), entry.getValue().getUrl());
+        StringBuilder sb = new StringBuilder();
+        sb.append("No configured repository is applicable to this pull request: ");
+        sb.append(metadata.htmlUrl()).append("\n");
+        for (Map.Entry<String, RepositoryConfig> entry : repositories.entrySet()) {
+          sb.append("    name: ")
+              .append(entry.getKey())
+              .append(" url: ")
+              .append(entry.getValue().getUrl())
+              .append('\n');
         }
+        messenger.error(sb.toString());
       }
     };
   }
 
+  /**
+   * A regular expression pattern that (roughly) matches the github repository url
+   * possibilities, which are generally of three forms:<ul>
+   *   <li>http://github.com/foo/bar
+   *   <li>https://github.com/foo/bar
+   *   <li>git@github.com:foo/bar
+   * </ul>
+   */
+  private static final Pattern GITHUB_URL_PATTERN =
+      Pattern.compile(".*github\\.com[:/]([a-zA-Z0-9_-]*)/([a-zA-Z0-9_-]*)(?:\\.git)?$");
+
   @VisibleForTesting
-  static boolean isGithubRepositoryUrl(String url, PullRequestUrl unused) {
-    // TODO(cgruber) validate against req using pattern capture groups.
-    return url != null
-        && (url.trim().matches("https?+://github[.]com/[a-zA-Z0-9_-]*/[a-zA-Z0-9_-]*([.]git)?")
-            || url.trim().matches("git@github[.]com:[a-zA-Z0-9_-]*/[a-zA-Z0-9_-]*([.]git)?"));
+  static boolean isGithubRepositoryUrl(String url, PullRequestUrl pullRequestUrl) {
+    if (url == null) {
+      return false;
+    }
+    Matcher matcher = GITHUB_URL_PATTERN.matcher(url.trim());
+    return matcher.matches()
+        && matcher.group(1).equals(pullRequestUrl.owner())
+        && matcher.group(2).equals(pullRequestUrl.project());
   }
 
   @Override

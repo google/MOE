@@ -17,29 +17,102 @@
 package com.google.devtools.moe.client.directives;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.devtools.moe.client.directives.GithubPullDirective.findRepoConfig;
 import static com.google.devtools.moe.client.directives.GithubPullDirective.isGithubRepositoryUrl;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.io.Resources;
+import com.google.devtools.moe.client.MoeUserProblem;
+import com.google.devtools.moe.client.github.GithubAPI.PullRequest;
+import com.google.devtools.moe.client.github.PullRequestUrl;
+import com.google.devtools.moe.client.gson.GsonModule;
+import com.google.devtools.moe.client.project.RepositoryConfig;
+import com.google.devtools.moe.client.testing.RecordingUi;
+import com.google.gson.Gson;
+
 import junit.framework.TestCase;
+
+import java.io.IOException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 /**
  * Tests for {@link GithubPullDirective}.
  */
+
 public class GithubPullDirectiveTest extends TestCase {
-  public void testIsGithubUrl() throws Exception {
+  private static final Gson GSON = GsonModule.provideGson();
+
+  public void testIsGithubUrlAndMapsToPull() throws Exception {
     assertThat(isGithubRepositoryUrl(null, null)).isFalse();
     assertThat(isGithubRepositoryUrl("", null)).isFalse();
-    assertThat(isGithubRepositoryUrl("https://github.com/google/MOE.git", null)).isTrue();
-    assertThat(isGithubRepositoryUrl("http://github.com/google/MOE.git", null)).isTrue();
-    assertThat(isGithubRepositoryUrl("git@github.com:google/MOE.git", null)).isTrue();
-    assertThat(isGithubRepositoryUrl("git@github.com:google/MOE", null)).isTrue();
-    assertThat(isGithubRepositoryUrl("https://github.com/google/closure-compiler.git", null))
+
+    PullRequestUrl pr = PullRequestUrl.create("https://github.com/google/MOE/pull/305");
+    assertThat(isGithubRepositoryUrl("https://github.com/google/MOE.git", pr)).isTrue();
+    assertThat(isGithubRepositoryUrl("http://github.com/google/MOE.git", pr)).isTrue();
+    assertThat(isGithubRepositoryUrl("git@github.com:google/MOE.git", pr)).isTrue();
+    assertThat(isGithubRepositoryUrl("git@github.com:google/MOE", pr)).isTrue();
+    assertThat(isGithubRepositoryUrl("https://github.com/google/MOE", pr)).isTrue();
+    assertThat(isGithubRepositoryUrl("http://github.com/google/MOE", pr)).isTrue();
+
+    pr = PullRequestUrl.create("https://github.com/google/closure-compiler/pull/3");
+    assertThat(isGithubRepositoryUrl("https://github.com/google/closure-compiler.git", pr))
         .isTrue();
-    assertThat(isGithubRepositoryUrl("https://github.com/google/closure-compiler", null))
+    assertThat(isGithubRepositoryUrl("https://github.com/google/closure-compiler", pr))
         .isTrue();
-    assertThat(isGithubRepositoryUrl("https://github.com/foo/closure_compiler.git", null)).isTrue();
-    assertThat(isGithubRepositoryUrl("https://github.com/truth0/plan9.git", null)).isTrue();
-    assertThat(isGithubRepositoryUrl("https://github.com/google/MOE", null)).isTrue();
-    assertThat(isGithubRepositoryUrl("http://github.com/google/MOE", null)).isTrue();
+
+    pr = PullRequestUrl.create("https://github.com/foo/closure_compiler/pull/3");
+    assertThat(isGithubRepositoryUrl("https://github.com/foo/closure_compiler.git", pr)).isTrue();
+
+    pr = PullRequestUrl.create("https://github.com/truth0/plan9/pull/3");
+    assertThat(isGithubRepositoryUrl("https://github.com/truth0/plan9.git", pr)).isTrue();
+
     assertThat(isGithubRepositoryUrl("https://bitbucket.com/google/MOE.git", null)).isFalse();
   }
+
+  public void testIsGithubUrlDoesntMapToPull() throws Exception {
+    PullRequestUrl pr = PullRequestUrl.create("https://github.com/google/MOE/pull/305");
+    assertThat(isGithubRepositoryUrl("git@github.com:google/FOO.git", pr)).isFalse();
+    assertThat(isGithubRepositoryUrl("git@github.com:cgruber/MOE", pr)).isFalse();
+  }
+
+  public void testValidRepoConfig() throws IOException {
+    URL resourcesUrl =
+        getClass()
+            .getClassLoader()
+            .getResource("com/google/devtools/moe/client/github/pull_request.json");
+    String pullRequestJson = Resources.toString(resourcesUrl, StandardCharsets.UTF_8);
+    PullRequest pr = GSON.fromJson(pullRequestJson, PullRequest.class);
+    String config = "{\"name\":\"github\",\"url\":\"git@github.com:google/MOE.git\"}";
+    Map<String, RepositoryConfig> repositories =
+        ImmutableMap.of("github",  GSON.fromJson(config, RepositoryConfig.class));
+    assertThat(findRepoConfig(repositories, pr)).isEqualTo("github");
+  }
+
+  public void testInvalidRepoConfig_differentProject() throws IOException {
+    URL resourcesUrl =
+        getClass()
+            .getClassLoader()
+            .getResource("com/google/devtools/moe/client/github/pull_request.json");
+    String pullRequestJson = Resources.toString(resourcesUrl, StandardCharsets.UTF_8);
+    PullRequest pr = GSON.fromJson(pullRequestJson, PullRequest.class);
+    String config = "{\"name\":\"foo\",\"url\":\"git@github.com:google/test.git\"}";
+    Map<String, RepositoryConfig> repositories =
+        ImmutableMap.of("foo",  GSON.fromJson(config, RepositoryConfig.class));
+    try {
+      findRepoConfig(repositories, pr);
+      fail("Should have thrown.");
+    } catch (MoeUserProblem mup) {
+      RecordingUi ui = new RecordingUi();
+      mup.reportTo(ui);
+      assertThat(ui.lastError)
+          .contains("No configured repository is applicable to this pull request");
+      assertThat(ui.lastError)
+          .contains("https://github.com/google/MOE/pull/14");
+      assertThat(ui.lastError)
+          .contains("name: foo");
+    }
+  }
+
 }
