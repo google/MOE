@@ -16,8 +16,6 @@
 
 package com.google.devtools.moe.client;
 
-import com.google.devtools.moe.client.project.ProjectContextFactory;
-
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -36,29 +34,21 @@ public class Injector {
   public static Injector INSTANCE;
 
   @Nullable private final FileSystem fileSystem;
-
   private final CommandRunner cmd;
-  private final ProjectContextFactory contextFactory;
   private final Ui ui;
 
   @Inject
   public Injector(
       @Nullable FileSystem fileSystem,
       CommandRunner cmd,
-      ProjectContextFactory contextFactory,
       Ui ui) {
     this.fileSystem = fileSystem;
     this.cmd = cmd;
-    this.contextFactory = contextFactory;
     this.ui = ui;
   }
 
   public CommandRunner cmd() {
     return cmd;
-  }
-
-  public ProjectContextFactory contextFactory() {
-    return contextFactory;
   }
 
   public FileSystem fileSystem() {

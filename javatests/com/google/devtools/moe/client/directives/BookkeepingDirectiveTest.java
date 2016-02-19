@@ -113,7 +113,7 @@ public class BookkeepingDirectiveTest extends TestCase {
             ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(filesystem)));
     InMemoryProjectContextFactory contextFactory =
         init(new InMemoryProjectContextFactory(fileDiffer, cmd, filesystem, ui, repositories));
-    Injector.INSTANCE = new Injector(filesystem, cmd, contextFactory, ui);
+    Injector.INSTANCE = new Injector(filesystem, cmd, ui);
     Db.Factory dbFactory = new FileDb.Factory(filesystem, GsonModule.provideGson());
     Db.Writer dbWriter = new FileDb.Writer(GsonModule.provideGson(), filesystem);
     BookkeepingDirective d =
@@ -158,7 +158,7 @@ public class BookkeepingDirectiveTest extends TestCase {
             ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(filesystem)));
     InMemoryProjectContextFactory contextFactory =
         init(new InMemoryProjectContextFactory(fileDiffer, cmd, filesystem, ui, repositories));
-    Injector.INSTANCE = new Injector(filesystem, cmd, contextFactory, ui);
+    Injector.INSTANCE = new Injector(filesystem, cmd, ui);
     Db.Factory dbFactory = new FileDb.Factory(filesystem, GsonModule.provideGson());
     Db.Writer dbWriter = new FileDb.Writer(GsonModule.provideGson(), filesystem);
     BookkeepingDirective d =
@@ -201,7 +201,7 @@ public class BookkeepingDirectiveTest extends TestCase {
             ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(filesystem)));
     InMemoryProjectContextFactory contextFactory =
         init(new InMemoryProjectContextFactory(fileDiffer, cmd, filesystem, ui, repositories));
-    Injector.INSTANCE = new Injector(filesystem, cmd, contextFactory, ui);
+    Injector.INSTANCE = new Injector(filesystem, cmd, ui);
     Db.Factory dbFactory = new FileDb.Factory(filesystem, GsonModule.provideGson());
     Db.Writer dbWriter = new FileDb.Writer(GsonModule.provideGson(), filesystem);
     BookkeepingDirective d =

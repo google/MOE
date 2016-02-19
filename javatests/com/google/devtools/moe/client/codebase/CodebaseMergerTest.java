@@ -25,10 +25,6 @@ import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.Ui;
-import com.google.devtools.moe.client.repositories.Repositories;
-import com.google.devtools.moe.client.repositories.RepositoryType;
-import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
-import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
 import com.google.devtools.moe.client.testing.RecordingUi;
 import com.google.devtools.moe.client.tools.FileDifference.ConcreteFileDiffer;
 import com.google.devtools.moe.client.tools.FileDifference.FileDiffer;
@@ -68,12 +64,7 @@ public class CodebaseMergerTest extends TestCase {
   private final IMocksControl control = EasyMock.createControl();
   private final FileSystem fileSystem = control.createMock(FileSystem.class);
   private final CommandRunner cmd = control.createMock(CommandRunner.class);
-  private final Repositories repositories =
-      new Repositories(
-          ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(fileSystem)));
   private final FileDiffer fileDiffer = new ConcreteFileDiffer(cmd, fileSystem);
-  private final InMemoryProjectContextFactory contextFactory =
-      new InMemoryProjectContextFactory(fileDiffer, cmd, fileSystem, ui, repositories);
 
   private Codebase orig, dest, mod;
 
@@ -407,7 +398,7 @@ public class CodebaseMergerTest extends TestCase {
    */
   public void testMerge() throws Exception {
     Ui ui = control.createMock(Ui.class);
-    Injector.INSTANCE = new Injector(fileSystem, cmd, contextFactory, ui);
+    Injector.INSTANCE = new Injector(fileSystem, cmd, ui);
 
     File mergedCodebaseLocation = new File("merged_codebase_7");
     expect(fileSystem.getTemporaryDirectory("merged_codebase_")).andReturn(mergedCodebaseLocation);

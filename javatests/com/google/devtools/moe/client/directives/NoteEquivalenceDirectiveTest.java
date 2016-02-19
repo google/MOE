@@ -64,7 +64,7 @@ public class NoteEquivalenceDirectiveTest extends TestCase {
             + "}}");
     super.setUp();
     // TODO(cgruber): Rip this out when Db.Factory is injected.
-    Injector.INSTANCE = new Injector(mockFs, cmd, contextFactory, ui);
+    Injector.INSTANCE = new Injector(mockFs, cmd, ui);
 
     d = new NoteEquivalenceDirective(contextFactory, dbFactory, dbWriter, ui);
     d.setContextFileName("moe_config.txt");

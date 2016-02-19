@@ -28,11 +28,7 @@ import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.SystemFileSystem;
 import com.google.devtools.moe.client.gson.GsonModule;
 import com.google.devtools.moe.client.project.InvalidProject;
-import com.google.devtools.moe.client.repositories.Repositories;
-import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.repositories.Revision;
-import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
-import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
 import com.google.devtools.moe.client.testing.RecordingUi;
 
 import junit.framework.TestCase;
@@ -48,17 +44,13 @@ import java.io.File;
 public class FileDbTest extends TestCase {
   private final RecordingUi ui = new RecordingUi();
   private final SystemCommandRunner cmd = new SystemCommandRunner(ui);
-  private final Repositories repositories =
-      new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(null)));
-  private final InMemoryProjectContextFactory contextFactory =
-      new InMemoryProjectContextFactory(null, cmd, null, ui, repositories);
   private final FileSystem filesystem = new SystemFileSystem();
   private final Db.Factory factory = new FileDb.Factory(filesystem, GsonModule.provideGson());
 
   @Override
   public void setUp() throws Exception {
     super.setUp();
-    Injector.INSTANCE = new Injector(filesystem, cmd, contextFactory, ui);
+    Injector.INSTANCE = new Injector(filesystem, cmd, ui);
   }
 
   public void testValidDb() throws Exception {
