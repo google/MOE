@@ -166,7 +166,7 @@ public class MigrateBranchDirective extends Directive {
     try {
       toWriter = toRepoExp.createWriter(context());
     } catch (WritingError e) {
-      throw new MoeProblem("Couldn't create local repo %s: %s", toRepoExp, e);
+      throw new MoeProblem(e, "Couldn't create local repo %s: %s", toRepoExp, e.getMessage());
     }
 
     DraftRevision dr = null; // Store one draft revision to obtain workspace location for UI.

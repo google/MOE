@@ -24,4 +24,8 @@ public class WritingError extends Exception {
   public WritingError(String message) {
     super(message);
   }
+
+  public WritingError(Throwable cause, String message) {
+    super(message, cause);
+  }
 }

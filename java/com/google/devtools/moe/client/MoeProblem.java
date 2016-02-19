@@ -32,6 +32,12 @@ public class MoeProblem extends RuntimeException {
     this.args = args;
   }
 
+  public MoeProblem(Throwable cause, String explanationFmt, Object... args) {
+    super(cause); // TODO(cgruber) do we need to lazily format? Could we not just format at constr?
+    this.explanationFmt = explanationFmt;
+    this.args = args;
+  }
+
   @Override
   public String getMessage() {
     return String.format(explanationFmt, args);
