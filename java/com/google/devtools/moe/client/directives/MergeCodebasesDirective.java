@@ -58,6 +58,7 @@ public class MergeCodebasesDirective extends Directive {
   )
   String destinationExpression = "";
 
+  private final Lazy<ProjectContext> context;
   private final FileDiffer differ;
   private final Ui ui;
   private final FileSystem filesystem;
@@ -70,7 +71,7 @@ public class MergeCodebasesDirective extends Directive {
       Ui ui,
       FileSystem filesystem,
       CommandRunner cmd) {
-    super(context);
+    this.context = context;
     this.differ = differ;
     this.ui = ui;
     this.filesystem = filesystem;
@@ -81,9 +82,10 @@ public class MergeCodebasesDirective extends Directive {
   protected int performDirectiveBehavior() {
     Codebase originalCodebase, destinationCodebase, modifiedCodebase;
     try {
-      originalCodebase = Parser.parseExpression(originalExpression).createCodebase(context());
-      modifiedCodebase = Parser.parseExpression(modifiedExpression).createCodebase(context());
-      destinationCodebase = Parser.parseExpression(destinationExpression).createCodebase(context());
+      originalCodebase = Parser.parseExpression(originalExpression).createCodebase(context.get());
+      modifiedCodebase = Parser.parseExpression(modifiedExpression).createCodebase(context.get());
+      destinationCodebase =
+          Parser.parseExpression(destinationExpression).createCodebase(context.get());
     } catch (ParseError e) {
       ui.error(e, "Error parsing");
       return 1;

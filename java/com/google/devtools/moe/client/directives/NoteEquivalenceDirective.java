@@ -55,6 +55,7 @@ public class NoteEquivalenceDirective extends Directive {
   )
   String repo2 = "";
 
+  private final Lazy<ProjectContext> context;
   private final Db.Factory dbFactory;
   private final Db.Writer dbWriter;
   private final Ui ui;
@@ -62,7 +63,7 @@ public class NoteEquivalenceDirective extends Directive {
   @Inject
   NoteEquivalenceDirective(
       Lazy<ProjectContext> context, Db.Factory dbFactory, Db.Writer dbWriter, Ui ui) {
-    super(context);
+    this.context = context;
     this.dbFactory = dbFactory;
     this.dbWriter = dbWriter;
     this.ui = ui;
@@ -86,8 +87,9 @@ public class NoteEquivalenceDirective extends Directive {
     }
 
     // Sanity check: make sure the given repos and revisions exist.
-    RepositoryType repo1 = context().getRepository(repoEx1.getRepositoryName());
-    RepositoryType repo2 = context().getRepository(repoEx2.getRepositoryName());
+    // TODO(cgruber): directly inject map of repositories (or error-checking wrapper)
+    RepositoryType repo1 = context.get().getRepository(repoEx1.getRepositoryName());
+    RepositoryType repo2 = context.get().getRepository(repoEx2.getRepositoryName());
 
     Revision realRev1 = repo1.revisionHistory().findHighestRevision(repoEx1.getOption("revision"));
     Revision realRev2 = repo2.revisionHistory().findHighestRevision(repoEx2.getOption("revision"));

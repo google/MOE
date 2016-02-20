@@ -32,6 +32,7 @@ import com.google.devtools.moe.client.migrations.MigrationConfig;
 import com.google.devtools.moe.client.migrations.Migrator;
 import com.google.devtools.moe.client.parser.Expression;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
+import com.google.devtools.moe.client.project.ProjectConfig;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.project.ScrubberConfig;
 import com.google.devtools.moe.client.repositories.RepositoryType;
@@ -73,6 +74,8 @@ public class MagicDirective extends Directive {
   )
   List<String> skipRevisions = new ArrayList<>();
 
+  private final Lazy<ProjectConfig> config;
+  private final Lazy<ProjectContext> context;
   private final Db.Factory dbFactory;
   private final Ui ui;
   private final Migrator migrator;
@@ -80,12 +83,14 @@ public class MagicDirective extends Directive {
 
   @Inject
   MagicDirective(
+      Lazy<ProjectConfig> config,
       Lazy<ProjectContext> context,
       Db.Factory dbFactory,
       Ui ui,
       Bookkeeper bookkeeper,
       Migrator migrator) {
-    super(context);
+    this.context = context;
+    this.config = config;
     this.dbFactory = dbFactory;
     this.ui = ui;
     this.bookkeeper = bookkeeper;
@@ -98,11 +103,11 @@ public class MagicDirective extends Directive {
 
     List<String> migrationNames =
         ImmutableList.copyOf(
-            migrations.isEmpty() ? context().migrationConfigs().keySet() : migrations);
+            migrations.isEmpty() ? context.get().migrationConfigs().keySet() : migrations);
 
     Set<String> skipRevisions = ImmutableSet.copyOf(this.skipRevisions);
 
-    if (bookkeeper.bookkeep(db, context()) != 0) {
+    if (bookkeeper.bookkeep(db, context.get()) != 0) {
       // Bookkeeping has failed, so fail here as well.
       return 1;
     }
@@ -113,13 +118,13 @@ public class MagicDirective extends Directive {
       Ui.Task migrationTask =
           ui.pushTask("perform_migration", "Performing migration '%s'", migrationName);
 
-      MigrationConfig migrationConfig = context().migrationConfigs().get(migrationName);
+      MigrationConfig migrationConfig = context.get().migrationConfigs().get(migrationName);
       if (migrationConfig == null) {
         ui.error("No migration found with name %s", migrationName);
         continue;
       }
 
-      RepositoryType fromRepo = context().getRepository(migrationConfig.getFromRepository());
+      RepositoryType fromRepo = context.get().getRepository(migrationConfig.getFromRepository());
       List<Migration> migrations =
           migrator.findMigrationsFromEquivalency(fromRepo, migrationConfig, db);
 
@@ -139,7 +144,7 @@ public class MagicDirective extends Directive {
 
       Writer toWriter;
       try {
-        toWriter = toRe.createWriter(context());
+        toWriter = toRe.createWriter(context.get());
       } catch (WritingError e) {
         throw new MoeProblem("Couldn't create local repo %s: %s", toRe, e);
       }
@@ -188,23 +193,22 @@ public class MagicDirective extends Directive {
         Codebase fromCodebase;
         try {
           String toProjectSpace =
-              context().config().getRepositoryConfig(migration.toRepository()).getProjectSpace();
+              config.get().getRepositoryConfig(migration.toRepository()).getProjectSpace();
           fromCodebase =
               new RepositoryExpression(migration.fromRepository())
                   .atRevision(mostRecentFromRev.revId())
                   .translateTo(toProjectSpace)
                   .withReferenceToCodebase(referenceToCodebase)
-                  .createCodebase(context());
+                  .createCodebase(context.get());
 
         } catch (CodebaseCreationError e) {
           throw new MoeProblem(e.getMessage());
         }
 
-        RepositoryType fromRepoType = context().getRepository(migrationConfig.getFromRepository());
+        RepositoryType fromRepoType =
+            context.get().getRepository(migrationConfig.getFromRepository());
         ScrubberConfig scrubber =
-            context()
-                .config()
-                .findScrubberConfig(migration.fromRepository(), migration.toRepository());
+            config.get().findScrubberConfig(migration.fromRepository(), migration.toRepository());
         dr =
             migrator.migrate(
                 migration,

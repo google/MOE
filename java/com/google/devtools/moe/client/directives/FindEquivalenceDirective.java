@@ -57,12 +57,13 @@ public class FindEquivalenceDirective extends Directive {
   )
   String inRepository = "";
 
+  private final Lazy<ProjectContext> context;
   private final Db.Factory dbFactory;
   private final Ui ui;
 
   @Inject
   FindEquivalenceDirective(Lazy<ProjectContext> context, Db.Factory dbFactory, Ui ui) {
-    super(context);
+    this.context = context;
     this.dbFactory = dbFactory;
     this.ui = ui;
   }
@@ -73,7 +74,7 @@ public class FindEquivalenceDirective extends Directive {
 
     try {
       RepositoryExpression repoEx = Parser.parseRepositoryExpression(fromRepository);
-      List<Revision> revs = Revision.fromRepositoryExpression(repoEx, context());
+      List<Revision> revs = Revision.fromRepositoryExpression(repoEx, context.get());
       printEquivalences(revs, inRepository, db);
       return 0;
     } catch (ParseError e) {

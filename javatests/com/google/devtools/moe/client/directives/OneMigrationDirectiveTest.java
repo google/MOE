@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.migrations.Migrator;
+import com.google.devtools.moe.client.project.ProjectConfig;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.repositories.RepositoryType;
@@ -37,6 +38,7 @@ public class OneMigrationDirectiveTest extends TestCase {
   private final RecordingUi ui = new RecordingUi();
   private final SystemCommandRunner cmd = new SystemCommandRunner(ui);
   private Lazy<ProjectContext> context;
+  private Lazy<ProjectConfig> config;
 
   @Override
   public void setUp() throws Exception {
@@ -54,11 +56,13 @@ public class OneMigrationDirectiveTest extends TestCase {
             + "\"to_project_space\":\"public\",\"steps\":[{\"name\":\"id_step\","
             + "\"editor\":{\"type\":\"identity\"}}]}]}");
     context = EagerLazy.fromInstance(contextFactory.create("moe_config.txt"));
+    config = EagerLazy.fromInstance(context.get().config());
   }
 
   public void testOneMigration() throws Exception {
     OneMigrationDirective d =
         new OneMigrationDirective(
+            config,
             context,
             ui,
             new DraftRevision.Factory(ui),
@@ -72,6 +76,7 @@ public class OneMigrationDirectiveTest extends TestCase {
   public void testOneMigrationFailOnFromRevision() throws Exception {
     OneMigrationDirective d =
         new OneMigrationDirective(
+            config,
             context,
             ui,
             new DraftRevision.Factory(ui),
@@ -90,6 +95,7 @@ public class OneMigrationDirectiveTest extends TestCase {
   public void testOneMigrationFailOnToRevision() throws Exception {
     OneMigrationDirective d =
         new OneMigrationDirective(
+            config,
             context,
             ui,
             new DraftRevision.Factory(ui),

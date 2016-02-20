@@ -49,12 +49,13 @@ public class CreateCodebaseDirective extends Directive {
   )
   String tarfile = null;
 
+  private final Lazy<ProjectContext> context;
   private final CommandRunner cmd;
   private final Ui ui;
 
   @Inject
   CreateCodebaseDirective(Lazy<ProjectContext> context, CommandRunner cmd, Ui ui) {
-    super(context);
+    this.context = context;
     this.cmd = cmd;
     this.ui = ui;
   }
@@ -64,7 +65,7 @@ public class CreateCodebaseDirective extends Directive {
     Task createCodebaseTask = ui.pushTask("create_codebase", "Creating codebase %s", codebase);
     Codebase c;
     try {
-      c = Parser.parseExpression(codebase).createCodebase(context());
+      c = Parser.parseExpression(codebase).createCodebase(context.get());
     } catch (ParseError e) {
       ui.error(e, "Error creating codebase");
       return 1;

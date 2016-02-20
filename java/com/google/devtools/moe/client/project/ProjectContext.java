@@ -48,6 +48,7 @@ public abstract class ProjectContext {
    *
    * @throws MoeProblem if no such repository with the given name exists
    */
+  // TODO(cgruber) Migrate this to a cleaner model, and inject the above five properties
   public RepositoryType getRepository(String repositoryName) {
     if (!repositories().containsKey(repositoryName)) {
       throw new MoeProblem(

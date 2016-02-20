@@ -46,12 +46,13 @@ public class DetermineMetadataDirective extends Directive {
   )
   String repositoryExpression = "";
 
+  private final Lazy<ProjectContext> context;
   private final Ui ui;
   private final Migrator migrator;
 
   @Inject
   DetermineMetadataDirective(Lazy<ProjectContext> context, Ui ui, Migrator migrator) {
-    super(context);
+    this.context = context;
     this.ui = ui;
     this.migrator = migrator;
   }
@@ -66,8 +67,8 @@ public class DetermineMetadataDirective extends Directive {
       return 1;
     }
 
-    List<Revision> revs = Revision.fromRepositoryExpression(repoEx, context());
-    RepositoryType repositoryType = context().getRepository(repoEx.getRepositoryName());
+    List<Revision> revs = Revision.fromRepositoryExpression(repoEx, context.get());
+    RepositoryType repositoryType = context.get().getRepository(repoEx.getRepositoryName());
     RevisionMetadata rm =
         migrator.processMetadata(repositoryType.revisionHistory(), revs, null, null);
     ui.info(rm.toString());

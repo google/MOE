@@ -59,12 +59,13 @@ public class LastEquivalenceDirective extends Directive {
   )
   String withRepository = "";
 
+  private final Lazy<ProjectContext> context;
   private final Db.Factory dbFactory;
   private final Ui ui;
 
   @Inject
   LastEquivalenceDirective(Lazy<ProjectContext> context, Db.Factory dbFactory, Ui ui) {
-    super(context);
+    this.context = context;
     this.dbFactory = dbFactory;
     this.ui = ui;
   }
@@ -81,7 +82,8 @@ public class LastEquivalenceDirective extends Directive {
       return 1;
     }
 
-    RepositoryType r = context().getRepository(repoEx.getRepositoryName());
+    // TODO(cgruber) use repository map directly.
+    RepositoryType r = context.get().getRepository(repoEx.getRepositoryName());
 
     RevisionHistory rh = r.revisionHistory();
     if (rh == null) {

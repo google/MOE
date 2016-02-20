@@ -53,7 +53,7 @@ public class MigrateBranchDirectiveTest extends TestCase {
     RevisionHistory branch =
         new DummyRepositoryFactory.DummyRevisionHistory(
             "foo_fork", false, c01, c02, c03, c04, c05, c06, c07, c08);
-    MigrateBranchDirective directive = new MigrateBranchDirective(null, null, null, ui, null);
+    MigrateBranchDirective directive = new MigrateBranchDirective(null, null, null, null, ui, null);
     List<Revision> revisions = directive.findDescendantRevisions(branch, parentBranch);
 
     assertThat(revisions)

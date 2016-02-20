@@ -19,7 +19,7 @@ import static dagger.Provides.Type.MAP;
 
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.github.GithubClient;
-import com.google.devtools.moe.client.project.ProjectContext;
+import com.google.devtools.moe.client.project.ProjectConfig;
 
 import dagger.Lazy;
 import dagger.MapKey;
@@ -117,11 +117,11 @@ public class DirectivesModule {
   @Provides(type = MAP)
   @StringKey("github_pull")
   static Directive githubPull(
-      Lazy<ProjectContext> context,
+      Lazy<ProjectConfig> config,
       Ui ui,
       GithubClient client,
       Lazy<MigrateBranchDirective> migrateBranchDirective) {
-    return new GithubPullDirective(context, ui, client, migrateBranchDirective);
+    return new GithubPullDirective(config, ui, client, migrateBranchDirective);
   }
 
   @Provides(type = MAP)

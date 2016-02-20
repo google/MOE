@@ -45,12 +45,13 @@ public class DiffCodebasesDirective extends Directive {
   @Option(name = "--codebase2", required = true, usage = "Codebase2 expression")
   String codebase2Spec = "";
 
+  private final Lazy<ProjectContext> context;
   private final CodebaseDiffer differ;
   private final Ui ui;
 
   @Inject
   DiffCodebasesDirective(Lazy<ProjectContext> context, CodebaseDiffer differ, Ui ui) {
-    super(context);
+    this.context = context;
     this.differ = differ;
     this.ui = ui;
   }
@@ -59,8 +60,8 @@ public class DiffCodebasesDirective extends Directive {
   protected int performDirectiveBehavior() {
     Codebase codebase1, codebase2;
     try {
-      codebase1 = Parser.parseExpression(codebase1Spec).createCodebase(context());
-      codebase2 = Parser.parseExpression(codebase2Spec).createCodebase(context());
+      codebase1 = Parser.parseExpression(codebase1Spec).createCodebase(context.get());
+      codebase2 = Parser.parseExpression(codebase2Spec).createCodebase(context.get());
     } catch (ParseError e) {
       ui.error(e, "Error parsing codebase expression");
       return 1;

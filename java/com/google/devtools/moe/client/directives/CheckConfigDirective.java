@@ -26,14 +26,16 @@ import javax.inject.Inject;
  * Reads a MOE Project's configuration and reads it, checking for errors.
  */
 public class CheckConfigDirective extends Directive {
+  private final Lazy<ProjectContext> context;
+
   @Inject
   CheckConfigDirective(Lazy<ProjectContext> context) {
-    super(context);
+    this.context = context;
   }
 
   @Override
   protected int performDirectiveBehavior() {
-    // Do nothing, since project config validation occurs in initialization of Directive.
+    context.get(); // force resolution and parsing.
     return 0;
   }
 

@@ -39,7 +39,6 @@ public class BookkeepingDirective extends Directive {
 
   @Inject
   BookkeepingDirective(Lazy<ProjectContext> context, Db.Factory dbFactory, Bookkeeper bookkeeper) {
-    super(context);
     this.context = context;
     this.dbFactory = dbFactory;
     this.bookkeeper = bookkeeper;

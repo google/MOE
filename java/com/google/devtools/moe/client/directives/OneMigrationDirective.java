@@ -23,6 +23,7 @@ import com.google.devtools.moe.client.migrations.Migrator;
 import com.google.devtools.moe.client.parser.Parser;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
+import com.google.devtools.moe.client.project.ProjectConfig;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.project.ScrubberConfig;
@@ -59,17 +60,21 @@ public class OneMigrationDirective extends Directive {
   )
   String toRepository = "";
 
+  private final Lazy<ProjectConfig> config;
+  private final Lazy<ProjectContext> context;
   private final Ui ui;
   private final DraftRevision.Factory revisionFactory;
   private final Migrator migrator;
 
   @Inject
   OneMigrationDirective(
+      Lazy<ProjectConfig> config,
       Lazy<ProjectContext> context,
       Ui ui,
       DraftRevision.Factory revisionFactory,
       Migrator migrator) {
-    super(context);
+    this.config = config;
+    this.context = context;
     this.ui = ui;
     this.revisionFactory = revisionFactory;
     this.migrator = migrator;
@@ -86,9 +91,9 @@ public class OneMigrationDirective extends Directive {
       return 1;
     }
     RepositoryConfig repositoryConfig =
-        context().config().getRepositoryConfig(toRepoEx.getRepositoryName());
+        config.get().getRepositoryConfig(toRepoEx.getRepositoryName());
     String toProjectSpace = repositoryConfig.getProjectSpace();
-    List<Revision> revs = Revision.fromRepositoryExpression(fromRepoEx, context());
+    List<Revision> revs = Revision.fromRepositoryExpression(fromRepoEx, context.get());
 
     Codebase sourceCodebase;
     try {
@@ -96,7 +101,7 @@ public class OneMigrationDirective extends Directive {
           new RepositoryExpression(fromRepoEx.getRepositoryName())
               .atRevision(revs.get(0).revId())
               .translateTo(toProjectSpace)
-              .createCodebase(context());
+              .createCodebase(context.get());
     } catch (CodebaseCreationError e) {
       ui.error(e, "Error creating codebase");
       return 1;
@@ -104,7 +109,7 @@ public class OneMigrationDirective extends Directive {
 
     Writer destination;
     try {
-      destination = toRepoEx.createWriter(context());
+      destination = toRepoEx.createWriter(context.get());
     } catch (WritingError e) {
       ui.error(e, "Error writing to repo");
       return 1;
@@ -113,13 +118,13 @@ public class OneMigrationDirective extends Directive {
     ui.info("Migrating '%s' to '%s'", fromRepoEx, toRepoEx);
 
 
-    RepositoryType repositoryType = context().getRepository(revs.get(0).repositoryName());
+    RepositoryType repositoryType = context.get().getRepository(revs.get(0).repositoryName());
 
     RevisionMetadata metadata =
         migrator.processMetadata(repositoryType.revisionHistory(), revs, null, revs.get(0));
     ScrubberConfig scrubber =
-        context()
-            .config()
+        config
+            .get()
             .findScrubberConfig(fromRepoEx.getRepositoryName(), toRepoEx.getRepositoryName());
     metadata = migrator.possiblyScrubAuthors(metadata, scrubber);
     DraftRevision draftRevision =

@@ -24,7 +24,7 @@ import com.google.devtools.moe.client.Ui.Task;
 import com.google.devtools.moe.client.github.GithubAPI.PullRequest;
 import com.google.devtools.moe.client.github.GithubClient;
 import com.google.devtools.moe.client.github.PullRequestUrl;
-import com.google.devtools.moe.client.project.ProjectContext;
+import com.google.devtools.moe.client.project.ProjectConfig;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 
 import dagger.Lazy;
@@ -53,16 +53,17 @@ public class GithubPullDirective extends Directive {
   )
   String url = "";
 
+  private final Lazy<ProjectConfig> config;
   private final GithubClient client;
   private final Ui ui;
   private final Lazy<MigrateBranchDirective> migrateBranchDirective;
 
   GithubPullDirective(
-      Lazy<ProjectContext> context,
+      Lazy<ProjectConfig> config,
       Ui ui,
       GithubClient client,
       Lazy<MigrateBranchDirective> migrateBranchDirective) {
-    super(context);
+    this.config = config;
     this.client = client;
     this.ui = ui;
     this.migrateBranchDirective = migrateBranchDirective;
@@ -102,7 +103,7 @@ public class GithubPullDirective extends Directive {
 
     MigrateBranchDirective delegate = migrateBranchDirective.get();
 
-    String repoConfigName = findRepoConfig(context().config().repositories(), metadata);
+    String repoConfigName = findRepoConfig(config.get().repositories(), metadata);
     ui.info("Using '%s' as the source repository.", repoConfigName);
     int result =
         delegate.performBranchMigration(

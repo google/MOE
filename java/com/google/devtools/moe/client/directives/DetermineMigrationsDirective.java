@@ -47,6 +47,7 @@ public class DetermineMigrationsDirective extends Directive {
   @Option(name = "--db", required = true, usage = "Location of MOE database")
   String dbLocation = "";
 
+  private final Lazy<ProjectContext> context;
   private final Db.Factory dbFactory;
   private final Ui ui;
   private final Migrator migrator;
@@ -54,7 +55,7 @@ public class DetermineMigrationsDirective extends Directive {
   @Inject
   public DetermineMigrationsDirective(
       Lazy<ProjectContext> context, Db.Factory dbFactory, Ui ui, Migrator migrator) {
-    super(context);
+    this.context = context;
     this.dbFactory = dbFactory;
     this.ui = ui;
     this.migrator = migrator;
@@ -64,13 +65,13 @@ public class DetermineMigrationsDirective extends Directive {
   protected int performDirectiveBehavior() {
     Db db = dbFactory.load(dbLocation);
 
-    MigrationConfig config = context().migrationConfigs().get(migrationName);
+    MigrationConfig config = context.get().migrationConfigs().get(migrationName);
     if (config == null) {
       ui.error("No migration found with name " + migrationName);
       return 1;
     }
 
-    RepositoryType fromRepo = context().getRepository(config.getFromRepository());
+    RepositoryType fromRepo = context.get().getRepository(config.getFromRepository());
     List<Migration> migrations = migrator.findMigrationsFromEquivalency(fromRepo, config, db);
     for (Migration migration : migrations) {
       ui.info("Pending migration: " + migration);

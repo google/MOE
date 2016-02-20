@@ -44,11 +44,12 @@ public class HighestRevisionDirective extends Directive {
   )
   String repository = "";
 
+  private final Lazy<ProjectContext> context;
   private final Ui ui;
 
   @Inject
   HighestRevisionDirective(Lazy<ProjectContext> context, Ui ui) {
-    super(context);
+    this.context = context;
     this.ui = ui;
   }
 
@@ -62,7 +63,7 @@ public class HighestRevisionDirective extends Directive {
       return 1;
     }
 
-    RepositoryType r = context().getRepository(repoEx.getRepositoryName());
+    RepositoryType r = context.get().getRepository(repoEx.getRepositoryName());
 
     RevisionHistory rh = r.revisionHistory();
     if (rh == null) {

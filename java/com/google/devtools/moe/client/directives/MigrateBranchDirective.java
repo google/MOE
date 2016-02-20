@@ -94,6 +94,8 @@ public class MigrateBranchDirective extends Directive {
   )
   private String overrideUrl = "";
 
+  private final Lazy<ProjectConfig> config;
+  private final Lazy<ProjectContext> context;
   private final Db.Factory dbFactory;
   private final Repositories repositories;
   private final Ui ui;
@@ -103,12 +105,14 @@ public class MigrateBranchDirective extends Directive {
 
   @Inject
   MigrateBranchDirective(
-      Db.Factory dbFactory,
+      Lazy<ProjectConfig> config,
       Lazy<ProjectContext> context,
+      Db.Factory dbFactory,
       Repositories repositories,
       Ui ui,
       Migrator migrator) {
-    super(context);
+    this.config = config;
+    this.context = context;
     this.dbFactory = dbFactory;
     this.repositories = repositories;
     this.ui = ui;
@@ -135,12 +139,11 @@ public class MigrateBranchDirective extends Directive {
             migrationConfig.getName(),
             branchLabel);
 
-    RepositoryConfig baseRepoConfig =
-        context().config().getRepositoryConfig(originalFromRepository);
+    RepositoryConfig baseRepoConfig = config.get().getRepositoryConfig(originalFromRepository);
     RepositoryType baseRepoType = repositories.create(originalFromRepository, baseRepoConfig);
     RepositoryConfig fromRepoConfig =
-        context()
-            .config()
+        config
+            .get()
             .getRepositoryConfig(originalFromRepository)
             .copyWithBranch(branchLabel)
             .copyWithUrl(overrideUrl);
@@ -165,7 +168,7 @@ public class MigrateBranchDirective extends Directive {
     RepositoryExpression toRepoExp = new RepositoryExpression(migrationConfig.getToRepository());
     Writer toWriter;
     try {
-      toWriter = toRepoExp.createWriter(context());
+      toWriter = toRepoExp.createWriter(context.get());
     } catch (WritingError e) {
       throw new MoeProblem(e, "Couldn't create local repo %s: %s", toRepoExp, e.getMessage());
     }
@@ -189,7 +192,7 @@ public class MigrateBranchDirective extends Directive {
       Codebase fromCodebase;
       try {
         String toProjectSpace =
-            context().config().getRepositoryConfig(migration.toRepository()).getProjectSpace();
+            config.get().getRepositoryConfig(migration.toRepository()).getProjectSpace();
 
         fromCodebase =
             new RepositoryExpression(migration.fromRepository())
@@ -198,13 +201,13 @@ public class MigrateBranchDirective extends Directive {
                 .withReferenceToCodebase(referenceToCodebase)
                 .createCodebase(
                     contextWithForkedRepository(
-                        context(), migrationConfig.getFromRepository(), fromRepoType));
+                        context.get(), migrationConfig.getFromRepository(), fromRepoType));
 
       } catch (CodebaseCreationError e) {
         throw new MoeProblem(e.getMessage());
       }
       ScrubberConfig scrubber =
-          context().config().findScrubberConfig(originalFromRepository, migration.toRepository());
+          config.get().findScrubberConfig(originalFromRepository, migration.toRepository());
 
       dr =
           migrator.migrate(
@@ -274,7 +277,7 @@ public class MigrateBranchDirective extends Directive {
       String overrideUrl, final String fromRepository, final String originalFromRepository) {
 
     List<MigrationConfig> configs =
-        FluentIterable.from(context().migrationConfigs().values())
+        FluentIterable.from(context.get().migrationConfigs().values())
             .filter(
                 new Predicate<MigrationConfig>() {
                   @Override

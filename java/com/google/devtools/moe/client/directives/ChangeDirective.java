@@ -43,12 +43,13 @@ public class ChangeDirective extends Directive {
   @Option(name = "--destination", required = true, usage = "Expression of destination writer")
   String destination = "";
 
+  private final Lazy<ProjectContext> context;
   private final Ui ui;
   private final DraftRevision.Factory revisionFactory;
 
   @Inject
   ChangeDirective(Lazy<ProjectContext> context, Ui ui, DraftRevision.Factory revisionFactory) {
-    super(context);
+    this.context = context;
     this.ui = ui;
     this.revisionFactory = revisionFactory;
   }
@@ -64,7 +65,7 @@ public class ChangeDirective extends Directive {
 
     Codebase c;
     try {
-      c = Parser.parseExpression(codebase).createCodebase(context());
+      c = Parser.parseExpression(codebase).createCodebase(context.get());
     } catch (ParseError e) {
       ui.error(e, "Error parsing codebase");
       return 1;
@@ -75,7 +76,7 @@ public class ChangeDirective extends Directive {
 
     Writer writer;
     try {
-      writer = Parser.parseRepositoryExpression(destination).createWriter(context());
+      writer = Parser.parseRepositoryExpression(destination).createWriter(context.get());
     } catch (ParseError e) {
       ui.error(e, "Error parsing change destination");
       return 1;

@@ -21,6 +21,7 @@ import com.google.devtools.moe.client.gson.GsonModule;
 import com.google.devtools.moe.client.options.OptionsModule;
 import com.google.devtools.moe.client.options.OptionsModule.Argument;
 import com.google.devtools.moe.client.project.FileReadingProjectContextFactory;
+import com.google.devtools.moe.client.project.ProjectConfig;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.project.ProjectContextFactory;
 import com.google.devtools.moe.client.repositories.Repositories;
@@ -75,6 +76,12 @@ public class MoeModule {
       throw new MoeProblem("Configuration file path not set.  Did you specify --config_file?");
     }
     return factory.create(configFilename);
+  }
+
+  @Provides
+  @Singleton
+  ProjectConfig projectConfig(ProjectContext context) {
+    return context.config();
   }
 
   @Provides
