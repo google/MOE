@@ -21,8 +21,10 @@ import com.google.devtools.moe.client.database.Db;
 import com.google.devtools.moe.client.migrations.Migration;
 import com.google.devtools.moe.client.migrations.MigrationConfig;
 import com.google.devtools.moe.client.migrations.Migrator;
-import com.google.devtools.moe.client.project.ProjectContextFactory;
+import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.RepositoryType;
+
+import dagger.Lazy;
 
 import org.kohsuke.args4j.Option;
 
@@ -51,8 +53,8 @@ public class DetermineMigrationsDirective extends Directive {
 
   @Inject
   public DetermineMigrationsDirective(
-      ProjectContextFactory contextFactory, Db.Factory dbFactory, Ui ui, Migrator migrator) {
-    super(contextFactory); // TODO(cgruber) Inject project context, not its factory
+      Lazy<ProjectContext> context, Db.Factory dbFactory, Ui ui, Migrator migrator) {
+    super(context);
     this.dbFactory = dbFactory;
     this.ui = ui;
     this.migrator = migrator;
@@ -68,7 +70,7 @@ public class DetermineMigrationsDirective extends Directive {
       return 1;
     }
 
-    RepositoryType fromRepo = context.getRepository(config.getFromRepository());
+    RepositoryType fromRepo = context().getRepository(config.getFromRepository());
     List<Migration> migrations = migrator.findMigrationsFromEquivalency(fromRepo, config, db);
     for (Migration migration : migrations) {
       ui.info("Pending migration: " + migration);

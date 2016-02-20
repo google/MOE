@@ -23,7 +23,7 @@ import com.google.devtools.moe.client.migrations.Migrator;
 import com.google.devtools.moe.client.parser.Parser;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
-import com.google.devtools.moe.client.project.ProjectContextFactory;
+import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.project.ScrubberConfig;
 import com.google.devtools.moe.client.repositories.RepositoryType;
@@ -32,6 +32,8 @@ import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.writer.DraftRevision;
 import com.google.devtools.moe.client.writer.Writer;
 import com.google.devtools.moe.client.writer.WritingError;
+
+import dagger.Lazy;
 
 import org.kohsuke.args4j.Option;
 
@@ -63,11 +65,11 @@ public class OneMigrationDirective extends Directive {
 
   @Inject
   OneMigrationDirective(
-      ProjectContextFactory contextFactory,
+      Lazy<ProjectContext> context,
       Ui ui,
       DraftRevision.Factory revisionFactory,
       Migrator migrator) {
-    super(contextFactory); // TODO(cgruber) Inject project context, not its factory
+    super(context);
     this.ui = ui;
     this.revisionFactory = revisionFactory;
     this.migrator = migrator;
@@ -111,12 +113,12 @@ public class OneMigrationDirective extends Directive {
     ui.info("Migrating '%s' to '%s'", fromRepoEx, toRepoEx);
 
 
-    RepositoryType repositoryType = context.getRepository(revs.get(0).repositoryName());
+    RepositoryType repositoryType = context().getRepository(revs.get(0).repositoryName());
 
     RevisionMetadata metadata =
         migrator.processMetadata(repositoryType.revisionHistory(), revs, null, revs.get(0));
     ScrubberConfig scrubber =
-        context
+        context()
             .config()
             .findScrubberConfig(fromRepoEx.getRepositoryName(), toRepoEx.getRepositoryName());
     metadata = migrator.possiblyScrubAuthors(metadata, scrubber);

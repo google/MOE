@@ -24,11 +24,13 @@ import com.google.devtools.moe.client.database.RepositoryEquivalenceMatcher;
 import com.google.devtools.moe.client.parser.Parser;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
-import com.google.devtools.moe.client.project.ProjectContextFactory;
+import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
 import com.google.devtools.moe.client.repositories.RevisionHistory.SearchType;
+
+import dagger.Lazy;
 
 import org.kohsuke.args4j.Option;
 
@@ -61,8 +63,8 @@ public class LastEquivalenceDirective extends Directive {
   private final Ui ui;
 
   @Inject
-  LastEquivalenceDirective(ProjectContextFactory contextFactory, Db.Factory dbFactory, Ui ui) {
-    super(contextFactory); // TODO(cgruber) Inject project context, not its factory
+  LastEquivalenceDirective(Lazy<ProjectContext> context, Db.Factory dbFactory, Ui ui) {
+    super(context);
     this.dbFactory = dbFactory;
     this.ui = ui;
   }

@@ -44,7 +44,6 @@ import com.google.devtools.moe.client.parser.Expression;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.project.ProjectConfig;
 import com.google.devtools.moe.client.project.ProjectContext;
-import com.google.devtools.moe.client.project.ProjectContextFactory;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.project.ScrubberConfig;
 import com.google.devtools.moe.client.repositories.Repositories;
@@ -55,6 +54,8 @@ import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.writer.DraftRevision;
 import com.google.devtools.moe.client.writer.Writer;
 import com.google.devtools.moe.client.writer.WritingError;
+
+import dagger.Lazy;
 
 import org.kohsuke.args4j.Option;
 
@@ -103,11 +104,11 @@ public class MigrateBranchDirective extends Directive {
   @Inject
   MigrateBranchDirective(
       Db.Factory dbFactory,
-      ProjectContextFactory contextFactory,
+      Lazy<ProjectContext> context,
       Repositories repositories,
       Ui ui,
       Migrator migrator) {
-    super(contextFactory);
+    super(context);
     this.dbFactory = dbFactory;
     this.repositories = repositories;
     this.ui = ui;
@@ -188,7 +189,7 @@ public class MigrateBranchDirective extends Directive {
       Codebase fromCodebase;
       try {
         String toProjectSpace =
-            context.config().getRepositoryConfig(migration.toRepository()).getProjectSpace();
+            context().config().getRepositoryConfig(migration.toRepository()).getProjectSpace();
 
         fromCodebase =
             new RepositoryExpression(migration.fromRepository())
@@ -203,7 +204,7 @@ public class MigrateBranchDirective extends Directive {
         throw new MoeProblem(e.getMessage());
       }
       ScrubberConfig scrubber =
-          context.config().findScrubberConfig(originalFromRepository, migration.toRepository());
+          context().config().findScrubberConfig(originalFromRepository, migration.toRepository());
 
       dr =
           migrator.migrate(

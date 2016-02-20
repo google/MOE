@@ -27,7 +27,9 @@ import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.parser.Parser;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
-import com.google.devtools.moe.client.project.ProjectContextFactory;
+import com.google.devtools.moe.client.project.ProjectContext;
+
+import dagger.Lazy;
 
 import org.kohsuke.args4j.Option;
 
@@ -51,8 +53,8 @@ public class CreateCodebaseDirective extends Directive {
   private final Ui ui;
 
   @Inject
-  CreateCodebaseDirective(CommandRunner cmd, ProjectContextFactory contextFactory, Ui ui) {
-    super(contextFactory); // TODO(cgruber) Inject project context, not its factory
+  CreateCodebaseDirective(Lazy<ProjectContext> context, CommandRunner cmd, Ui ui) {
+    super(context);
     this.cmd = cmd;
     this.ui = ui;
   }

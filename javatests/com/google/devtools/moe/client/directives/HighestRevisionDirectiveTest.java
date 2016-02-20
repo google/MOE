@@ -18,11 +18,13 @@ package com.google.devtools.moe.client.directives;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.SystemCommandRunner;
+import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
 import com.google.devtools.moe.client.testing.RecordingUi;
+import com.google.devtools.moe.client.tools.EagerLazy;
 
 import junit.framework.TestCase;
 
@@ -38,8 +40,8 @@ public class HighestRevisionDirectiveTest extends TestCase {
     contextFactory.projectConfigs.put(
         "moe_config.txt",
         "{\"name\": \"foo\", \"repositories\": {\"internal\": {\"type\": \"dummy\"}}}");
-    HighestRevisionDirective d = new HighestRevisionDirective(contextFactory, ui);
-    d.setContextFileName("moe_config.txt");
+    ProjectContext context = contextFactory.create("moe_config.txt");
+    HighestRevisionDirective d = new HighestRevisionDirective(EagerLazy.fromInstance(context), ui);
     d.repository = "internal";
     assertEquals(0, d.perform());
     assertEquals("Highest revision in repository \"internal\": 1", ui.lastInfo);
@@ -49,8 +51,8 @@ public class HighestRevisionDirectiveTest extends TestCase {
     contextFactory.projectConfigs.put(
         "moe_config.txt",
         "{\"name\": \"foo\", \"repositories\": {\"internal\": {\"type\": \"dummy\"}}}");
-    HighestRevisionDirective d = new HighestRevisionDirective(contextFactory, ui);
-    d.setContextFileName("moe_config.txt");
+    ProjectContext context = contextFactory.create("moe_config.txt");
+    HighestRevisionDirective d = new HighestRevisionDirective(EagerLazy.fromInstance(context), ui);
     d.repository = "internal(revision=4)";
     assertEquals(0, d.perform());
     assertEquals("Highest revision in repository \"internal\": 4", ui.lastInfo);

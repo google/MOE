@@ -16,12 +16,13 @@
 
 package com.google.devtools.moe.client.directives;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.devtools.moe.client.options.MoeOptions;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.ProjectContext;
-import com.google.devtools.moe.client.project.ProjectContextFactory;
+
+import dagger.Lazy;
 
 /**
  * A Directive is what MOE should do in this run.
@@ -32,16 +33,14 @@ public abstract class Directive extends MoeOptions {
   // This is only accessible by children so the same context can be shared by dependent
   // directives (otherwise they clean up each others' files as if they were temporary). This
   // will go away as soon as ProjectContext is injected in a subcomponent. THIS_IS_A_HACK
-  protected ProjectContext context;
-  private final ProjectContextFactory contextFactory;
+  private final Lazy<ProjectContext> context;
 
-  protected Directive(ProjectContextFactory contextFactory) {
-    this.contextFactory = contextFactory;
+  protected Directive(Lazy<ProjectContext> context) {
+    this.context = context;
   }
 
   protected ProjectContext context() {
-    Preconditions.checkState(context != null, "Project context was not initialized");
-    return context;
+    return context.get();
   }
 
   /**
@@ -50,8 +49,12 @@ public abstract class Directive extends MoeOptions {
    * @return the status of performing the Directive, suitable for returning from this process.
    */
   public int perform() throws InvalidProject {
-    if (context == null) {
-      this.context = contextFactory.create(configFilename);
+    try {
+      checkNotNull(context.get()); // Initialize project context during this phase.
+    } catch (InvalidProject e) {
+      throw e;
+    } catch (Exception e) {
+      throw new InvalidProject("Could not initalize project context.", e);
     }
     return performDirectiveBehavior();
   }
@@ -67,10 +70,4 @@ public abstract class Directive extends MoeOptions {
    * Get description suitable for command-line help.
    */
   public abstract String getDescription();
-
-  // TODO(cgruber) Kill this with fire ASAP (when ProjectContext is injected)
-  @VisibleForTesting
-  void setContextFileName(String name) {
-    super.configFilename = name;
-  }
 }

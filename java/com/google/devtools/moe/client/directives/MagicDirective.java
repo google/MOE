@@ -32,13 +32,15 @@ import com.google.devtools.moe.client.migrations.MigrationConfig;
 import com.google.devtools.moe.client.migrations.Migrator;
 import com.google.devtools.moe.client.parser.Expression;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
-import com.google.devtools.moe.client.project.ProjectContextFactory;
+import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.project.ScrubberConfig;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.writer.DraftRevision;
 import com.google.devtools.moe.client.writer.Writer;
 import com.google.devtools.moe.client.writer.WritingError;
+
+import dagger.Lazy;
 
 import org.kohsuke.args4j.Option;
 
@@ -78,12 +80,12 @@ public class MagicDirective extends Directive {
 
   @Inject
   MagicDirective(
-      ProjectContextFactory contextFactory,
+      Lazy<ProjectContext> context,
       Db.Factory dbFactory,
       Ui ui,
       Bookkeeper bookkeeper,
       Migrator migrator) {
-    super(contextFactory); // TODO(cgruber) Inject project context, not its factory
+    super(context);
     this.dbFactory = dbFactory;
     this.ui = ui;
     this.bookkeeper = bookkeeper;
@@ -117,7 +119,7 @@ public class MagicDirective extends Directive {
         continue;
       }
 
-      RepositoryType fromRepo = context.getRepository(migrationConfig.getFromRepository());
+      RepositoryType fromRepo = context().getRepository(migrationConfig.getFromRepository());
       List<Migration> migrations =
           migrator.findMigrationsFromEquivalency(fromRepo, migrationConfig, db);
 
@@ -186,13 +188,13 @@ public class MagicDirective extends Directive {
         Codebase fromCodebase;
         try {
           String toProjectSpace =
-              context.config().getRepositoryConfig(migration.toRepository()).getProjectSpace();
+              context().config().getRepositoryConfig(migration.toRepository()).getProjectSpace();
           fromCodebase =
               new RepositoryExpression(migration.fromRepository())
                   .atRevision(mostRecentFromRev.revId())
                   .translateTo(toProjectSpace)
                   .withReferenceToCodebase(referenceToCodebase)
-                  .createCodebase(context);
+                  .createCodebase(context());
 
         } catch (CodebaseCreationError e) {
           throw new MoeProblem(e.getMessage());
@@ -200,7 +202,7 @@ public class MagicDirective extends Directive {
 
         RepositoryType fromRepoType = context().getRepository(migrationConfig.getFromRepository());
         ScrubberConfig scrubber =
-            context
+            context()
                 .config()
                 .findScrubberConfig(migration.fromRepository(), migration.toRepository());
         dr =

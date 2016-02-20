@@ -31,6 +31,7 @@ import com.google.devtools.moe.client.database.FileDb;
 import com.google.devtools.moe.client.database.RepositoryEquivalence;
 import com.google.devtools.moe.client.database.SubmittedMigration;
 import com.google.devtools.moe.client.gson.GsonModule;
+import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.repositories.Revision;
@@ -39,6 +40,7 @@ import com.google.devtools.moe.client.testing.InMemoryFileSystem;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
 import com.google.devtools.moe.client.testing.RecordingUi;
 import com.google.devtools.moe.client.tools.CodebaseDiffer;
+import com.google.devtools.moe.client.tools.EagerLazy;
 import com.google.devtools.moe.client.tools.FileDifference.ConcreteFileDiffer;
 import com.google.devtools.moe.client.tools.FileDifference.FileDiffer;
 
@@ -113,13 +115,15 @@ public class BookkeepingDirectiveTest extends TestCase {
             ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(filesystem)));
     InMemoryProjectContextFactory contextFactory =
         init(new InMemoryProjectContextFactory(fileDiffer, cmd, filesystem, ui, repositories));
+    ProjectContext context = contextFactory.create("moe_config.txt");
     Injector.INSTANCE = new Injector(filesystem, cmd, ui);
     Db.Factory dbFactory = new FileDb.Factory(filesystem, GsonModule.provideGson());
     Db.Writer dbWriter = new FileDb.Writer(GsonModule.provideGson(), filesystem);
     BookkeepingDirective d =
         new BookkeepingDirective(
-            contextFactory, dbFactory, new Bookkeeper(codebaseDiffer, dbWriter, ui));
-    d.setContextFileName("moe_config.txt");
+            EagerLazy.fromInstance(context),
+            dbFactory,
+            new Bookkeeper(codebaseDiffer, dbWriter, ui));
     d.dbLocation = DB_FILE.getAbsolutePath();
 
     expectDiffs();
@@ -158,13 +162,15 @@ public class BookkeepingDirectiveTest extends TestCase {
             ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(filesystem)));
     InMemoryProjectContextFactory contextFactory =
         init(new InMemoryProjectContextFactory(fileDiffer, cmd, filesystem, ui, repositories));
+    ProjectContext context = contextFactory.create("moe_config.txt");
     Injector.INSTANCE = new Injector(filesystem, cmd, ui);
     Db.Factory dbFactory = new FileDb.Factory(filesystem, GsonModule.provideGson());
     Db.Writer dbWriter = new FileDb.Writer(GsonModule.provideGson(), filesystem);
     BookkeepingDirective d =
         new BookkeepingDirective(
-            contextFactory, dbFactory, new Bookkeeper(codebaseDiffer, dbWriter, ui));
-    d.setContextFileName("moe_config.txt");
+            EagerLazy.fromInstance(context),
+            dbFactory,
+            new Bookkeeper(codebaseDiffer, dbWriter, ui));
     d.dbLocation = DB_FILE.getAbsolutePath();
 
     expectDiffs();
@@ -201,13 +207,15 @@ public class BookkeepingDirectiveTest extends TestCase {
             ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(filesystem)));
     InMemoryProjectContextFactory contextFactory =
         init(new InMemoryProjectContextFactory(fileDiffer, cmd, filesystem, ui, repositories));
+    ProjectContext context = contextFactory.create("moe_config.txt");
     Injector.INSTANCE = new Injector(filesystem, cmd, ui);
     Db.Factory dbFactory = new FileDb.Factory(filesystem, GsonModule.provideGson());
     Db.Writer dbWriter = new FileDb.Writer(GsonModule.provideGson(), filesystem);
     BookkeepingDirective d =
         new BookkeepingDirective(
-            contextFactory, dbFactory, new Bookkeeper(codebaseDiffer, dbWriter, ui));
-    d.setContextFileName("moe_config.txt");
+            EagerLazy.fromInstance(context),
+            dbFactory,
+            new Bookkeeper(codebaseDiffer, dbWriter, ui));
     d.dbLocation = DB_FILE.getAbsolutePath();
 
     expectDiffs();

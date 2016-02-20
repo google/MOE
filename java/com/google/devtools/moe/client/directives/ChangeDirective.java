@@ -22,10 +22,12 @@ import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.parser.Parser;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
-import com.google.devtools.moe.client.project.ProjectContextFactory;
+import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.writer.DraftRevision;
 import com.google.devtools.moe.client.writer.Writer;
 import com.google.devtools.moe.client.writer.WritingError;
+
+import dagger.Lazy;
 
 import org.kohsuke.args4j.Option;
 
@@ -45,9 +47,8 @@ public class ChangeDirective extends Directive {
   private final DraftRevision.Factory revisionFactory;
 
   @Inject
-  ChangeDirective(
-      ProjectContextFactory contextFactory, Ui ui, DraftRevision.Factory revisionFactory) {
-    super(contextFactory); // TODO(cgruber) Inject project context, not its factory
+  ChangeDirective(Lazy<ProjectContext> context, Ui ui, DraftRevision.Factory revisionFactory) {
+    super(context);
     this.ui = ui;
     this.revisionFactory = revisionFactory;
   }

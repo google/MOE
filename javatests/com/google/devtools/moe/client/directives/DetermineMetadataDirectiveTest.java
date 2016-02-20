@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.migrations.Migrator;
+import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.repositories.Revision;
@@ -27,6 +28,7 @@ import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
 import com.google.devtools.moe.client.testing.RecordingUi;
+import com.google.devtools.moe.client.tools.EagerLazy;
 import com.google.devtools.moe.client.writer.DraftRevision;
 
 import junit.framework.TestCase;
@@ -48,10 +50,10 @@ public class DetermineMetadataDirectiveTest extends TestCase {
     contextFactory.projectConfigs.put(
         "moe_config.txt",
         "{\"name\": \"foo\", \"repositories\": {\"internal\": {\"type\": \"dummy\"}}}");
+    ProjectContext context = contextFactory.create("moe_config.txt");
     DetermineMetadataDirective d =
         new DetermineMetadataDirective(
-            contextFactory, ui, new Migrator(new DraftRevision.Factory(ui), ui));
-    d.setContextFileName("moe_config.txt");
+            EagerLazy.fromInstance(context), ui, new Migrator(new DraftRevision.Factory(ui), ui));
     d.repositoryExpression = "internal(revision=\"1,2\")";
     assertEquals(0, d.perform());
     RevisionMetadata rm =
@@ -73,10 +75,10 @@ public class DetermineMetadataDirectiveTest extends TestCase {
     contextFactory.projectConfigs.put(
         "moe_config.txt",
         "{\"name\": \"foo\", \"repositories\": {\"internal\": {\"type\": \"dummy\"}}}");
+    ProjectContext context = contextFactory.create("moe_config.txt");
     DetermineMetadataDirective d =
         new DetermineMetadataDirective(
-            contextFactory, ui, new Migrator(new DraftRevision.Factory(ui), ui));
-    d.setContextFileName("moe_config.txt");
+            EagerLazy.fromInstance(context), ui, new Migrator(new DraftRevision.Factory(ui), ui));
     d.repositoryExpression = "internal(revision=7)";
     assertEquals(0, d.perform());
     RevisionMetadata rm =

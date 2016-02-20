@@ -22,6 +22,10 @@ import com.google.common.base.Strings;
  * An error thrown in the case of an invalid project definition or configuration.
  */
 public class InvalidProject extends RuntimeException {
+  public InvalidProject(Throwable t, String explanationTemplate, Object... args) {
+    super(String.format(explanationTemplate, args), t);
+  }
+
   public InvalidProject(String explanationTemplate, Object... args) {
     super(String.format(explanationTemplate, args));
   }

@@ -27,11 +27,13 @@ import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.database.Db;
 import com.google.devtools.moe.client.database.FileDb;
 import com.google.devtools.moe.client.gson.GsonModule;
+import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
 import com.google.devtools.moe.client.testing.RecordingUi;
+import com.google.devtools.moe.client.tools.EagerLazy;
 
 import junit.framework.TestCase;
 
@@ -62,12 +64,12 @@ public class NoteEquivalenceDirectiveTest extends TestCase {
         "{'name': 'foo', 'repositories': {"
             + "  'internal': {'type': 'dummy'}, 'public': {'type': 'dummy'}"
             + "}}");
+    ProjectContext context = contextFactory.create("moe_config.txt");
     super.setUp();
     // TODO(cgruber): Rip this out when Db.Factory is injected.
     Injector.INSTANCE = new Injector(mockFs, cmd, ui);
 
-    d = new NoteEquivalenceDirective(contextFactory, dbFactory, dbWriter, ui);
-    d.setContextFileName("moe_config.txt");
+    d = new NoteEquivalenceDirective(EagerLazy.fromInstance(context), dbFactory, dbWriter, ui);
     d.dbLocation = "/foo/db.txt";
   }
 

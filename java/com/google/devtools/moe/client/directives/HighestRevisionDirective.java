@@ -20,10 +20,12 @@ import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.parser.Parser;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
-import com.google.devtools.moe.client.project.ProjectContextFactory;
+import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
+
+import dagger.Lazy;
 
 import org.kohsuke.args4j.Option;
 
@@ -45,8 +47,8 @@ public class HighestRevisionDirective extends Directive {
   private final Ui ui;
 
   @Inject
-  HighestRevisionDirective(ProjectContextFactory contextFactory, Ui ui) {
-    super(contextFactory); // TODO(cgruber) Inject project context, not its factory
+  HighestRevisionDirective(Lazy<ProjectContext> context, Ui ui) {
+    super(context);
     this.ui = ui;
   }
 

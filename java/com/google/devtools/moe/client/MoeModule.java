@@ -19,7 +19,9 @@ import com.google.devtools.moe.client.database.FileDb;
 import com.google.devtools.moe.client.directives.DirectivesModule;
 import com.google.devtools.moe.client.gson.GsonModule;
 import com.google.devtools.moe.client.options.OptionsModule;
+import com.google.devtools.moe.client.options.OptionsModule.Argument;
 import com.google.devtools.moe.client.project.FileReadingProjectContextFactory;
+import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.project.ProjectContextFactory;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.tools.FileDifference.ConcreteFileDiffer;
@@ -30,6 +32,7 @@ import com.squareup.okhttp.OkHttpClient;
 import dagger.Module;
 import dagger.Provides;
 
+import javax.annotation.Nullable;
 import javax.inject.Singleton;
 
 /**
@@ -61,6 +64,17 @@ public class MoeModule {
   @Singleton
   ProjectContextFactory projectContextFactory(FileReadingProjectContextFactory factory) {
     return factory;
+  }
+
+  @Provides
+  @Singleton
+  ProjectContext projectContext(
+      @Nullable @Argument("config_file") String configFilename, ProjectContextFactory factory) {
+    // Handle null filename here, to make a better error message, rather than let dagger do it.
+    if (configFilename == null) {
+      throw new MoeProblem("Configuration file path not set.  Did you specify --config_file?");
+    }
+    return factory.create(configFilename);
   }
 
   @Provides

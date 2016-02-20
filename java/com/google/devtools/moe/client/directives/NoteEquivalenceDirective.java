@@ -23,9 +23,11 @@ import com.google.devtools.moe.client.database.RepositoryEquivalence;
 import com.google.devtools.moe.client.parser.Parser;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
-import com.google.devtools.moe.client.project.ProjectContextFactory;
+import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.repositories.Revision;
+
+import dagger.Lazy;
 
 import org.kohsuke.args4j.Option;
 
@@ -59,8 +61,8 @@ public class NoteEquivalenceDirective extends Directive {
 
   @Inject
   NoteEquivalenceDirective(
-      ProjectContextFactory contextFactory, Db.Factory dbFactory, Db.Writer dbWriter, Ui ui) {
-    super(contextFactory); // TODO(cgruber) Inject project context, not its factory
+      Lazy<ProjectContext> context, Db.Factory dbFactory, Db.Writer dbWriter, Ui ui) {
+    super(context);
     this.dbFactory = dbFactory;
     this.dbWriter = dbWriter;
     this.ui = ui;

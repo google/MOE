@@ -16,6 +16,7 @@
 package com.google.devtools.moe.client.options;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.directives.Directives.SelectedDirective;
 
 import dagger.Provides;
@@ -27,6 +28,8 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.annotation.Nullable;
+import javax.inject.Qualifier;
 import javax.inject.Singleton;
 
 /** Dagger module to seed command-line arguments into the graph */
@@ -38,6 +41,34 @@ public class OptionsModule {
     Preconditions.checkArgument(
         args.length > 0, OptionsModule.class.getSimpleName() + " requires a non-empty args list.");
     this.rawArgs = args;
+  }
+
+  @Provides
+  @Nullable
+  @Argument("config_file")
+  static String configFile(String... args) {
+    // TODO(cgruber) Migrate to JCommander, so we don't have to manually parse some of these.
+    List<String> matchingArgs = ImmutableList.of("-c", "--config", "--config_file");
+    for (int i = 0; i < args.length; i++) {
+      if (matchingArgs.contains(args[i])) {
+        if ((i + 1) >= args.length) {
+          throw new IllegalArgumentException("'" + args[i] + "' specified without a parameter");
+        }
+        if (args[i + 1].startsWith("-")) {
+          throw new IllegalArgumentException("'" + args[i] + "' is not followed by a path");
+        }
+        return args[i + 1];
+      }
+      // check for "--config=" style.
+      for (String prefix : matchingArgs) {
+        if (args[i].startsWith(prefix + "=")) {
+          return args[i].substring(prefix.length() + 1);
+        }
+      }
+    }
+    // Some commands may not require config
+    // TODO(cgruber) make this not-nullable when only config-requiring commands yank in the config.
+    return null;
   }
 
   @Provides
@@ -84,5 +115,14 @@ public class OptionsModule {
       }
     }
     return processedArgs.toArray(new String[args.size()]);
+  }
+
+  /**
+   * A JSR-330 {@link Qualifier} annotation to distinguish injected argument values from other
+   * injected {@link String} values.
+   */
+  @Qualifier
+  public @interface Argument {
+    String value();
   }
 }

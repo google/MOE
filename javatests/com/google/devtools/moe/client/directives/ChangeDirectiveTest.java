@@ -18,11 +18,13 @@ package com.google.devtools.moe.client.directives;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.SystemCommandRunner;
+import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
 import com.google.devtools.moe.client.testing.RecordingUi;
+import com.google.devtools.moe.client.tools.EagerLazy;
 import com.google.devtools.moe.client.writer.DraftRevision;
 
 import junit.framework.TestCase;
@@ -42,8 +44,9 @@ public class ChangeDirectiveTest extends TestCase {
     contextFactory.projectConfigs.put(
         "moe_config.txt",
         "{\"name\": \"foo\", \"repositories\": {\"internal\": {\"type\": \"dummy\"}}}");
-    ChangeDirective d = new ChangeDirective(contextFactory, ui, new DraftRevision.Factory(ui));
-    d.setContextFileName("moe_config.txt");
+    ProjectContext context = contextFactory.create("moe_config.txt");
+    ChangeDirective d =
+        new ChangeDirective(EagerLazy.fromInstance(context), ui, new DraftRevision.Factory(ui));
     d.codebase = "internal";
     d.destination = "internal";
     assertEquals(0, d.perform());

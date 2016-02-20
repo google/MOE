@@ -21,10 +21,12 @@ import com.google.devtools.moe.client.migrations.Migrator;
 import com.google.devtools.moe.client.parser.Parser;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
-import com.google.devtools.moe.client.project.ProjectContextFactory;
+import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
+
+import dagger.Lazy;
 
 import org.kohsuke.args4j.Option;
 
@@ -48,8 +50,8 @@ public class DetermineMetadataDirective extends Directive {
   private final Migrator migrator;
 
   @Inject
-  DetermineMetadataDirective(ProjectContextFactory contextFactory, Ui ui, Migrator migrator) {
-    super(contextFactory); // TODO(cgruber) Inject project context, not its factory
+  DetermineMetadataDirective(Lazy<ProjectContext> context, Ui ui, Migrator migrator) {
+    super(context);
     this.ui = ui;
     this.migrator = migrator;
   }
@@ -65,7 +67,7 @@ public class DetermineMetadataDirective extends Directive {
     }
 
     List<Revision> revs = Revision.fromRepositoryExpression(repoEx, context());
-    RepositoryType repositoryType = context.getRepository(repoEx.getRepositoryName());
+    RepositoryType repositoryType = context().getRepository(repoEx.getRepositoryName());
     RevisionMetadata rm =
         migrator.processMetadata(repositoryType.revisionHistory(), revs, null, null);
     ui.info(rm.toString());

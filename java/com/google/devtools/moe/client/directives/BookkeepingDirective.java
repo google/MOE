@@ -18,7 +18,9 @@ package com.google.devtools.moe.client.directives;
 
 import com.google.devtools.moe.client.database.Bookkeeper;
 import com.google.devtools.moe.client.database.Db;
-import com.google.devtools.moe.client.project.ProjectContextFactory;
+import com.google.devtools.moe.client.project.ProjectContext;
+
+import dagger.Lazy;
 
 import org.kohsuke.args4j.Option;
 
@@ -31,13 +33,14 @@ public class BookkeepingDirective extends Directive {
   @Option(name = "--db", required = true, usage = "Location of MOE database")
   String dbLocation = "";
 
+  private final Lazy<ProjectContext> context;
   private final Db.Factory dbFactory;
   private final Bookkeeper bookkeeper;
 
   @Inject
-  BookkeepingDirective(
-      ProjectContextFactory contextFactory, Db.Factory dbFactory, Bookkeeper bookkeeper) {
-    super(contextFactory); // TODO(cgruber) Inject project context, not its factory
+  BookkeepingDirective(Lazy<ProjectContext> context, Db.Factory dbFactory, Bookkeeper bookkeeper) {
+    super(context);
+    this.context = context;
     this.dbFactory = dbFactory;
     this.bookkeeper = bookkeeper;
   }
@@ -45,7 +48,7 @@ public class BookkeepingDirective extends Directive {
   @Override
   protected int performDirectiveBehavior() {
     Db db = dbFactory.load(dbLocation);
-    return bookkeeper.bookkeep(db, context());
+    return bookkeeper.bookkeep(db, context.get());
   }
 
   @Override

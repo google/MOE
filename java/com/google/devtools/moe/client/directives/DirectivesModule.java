@@ -19,7 +19,7 @@ import static dagger.Provides.Type.MAP;
 
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.github.GithubClient;
-import com.google.devtools.moe.client.project.ProjectContextFactory;
+import com.google.devtools.moe.client.project.ProjectContext;
 
 import dagger.Lazy;
 import dagger.MapKey;
@@ -113,14 +113,15 @@ public class DirectivesModule {
     return directive;
   }
 
+  // TODO(cgruber) Figure out why dagger breaks when directly injecting the impl.
   @Provides(type = MAP)
   @StringKey("github_pull")
   static Directive githubPull(
-      ProjectContextFactory contextFactory,
+      Lazy<ProjectContext> context,
       Ui ui,
       GithubClient client,
       Lazy<MigrateBranchDirective> migrateBranchDirective) {
-    return new GithubPullDirective(contextFactory, ui, client, migrateBranchDirective);
+    return new GithubPullDirective(context, ui, client, migrateBranchDirective);
   }
 
   @Provides(type = MAP)

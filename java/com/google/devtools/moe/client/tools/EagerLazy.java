@@ -13,32 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package com.google.devtools.moe.client.directives;
-
-import com.google.devtools.moe.client.project.ProjectContext;
+package com.google.devtools.moe.client.tools;
 
 import dagger.Lazy;
 
-import javax.inject.Inject;
+/** An implementation of {@link dagger.Lazy} used for testing (and in one legacy position) */
+// TODO(cgruber) move to testing this when all directives inject Lazy<ProjectContext>
+public final class EagerLazy<T> implements Lazy<T> {
+  private final T instance;
 
-/**
- * Reads a MOE Project's configuration and reads it, checking for errors.
- */
-public class CheckConfigDirective extends Directive {
-  @Inject
-  CheckConfigDirective(Lazy<ProjectContext> context) {
-    super(context);
+  private EagerLazy(T instance) {
+    this.instance = instance;
   }
 
   @Override
-  protected int performDirectiveBehavior() {
-    // Do nothing, since project config validation occurs in initialization of Directive.
-    return 0;
+  public T get() {
+    return instance;
   }
 
-  @Override
-  public String getDescription() {
-    return "Checks that the project's configuration is valid";
+  public static <T> Lazy<T> fromInstance(T instance) {
+    return new EagerLazy<T>(instance);
   }
 }

@@ -21,10 +21,12 @@ import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.parser.Parser;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
-import com.google.devtools.moe.client.project.ProjectContextFactory;
+import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.tools.CodebaseDiffer;
 import com.google.devtools.moe.client.tools.CodebaseDifference;
 import com.google.devtools.moe.client.tools.PatchCodebaseDifferenceRenderer;
+
+import dagger.Lazy;
 
 import org.kohsuke.args4j.Option;
 
@@ -47,8 +49,8 @@ public class DiffCodebasesDirective extends Directive {
   private final Ui ui;
 
   @Inject
-  DiffCodebasesDirective(ProjectContextFactory contextFactory, CodebaseDiffer differ, Ui ui) {
-    super(contextFactory); // TODO(cgruber) Inject project context, not its factory
+  DiffCodebasesDirective(Lazy<ProjectContext> context, CodebaseDiffer differ, Ui ui) {
+    super(context);
     this.differ = differ;
     this.ui = ui;
   }

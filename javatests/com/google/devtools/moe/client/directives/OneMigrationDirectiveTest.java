@@ -20,26 +20,31 @@ import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.migrations.Migrator;
+import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
 import com.google.devtools.moe.client.testing.RecordingUi;
+import com.google.devtools.moe.client.tools.EagerLazy;
 import com.google.devtools.moe.client.writer.DraftRevision;
+
+import dagger.Lazy;
 
 import junit.framework.TestCase;
 
 public class OneMigrationDirectiveTest extends TestCase {
   private final RecordingUi ui = new RecordingUi();
   private final SystemCommandRunner cmd = new SystemCommandRunner(ui);
-  private final Repositories repositories =
-      new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(null)));
-  private final InMemoryProjectContextFactory contextFactory =
-      new InMemoryProjectContextFactory(null, cmd, null, ui, repositories);
+  private Lazy<ProjectContext> context;
 
   @Override
   public void setUp() throws Exception {
     super.setUp();
+    Repositories repositories =
+        new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(null)));
+    InMemoryProjectContextFactory contextFactory =
+        new InMemoryProjectContextFactory(null, cmd, null, ui, repositories);
     contextFactory.projectConfigs.put(
         "moe_config.txt",
         "{\"name\":\"foo\",\"repositories\":{"
@@ -48,16 +53,16 @@ public class OneMigrationDirectiveTest extends TestCase {
             + "\"translators\":[{\"from_project_space\":\"internal\","
             + "\"to_project_space\":\"public\",\"steps\":[{\"name\":\"id_step\","
             + "\"editor\":{\"type\":\"identity\"}}]}]}");
+    context = EagerLazy.fromInstance(contextFactory.create("moe_config.txt"));
   }
 
   public void testOneMigration() throws Exception {
     OneMigrationDirective d =
         new OneMigrationDirective(
-            contextFactory,
+            context,
             ui,
             new DraftRevision.Factory(ui),
             new Migrator(new DraftRevision.Factory(ui), ui));
-    d.setContextFileName("moe_config.txt");
     d.fromRepository = "int(revision=1000)";
     d.toRepository = "pub(revision=2)";
     assertEquals(0, d.perform());
@@ -67,11 +72,10 @@ public class OneMigrationDirectiveTest extends TestCase {
   public void testOneMigrationFailOnFromRevision() throws Exception {
     OneMigrationDirective d =
         new OneMigrationDirective(
-            contextFactory,
+            context,
             ui,
             new DraftRevision.Factory(ui),
             new Migrator(new DraftRevision.Factory(ui), ui));
-    d.setContextFileName("moe_config.txt");
     d.fromRepository = "x(revision=1000)";
     d.toRepository = "pub(revision=2)";
     try {
@@ -86,11 +90,10 @@ public class OneMigrationDirectiveTest extends TestCase {
   public void testOneMigrationFailOnToRevision() throws Exception {
     OneMigrationDirective d =
         new OneMigrationDirective(
-            contextFactory,
+            context,
             ui,
             new DraftRevision.Factory(ui),
             new Migrator(new DraftRevision.Factory(ui), ui));
-    d.setContextFileName("moe_config.txt");
     d.fromRepository = "int(revision=1000)";
     d.toRepository = "x(revision=2)";
     try {

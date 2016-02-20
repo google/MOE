@@ -24,8 +24,10 @@ import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.codebase.CodebaseMerger;
 import com.google.devtools.moe.client.parser.Parser;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
-import com.google.devtools.moe.client.project.ProjectContextFactory;
+import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.tools.FileDifference.FileDiffer;
+
+import dagger.Lazy;
 
 import org.kohsuke.args4j.Option;
 
@@ -63,12 +65,12 @@ public class MergeCodebasesDirective extends Directive {
 
   @Inject
   MergeCodebasesDirective(
-      ProjectContextFactory contextFactory,
+      Lazy<ProjectContext> context,
       FileDiffer differ,
       Ui ui,
       FileSystem filesystem,
       CommandRunner cmd) {
-    super(contextFactory); // TODO(cgruber) Inject project context, not its factory
+    super(context);
     this.differ = differ;
     this.ui = ui;
     this.filesystem = filesystem;

@@ -21,8 +21,10 @@ import com.google.devtools.moe.client.database.Db;
 import com.google.devtools.moe.client.parser.Parser;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
-import com.google.devtools.moe.client.project.ProjectContextFactory;
+import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.Revision;
+
+import dagger.Lazy;
 
 import org.kohsuke.args4j.Option;
 
@@ -59,8 +61,8 @@ public class FindEquivalenceDirective extends Directive {
   private final Ui ui;
 
   @Inject
-  FindEquivalenceDirective(ProjectContextFactory contextFactory, Db.Factory dbFactory, Ui ui) {
-    super(contextFactory); // TODO(cgruber) Inject project context, not its factory
+  FindEquivalenceDirective(Lazy<ProjectContext> context, Db.Factory dbFactory, Ui ui) {
+    super(context);
     this.dbFactory = dbFactory;
     this.ui = ui;
   }

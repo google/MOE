@@ -24,7 +24,7 @@ import com.google.devtools.moe.client.Ui.Task;
 import com.google.devtools.moe.client.github.GithubAPI.PullRequest;
 import com.google.devtools.moe.client.github.GithubClient;
 import com.google.devtools.moe.client.github.PullRequestUrl;
-import com.google.devtools.moe.client.project.ProjectContextFactory;
+import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 
 import dagger.Lazy;
@@ -58,11 +58,11 @@ public class GithubPullDirective extends Directive {
   private final Lazy<MigrateBranchDirective> migrateBranchDirective;
 
   GithubPullDirective(
-      ProjectContextFactory contextFactory,
+      Lazy<ProjectContext> context,
       Ui ui,
       GithubClient client,
       Lazy<MigrateBranchDirective> migrateBranchDirective) {
-    super(contextFactory); // TODO(cgruber) Inject project context, not its factory
+    super(context);
     this.client = client;
     this.ui = ui;
     this.migrateBranchDirective = migrateBranchDirective;
@@ -101,10 +101,6 @@ public class GithubPullDirective extends Directive {
     }
 
     MigrateBranchDirective delegate = migrateBranchDirective.get();
-
-    // TODO(cgruber): Strip out project context so that this is not necessary.
-    // Override context to avoid re-creating it from files.
-    delegate.context = context;
 
     String repoConfigName = findRepoConfig(context().config().repositories(), metadata);
     ui.info("Using '%s' as the source repository.", repoConfigName);
