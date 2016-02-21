@@ -44,4 +44,9 @@ public class Operation {
     }
     return toString().equals(o.toString());
   }
+
+  @Override
+  public int hashCode() {
+    return toString().hashCode();
+  }
 }
