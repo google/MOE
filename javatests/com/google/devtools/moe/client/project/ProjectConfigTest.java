@@ -152,4 +152,42 @@ public class ProjectConfigTest extends TestCase {
     assertEquals(1, p.repositories().size());
     assertNotNull(p.getRepositoryConfig("internal"));
   }
+
+  public void testJsonSemanticsMismatch() throws Exception {
+    assertInvalidConfig(
+        "{"
+        + " 'name': 'foo',"
+        + " 'repositories': {"
+        + "   'x': {}"
+        + " },"
+        // The trailing comma here leads to a null value in GSON
+        // but not per JavaScript Array constructor semantics.
+        + " 'migrations': [{'name': 'foo'},]"
+        + "}",
+        "MOE config uses problematic JavaScript constructs at key chain .migrations[1].");
+
+
+    assertInvalidConfig(
+        "{"
+        + "  'name': 'foo',"
+        + "  'translators': {"
+        + "    'steps': ["
+        + "      {"
+        + "        'name': 'rename_step',"
+        + "        'editor': {"
+        + "          type: 'renamer',"
+        + "          'mappings': {"
+        // foo/bar is not an identifier, and there's a trailing comment
+        // and a non-JS comment here.
+        + "            'foo/bar': [,]  # Python comment\n"
+        + "          }"
+        + "        }"
+        + "      }"
+        + "    ]"
+        + "  }"
+        + "}",
+        "MOE config uses problematic JavaScript constructs at key chain "
+        + ".translators.steps[0].editor.mappings[\"foo/bar\"][1].");
+  }
+
 }
