@@ -112,7 +112,7 @@ public class SvnWriter implements Writer {
 
       Injector.INSTANCE
           .ui()
-          .info(
+          .message(
               "To submit, run: cd %s && ./svn_commit.sh && cd -", rootDirectory.getAbsolutePath());
     }
     return dr;
@@ -166,7 +166,7 @@ public class SvnWriter implements Writer {
         } catch (CommandRunner.CommandException e) {
           // If the mime type setting fails, it's not really a big deal.
           // Just log it and keep going.
-          Injector.INSTANCE.ui().info("Error setting mime-type for %s", relativePath);
+          Injector.INSTANCE.ui().message("Error setting mime-type for %s", relativePath);
         }
       }
 

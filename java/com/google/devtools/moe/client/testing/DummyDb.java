@@ -18,7 +18,7 @@ package com.google.devtools.moe.client.testing;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.moe.client.Messenger;
+import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.database.Db;
 import com.google.devtools.moe.client.database.RepositoryEquivalence;
 import com.google.devtools.moe.client.database.SubmittedMigration;
@@ -94,11 +94,11 @@ public class DummyDb implements Db {
 
   /** Simulates writing a database out, logging output to the messenger/UI. */
   public static class Writer implements Db.Writer {
-    private final Messenger messenger;
+    private final Ui ui;
 
     @Inject
-    public Writer(Messenger messenger) {
-      this.messenger = messenger;
+    public Writer(Ui ui) {
+      this.ui = ui;
     }
 
     @Override
@@ -109,11 +109,10 @@ public class DummyDb implements Db {
     @Override
     public void writeToLocation(String dbLocation, Db db) {
       DummyDb dummyDb = (DummyDb) db;
-      messenger.info(
-          String.format(
-              "Equivalences:\n%s\nMigrations:\n%s",
-              JOINER.join(dummyDb.equivalences),
-              JOINER.join(dummyDb.migrations)));
+      ui.message(
+          "Equivalences:\n%s\nMigrations:\n%s",
+          JOINER.join(dummyDb.equivalences),
+          JOINER.join(dummyDb.migrations));
     }
   }
 }

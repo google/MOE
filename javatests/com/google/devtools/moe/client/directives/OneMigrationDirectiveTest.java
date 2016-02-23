@@ -16,9 +16,12 @@
 
 package com.google.devtools.moe.client.directives;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.SystemCommandRunner;
+import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.migrations.Migrator;
 import com.google.devtools.moe.client.project.ProjectConfig;
 import com.google.devtools.moe.client.project.ProjectContext;
@@ -26,7 +29,6 @@ import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
-import com.google.devtools.moe.client.testing.RecordingUi;
 import com.google.devtools.moe.client.tools.EagerLazy;
 import com.google.devtools.moe.client.writer.DraftRevision;
 
@@ -34,9 +36,12 @@ import dagger.Lazy;
 
 import junit.framework.TestCase;
 
+import java.io.ByteArrayOutputStream;
+
 public class OneMigrationDirectiveTest extends TestCase {
-  private final RecordingUi ui = new RecordingUi();
-  private final SystemCommandRunner cmd = new SystemCommandRunner(ui);
+  private final ByteArrayOutputStream stream = new ByteArrayOutputStream();
+  private final Ui ui = new Ui(stream, /* fileSystem */ null);
+  private final SystemCommandRunner cmd = new SystemCommandRunner();
   private Lazy<ProjectContext> context;
   private Lazy<ProjectConfig> config;
 
@@ -69,8 +74,8 @@ public class OneMigrationDirectiveTest extends TestCase {
             new Migrator(new DraftRevision.Factory(ui), ui));
     d.fromRepository = "int(revision=1000)";
     d.toRepository = "pub(revision=2)";
-    assertEquals(0, d.perform());
-    assertEquals(String.format("Created Draft Revision: %s", "/dummy/revision/pub"), ui.lastInfo);
+    assertThat(d.perform()).isEqualTo(0);
+    assertThat(stream.toString()).contains("Created Draft Revision: /dummy/revision/pub");
   }
 
   public void testOneMigrationFailOnFromRevision() throws Exception {

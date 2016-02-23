@@ -23,17 +23,18 @@ import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
 import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
 import com.google.devtools.moe.client.testing.DummyRepositoryFactory.DummyCommit;
-import com.google.devtools.moe.client.testing.RecordingUi;
 
 import junit.framework.TestCase;
 
 import org.joda.time.DateTime;
 
+import java.io.ByteArrayOutputStream;
 import java.util.List;
 
 public class MigrateBranchDirectiveTest extends TestCase {
   private static final String AUTHOR = "foo@foo.com";
-  private final Ui ui = new RecordingUi();
+  private final ByteArrayOutputStream stream = new ByteArrayOutputStream();
+  private final Ui ui = new Ui(stream, /* fileSystem */ null);
 
   public void testBranchRevision() {
 

@@ -97,18 +97,18 @@ public class GitWriter extends AbstractDvcsWriter<GitClonedRepository> {
     }
 
     Ui ui = Injector.INSTANCE.ui();
-    ui.info("=====");
-    ui.info("MOE changes have been committed to a clone at " + getRoot());
+    ui.message("=====");
+    ui.message("MOE changes have been committed to a clone at " + getRoot());
     if (moeBranchName.startsWith(GitClonedRepository.MOE_MIGRATIONS_BRANCH_PREFIX)) {
-      ui.info("Changes are on a new branch. Rebase or merge these changes back onto ");
-      ui.info("the desired branch before pushing. For example:");
-      ui.info("$ git rebase " + originalBranchName);
-      ui.info("$ git checkout " + originalBranchName);
-      ui.info("$ git merge --ff-only " + moeBranchName);
-      ui.info("$ git push");
+      ui.message("Changes are on a new branch. Rebase or merge these changes back onto ");
+      ui.message("the desired branch before pushing. For example:");
+      ui.message("$ git rebase " + originalBranchName);
+      ui.message("$ git checkout " + originalBranchName);
+      ui.message("$ git merge --ff-only " + moeBranchName);
+      ui.message("$ git push");
     } else {
-      ui.info("Changes are on branch '" + moeBranchName + "' and are ready to push.");
+      ui.message("Changes are on branch '" + moeBranchName + "' and are ready to push.");
     }
-    ui.info("=====");
+    ui.message("=====");
   }
 }

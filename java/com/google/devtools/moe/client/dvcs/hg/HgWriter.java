@@ -90,14 +90,14 @@ public class HgWriter extends AbstractDvcsWriter<HgClonedRepository> {
   @Override
   public void printPushMessage() {
     Ui ui = Injector.INSTANCE.ui();
-    ui.info("=====");
-    ui.info("MOE changes have been committed to a clone at " + getRoot());
-    ui.info("Changes may have created a new head. Merge heads if needed, then push to remote.");
-    ui.info("For example:");
-    ui.info("$ hg heads");
-    ui.info("$ hg merge  # if more than one head");
-    ui.info("$ hg commit -m 'MOE merge'");
-    ui.info("$ hg push");
-    ui.info("=====");
+    ui.message("=====");
+    ui.message("MOE changes have been committed to a clone at %s", getRoot());
+    ui.message("Changes may have created a new head. Merge heads if needed, then push to remote.");
+    ui.message("For example:");
+    ui.message("$ hg heads");
+    ui.message("$ hg merge  # if more than one head");
+    ui.message("$ hg commit -m 'MOE merge'");
+    ui.message("$ hg push");
+    ui.message("=====");
   }
 }

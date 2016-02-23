@@ -16,9 +16,12 @@
 
 package com.google.devtools.moe.client.directives;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.SystemCommandRunner;
+import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.migrations.Migrator;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.Repositories;
@@ -27,7 +30,6 @@ import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
-import com.google.devtools.moe.client.testing.RecordingUi;
 import com.google.devtools.moe.client.tools.EagerLazy;
 import com.google.devtools.moe.client.writer.DraftRevision;
 
@@ -35,9 +37,12 @@ import junit.framework.TestCase;
 
 import org.joda.time.DateTime;
 
+import java.io.ByteArrayOutputStream;
+
 public class DetermineMetadataDirectiveTest extends TestCase {
-  private final RecordingUi ui = new RecordingUi();
-  private final SystemCommandRunner cmd = new SystemCommandRunner(ui);
+  private final ByteArrayOutputStream stream = new ByteArrayOutputStream();
+  private final Ui ui = new Ui(stream, /* fileSystem */ null);
+  private final SystemCommandRunner cmd = new SystemCommandRunner();
   private final Repositories repositories =
       new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(null)));
   private final InMemoryProjectContextFactory contextFactory =
@@ -64,7 +69,7 @@ public class DetermineMetadataDirectiveTest extends TestCase {
             "description\n-------------\ndescription",
             ImmutableList.of(
                 Revision.create("parent", "internal"), Revision.create("parent", "internal")));
-    assertEquals(rm.toString(), ui.lastInfo);
+    assertThat(stream.toString().trim()).isEqualTo(rm.toString().trim());
   }
 
   /**
@@ -88,6 +93,6 @@ public class DetermineMetadataDirectiveTest extends TestCase {
             new DateTime(1L),
             "description",
             ImmutableList.of(Revision.create("parent", "internal")));
-    assertEquals(rm.toString(), ui.lastInfo);
+    assertThat(stream.toString().trim()).isEqualTo(rm.toString().trim());
   }
 }

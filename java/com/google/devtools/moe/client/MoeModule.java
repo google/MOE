@@ -15,6 +15,7 @@
  */
 package com.google.devtools.moe.client;
 
+import com.google.devtools.moe.client.Ui.UiModule;
 import com.google.devtools.moe.client.database.FileDb;
 import com.google.devtools.moe.client.directives.DirectivesModule;
 import com.google.devtools.moe.client.gson.GsonModule;
@@ -45,22 +46,11 @@ import javax.inject.Singleton;
     OptionsModule.class,
     DirectivesModule.class,
     FileDb.Module.class,
-    GsonModule.class
+    GsonModule.class,
+    UiModule.class
   }
 )
 public class MoeModule {
-  @Provides
-  @Singleton
-  Ui ui(SystemUi sysui) {
-    return sysui;
-  }
-
-  /* Alias to UI which extends this interface */
-  @Provides
-  public Messenger messenger(Ui ui) {
-    return ui;
-  }
-
   @Provides
   @Singleton
   ProjectContextFactory projectContextFactory(FileReadingProjectContextFactory factory) {

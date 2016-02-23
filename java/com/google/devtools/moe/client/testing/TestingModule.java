@@ -17,7 +17,7 @@ package com.google.devtools.moe.client.testing;
 
 import static dagger.Provides.Type.SET;
 
-import com.google.devtools.moe.client.Ui;
+import com.google.devtools.moe.client.Ui.UiModule;
 import com.google.devtools.moe.client.project.ProjectContextFactory;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.tools.FileDifference.ConcreteFileDiffer;
@@ -31,13 +31,8 @@ import javax.inject.Singleton;
 /**
  * A simple Dagger module to provide some nearly-universally-used in-memory test fakes.
  */
-@Module
+@Module(includes = UiModule.class)
 public class TestingModule {
-  @Provides
-  @Singleton
-  public Ui ui(RecordingUi recordingUi) {
-    return recordingUi;
-  }
 
   @Provides
   @Singleton

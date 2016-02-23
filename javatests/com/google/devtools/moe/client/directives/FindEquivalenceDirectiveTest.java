@@ -16,8 +16,11 @@
 
 package com.google.devtools.moe.client.directives;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.SystemCommandRunner;
+import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.database.Db;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.Repositories;
@@ -25,14 +28,16 @@ import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.testing.DummyDb;
 import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
-import com.google.devtools.moe.client.testing.RecordingUi;
 import com.google.devtools.moe.client.tools.EagerLazy;
 
 import junit.framework.TestCase;
 
+import java.io.ByteArrayOutputStream;
+
 public class FindEquivalenceDirectiveTest extends TestCase {
-  private final RecordingUi ui = new RecordingUi();
-  private final SystemCommandRunner cmd = new SystemCommandRunner(ui);
+  private final ByteArrayOutputStream stream = new ByteArrayOutputStream();
+  private final Ui ui = new Ui(stream, /* fileSystem */ null);
+  private final SystemCommandRunner cmd = new SystemCommandRunner();
   private final Repositories repositories =
       new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(null)));
   private final InMemoryProjectContextFactory contextFactory =
@@ -50,6 +55,6 @@ public class FindEquivalenceDirectiveTest extends TestCase {
     d.fromRepository = "internal(revision=1)";
     d.inRepository = "public";
     assertEquals(0, d.perform());
-    assertEquals("\"internal{1}\" == \"public{1,2}\"", ui.lastInfo);
+    assertThat(stream.toString()).contains("\"internal{1}\" == \"public{1,2}\"");
   }
 }

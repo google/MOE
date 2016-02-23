@@ -18,6 +18,7 @@ package com.google.devtools.moe.client.directives;
 
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
+import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
@@ -87,11 +88,9 @@ public class MergeCodebasesDirective extends Directive {
       destinationCodebase =
           Parser.parseExpression(destinationExpression).createCodebase(context.get());
     } catch (ParseError e) {
-      ui.error(e, "Error parsing");
-      return 1;
+      throw new MoeProblem(e, "Error parsing");
     } catch (CodebaseCreationError e) {
-      ui.error(e, "Error creating codebase");
-      return 1;
+      throw new MoeProblem(e, "Error creating codebase");
     }
     new CodebaseMerger(
             ui, filesystem, cmd, differ, originalCodebase, destinationCodebase, modifiedCodebase)

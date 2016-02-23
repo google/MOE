@@ -26,6 +26,7 @@ import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.NullFileSystemModule;
+import com.google.devtools.moe.client.Ui.UiModule;
 import com.google.devtools.moe.client.database.DbStorage;
 import com.google.devtools.moe.client.database.FileDb;
 import com.google.devtools.moe.client.database.RepositoryEquivalence;
@@ -67,7 +68,9 @@ public class HgRevisionHistoryTest extends TestCase {
   private final RepositoryConfig config = control.createMock(RepositoryConfig.class);
 
   // TODO(cgruber): Rework these when statics aren't inherent in the design.
-  @dagger.Component(modules = {TestingModule.class, NullFileSystemModule.class, Module.class})
+  @dagger.Component(
+    modules = {TestingModule.class, NullFileSystemModule.class, Module.class, UiModule.class}
+  )
   @Singleton
   interface Component {
     Injector context(); // TODO (b/19676630) Remove when bug is fixed.

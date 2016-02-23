@@ -21,6 +21,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
+import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.Ui.Task;
 import com.google.devtools.moe.client.codebase.Codebase;
@@ -67,19 +68,16 @@ public class CreateCodebaseDirective extends Directive {
     try {
       c = Parser.parseExpression(codebase).createCodebase(context.get());
     } catch (ParseError e) {
-      ui.error(e, "Error creating codebase");
-      return 1;
+      throw new MoeProblem(e, "Error creating codebase");
     } catch (CodebaseCreationError e) {
-      ui.error(e, "Error creating codebase");
-      return 1;
+      throw new MoeProblem(e, "Error creating codebase");
     }
-    ui.info("Codebase \"%s\" created at %s", c, c.getPath());
+    ui.message("Codebase \"%s\" created at %s", c, c.getPath());
 
     try {
       maybeWriteTar(c);
     } catch (CommandException e) {
-      ui.error(e, "Error creating codebase tarfile");
-      return 1;
+      throw new MoeProblem(e, "Error creating codebase tarfile");
     }
 
     ui.popTaskAndPersist(createCodebaseTask, c.getPath());
@@ -101,7 +99,7 @@ public class CreateCodebaseDirective extends Directive {
         ImmutableList.of("--mtime=1980-01-01", "--owner=0", "--group=0", "-c", "-f", tarfile, "."),
         codebase.getPath().getAbsolutePath());
 
-    ui.info("tar of codebase \"%s\" created at %s", codebase, tarfile);
+    ui.message("tar of codebase \"%s\" created at %s", codebase, tarfile);
   }
 
   @Override

@@ -16,6 +16,7 @@
 
 package com.google.devtools.moe.client.directives;
 
+import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.parser.Parser;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
@@ -59,24 +60,22 @@ public class HighestRevisionDirective extends Directive {
     try {
       repoEx = Parser.parseRepositoryExpression(repository);
     } catch (ParseError e) {
-      ui.error(e, "Couldn't parse " + repository);
-      return 1;
+      throw new MoeProblem(e, "Couldn't parse " + repository);
     }
 
     RepositoryType r = context.get().getRepository(repoEx.getRepositoryName());
 
     RevisionHistory rh = r.revisionHistory();
     if (rh == null) {
-      ui.error("Repository " + r.name() + " does not support revision history.");
-      return 1;
+      throw new MoeProblem("Repository " + r.name() + " does not support revision history.");
     }
 
     Revision rev = rh.findHighestRevision(repoEx.getOption("revision"));
     if (rev == null) {
-      return 1;
+      throw new MoeProblem("Could not find the most recent revision in repository " + r.name());
     }
 
-    ui.info("Highest revision in repository \"" + r.name() + "\": " + rev.revId());
+    ui.message("Highest revision in repository \"" + r.name() + "\": " + rev.revId());
     return 0;
   }
 

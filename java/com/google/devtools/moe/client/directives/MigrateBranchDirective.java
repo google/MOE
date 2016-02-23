@@ -25,7 +25,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-import com.google.devtools.moe.client.Messenger;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.MoeUserProblem;
 import com.google.devtools.moe.client.Ui;
@@ -160,7 +159,7 @@ public class MigrateBranchDirective extends Directive {
             !migrationConfig.getSeparateRevisions());
 
     if (migrations.isEmpty()) {
-      ui.info("No pending revisions to migrate in branch '%s' (as of %s)", branchLabel, "");
+      ui.message("No pending revisions to migrate in branch '%s' (as of %s)", branchLabel, "");
       ui.popTask(migrationTask, "No migrations to process");
       return 0;
     }
@@ -225,7 +224,7 @@ public class MigrateBranchDirective extends Directive {
     }
     toWriter.printPushMessage();
     ui.popTaskAndPersist(migrationTask, toWriter.getRoot());
-    ui.info(
+    ui.message(
         "Created Draft workspace:\n%s in repository '%s'",
         dr.getLocation(),
         toRepoExp.getRepositoryName());
@@ -290,8 +289,8 @@ public class MigrateBranchDirective extends Directive {
       case 0:
         throw new MoeUserProblem() {
           @Override
-          public void reportTo(Messenger ui) {
-            ui.error(
+          public void reportTo(Ui ui) {
+            ui.message(
                 "No migration configurations could be found from repository '%s'", fromRepository);
           }
         };
@@ -304,8 +303,9 @@ public class MigrateBranchDirective extends Directive {
         // TODO(cgruber) Allow specification of a migration if there are more than one.
         throw new MoeUserProblem() {
           @Override
-          public void reportTo(Messenger ui) {
-            ui.error("More than one migration configuration from repository '%s'", fromRepository);
+          public void reportTo(Ui ui) {
+            ui.message(
+                "More than one migration configuration from repository '%s'", fromRepository);
           }
         };
     }
@@ -331,7 +331,7 @@ public class MigrateBranchDirective extends Directive {
 
     RepositoryEquivalence latestEquivalence = equivMatch.getEquivalences().get(0);
 
-    ui.info(
+    ui.message(
         "Migrating %d revisions in %s (branch %s): %s",
         toMigrate.size(),
         fromRepoName,

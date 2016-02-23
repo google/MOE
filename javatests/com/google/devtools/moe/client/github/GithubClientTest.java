@@ -18,8 +18,6 @@ package com.google.devtools.moe.client.github;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.io.Resources;
-import com.google.devtools.moe.client.Messenger;
-import com.google.devtools.moe.client.MoeUserProblem;
 import com.google.devtools.moe.client.github.GithubAPI.IssueState;
 import com.google.devtools.moe.client.github.GithubAPI.PullRequest;
 import com.google.devtools.moe.client.github.GithubClient.OkHttpClientWrapper;
@@ -76,7 +74,7 @@ public class GithubClientTest extends TestCase {
       PullRequestUrl.create("blah");
       fail("Expected exception");
     } catch (InvalidGithubUrl expected) {
-      assertThat(getMessage(expected)).contains("url supplied is not a valid url: blah");
+      assertThat(expected.getMessage()).contains("url supplied is not a valid url: blah");
     }
   }
 
@@ -86,8 +84,8 @@ public class GithubClientTest extends TestCase {
       PullRequestUrl.create(url);
       fail("Expected exception");
     } catch (InvalidGithubUrl expected) {
-      assertThat(getMessage(expected)).contains("not a github.com url");
-      assertThat(getMessage(expected)).contains(url);
+      assertThat(expected.getMessage()).contains("not a github.com url");
+      assertThat(expected.getMessage()).contains(url);
     }
   }
 
@@ -97,8 +95,8 @@ public class GithubClientTest extends TestCase {
       PullRequestUrl.create(url);
       fail("Expected exception");
     } catch (InvalidGithubUrl expected) {
-      assertThat(getMessage(expected)).contains("Invalid pull request number");
-      assertThat(getMessage(expected)).contains(url);
+      assertThat(expected.getMessage()).contains("Invalid pull request number");
+      assertThat(expected.getMessage()).contains(url);
     }
   }
 
@@ -107,49 +105,22 @@ public class GithubClientTest extends TestCase {
       PullRequestUrl.create("http://github.com/blah/foo/blargh/5");
       fail("Expected exception");
     } catch (InvalidGithubUrl expected) {
-      assertThat(getMessage(expected)).contains("Invalid pull request URL: ");
+      assertThat(expected.getMessage()).contains("Invalid pull request URL: ");
     }
     try {
       PullRequestUrl.create("http://github.com/blah/foo/pulls");
       fail("Expected exception");
     } catch (InvalidGithubUrl expected) {
-      assertThat(getMessage(expected)).contains("Invalid pull request URL: ");
+      assertThat(expected.getMessage()).contains("Invalid pull request URL: ");
     }
     try {
       PullRequestUrl.create("http://github.com/blah/foo/pull/5/foo");
       fail("Expected exception");
     } catch (InvalidGithubUrl expected) {
-      assertThat(getMessage(expected)).contains("Invalid pull request URL: ");
+      assertThat(expected.getMessage()).contains("Invalid pull request URL: ");
     }
   }
 
-  private static String getMessage(MoeUserProblem problem) {
-    class CapturingMessenger implements Messenger {
-      private String message = null;
 
-      @Override
-      public void info(String msgfmt, Object... args) {
-        message = String.format(msgfmt, args);
-      }
-
-      @Override
-      public void error(String msgfmt, Object... args) {
-        message = String.format(msgfmt, args);
-      }
-
-      @Override
-      public void error(Throwable error, String msgfmt, Object... args) {
-        message = String.format(msgfmt, args);
-      }
-
-      @Override
-      public void debug(String msgfmt, Object... args) {
-        message = String.format(msgfmt, args);
-      }
-    }
-    CapturingMessenger messenger = new CapturingMessenger();
-    problem.reportTo(messenger);
-    return messenger.message;
-  }
 }
 

@@ -16,6 +16,7 @@
 
 package com.google.devtools.moe.client.directives;
 
+import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
@@ -63,19 +64,17 @@ public class DiffCodebasesDirective extends Directive {
       codebase1 = Parser.parseExpression(codebase1Spec).createCodebase(context.get());
       codebase2 = Parser.parseExpression(codebase2Spec).createCodebase(context.get());
     } catch (ParseError e) {
-      ui.error(e, "Error parsing codebase expression");
-      return 1;
+      throw new MoeProblem(e, "Error parsing codebase expression");
     } catch (CodebaseCreationError e) {
-      ui.error(e, "Error creating codebase");
-      return 1;
+      throw new MoeProblem(e, "Error creating codebase");
     }
 
     CodebaseDifference diff = differ.diffCodebases(codebase1, codebase2);
     if (diff.areDifferent()) {
-      ui.info(
+      ui.message(
           "Codebases \"%s\" and \"%s\" differ:\n%s", codebase1, codebase2, RENDERER.render(diff));
     } else {
-      ui.info("Codebases \"%s\" and \"%s\" are identical", codebase1, codebase2);
+      ui.message("Codebases \"%s\" and \"%s\" are identical", codebase1, codebase2);
     }
     return 0;
   }

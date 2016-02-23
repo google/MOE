@@ -17,6 +17,10 @@
 package com.google.devtools.moe.client;
 
 import static com.google.devtools.moe.client.Ui.MOE_TERMINATION_TASK_NAME;
+import static com.google.devtools.moe.client.options.OptionsParser.debugFlagPresent;
+import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.SEVERE;
+import static java.util.logging.Level.WARNING;
 
 import com.google.devtools.moe.client.directives.Directive;
 import com.google.devtools.moe.client.directives.Directives;
@@ -25,8 +29,6 @@ import com.google.devtools.moe.client.options.OptionsParser;
 import com.google.devtools.moe.client.project.InvalidProject;
 
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -59,15 +61,15 @@ public class Moe {
    * a main() that works with the new Task framework.
    */
   public static void main(String... args) {
-    ConsoleHandler sysErrHandler = new ConsoleHandler();
-    sysErrHandler.setLevel(Level.WARNING);
-    allMoeLogger.addHandler(sysErrHandler);
-    allMoeLogger.setUseParentHandlers(false);
     System.exit(doMain(args));
   }
 
   /** Implements the main method logic for Moe, returning an error code if there is any */
-  static int doMain(String... args) {
+  public static int doMain(String... args) {
+    ConsoleHandler sysErrHandler = new ConsoleHandler();
+    sysErrHandler.setLevel(debugFlagPresent(args) ? FINE : WARNING);
+    allMoeLogger.addHandler(sysErrHandler);
+    allMoeLogger.setUseParentHandlers(false);
     if (args.length < 1) {
       System.err.println("Usage: moe <directive>");
       return 1;
@@ -95,30 +97,31 @@ public class Moe {
       try {
         component.context().fileSystem().cleanUpTempDirs();
       } catch (IOException e) {
-        ui.info(
-            "WARNING: Moe enocuntered a problem cleaning up temporary directories: %s",
-            e.getMessage());
+        logHelper(debug, WARNING, "Moe enocuntered a problem cleaning up temporary directories", e);
+
       }
       ui.popTask(terminateTask, "");
       return result;
     } catch (InvalidProject e) {
-      ui.error(e, "Couldn't create project");
+      logHelper(debug, SEVERE, "Couldn't create project", e);
     } catch (MoeUserProblem e) {
       e.reportTo(ui);
       if (debug) {
-        StringWriter sw = new StringWriter();
-        e.printStackTrace(new PrintWriter(sw));
-        ui.info("%s", sw.getBuffer());
+        allMoeLogger.log(WARNING, "Moe encountered a problem", e);
       }
     } catch (MoeProblem m) {
-      ui.error(m, "Moe encountered a problem; look above for explanation");
-      if (debug) {
-        StringWriter sw = new StringWriter();
-        m.printStackTrace(new PrintWriter(sw));
-        ui.error("%s", sw.getBuffer());
-      }
+      logHelper(debug, SEVERE, "Moe encountered a problem", m);
     }
     return 1;
+  }
+
+  private static void logHelper(boolean debug, Level level, String message, Throwable t) {
+    allMoeLogger.log(level, message);
+    if (!debug) {
+      allMoeLogger.log(level, t.getMessage());
+    } else {
+      allMoeLogger.log(level, "", t);
+    }
   }
 
   private Moe() {}

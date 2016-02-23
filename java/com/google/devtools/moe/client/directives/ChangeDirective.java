@@ -16,6 +16,7 @@
 
 package com.google.devtools.moe.client.directives;
 
+import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.Ui.Task;
 import com.google.devtools.moe.client.codebase.Codebase;
@@ -67,22 +68,18 @@ public class ChangeDirective extends Directive {
     try {
       c = Parser.parseExpression(codebase).createCodebase(context.get());
     } catch (ParseError e) {
-      ui.error(e, "Error parsing codebase");
-      return 1;
+      throw new MoeProblem(e, "Error parsing codebase");
     } catch (CodebaseCreationError e) {
-      ui.error(e, "Error creating codebase");
-      return 1;
+      throw new MoeProblem(e, "Error creating codebase");
     }
 
     Writer writer;
     try {
       writer = Parser.parseRepositoryExpression(destination).createWriter(context.get());
     } catch (ParseError e) {
-      ui.error(e, "Error parsing change destination");
-      return 1;
+      throw new MoeProblem(e, "Error parsing change destination");
     } catch (WritingError e) {
-      ui.error(e, "Error writing change");
-      return 1;
+      throw new MoeProblem(e, "Error writing change");
     }
 
     DraftRevision r = revisionFactory.create(c, writer, null);

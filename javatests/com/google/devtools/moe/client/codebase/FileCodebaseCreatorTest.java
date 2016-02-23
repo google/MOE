@@ -25,14 +25,15 @@ import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.SystemCommandRunner;
+import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.testing.FileCodebaseCreator;
-import com.google.devtools.moe.client.testing.RecordingUi;
 
 import junit.framework.TestCase;
 
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -41,10 +42,11 @@ import java.util.List;
  * Tests for the FileCodebaseCreator class.
  */
 public class FileCodebaseCreatorTest extends TestCase {
-  private final RecordingUi ui = new RecordingUi();
-  private final SystemCommandRunner cmd = new SystemCommandRunner(ui);
+  private final SystemCommandRunner cmd = new SystemCommandRunner();
   private final IMocksControl control = EasyMock.createControl();
   private final FileSystem mockfs = control.createMock(FileSystem.class);
+  private final ByteArrayOutputStream stream = new ByteArrayOutputStream();
+  private final Ui ui = new Ui(stream, /* fileSystem */ null);
 
   @Override
   public void setUp() throws Exception {

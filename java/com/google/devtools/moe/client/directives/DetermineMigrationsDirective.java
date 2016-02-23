@@ -16,6 +16,7 @@
 
 package com.google.devtools.moe.client.directives;
 
+import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.database.Db;
 import com.google.devtools.moe.client.migrations.Migration;
@@ -67,14 +68,13 @@ public class DetermineMigrationsDirective extends Directive {
 
     MigrationConfig config = context.get().migrationConfigs().get(migrationName);
     if (config == null) {
-      ui.error("No migration found with name " + migrationName);
-      return 1;
+      throw new MoeProblem("No migration found with name " + migrationName);
     }
 
     RepositoryType fromRepo = context.get().getRepository(config.getFromRepository());
     List<Migration> migrations = migrator.findMigrationsFromEquivalency(fromRepo, config, db);
     for (Migration migration : migrations) {
-      ui.info("Pending migration: " + migration);
+      ui.message("Pending migration: " + migration);
     }
 
     return 0;

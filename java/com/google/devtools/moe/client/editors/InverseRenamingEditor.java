@@ -24,7 +24,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
-import com.google.devtools.moe.client.Messenger;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.project.EditorConfig;
@@ -66,7 +65,6 @@ public class InverseRenamingEditor implements InverseEditor {
   private static final Splitter FILE_SEP_SPLITTER = Splitter.on(File.separator);
 
   private final FileSystem filesystem = Injector.INSTANCE.fileSystem(); // TODO(cgruber) @Inject
-  private final Messenger messenger = Injector.INSTANCE.ui(); // TODO(cgruber) @Inject
 
   public static InverseRenamingEditor makeInverseRenamingEditor(
       String editorName, EditorConfig config) {
@@ -129,8 +127,7 @@ public class InverseRenamingEditor implements InverseEditor {
       filesystem.makeDirsForFile(destFile);
       filesystem.copyFile(inputFile, destFile);
     } catch (IOException e) {
-      messenger.error(e, e.getMessage());
-      throw new MoeProblem(e.getMessage());
+      throw new MoeProblem(e, "%s", e.getMessage());
     }
   }
 

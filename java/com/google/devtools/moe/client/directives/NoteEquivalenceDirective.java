@@ -78,8 +78,7 @@ public class NoteEquivalenceDirective extends Directive {
       repoEx1 = Parser.parseRepositoryExpression(repo1);
       repoEx2 = Parser.parseRepositoryExpression(repo2);
     } catch (ParseError e) {
-      ui.error(e, "Couldn't parse " + (repoEx1 == null ? repo1 : repo2));
-      return 1;
+      throw new MoeProblem(e, "Couldn't parse " + (repoEx1 == null ? repo1 : repo2));
     }
 
     if (repoEx1.getOption("revision") == null || repoEx2.getOption("revision") == null) {
@@ -98,7 +97,7 @@ public class NoteEquivalenceDirective extends Directive {
     db.noteEquivalence(newEq);
     dbWriter.write(db);
 
-    ui.info("Noted equivalence: " + newEq);
+    ui.message("Noted equivalence: " + newEq);
 
     return 0;
   }

@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.SystemCommandRunner;
+import com.google.devtools.moe.client.Ui.UiModule;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.LocalWorkspace;
 import com.google.devtools.moe.client.project.RepositoryConfig;
@@ -63,7 +64,9 @@ public class AbstractDvcsCodebaseCreatorTest extends TestCase {
       };
 
   // TODO(cgruber): Rework these when statics aren't inherent in the design.
-  @dagger.Component(modules = {TestingModule.class, SystemCommandRunner.Module.class, Module.class})
+  @dagger.Component(
+    modules = {UiModule.class, TestingModule.class, SystemCommandRunner.Module.class, Module.class}
+  )
   @Singleton
   interface Component {
     Injector context(); // TODO (b/19676630) Remove when bug is fixed.

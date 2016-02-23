@@ -23,15 +23,16 @@ import static com.google.devtools.moe.client.directives.GithubPullDirective.isGi
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 import com.google.devtools.moe.client.MoeUserProblem;
+import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.github.GithubAPI.PullRequest;
 import com.google.devtools.moe.client.github.PullRequestUrl;
 import com.google.devtools.moe.client.gson.GsonModule;
 import com.google.devtools.moe.client.project.RepositoryConfig;
-import com.google.devtools.moe.client.testing.RecordingUi;
 import com.google.gson.Gson;
 
 import junit.framework.TestCase;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -104,14 +105,14 @@ public class GithubPullDirectiveTest extends TestCase {
       findRepoConfig(repositories, pr);
       fail("Should have thrown.");
     } catch (MoeUserProblem mup) {
-      RecordingUi ui = new RecordingUi();
+      ByteArrayOutputStream stream = new ByteArrayOutputStream();
+      Ui ui = new Ui(stream, /* fileSystem */ null);
       mup.reportTo(ui);
-      assertThat(ui.lastError)
+      String actualOutput = stream.toString();
+      assertThat(actualOutput)
           .contains("No configured repository is applicable to this pull request");
-      assertThat(ui.lastError)
-          .contains("https://github.com/google/MOE/pull/14");
-      assertThat(ui.lastError)
-          .contains("name: foo");
+      assertThat(actualOutput).contains("https://github.com/google/MOE/pull/14");
+      assertThat(actualOutput).contains("name: foo");
     }
   }
 

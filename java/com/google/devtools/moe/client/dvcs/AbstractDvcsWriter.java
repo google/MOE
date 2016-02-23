@@ -172,7 +172,7 @@ public abstract class AbstractDvcsWriter<T extends LocalWorkspace> implements Wr
         commitChanges(revMetaData);
         Injector.INSTANCE
             .ui()
-            .info("Converted draft revision to writer at " + getRoot().getAbsolutePath());
+            .message("Converted draft revision to writer at " + getRoot().getAbsolutePath());
       } catch (CommandException e) {
         throw new WritingError("Error committing: " + e);
       }

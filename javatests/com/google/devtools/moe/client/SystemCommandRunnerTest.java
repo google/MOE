@@ -23,18 +23,7 @@ import junit.framework.TestCase;
 
 public class SystemCommandRunnerTest extends TestCase {
 
-  SystemCommandRunner c;
-
-  @Override
-  protected void setUp() throws Exception {
-    super.setUp();
-    c =
-        new SystemCommandRunner(
-            new SystemUi(null) {
-              @Override
-              public void debug(String msg, Object... args) {}
-            });
-  }
+  private final SystemCommandRunner c = new SystemCommandRunner();
 
   public void testLongStdout() throws Exception {
     String data = c.runCommand("perl", ImmutableList.of("-e", "print (\"*\" x 17000)"), "");

@@ -17,9 +17,9 @@
 package com.google.devtools.moe.client.repositories;
 
 import com.google.auto.value.AutoValue;
-import com.google.devtools.moe.client.Messenger;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.MoeUserProblem;
+import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.database.RepositoryEquivalenceMatcher;
 
 import java.util.List;
@@ -56,8 +56,8 @@ public class ExactRevisionMatcher implements RevisionMatcher<ExactRevisionMatche
       case 0:
         throw new MoeUserProblem() {
           @Override
-          public void reportTo(Messenger ui) {
-            ui.error(
+          public void reportTo(Ui ui) {
+            ui.message(
                 "No matching revisions in history. "
                     + "The branch may have no commits, be mislabeled, or not be branched "
                     + "from revision %s.  Consider merging with the main line to ensure "

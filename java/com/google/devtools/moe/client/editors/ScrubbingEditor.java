@@ -63,8 +63,7 @@ public class ScrubbingEditor implements Editor {
                 Injector.INSTANCE.fileSystem().setExecutable(scrubberBinary);
                 return scrubberBinary;
               } catch (IOException ioEx) {
-                Injector.INSTANCE.ui().error(ioEx, "Error extracting scrubber");
-                throw new MoeProblem("Error extracting scrubber: " + ioEx.getMessage());
+                throw new MoeProblem(ioEx, "Error extracting scrubber.");
               }
             }
           });

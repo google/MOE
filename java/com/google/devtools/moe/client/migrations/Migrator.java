@@ -118,7 +118,7 @@ public class Migrator {
         Lists.reverse(equivMatch.getRevisionsSinceEquivalence().getBreadthFirstHistory());
 
     if (revisionsSinceEquivalence.isEmpty()) {
-      ui.info(
+      ui.message(
           "No revisions found since last equivalence for migration '%s'",
           migrationConfig.getName());
       return ImmutableList.of();
@@ -133,7 +133,7 @@ public class Migrator {
            + "Follow the steps in \"Make the Initial Push.\"");
     }
     RepositoryEquivalence lastEq = equivalences.get(0);
-    ui.info(
+    ui.message(
         "Found %d revisions in %s since equivalence (%s): %s",
         revisionsSinceEquivalence.size(),
         migrationConfig.getFromRepository(),

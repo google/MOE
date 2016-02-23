@@ -25,7 +25,6 @@ import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.Ui;
-import com.google.devtools.moe.client.testing.RecordingUi;
 import com.google.devtools.moe.client.tools.FileDifference.ConcreteFileDiffer;
 import com.google.devtools.moe.client.tools.FileDifference.FileDiffer;
 
@@ -34,6 +33,7 @@ import junit.framework.TestCase;
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.List;
 
@@ -60,9 +60,10 @@ import java.util.List;
  * </pre>
  */
 public class CodebaseMergerTest extends TestCase {
-  private final RecordingUi ui = new RecordingUi();
   private final IMocksControl control = EasyMock.createControl();
   private final FileSystem fileSystem = control.createMock(FileSystem.class);
+  private final ByteArrayOutputStream stream = new ByteArrayOutputStream();
+  private final Ui ui = new Ui(stream, /* fileSystem */ null);
   private final CommandRunner cmd = control.createMock(CommandRunner.class);
   private final FileDiffer fileDiffer = new ConcreteFileDiffer(cmd, fileSystem);
 
@@ -447,8 +448,8 @@ public class CodebaseMergerTest extends TestCase {
     // codebase.
 
     // Expect in call to report()
-    ui.info("Merged codebase generated at: %s", mergedCodebaseLocation.getAbsolutePath());
-    ui.info(
+    ui.message("Merged codebase generated at: %s", mergedCodebaseLocation.getAbsolutePath());
+    ui.message(
         "%d files merged successfully\n"
             + "%d files have merge conflicts. Edit the following files to resolve conflicts:\n%s",
         1,

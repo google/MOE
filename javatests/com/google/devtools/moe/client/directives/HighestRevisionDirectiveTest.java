@@ -16,21 +16,26 @@
 
 package com.google.devtools.moe.client.directives;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.SystemCommandRunner;
+import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
-import com.google.devtools.moe.client.testing.RecordingUi;
 import com.google.devtools.moe.client.tools.EagerLazy;
 
 import junit.framework.TestCase;
 
+import java.io.ByteArrayOutputStream;
+
 public class HighestRevisionDirectiveTest extends TestCase {
-  private final RecordingUi ui = new RecordingUi();
-  private final SystemCommandRunner cmd = new SystemCommandRunner(ui);
+  private final ByteArrayOutputStream stream = new ByteArrayOutputStream();
+  private final Ui ui = new Ui(stream, /* fileSystem */ null);
+  private final SystemCommandRunner cmd = new SystemCommandRunner();
   private final Repositories repositories =
       new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(null)));
   private final InMemoryProjectContextFactory contextFactory =
@@ -43,8 +48,8 @@ public class HighestRevisionDirectiveTest extends TestCase {
     ProjectContext context = contextFactory.create("moe_config.txt");
     HighestRevisionDirective d = new HighestRevisionDirective(EagerLazy.fromInstance(context), ui);
     d.repository = "internal";
-    assertEquals(0, d.perform());
-    assertEquals("Highest revision in repository \"internal\": 1", ui.lastInfo);
+    assertThat(d.perform()).isEqualTo(0);
+    assertThat(stream.toString()).contains("Highest revision in repository \"internal\": 1");
   }
 
   public void testWithRevision() throws Exception {
@@ -54,7 +59,7 @@ public class HighestRevisionDirectiveTest extends TestCase {
     ProjectContext context = contextFactory.create("moe_config.txt");
     HighestRevisionDirective d = new HighestRevisionDirective(EagerLazy.fromInstance(context), ui);
     d.repository = "internal(revision=4)";
-    assertEquals(0, d.perform());
-    assertEquals("Highest revision in repository \"internal\": 4", ui.lastInfo);
+    assertThat(d.perform()).isEqualTo(0);
+    assertThat(stream.toString()).contains("Highest revision in repository \"internal\": 4");
   }
 }

@@ -16,6 +16,7 @@
 
 package com.google.devtools.moe.client.directives;
 
+import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.migrations.Migrator;
 import com.google.devtools.moe.client.parser.Parser;
@@ -63,15 +64,14 @@ public class DetermineMetadataDirective extends Directive {
     try {
       repoEx = Parser.parseRepositoryExpression(repositoryExpression);
     } catch (ParseError e) {
-      ui.error(e, "Couldn't parse " + repositoryExpression);
-      return 1;
+      throw new MoeProblem(e, "Couldn't parse " + repositoryExpression);
     }
 
     List<Revision> revs = Revision.fromRepositoryExpression(repoEx, context.get());
     RepositoryType repositoryType = context.get().getRepository(repoEx.getRepositoryName());
     RevisionMetadata rm =
         migrator.processMetadata(repositoryType.revisionHistory(), revs, null, null);
-    ui.info(rm.toString());
+    ui.message(rm.toString());
     return 0;
   }
 

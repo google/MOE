@@ -15,8 +15,8 @@
  */
 package com.google.devtools.moe.client.github;
 
-import com.google.devtools.moe.client.Messenger;
 import com.google.devtools.moe.client.MoeUserProblem;
+import com.google.devtools.moe.client.Ui;
 
 /** An error reported when an invalid github pull request URL is given */
 public class InvalidGithubUrl extends MoeUserProblem {
@@ -27,7 +27,7 @@ public class InvalidGithubUrl extends MoeUserProblem {
   }
 
   @Override
-  public void reportTo(Messenger messenger) {
-    messenger.info(message);
+  public void reportTo(Ui messenger) {
+    messenger.message(message);
   }
 }

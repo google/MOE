@@ -79,8 +79,7 @@ public class Bookkeeper {
               .translateTo(to.getProjectSpace())
               .createCodebase(context);
     } catch (CodebaseCreationError e) {
-      ui.error(e, "Could not generate codebase");
-      return;
+      throw new MoeProblem(e, "Could not generate codebase");
     }
 
     Ui.Task t = ui.pushTask("diff_codebases", "Diff codebases '%s' and '%s'", from, to);
@@ -106,7 +105,7 @@ public class Bookkeeper {
 
     List<Revision> linearToRevs =
         equivMatch.getRevisionsSinceEquivalence().getBreadthFirstHistory();
-    ui.info(
+    ui.message(
         "Found %d revisions in %s since equivalence (%s): %s",
         linearToRevs.size(),
         toRepository,
@@ -136,7 +135,7 @@ public class Bookkeeper {
       Revision fromRev, Revision toRev, Db db, ProjectContext context, boolean inverse) {
     SubmittedMigration migration = SubmittedMigration.create(fromRev, toRev);
     if (!db.noteMigration(migration)) {
-      ui.info(
+      ui.message(
           "Skipping bookkeeping of this SubmittedMigration because it was already in the Db: %s",
           migration);
       return;
@@ -162,15 +161,14 @@ public class Bookkeeper {
       to = toEx.createCodebase(context);
       from = fromEx.createCodebase(context);
     } catch (CodebaseCreationError e) {
-      ui.error(e, "Could not generate codebase");
-      return;
+      throw new MoeProblem(e, "Could not generate codebase");
     }
 
     Ui.Task t = ui.pushTask("diff_codebases", "Diff codebases '%s' and '%s'", from, to);
     if (!differ.diffCodebases(from, to).areDifferent()) {
       RepositoryEquivalence newEquiv = RepositoryEquivalence.create(fromRev, toRev);
       db.noteEquivalence(newEquiv);
-      ui.info("Codebases are identical, noted new equivalence: %s", newEquiv);
+      ui.message("Codebases are identical, noted new equivalence: %s", newEquiv);
     }
     ui.popTask(t, "");
   }

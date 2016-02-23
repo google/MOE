@@ -16,37 +16,79 @@
 
 package com.google.devtools.moe.client;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.devtools.moe.client.FileSystem.Lifetime;
 
+import dagger.Provides;
+
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
 import javax.annotation.Nullable;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
 /**
  * Represents the command-line user interface for MOE.
  */
-public abstract class Ui implements Messenger {
-
-  //TODO(cgruber): Make this not nullable (No-Op filesystem for testing perhaps?)
-  @Nullable
-  protected final FileSystem fileSystem;
-
-  protected Ui(@Nullable FileSystem fileSystem) {
-    this.fileSystem = fileSystem;
-  }
-
+@Singleton
+public class Ui {
   /**
    * The name of the Task pushed to the Ui for clean-up when MOE is about to exit. This name is
    * used, for example, to set a temp dir's lifetime to "clean up when MOE is about to exit".
    */
   public static final String MOE_TERMINATION_TASK_NAME = "moe_termination";
 
-  protected final Deque<Task> stack = new ArrayDeque<Task>();
+  private final PrintStream out;
+  private final Deque<Task> stack = new ArrayDeque<Task>();
+
+  // We store the task that is the current output, if any, so that we can special case a Task that
+  // is popped right after it is pushed. In this case, we can output: "Doing...Done" on one line.
+  private Ui.Task currentOutput;
+
+  @Nullable //TODO(cgruber): Make this not nullable (No-Op filesystem for testing perhaps?)
+  protected final FileSystem fileSystem;
+
+  @Inject
+  public Ui(OutputStream out, @Nullable FileSystem fileSystem) {
+    try {
+      this.out = new PrintStream(out, false, "UTF-8");
+    } catch (UnsupportedEncodingException e) {
+      throw new MoeProblem(e, "Invalid character set.");
+    }
+    this.fileSystem = fileSystem;
+  }
+
+  /**
+   * Clears the current output, if applicable.
+   */
+  private void clearOutput() {
+    if (currentOutput != null) {
+      // We're in the middle of a line, so start a new one.
+      out.println();
+    }
+    currentOutput = null;
+  }
+
+  private String indent(String msg) {
+    String indentation = Strings.repeat("  ", stack.size());
+    return indentation + Joiner.on("\n" + indentation).join(Splitter.on('\n').split(msg));
+  }
+
+  public void message(String msg, Object... args) {
+    clearOutput();
+    out.println(indent(String.format(msg, args)));
+  }
+
 
   public static class Task {
     public final String taskName;
@@ -78,13 +120,18 @@ public abstract class Ui implements Messenger {
    * @param task  the name of the task; should be sensical to a computer
    * @param descriptionFormat  a String.format() template for the description of what MOE is
    *     about to do, suitable for a user.
-   * @param formatArgs  arguments which will be used to format the descriptionFormat template
+   * @param args  arguments which will be used to format the descriptionFormat template
    *
    * @returns the Task created
    */
-  public Task pushTask(String task, String descriptionFormat, Object... formatArgs) {
-    Task t = new Task(task, descriptionFormat, formatArgs);
+  public Task pushTask(String task, String descriptionFormat, Object... args) {
+    clearOutput();
+    String description = String.format(descriptionFormat, args);
+    String indented = indent(description + "... ");
+    out.print(indented);
+    Task t = new Task(task, descriptionFormat, args);
     stack.addFirst(t);
+    currentOutput = t;
     return t;
   }
 
@@ -111,10 +158,21 @@ public abstract class Ui implements Messenger {
       try {
         fileSystem.cleanUpTempDirs();
       } catch (IOException ioEx) {
-        error(ioEx, "Error cleaning up temp dirs");
-        throw new MoeProblem("Error cleaning up temp dirs: " + ioEx);
+        throw new MoeProblem(ioEx, "Error cleaning up temp dirs.");
       }
     }
+
+    if (result.isEmpty()) {
+      result = "Done";
+    }
+    if (currentOutput == task) {
+      // The last thing we printed was starting this task
+      out.println(result);
+    } else {
+      // We need to print the description again
+      out.println(indent("DONE: " + task.description + ": " + result));
+    }
+    currentOutput = null;
   }
 
   /**
@@ -180,6 +238,16 @@ public abstract class Ui implements Messenger {
     }
   }
 
-  // TODO(dbentley): there should be errorTask, which reports that the task was finished in error.
-
+  /**
+   * A module to supply the OutputStream used in the UI.  In testing, this can be overridden
+   * passing in a {@code ByteArrayOutputStream} or some other string-bearing stream.
+   */
+  @dagger.Module
+  public static class UiModule {
+    @Provides
+    @Singleton
+    public OutputStream uiOutputStream() {
+      return System.out;
+    }
+  }
 }

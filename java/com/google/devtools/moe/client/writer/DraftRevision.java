@@ -16,6 +16,7 @@
 
 package com.google.devtools.moe.client.writer;
 
+import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
@@ -64,8 +65,7 @@ public interface DraftRevision {
         ui.popTask(t, "");
         return r;
       } catch (WritingError e) {
-        ui.error(e, "Error writing change");
-        return null;
+        throw new MoeProblem(e, "Error creating draft revision to codebase");
       }
     }
   }

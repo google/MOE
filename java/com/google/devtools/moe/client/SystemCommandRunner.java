@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.logging.Logger;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -36,12 +37,10 @@ import javax.inject.Singleton;
  */
 @Singleton
 public class SystemCommandRunner implements CommandRunner {
-  private final Ui ui;
+  private static final Logger logger = Logger.getLogger(SystemCommandRunner.class.getName());
 
   @Inject
-  public SystemCommandRunner(Ui ui) {
-    this.ui = ui;
-  }
+  public SystemCommandRunner() {}
 
   @Override
   public CommandOutput runCommandWithFullOutput(
@@ -49,7 +48,7 @@ public class SystemCommandRunner implements CommandRunner {
     ImmutableList<String> cmdArgs =
         new ImmutableList.Builder<String>().add(cmd).addAll(args).build();
 
-    ui.debug("%s $ %s", workingDirectory, Joiner.on(" ").join(cmdArgs));
+    logger.fine(workingDirectory + " $ " + Joiner.on(" ").join(cmdArgs));
 
     ProcessBuilder pb = new ProcessBuilder(cmdArgs);
     if (workingDirectory != null && !workingDirectory.isEmpty()) {

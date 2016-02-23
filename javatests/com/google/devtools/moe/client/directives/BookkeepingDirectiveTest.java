@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.database.Bookkeeper;
 import com.google.devtools.moe.client.database.Db;
 import com.google.devtools.moe.client.database.DbStorage;
@@ -38,7 +39,6 @@ import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
 import com.google.devtools.moe.client.testing.InMemoryFileSystem;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
-import com.google.devtools.moe.client.testing.RecordingUi;
 import com.google.devtools.moe.client.tools.CodebaseDiffer;
 import com.google.devtools.moe.client.tools.EagerLazy;
 import com.google.devtools.moe.client.tools.FileDifference.ConcreteFileDiffer;
@@ -49,6 +49,7 @@ import junit.framework.TestCase;
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 
 /**
@@ -62,7 +63,8 @@ import java.io.File;
  */
 public class BookkeepingDirectiveTest extends TestCase {
   private static final File DB_FILE = new File("/path/to/db");
-  private final RecordingUi ui = new RecordingUi();
+  private final ByteArrayOutputStream stream = new ByteArrayOutputStream();
+  private final Ui ui = new Ui(stream, /* fileSystem */ null);
   private final IMocksControl control = EasyMock.createControl();
   private final CommandRunner cmd = control.createMock(CommandRunner.class);
 

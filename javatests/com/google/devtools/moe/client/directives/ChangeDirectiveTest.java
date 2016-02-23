@@ -16,31 +16,38 @@
 
 package com.google.devtools.moe.client.directives;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.collect.ImmutableSet;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.SystemCommandRunner;
+import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
-import com.google.devtools.moe.client.testing.RecordingUi;
 import com.google.devtools.moe.client.tools.EagerLazy;
 import com.google.devtools.moe.client.writer.DraftRevision;
 
 import junit.framework.TestCase;
 
+import java.io.ByteArrayOutputStream;
+
 /**
  * Tests for {@link ChangeDirective}.
  */
 public class ChangeDirectiveTest extends TestCase {
-  private final RecordingUi ui = new RecordingUi();
-  private final SystemCommandRunner cmd = new SystemCommandRunner(ui);
+  private final ByteArrayOutputStream stream = new ByteArrayOutputStream();
+  private final Ui ui = new Ui(stream, /* fileSystem */ null);
+  private final SystemCommandRunner cmd = new SystemCommandRunner();
   private final Repositories repositories =
       new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(null)));
   private final InMemoryProjectContextFactory contextFactory =
       new InMemoryProjectContextFactory(null, cmd, null, ui, repositories);
 
   public void testChange() throws Exception {
+    Injector.INSTANCE = new Injector(null, cmd, ui);
     contextFactory.projectConfigs.put(
         "moe_config.txt",
         "{\"name\": \"foo\", \"repositories\": {\"internal\": {\"type\": \"dummy\"}}}");
@@ -50,6 +57,6 @@ public class ChangeDirectiveTest extends TestCase {
     d.codebase = "internal";
     d.destination = "internal";
     assertEquals(0, d.perform());
-    assertEquals("/dummy/writer/internal", ui.lastTaskResult);
+    assertThat(stream.toString()).contains("with contents \"internal\": /dummy/writer/internal");
   }
 }

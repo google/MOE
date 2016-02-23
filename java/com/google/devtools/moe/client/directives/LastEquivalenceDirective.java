@@ -17,6 +17,7 @@
 package com.google.devtools.moe.client.directives;
 
 import com.google.common.base.Joiner;
+import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.database.Db;
 import com.google.devtools.moe.client.database.RepositoryEquivalence;
@@ -78,8 +79,7 @@ public class LastEquivalenceDirective extends Directive {
     try {
       repoEx = Parser.parseRepositoryExpression(fromRepository);
     } catch (ParseError e) {
-      ui.error(e, "Couldn't parse " + fromRepository);
-      return 1;
+      throw new MoeProblem(e, "Couldn't parse " + fromRepository);
     }
 
     // TODO(cgruber) use repository map directly.
@@ -87,8 +87,7 @@ public class LastEquivalenceDirective extends Directive {
 
     RevisionHistory rh = r.revisionHistory();
     if (rh == null) {
-      ui.error("Repository " + r.name() + " does not support revision history.");
-      return 1;
+      throw new MoeProblem("Repository " + r.name() + " does not support revision history.");
     }
 
     Revision rev = rh.findHighestRevision(repoEx.getOption("revision"));
@@ -98,13 +97,13 @@ public class LastEquivalenceDirective extends Directive {
         rh.findRevisions(rev, matcher, SearchType.BRANCHED).getEquivalences();
 
     if (lastEquivs.isEmpty()) {
-      ui.info(
+      ui.message(
           "No equivalence was found between %s and %s starting from %s.",
           rev.repositoryName(),
           withRepository,
           rev);
     } else {
-      ui.info("Last equivalence: %s", Joiner.on(", ").join(lastEquivs));
+      ui.message("Last equivalence: %s", Joiner.on(", ").join(lastEquivs));
     }
 
     return 0;

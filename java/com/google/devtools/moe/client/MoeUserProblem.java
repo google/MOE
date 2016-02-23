@@ -16,7 +16,7 @@
 
 package com.google.devtools.moe.client;
 
-import com.google.devtools.moe.client.testing.RecordingUi;
+import java.io.ByteArrayOutputStream;
 
 /**
  * A problem that we expect to routinely happen, and which should be reported cleanly to the
@@ -30,15 +30,15 @@ public abstract class MoeUserProblem extends RuntimeException {
    * {@link Ui} class.  Implementers should override this message and log any user output
    * relevant to the error.
    */
-  public abstract void reportTo(Messenger ui);
+  public abstract void reportTo(Ui ui);
 
   @Override
   public String getMessage() {
     // This is typically never directly called - this exception is thrown away after it
     // reports its error, but to preserve reasonable functioning during tests, this
     // override provides the string that would otherwise be reported.
-    RecordingUi ui = new RecordingUi();
-    reportTo(ui);
-    return ui.lastError;
+    ByteArrayOutputStream stream = new ByteArrayOutputStream();
+    reportTo(new Ui(stream, /* filesystem */ null));
+    return stream.toString();
   }
 }

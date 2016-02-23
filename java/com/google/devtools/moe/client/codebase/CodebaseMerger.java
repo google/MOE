@@ -140,8 +140,8 @@ public class CodebaseMerger {
    * Print the results of a merge to the UI.
    */
   public void report() {
-    ui.info("Merged codebase generated at: %s", mergedCodebase.getPath().getAbsolutePath());
-    ui.info(
+    ui.message("Merged codebase generated at: %s", mergedCodebase.getPath().getAbsolutePath());
+    ui.message(
         "%d files merged successfully\n%d files have merge "
             + "conflicts. Edit the following files to resolve conflicts:\n%s",
         mergedFiles.size(),

@@ -16,8 +16,8 @@
 
 package com.google.devtools.moe.client.directives;
 
-import com.google.devtools.moe.client.Messenger;
 import com.google.devtools.moe.client.MoeUserProblem;
+import com.google.devtools.moe.client.Ui;
 
 import java.util.Map;
 
@@ -56,13 +56,13 @@ public class Directives {
   /** Thrown when an invalid directive name is selected. */
   public class NoSuchDirectiveException extends MoeUserProblem {
     @Override
-    public void reportTo(Messenger messenger) {
+    public void reportTo(Ui messenger) {
       // Bad input, print all possible directives
-      messenger.info(directiveName + " is not a valid directive. Must be one of: ");
+      messenger.message(directiveName + " is not a valid directive. Must be one of: ");
 
       for (Map.Entry<String, Provider<Directive>> entry : directives.entrySet()) {
         // TODO(cgruber): make this a table map so this isn't needed.
-        messenger.info("* " + entry.getKey() + ": " + entry.getValue().get().getDescription());
+        messenger.message("* " + entry.getKey() + ": " + entry.getValue().get().getDescription());
       }
     }
   }

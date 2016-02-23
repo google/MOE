@@ -24,6 +24,7 @@ import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.SystemCommandRunner;
+import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.database.Db;
 import com.google.devtools.moe.client.database.FileDb;
 import com.google.devtools.moe.client.gson.GsonModule;
@@ -32,7 +33,6 @@ import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
-import com.google.devtools.moe.client.testing.RecordingUi;
 import com.google.devtools.moe.client.tools.EagerLazy;
 
 import junit.framework.TestCase;
@@ -40,13 +40,15 @@ import junit.framework.TestCase;
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 
 public class NoteEquivalenceDirectiveTest extends TestCase {
-  public final RecordingUi ui = new RecordingUi();
+  private final ByteArrayOutputStream stream = new ByteArrayOutputStream();
+  private final Ui ui = new Ui(stream, /* fileSystem */ null);
   private final IMocksControl control = EasyMock.createControl();
   private final FileSystem mockFs = control.createMock(FileSystem.class);
-  private final SystemCommandRunner cmd = new SystemCommandRunner(ui);
+  private final SystemCommandRunner cmd = new SystemCommandRunner();
   private final Repositories repositories =
       new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(mockFs)));
   private final InMemoryProjectContextFactory contextFactory =

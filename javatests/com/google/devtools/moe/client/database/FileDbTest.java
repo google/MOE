@@ -26,24 +26,26 @@ import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.SystemFileSystem;
+import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.gson.GsonModule;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.repositories.Revision;
-import com.google.devtools.moe.client.testing.RecordingUi;
 
 import junit.framework.TestCase;
 
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 
 /**
  * Tests for the FileDb
  */
 public class FileDbTest extends TestCase {
-  private final RecordingUi ui = new RecordingUi();
-  private final SystemCommandRunner cmd = new SystemCommandRunner(ui);
+  private final ByteArrayOutputStream stream = new ByteArrayOutputStream();
+  private final Ui ui = new Ui(stream, /* fileSystem */ null);
+  private final SystemCommandRunner cmd = new SystemCommandRunner();
   private final FileSystem filesystem = new SystemFileSystem();
   private final Db.Factory factory = new FileDb.Factory(filesystem, GsonModule.provideGson());
 

@@ -16,6 +16,7 @@
 
 package com.google.devtools.moe.client.directives;
 
+import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.database.Db;
 import com.google.devtools.moe.client.parser.Parser;
@@ -78,8 +79,7 @@ public class FindEquivalenceDirective extends Directive {
       printEquivalences(revs, inRepository, db);
       return 0;
     } catch (ParseError e) {
-      ui.error(e, "Couldn't parse " + fromRepository);
-      return 1;
+      throw new MoeProblem(e, "Couldn't parse %s", fromRepository);
     }
   }
 
@@ -102,13 +102,13 @@ public class FindEquivalenceDirective extends Directive {
         }
       }
       if (equivalences.isEmpty()) {
-        ui.info(
+        ui.message(
             "No Equivalences for \"%s{%s}\" in repository \"%s\"",
             rev.repositoryName(),
             rev.revId(),
             inRepo);
       } else {
-        ui.info("\"%s{%s}\" == \"%s{%s}\"", rev.repositoryName(), rev.revId(), inRepo, result);
+        ui.message("\"%s{%s}\" == \"%s{%s}\"", rev.repositoryName(), rev.revId(), inRepo, result);
       }
     }
   }

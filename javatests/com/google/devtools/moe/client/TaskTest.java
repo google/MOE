@@ -18,10 +18,12 @@ package com.google.devtools.moe.client;
 
 import junit.framework.TestCase;
 
+import java.io.ByteArrayOutputStream;
+
 public class TaskTest extends TestCase {
 
   public void testPoppingTaskNotOnStack() throws Exception {
-    Ui ui = new NoOpUi(new SystemFileSystem());
+    Ui ui = new Ui(new ByteArrayOutputStream(), new SystemFileSystem());
     Ui.Task t = ui.pushTask("foo", "bar");
     ui.popTask(t, "");
     assertEquals("bar", t.description);

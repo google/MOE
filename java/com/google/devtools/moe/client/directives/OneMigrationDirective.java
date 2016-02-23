@@ -16,6 +16,7 @@
 
 package com.google.devtools.moe.client.directives;
 
+import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
@@ -87,8 +88,7 @@ public class OneMigrationDirective extends Directive {
       toRepoEx = Parser.parseRepositoryExpression(toRepository);
       fromRepoEx = Parser.parseRepositoryExpression(fromRepository);
     } catch (ParseError e) {
-      ui.error(e, "Couldn't parse expression");
-      return 1;
+      throw new MoeProblem(e, "Couldn't parse expression");
     }
     RepositoryConfig repositoryConfig =
         config.get().getRepositoryConfig(toRepoEx.getRepositoryName());
@@ -103,19 +103,17 @@ public class OneMigrationDirective extends Directive {
               .translateTo(toProjectSpace)
               .createCodebase(context.get());
     } catch (CodebaseCreationError e) {
-      ui.error(e, "Error creating codebase");
-      return 1;
+      throw new MoeProblem(e, "Error creating codebase");
     }
 
     Writer destination;
     try {
       destination = toRepoEx.createWriter(context.get());
     } catch (WritingError e) {
-      ui.error(e, "Error writing to repo");
-      return 1;
+      throw new MoeProblem(e, "Error writing to repo");
     }
 
-    ui.info("Migrating '%s' to '%s'", fromRepoEx, toRepoEx);
+    ui.message("Migrating '%s' to '%s'", fromRepoEx, toRepoEx);
 
 
     RepositoryType repositoryType = context.get().getRepository(revs.get(0).repositoryName());
@@ -135,7 +133,7 @@ public class OneMigrationDirective extends Directive {
       return 1;
     }
 
-    ui.info("Created Draft Revision: " + draftRevision.getLocation());
+    ui.message("Created Draft Revision: " + draftRevision.getLocation());
     return 0;
   }
 

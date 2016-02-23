@@ -120,7 +120,7 @@ public class MagicDirective extends Directive {
 
       MigrationConfig migrationConfig = context.get().migrationConfigs().get(migrationName);
       if (migrationConfig == null) {
-        ui.error("No migration found with name %s", migrationName);
+        ui.message("No migration found with name %s... skipping.", migrationName);
         continue;
       }
 
@@ -129,7 +129,7 @@ public class MagicDirective extends Directive {
           migrator.findMigrationsFromEquivalency(fromRepo, migrationConfig, db);
 
       if (migrations.isEmpty()) {
-        ui.info("No pending revisions to migrate for %s", migrationName);
+        ui.message("No pending revisions to migrate for %s", migrationName);
         continue;
       }
 
@@ -165,12 +165,11 @@ public class MagicDirective extends Directive {
             throw new MoeProblem(
                 "Cannot skip subset of revisions in a single migration: " + migration);
           }
-          ui.info(
-              String.format(
-                  "Skipping %s/%s migration `%s`",
-                  currentlyPerformedMigration++,
-                  migrations.size(),
-                  migration));
+          ui.message(
+              "Skipping %s/%s migration `%s`",
+              currentlyPerformedMigration++,
+              migrations.size(),
+              migration);
           continue;
         }
 
@@ -233,9 +232,9 @@ public class MagicDirective extends Directive {
 
     List<String> migrationsMade = migrationsMadeBuilder.build();
     if (migrationsMade.isEmpty()) {
-      ui.info("No migrations made.");
+      ui.message("No migrations made.");
     } else {
-      ui.info("Created Draft Revisions:\n" + Joiner.on("\n").join(migrationsMade));
+      ui.message("Created Draft Revisions:\n" + Joiner.on("\n").join(migrationsMade));
     }
 
     return 0;

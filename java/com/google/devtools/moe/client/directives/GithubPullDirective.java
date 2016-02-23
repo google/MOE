@@ -17,7 +17,7 @@
 package com.google.devtools.moe.client.directives;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.devtools.moe.client.Messenger;
+import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.MoeUserProblem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.Ui.Task;
@@ -76,35 +76,33 @@ public class GithubPullDirective extends Directive {
     PullRequest metadata = client.getPullRequest(url);
     if (debug()) {
       // TODO(cgruber) Re-work debug mode into ui messenger when flags are separated from directives
-      ui.info("DEBUG: Pull Request Metadata: '%s'", metadata);
+      ui.message("DEBUG: Pull Request Metadata: '%s'", metadata);
     }
     if (metadata.merged()) {
-      ui.error("This pull request has already been merged on github: '%s'", url);
-      return 1;
+      throw new MoeProblem("This pull request has already been merged on github: '%s'", url);
     }
     switch (metadata.mergeableState()) {
       case CLEAN:
-        ui.info("Pull request %s is ready to merge", metadata.number());
+        ui.message("Pull request %s is ready to merge", metadata.number());
         break;
       case UNSTABLE:
-        ui.info(
+        ui.message(
             "WARNING: Pull request %s is ready to merge, but GitHub is reporting it as failing. "
                 + "Continuing, but this branch may have problems. ",
             metadata.number());
         break;
       default:
-        ui.error(
+        throw new MoeProblem(
             "Pull request %s is in an indeterminate state. "
                 + "Please please check the pull request status, "
                 + "perform any needed rebase/merge, and re-run",
             metadata.number());
-        return 1;
     }
 
     MigrateBranchDirective delegate = migrateBranchDirective.get();
 
     String repoConfigName = findRepoConfig(config.get().repositories(), metadata);
-    ui.info("Using '%s' as the source repository.", repoConfigName);
+    ui.message("Using '%s' as the source repository.", repoConfigName);
     int result =
         delegate.performBranchMigration(
             dbLocation,
@@ -134,7 +132,7 @@ public class GithubPullDirective extends Directive {
     }
     throw new MoeUserProblem() {
       @Override
-      public void reportTo(Messenger messenger) {
+      public void reportTo(Ui messenger) {
         StringBuilder sb = new StringBuilder();
         sb.append("No configured repository is applicable to this pull request: ");
         sb.append(metadata.htmlUrl()).append("\n");
@@ -145,7 +143,7 @@ public class GithubPullDirective extends Directive {
               .append(entry.getValue().getUrl())
               .append('\n');
         }
-        messenger.error(sb.toString());
+        messenger.message(sb.toString());
       }
     };
   }
