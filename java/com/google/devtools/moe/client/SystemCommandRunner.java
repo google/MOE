@@ -128,6 +128,10 @@ public class SystemCommandRunner implements CommandRunner {
     return runCommandWithFullOutput(cmd, args, workingDirectory).getStdout();
   }
 
+  /**
+   * Class responsible to manager the use of streams by the 
+   * {@link SystemCommandRunner} class.
+   */
   private static class Sink {
     private final List<Byte> bytes = Lists.newArrayList();
     private InputStream stream;
@@ -136,14 +140,32 @@ public class SystemCommandRunner implements CommandRunner {
       this.stream = stream;
     }
 
+    /**
+     * Checks if a stream is available to be read.
+     * 
+     * @return true if the stream is available or false, otherwise.
+     * 
+     * @throws IOException if some error occurs during the checking.
+     */
     boolean isAvailable() throws IOException {
       return stream != null && stream.available() > 0;
     }
 
+    /**
+     * Closes the stream. It is the same of making stream equals to null.
+     */
     void closeStream() {
       stream = null;
     }
 
+    /**
+     * Reads the next byte from the stream to the {@link #bytes} list.
+     * 
+     * @return true is the byte was read successfully or false if there was no 
+     * more byte to read.
+     * 
+     * @throws IOException if some error occurs when reading the byte.
+     */
     boolean consumeByte() throws IOException {
       int data = stream.read();
       if (data == -1) {
@@ -154,6 +176,11 @@ public class SystemCommandRunner implements CommandRunner {
       }
     }
 
+    /**
+     * Gets the bytes read from the stream as a string.
+     * 
+     * @return the string represented by the bytes read from the stream.
+     */
     String getData() {
       byte[] byteArray = new byte[bytes.size()];
       int i = 0;
@@ -164,7 +191,9 @@ public class SystemCommandRunner implements CommandRunner {
     }
   }
 
-  /** A Dagger module for binding this implementation of {@link CommandRunner}. */
+  /** 
+   * A Dagger module for binding this implementation of {@link CommandRunner}.
+   */
   @dagger.Module
   public static class Module {
     @Provides
