@@ -20,7 +20,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
-import com.google.devtools.moe.client.Ui.Task;
+import com.google.devtools.moe.client.Task;
 import com.google.devtools.moe.client.testing.TestingModule;
 
 import junit.framework.TestCase;

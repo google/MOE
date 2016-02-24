@@ -38,7 +38,7 @@ public final class Lifetimes {
    * @return the current task lifetime.
    */
   public static final Lifetime currentTask() {
-    return Injector.INSTANCE.getUi().currentTaskLifetime();
+    return Injector.INSTANCE.getUi().getCurrentTaskLifetime();
   }
 
   /**
@@ -48,7 +48,7 @@ public final class Lifetimes {
    * @return the lifetime for the MOE execution.
    */
   public static final Lifetime moeExecution() {
-    return Injector.INSTANCE.getUi().moeExecutionLifetime();
+    return Injector.INSTANCE.getUi().getMoeExecutionLifetime();
   }
 
   /**

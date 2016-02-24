@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.devtools.moe.client.MoeProblem;
+import com.google.devtools.moe.client.Task;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
@@ -108,7 +109,7 @@ public class MagicDirective extends Directive {
     ImmutableList.Builder<String> migrationsMadeBuilder = ImmutableList.builder();
 
     for (String migrationName : migrationNames) {
-      Ui.Task migrationTask =
+      Task migrationTask =
           ui.pushTask("perform_migration", "Performing migration '%s'", migrationName);
 
       MigrationConfig migrationConfig = context().migrationConfigs().get(migrationName);
@@ -173,7 +174,7 @@ public class MagicDirective extends Directive {
             new RepositoryExpression(migrationConfig.getToRepository())
                 .withOption("localroot", toWriter.getRoot().getAbsolutePath());
 
-        Ui.Task oneMigrationTask =
+        Task oneMigrationTask =
             ui.pushTask(
                 "perform_individual_migration",
                 "Performing %s/%s migration '%s'",

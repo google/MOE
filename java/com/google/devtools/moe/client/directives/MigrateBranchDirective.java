@@ -28,6 +28,7 @@ import com.google.common.collect.Iterables;
 import com.google.devtools.moe.client.Messenger;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.MoeUserProblem;
+import com.google.devtools.moe.client.Task;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
@@ -127,7 +128,7 @@ public class MigrateBranchDirective extends Directive {
         findMigrationConfigForRepository(
             overrideUrl, originalFromRepository + "_fork", originalFromRepository);
 
-    Ui.Task migrationTask =
+    Task migrationTask =
         ui.pushTask(
             "perform_migration",
             "Performing migration '%s' from branch '%s'",
@@ -177,7 +178,7 @@ public class MigrateBranchDirective extends Directive {
           new RepositoryExpression(migrationConfig.getToRepository())
               .withOption("localroot", toWriter.getRoot().getAbsolutePath());
 
-      Ui.Task performMigration =
+      Task performMigration =
           ui.pushTask(
               "perform_individual_migration",
               "Performing individual migration '%s'",
@@ -319,7 +320,7 @@ public class MigrateBranchDirective extends Directive {
       RevisionHistory baseRevisions,
       RevisionHistory fromRevisions,
       boolean batchChanges) {
-    Ui.Task determineMigrationsTask = ui.pushTask("determind migrations", "Determine migrations");
+    Task determineMigrationsTask = ui.pushTask("determind migrations", "Determine migrations");
     List<Revision> toMigrate = findDescendantRevisions(fromRevisions, baseRevisions);
     ui.popTask(determineMigrationsTask, "");
 
@@ -376,7 +377,7 @@ public class MigrateBranchDirective extends Directive {
     Revision head = parentBranch.findHighestRevision(null);
     String parentRepositoryName = head.repositoryName();
 
-    Ui.Task ancestorTask = ui.pushTask("scan_ancestor_branch", "Gathering ancestor revisions");
+    Task ancestorTask = ui.pushTask("scan_ancestor_branch", "Gathering ancestor revisions");
     Deque<Revision> revisionsToProcess = new ArrayDeque<>();
     revisionsToProcess.add(head);
     int count = 0;
@@ -395,7 +396,7 @@ public class MigrateBranchDirective extends Directive {
     }
     ui.popTask(ancestorTask, "Scanned revisions: " + count);
 
-    Ui.Task migrationBranchTask = ui.pushTask("scan_target_branch", "Finding mergeable commits");
+    Task migrationBranchTask = ui.pushTask("scan_target_branch", "Finding mergeable commits");
     LinkedHashSet<String> commitsNotInParentBranch = new LinkedHashSet<>();
     revisionsToProcess = new ArrayDeque<>();
     revisionsToProcess.add(branch.findHighestRevision(null));

@@ -18,6 +18,7 @@ package com.google.devtools.moe.client.parser;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.Task;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
@@ -81,7 +82,7 @@ public class RepositoryExpression extends AbstractExpression {
       cc = repo.codebaseCreator();
     }
 
-    Ui.Task createTask =
+    Task createTask =
         Injector.INSTANCE.getUi().pushTask("create_codebase", "Creating from '%s'", this);
     Codebase c = cc.create(term.options);
     Injector.INSTANCE.getUi().popTaskAndPersist(createTask, c.getPath());
@@ -99,7 +100,7 @@ public class RepositoryExpression extends AbstractExpression {
     RepositoryType r = context.getRepository(term.identifier);
     WriterCreator wc = r.writerCreator();
 
-    Ui.Task t = Injector.INSTANCE.getUi().pushTask("create_writer", "Creating Writer \"%s\"", term);
+    Task t = Injector.INSTANCE.getUi().pushTask("create_writer", "Creating Writer \"%s\"", term);
     try {
       Writer writer = wc.create(term.options);
       Injector.INSTANCE.getUi().popTaskAndPersist(t, writer.getRoot());

@@ -18,7 +18,6 @@ package com.google.devtools.moe.client;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
-import com.google.devtools.moe.client.Lifetime;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,65 +41,44 @@ public abstract class Ui implements Messenger {
    */
   public static final String MOE_TERMINATION_TASK_NAME = "moe_termination";
 
-  protected final Deque<Task> stack = new ArrayDeque<Task>();
-
-  public static class Task {
-    public final String taskName;
-    public final String description;
-
-    public Task(String taskName, String description) {
-      this.taskName = taskName;
-      this.description = description;
-    }
-
-    public Task(String taskName, String descriptionFormat, Object... args) {
-      this.taskName = taskName;
-      // TODO(cgruber) make this lazy once Task is an autovalue.
-      this.description = String.format(descriptionFormat, args);
-    }
-
-    @Override
-    public String toString() {
-      return taskName;
-    }
-  }
+  protected final Deque<Task> STACK = new ArrayDeque<Task>();
 
   /**
    * Pushes a task onto the Task Stack.
    *
-   * <p>MOE's UI operates on a stack model. Tasks get pushed onto the stack and then what is popped
-   * must be the top task on the stack, allowing nesting only.
+   * <p>MOE's UI operates on a STACK model. Tasks get pushed onto the STACK and 
+   * then what is popped must be the top task on the STACK, allowing nesting only.
    *
-   * @param task  the name of the task; should be sensical to a computer
+   * @param taskName  the name of the task; should be sensical to a computer
    * @param descriptionFormat  a String.format() template for the description of what MOE is
    *     about to do, suitable for a user.
    * @param formatArgs  arguments which will be used to format the descriptionFormat template
    *
-   * @returns the Task created
+   * @return the Task created.
    */
-  public Task pushTask(String task, String descriptionFormat, Object... formatArgs) {
-    Task t = new Task(task, descriptionFormat, formatArgs);
-    stack.addFirst(t);
-    return t;
+  public Task pushTask(String taskName, String descriptionFormat, Object... formatArgs) {
+    Task task = new Task(taskName, descriptionFormat, formatArgs);
+    STACK.addFirst(task);
+    return task;
   }
 
   /**
    * Pops a task from the Task Stack. No files or directories are persisted beyond this Task. After
    * the Task is popped, temp dirs are cleaned up via {@link FileSystem#cleanUpTempDirs()}.
    *
-   * @param task  the task to pop. This must be the task on the top of the stack.
+   * @param task  the task to pop. This must be the task on the top of the STACK.
    * @param result  the result of the task, if applicable, or "".
-   * @throws MoeProblem  if task is not on the top of the stack
+   * @throws MoeProblem  if task is not on the top of the STACK
    */
   public void popTask(Task task, String result) {
-    if (stack.isEmpty()) {
+    if (STACK.isEmpty()) {
       throw new MoeProblem("Tried to end task %s, but stack is empty", task.taskName);
     }
 
-    Task top = stack.removeFirst();
+    Task top = STACK.removeFirst();
 
     if (top != task) {
-      throw new MoeProblem("Tried to end task %s, but stack contains: %s", task.taskName, stack);
+      throw new MoeProblem("Tried to end task %s, but stack contains: %s", task.taskName, STACK);
     }
 
     if (fileSystem != null) {
@@ -114,23 +92,25 @@ public abstract class Ui implements Messenger {
   }
 
   /**
-   * Pops a task from the Task Stack, persisting the given File beyond this Task. In general, use
-   * this if you call {@link FileSystem#getTemporaryDirectory(String, Lifetime)} within a Task and
-   * need to keep the resulting temp dir past completion of this Task.
-   *
-   * If there is a parent Task on the stack after the one being popped here, then
+   * Pops a task from the Task Stack, persisting the given File beyond this Task.
+   * In general, use this if you call {@link FileSystem#getTemporaryDirectory(String, Lifetime)} 
+   * within a Task and need to keep the resulting temporary directory past completion of this Task.
+   * If there is a parent Task on the STACK after the one being popped here, then
    * {@code persistentResult} will be cleaned up when the parent Task is popped (unless it's
    * persisted within that Task too). If there is no parent Task, then {@code persistentResult}
    * will be persisted beyond MOE execution. So any results persisted beyond a top-level Task
    * constitute outputs of MOE execution.
+   * 
+   * @param task task to be popped.
+   * @param persistentResult file to the persistent result.
    */
   public void popTaskAndPersist(Task task, File persistentResult) {
     if (fileSystem != null) {
       Lifetime newLifetime;
-      if (stack.size() == 1) {
+      if (STACK.size() == 1) {
         newLifetime = Lifetimes.persistent();
       } else {
-        Task parentTask = Iterables.get(stack, 1);
+        Task parentTask = Iterables.get(STACK, 1);
         newLifetime = new TaskLifetime(parentTask);
       }
       fileSystem.setLifetime(persistentResult, newLifetime);
@@ -139,17 +119,28 @@ public abstract class Ui implements Messenger {
     popTask(task, persistentResult.getAbsolutePath());
   }
 
-  Lifetime currentTaskLifetime() {
-    Preconditions.checkState(!stack.isEmpty());
-    return new TaskLifetime(stack.peek());
+  /**
+   * Gets the TaskLifetime of the top of the stack.
+   * 
+   * @return TaskLifetime of the top of the stack.
+   */
+  Lifetime getCurrentTaskLifetime() {
+    Preconditions.checkState(!STACK.isEmpty());
+    return new TaskLifetime(STACK.peek());
   }
 
-  Lifetime moeExecutionLifetime() {
+  /**
+   * Gets the a new instance of the MoeExecutionLifetime class.
+   * 
+   * @return a new MoeExecutionLifetime instance.
+   */
+  Lifetime getMoeExecutionLifetime() {
     return new MoeExecutionLifetime();
   }
 
   /**
-   * A {@code Lifetime} for a temp dir that should be cleaned up when the given Task is completed.
+   * A {@code Lifetime} for a temporary directory that should be cleaned up when
+   * the given Task is completed.
    */
   private class TaskLifetime implements Lifetime {
 
@@ -161,18 +152,19 @@ public abstract class Ui implements Messenger {
 
     @Override
     public boolean shouldCleanUp() {
-      return !stack.contains(task);
+      return !STACK.contains(task);
     }
   }
 
   /**
-   * A {@code Lifetime} for a temp dir that should be cleaned up when MOE completes execution.
+   * A {@code Lifetime} for a temporary directory that should be cleaned up when 
+   * MOE completes execution.
    */
   private class MoeExecutionLifetime implements Lifetime {
 
     @Override
     public boolean shouldCleanUp() {
-      return !stack.isEmpty() && stack.peek().taskName.equals(MOE_TERMINATION_TASK_NAME);
+      return !STACK.isEmpty() && STACK.peek().taskName.equals(MOE_TERMINATION_TASK_NAME);
     }
   }
 

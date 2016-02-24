@@ -17,6 +17,7 @@
 package com.google.devtools.moe.client.testing;
 
 import com.google.devtools.moe.client.SystemUi;
+import com.google.devtools.moe.client.Task;
 import com.google.devtools.moe.client.Ui;
 
 import dagger.Provides;
@@ -51,7 +52,7 @@ public class RecordingUi extends SystemUi {
   }
 
   @Override
-  public void popTask(Ui.Task task, String result) {
+  public void popTask(Task task, String result) {
     lastTaskResult = result;
     super.popTask(task, result);
   }

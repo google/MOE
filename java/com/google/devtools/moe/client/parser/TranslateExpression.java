@@ -18,6 +18,7 @@ package com.google.devtools.moe.client.parser;
 
 import com.google.common.base.Preconditions;
 import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.Task;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
@@ -57,7 +58,7 @@ public class TranslateExpression extends AbstractExpression {
           context.translators().keySet());
     }
 
-    Ui.Task translateTask =
+    Task translateTask =
         Injector.INSTANCE
             .getUi()
             .pushTask(

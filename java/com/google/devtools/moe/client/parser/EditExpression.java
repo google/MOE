@@ -18,6 +18,7 @@ package com.google.devtools.moe.client.parser;
 
 import com.google.common.base.Preconditions;
 import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.Task;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
@@ -50,7 +51,7 @@ public class EditExpression extends AbstractExpression {
       throw new CodebaseCreationError("no editor " + editorName);
     }
 
-    Ui.Task editTask =
+    Task editTask =
         Injector.INSTANCE
             .getUi()
             .pushTask(

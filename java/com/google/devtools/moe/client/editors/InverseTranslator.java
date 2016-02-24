@@ -19,7 +19,7 @@ package com.google.devtools.moe.client.editors;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.moe.client.Injector;
-import com.google.devtools.moe.client.Ui.Task;
+import com.google.devtools.moe.client.Task;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.parser.Expression;

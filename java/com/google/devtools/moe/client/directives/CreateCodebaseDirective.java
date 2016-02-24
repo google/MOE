@@ -22,7 +22,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.CommandException;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.Ui;
-import com.google.devtools.moe.client.Ui.Task;
+import com.google.devtools.moe.client.Task;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.parser.Parser;

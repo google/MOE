@@ -40,13 +40,13 @@ public class UiTest extends TestCase {
 
   public void testStackHelpers() throws Exception {
     Ui ui = new NoOpUi();
-    Ui.Task t = ui.pushTask("foo", "bar");
+    Task t = ui.pushTask("foo", "bar");
     ui.popTask(t, "");
     assertEquals("bar", t.description);
 
     t = ui.pushTask("foo", "bar");
     try {
-      ui.popTask(new Ui.Task("baz", "quux"), "");
+      ui.popTask(new Task("baz", "quux"), "");
     } catch (MoeProblem expected) {
       return;
     }

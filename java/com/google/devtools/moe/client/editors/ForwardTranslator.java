@@ -17,6 +17,7 @@
 package com.google.devtools.moe.client.editors;
 
 import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.Task;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.project.ProjectContext;
@@ -41,7 +42,7 @@ public class ForwardTranslator implements Translator {
       Codebase toTranslate, Map<String, String> options, ProjectContext context) {
     Codebase translated = toTranslate;
     for (TranslatorStep s : steps) {
-      Ui.Task editTask = Injector.INSTANCE.getUi().pushTask("edit", "Translation editor: " + s.name);
+      Task editTask = Injector.INSTANCE.getUi().pushTask("edit", "Translation editor: " + s.name);
       // Pass the translation options to each editor.
       translated = s.editor.edit(translated, context, options);
       Injector.INSTANCE.getUi().popTaskAndPersist(editTask, translated.getPath());

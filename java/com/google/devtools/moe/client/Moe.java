@@ -98,7 +98,7 @@ public class Moe {
       }
 
       int result = directive.perform();
-      Ui.Task terminateTask = ui.pushTask(MOE_TERMINATION_TASK_NAME, "Final clean-up");
+      Task terminateTask = ui.pushTask(MOE_TERMINATION_TASK_NAME, "Final clean-up");
       try {
         component.getContext().getFileSystem().cleanUpTempDirs();
       } catch (IOException e) {

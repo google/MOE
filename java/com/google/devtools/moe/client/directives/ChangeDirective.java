@@ -17,7 +17,7 @@
 package com.google.devtools.moe.client.directives;
 
 import com.google.devtools.moe.client.Ui;
-import com.google.devtools.moe.client.Ui.Task;
+import com.google.devtools.moe.client.Task;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.parser.Parser;

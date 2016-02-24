@@ -37,7 +37,7 @@ public class SystemUi extends Ui {
 
   // We store the task that is the current output, if any, so that we can special case a Task that
   // is popped right after it is pushed. In this case, we can output: "Doing...Done" on one line.
-  Ui.Task currentOutput;
+  Task currentOutput;
 
   @Inject
   public SystemUi() {
@@ -57,13 +57,13 @@ public class SystemUi extends Ui {
   }
 
   /**
-   * Indents a message according to the stack size.
+   * Indents a message according to the STACK size.
    * 
    * @param message message to be indented.
    * @return the message indented.
    */
   private String indent(String message) {
-    String indentation = Strings.repeat("  ", stack.size());
+    String indentation = Strings.repeat("  ", STACK.size());
     return indentation + Joiner.on("\n" + indentation).join(Splitter.on('\n').split(message));
   }
 
@@ -98,13 +98,13 @@ public class SystemUi extends Ui {
   public void error(Throwable throwable, String messageFormat, Object... args) {
     clearOutput();
     String message = String.format(messageFormat, args);
-    // Do not expose the stack trace to the user. Just send it to the INFO logs.
+    // Do not expose the STACK trace to the user. Just send it to the INFO logs.
     LOGGER.log(Level.SEVERE, message + ": " + throwable.getMessage());
     LOGGER.log(Level.INFO, message, throwable);
   }
 
   @Override
-  public Ui.Task pushTask(String task, String descriptionFormat, Object... args) {
+  public Task pushTask(String task, String descriptionFormat, Object... args) {
     clearOutput();
     String description = String.format(descriptionFormat, args);
     String indented = indent(description + "... ");
@@ -116,7 +116,7 @@ public class SystemUi extends Ui {
   }
 
   @Override
-  public void popTask(Ui.Task task, String result) {
+  public void popTask(Task task, String result) {
     super.popTask(task, result);
     if (result.isEmpty()) {
       result = "Done";
