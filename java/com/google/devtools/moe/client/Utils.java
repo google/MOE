@@ -38,12 +38,23 @@ public class Utils {
 
   /**
    * Returns a Set that excludes strings matching any of excludeRes.
+   * 
+   * @param originalSet original set of strings to be filtered.
+   * @param excludeRes regular expressions to be used as filter.
+   * 
+   * @return new Set of strings filtered.
    */
-  public static Set<String> filterByRegEx(Set<String> c, List<String> excludeRes) {
-    return ImmutableSet.copyOf(Sets.filter(c, nonMatchingPredicateFromRes(excludeRes)));
+  public static Set<String> filterByRegEx(Set<String> originalSet, List<String> excludeRes) {
+    return ImmutableSet.copyOf(Sets.filter(originalSet, nonMatchingPredicateFromRes(excludeRes)));
   }
 
-  /** @return a Predicate that's true iff a CharSequence doesn't match any of the given regexes */
+  /** 
+   * Creates a Predicate with the nonmatching regular expressions.
+   * 
+   * @param excludeRes regular expressions to match.
+   * @return a Predicate that's true if a CharSequence doesn't match any of the 
+   * given regular expressions.
+   */
   public static Predicate<CharSequence> nonMatchingPredicateFromRes(List<String> excludeRes) {
     ImmutableList.Builder<Predicate<CharSequence>> rePredicateBuilder = ImmutableList.builder();
     for (String excludeRe : excludeRes) {
@@ -52,13 +63,27 @@ public class Utils {
     return Predicates.and(rePredicateBuilder.build());
   }
 
+  /**
+   * Checks the keys passed into the options to MOE. If an invalid option is
+   * found, a MoeProblem is thrown.
+   * 
+   * @param options options received to be checked.
+   * @param allowedOptions allowed options.
+   */
   public static void checkKeys(Map<String, String> options, Set<String> allowedOptions) {
     if (!allowedOptions.containsAll(options.keySet())) {
       throw new MoeProblem(
           "Options contains invalid keys:%nOptions: %s%nAllowed keys: %s", options, allowedOptions);
     }
   }
-
+  
+  /**
+   * Makes the files under a path become relative.
+   * 
+   * @param files files to have the path converted.
+   * @param basePath base path for the files.
+   * @return set of strings containing the relative paths created.
+   */
   public static Set<String> makeFilenamesRelative(Set<File> files, File basePath) {
     Set<String> result = Sets.newLinkedHashSet();
     for (File f : files) {
@@ -70,18 +95,29 @@ public class Utils {
     return ImmutableSet.copyOf(result);
   }
 
-  /** Applies the given Function to all files under baseDir. */
-  public static void doToFiles(File baseDir, Function<File, Void> doFunction) {
-    for (File file : Injector.INSTANCE.getFileSystem().findFiles(baseDir)) {
+  /**
+   * Applies the given Function to all files under a base directory.
+   * 
+   * @param baseDirectory the base directory to have the files applied to the function.
+   * @param doFunction function to be applied to the files.
+   */
+  public static void doToFiles(File baseDirectory, Function<File, Void> doFunction) {
+    for (File file : Injector.INSTANCE.getFileSystem().findFiles(baseDirectory)) {
       doFunction.apply(file);
     }
   }
 
-  /** Delete files under baseDir whose paths relative to baseDir don't match the given Predicate. */
-  public static void filterFiles(File baseDir, final Predicate<CharSequence> positiveFilter) {
-    final URI baseUri = baseDir.toURI();
+  /** 
+   * Delete files under a base directory whose paths relative to base directory 
+   * don't match the given Predicate.
+   * 
+   * @param baseDirectory the base directory containing the files.
+   * @param positiveFilter predicate to be used as filter.
+   */
+  public static void filterFiles(File baseDirectory, final Predicate<CharSequence> positiveFilter) {
+    final URI baseUri = baseDirectory.toURI();
     Utils.doToFiles(
-        baseDir,
+        baseDirectory,
         new Function<File, Void>() {
           @Override
           public Void apply(File file) {
@@ -98,12 +134,13 @@ public class Utils {
   }
 
   /**
-   * Expands the specified File to a new temporary directory, or returns null if the file
-   * type is unsupported.
+   * Expands the specified File to a new temporary directory.
+   * 
    * @param inputFile The File to be extracted.
-   * @return File pointing to a directory, or null.
-   * @throws CommandException
-   * @throws IOException
+   * @return File pointing to a directory, or null if the file type is unsupported.
+   * 
+   * @throws CommandException if some error occurs while performing the command.
+   * @throws IOException is some I/O error occurs.
    */
   public static File expandToDirectory(File inputFile) throws IOException, CommandException {
     // If the specified path already is a directory, return it without modification.
@@ -121,6 +158,14 @@ public class Utils {
     return null;
   }
 
+  /**
+   * Expands a tar file.
+   * 
+   * @param tar tar file to be expanded.
+   * @return the expanded directory for the tar file.
+   * @throws IOException if some error occurs while expanding the tar.
+   * @throws CommandException if some error occurs while running the command.
+   */
   public static File expandTar(File tar) throws IOException, CommandException {
     File expandedDir = Injector.INSTANCE.getFileSystem().getTemporaryDirectory("expanded_tar_");
     Injector.INSTANCE.getFileSystem().makeDirs(expandedDir);
@@ -136,19 +181,28 @@ public class Utils {
     return expandedDir;
   }
 
-  public static void copyDirectory(File src, File dest) throws IOException, CommandException {
-    if (src == null) {
+  /**
+   * Copies a directory to another.
+   * 
+   * @param source source directory to be copied.
+   * @param destination destination directory of the copy.
+   * 
+   * @throws IOException if some I/O error occurs while copying the directory.
+   * @throws CommandException if some error occurs while performing the command.
+   */
+  public static void copyDirectory(File source, File destination) throws IOException, CommandException {
+    if (source == null) {
       return;
     }
-    Injector.INSTANCE.getFileSystem().makeDirsForFile(dest);
-    if (Injector.INSTANCE.getFileSystem().isFile(src)) {
-      Injector.INSTANCE.getFileSystem().copyFile(src, dest);
+    Injector.INSTANCE.getFileSystem().makeDirsForFile(destination);
+    if (Injector.INSTANCE.getFileSystem().isFile(source)) {
+      Injector.INSTANCE.getFileSystem().copyFile(source, destination);
       return;
     }
-    File[] files = Injector.INSTANCE.getFileSystem().listFiles(src);
+    File[] files = Injector.INSTANCE.getFileSystem().listFiles(source);
     if (files != null) {
       for (File subFile : files) {
-        File newFile = new File(dest, Injector.INSTANCE.getFileSystem().getName(subFile));
+        File newFile = new File(destination, Injector.INSTANCE.getFileSystem().getName(subFile));
         if (Injector.INSTANCE.getFileSystem().isDirectory(subFile)) {
           copyDirectory(subFile, newFile);
         } else {
@@ -157,7 +211,6 @@ public class Utils {
         }
       }
     }
-    return;
   }
 
   /**
@@ -176,13 +229,19 @@ public class Utils {
     }
   }
 
-  /** A Gson parser used specifically for cloning Gson-ready objects */
+  /**
+   * A Gson parser used specifically for cloning Gson-ready objects
+   */
   private static final Gson CLONER = new Gson();
 
   /**
    * Does a simple clone of a Gson-ready object, by marshalling into a Json intermediary and
    * processing into a new object.  This is not in any way efficient, but it guarantees the correct
-   * cloning semantics.  It should not be used in tight loops where performance is a concern.
+   * cloning semantics. It should not be used in tight loops where performance is a concern.
+   * 
+   * @param <T> type of the object being cloned.
+   * @param t object to be cloned.
+   * @return object cloned.
    */
   @SuppressWarnings("unchecked")
   public static <T> T cloneGsonObject(T t) {
