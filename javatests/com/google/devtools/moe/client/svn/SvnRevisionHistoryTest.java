@@ -21,7 +21,7 @@ import static org.easymock.EasyMock.expect;
 
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.CommandRunner;
-import com.google.devtools.moe.client.CommandRunner.CommandException;
+import com.google.devtools.moe.client.CommandException;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.NullFileSystemModule;
 import com.google.devtools.moe.client.database.DbStorage;

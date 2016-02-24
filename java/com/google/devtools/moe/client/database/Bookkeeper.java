@@ -18,6 +18,7 @@ package com.google.devtools.moe.client.database;
 
 import com.google.common.base.Joiner;
 import com.google.devtools.moe.client.MoeProblem;
+import com.google.devtools.moe.client.Task;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
@@ -83,7 +84,7 @@ public class Bookkeeper {
       return;
     }
 
-    Ui.Task t = ui.pushTask("diff_codebases", "Diff codebases '%s' and '%s'", from, to);
+    Task t = ui.pushTask("diff_codebases", "Diff codebases '%s' and '%s'", from, to);
     if (!differ.diffCodebases(from, to).areDifferent()) {
       db.noteEquivalence(RepositoryEquivalence.create(fromHead, toHead));
     }
@@ -166,7 +167,7 @@ public class Bookkeeper {
       return;
     }
 
-    Ui.Task t = ui.pushTask("diff_codebases", "Diff codebases '%s' and '%s'", from, to);
+    Task t = ui.pushTask("diff_codebases", "Diff codebases '%s' and '%s'", from, to);
     if (!differ.diffCodebases(from, to).areDifferent()) {
       RepositoryEquivalence newEquiv = RepositoryEquivalence.create(fromRev, toRev);
       db.noteEquivalence(newEquiv);
@@ -206,10 +207,10 @@ public class Bookkeeper {
    * @return 0 on success, 1 on failure
    */
   public int bookkeep(Db db, ProjectContext context) {
-    Ui.Task t = ui.pushTask("perform_checks", "Updating database");
+    Task t = ui.pushTask("perform_checks", "Updating database");
 
     for (MigrationConfig config : context.migrationConfigs().values()) {
-      Ui.Task bookkeepOneMigrationTask =
+      Task bookkeepOneMigrationTask =
           ui.pushTask(
               "bookkeping_one_migration",
               "Doing bookkeeping between '%s' and '%s' for migration '%s'",
@@ -222,7 +223,7 @@ public class Bookkeeper {
 
       // TODO(user): ? Switch the order of these two checks, so that we don't have to look back
       // through the history for irrelevant equivalences if there's one at head.
-      Ui.Task checkMigrationsTask =
+      Task checkMigrationsTask =
           ui.pushTask(
               "check_migrations",
               "Checking completed migrations for new equivalence between '%s' and '%s'",
@@ -239,7 +240,7 @@ public class Bookkeeper {
       // Skip head-equivalence checking for inverse translation -- assume it will be performed via
       // the forward-translated migration.
       if (!migrationTranslator.isInverse()) {
-        Ui.Task checkHeadsTask =
+        Task checkHeadsTask =
             ui.pushTask(
                 "check_heads",
                 "Checking head equivalence between '%s' and '%s'",

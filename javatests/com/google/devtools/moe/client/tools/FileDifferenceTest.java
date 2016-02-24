@@ -19,6 +19,7 @@ package com.google.devtools.moe.client.tools;
 import static org.easymock.EasyMock.expect;
 
 import com.google.common.collect.ImmutableList;
+import com.google.devtools.moe.client.CommandException;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
@@ -81,7 +82,7 @@ public class FileDifferenceTest extends TestCase {
     expect(fileSystem.isExecutable(file2)).andReturn(false);
     expect(cmd.runCommand("diff", ImmutableList.of("-N", "/1/foo", "/2/foo"), ""))
         .andThrow(
-            new CommandRunner.CommandException(
+            new CommandException(
                 "diff", ImmutableList.of("-N", "/1/foo", "/2/foo"), "foo", "", 1));
 
     control.replay();
@@ -102,7 +103,7 @@ public class FileDifferenceTest extends TestCase {
     expect(fileSystem.isExecutable(file2)).andReturn(false);
     expect(cmd.runCommand("diff", ImmutableList.of("-N", "/1/foo", "/2/foo"), ""))
         .andThrow(
-            new CommandRunner.CommandException(
+            new CommandException(
                 "diff", ImmutableList.of("-N", "/1/foo", "/2/foo"), "foo", "", 1));
 
     control.replay();
@@ -159,7 +160,7 @@ public class FileDifferenceTest extends TestCase {
     expect(fileSystem.isExecutable(file2)).andReturn(true);
     expect(cmd.runCommand("diff", ImmutableList.of("-N", "/1/foo", "/2/foo"), ""))
         .andThrow(
-            new CommandRunner.CommandException(
+            new CommandException(
                 "diff", ImmutableList.of("-N", "/1/foo", "/2/foo"), "foo", "", 1));
 
     control.replay();
@@ -180,7 +181,7 @@ public class FileDifferenceTest extends TestCase {
     expect(fileSystem.isExecutable(file2)).andReturn(false);
     expect(cmd.runCommand("diff", ImmutableList.of("-N", "/1/foo", "/2/foo"), ""))
         .andThrow(
-            new CommandRunner.CommandException(
+            new CommandException(
                 "diff", ImmutableList.of("-N", "/1/foo", "/2/foo"), "foo", "", 1));
 
     control.replay();

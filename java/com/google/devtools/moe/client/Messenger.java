@@ -18,20 +18,40 @@ package com.google.devtools.moe.client;
 
 /**
  * A type used to wrap logging.
- *
- * TODO(cgruber): Replace with fluent logger when it is released (go/flogger)
  */
+// TODO(cgruber): Replace with fluent logger when it is released (go/flogger)
 public interface Messenger {
 
-  /** Sends an informational message to the user. */
-  void info(String msgfmt, Object... args);
+  /**
+   * Sends an informational message to the user.
+   * 
+   * @param messageFormat format of the message.
+   * @param args arguments to create the message.
+   */
+  void info(String messageFormat, Object... args);
 
-  /** Reports an error to the user. */
-  void error(String msgfmt, Object... args);
+  /** 
+   * Reports an error to the user.
+   * 
+   * @param messageFormat format of the message.
+   * @param args arguments to create the message.
+   */
+  void error(String messageFormat, Object... args);
 
-  /** Reports an error to the user, logging additional information about the error. */
-  void error(Throwable e, String msgfmt, Object... args);
+  /** 
+   * Reports an error to the user, logging additional information about the error.
+   * 
+   * @param throwable the occurred error.
+   * @param messageFormat format of the message.
+   * @param args arguments to create the message. 
+   */
+  void error(Throwable throwable, String messageFormat, Object... args);
 
-  /** Sends a debug message to the logs. */
-  void debug(String msgfmt, Object... args);
+  /** 
+   * Sends a debug message to the logs.
+   * 
+   * @param messageFormat format of the message.
+   * @param args arguments to create the message.
+   */
+  void debug(String messageFormat, Object... args);
 }

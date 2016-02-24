@@ -21,6 +21,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.google.common.io.Files;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
+import com.google.devtools.moe.client.Task;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.tools.FileDifference.FileDiffer;
@@ -48,7 +49,7 @@ public class FileReadingProjectContextFactory extends ProjectContextFactory {
   @Override
   public ProjectConfig loadConfiguration(String configFilename) throws InvalidProject {
     String configText;
-    Ui.Task task = ui.pushTask("read_config", "Reading config file from %s", configFilename);
+    Task task = ui.pushTask("read_config", "Reading config file from %s", configFilename);
     try {
       try {
         configText = Files.toString(new File(configFilename), UTF_8);

@@ -18,7 +18,7 @@ package com.google.devtools.moe.client.testing;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.moe.client.CommandRunner.CommandException;
+import com.google.devtools.moe.client.CommandException;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.Utils;
@@ -75,19 +75,19 @@ public class FileCodebaseCreator implements CodebaseCreator {
    */
   public static File getCodebasePath(File sourceFile) throws CodebaseCreationError {
     // Check whether the specified path is valid.
-    if (!Injector.INSTANCE.fileSystem().exists(sourceFile)) {
+    if (!Injector.INSTANCE.getFileSystem().exists(sourceFile)) {
       throw new CodebaseCreationError(
           "The specified codebase path \"%s\" does not exist.", sourceFile);
     }
 
     try {
       // Get the target path based upon whether we are dealing with a directory or a file.
-      if (Injector.INSTANCE.fileSystem().isDirectory(sourceFile)) {
+      if (Injector.INSTANCE.getFileSystem().isDirectory(sourceFile)) {
         // If it is a directory, make a copy and return the path of the copy.
-        File destFile = Injector.INSTANCE.fileSystem().getTemporaryDirectory("file_codebase_copy_");
+        File destFile = Injector.INSTANCE.getFileSystem().getTemporaryDirectory("file_codebase_copy_");
         Utils.copyDirectory(sourceFile, destFile);
         return destFile;
-      } else if (Injector.INSTANCE.fileSystem().isFile(sourceFile)) {
+      } else if (Injector.INSTANCE.getFileSystem().isFile(sourceFile)) {
         // If it is a file, assume that it is an archive and try to extract it.
         File extractedArchive = Utils.expandToDirectory(sourceFile);
         if (extractedArchive != null) {

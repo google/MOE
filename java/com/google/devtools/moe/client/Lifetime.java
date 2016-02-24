@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Google, Inc.
+ * Copyright (c) 2012 Google, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,18 +17,18 @@
 package com.google.devtools.moe.client;
 
 /**
- * A problem that we expect to routinely happen, and which should be reported cleanly to the
- * CLI upon catching.
+ * A specification of whether a temporary directory should be cleaned up on a call to
+ * {@link FileSystem#cleanUpTempDirs()}. On clean-up, each temporary directory's {@code Lifetime}
+ * is looked up, and {@link #shouldCleanUp()} is called.
  */
-public abstract class MoeUserProblem extends RuntimeException {
-  public MoeUserProblem() {}
+public interface Lifetime {
 
   /**
-   * A method which allows the user-visible message to be reported appropriately to the
-   * {@link Ui} class.  Implementers should override this message and log any user output
-   * relevant to the error.
-   * 
-   * @param messenger messenger to receive a message.
+   * Checks if a temporary directory with this {@code Lifetime} should be cleaned up now.
+   *
+   * @return true if the directory should be cleaned up now or false, otherwise.
+   * @see FileSystem#cleanUpTempDirs()
    */
-  public abstract void reportTo(Messenger messenger);
+  boolean shouldCleanUp();
+  
 }

@@ -17,6 +17,7 @@
 package com.google.devtools.moe.client.svn;
 
 import com.google.common.base.Predicate;
+import com.google.devtools.moe.client.CommandException;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.MoeProblem;
@@ -71,7 +72,7 @@ public class SvnCodebaseCreator implements CodebaseCreator {
     try {
       util.runSvnCommand(
           "export", config.getUrl(), "-r", rev.revId(), exportPath.getAbsolutePath());
-    } catch (CommandRunner.CommandException e) {
+    } catch (CommandException e) {
       throw new MoeProblem("could not export from svn" + e.getMessage());
     }
 

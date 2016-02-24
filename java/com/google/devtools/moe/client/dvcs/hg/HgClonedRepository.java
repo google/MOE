@@ -23,9 +23,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.CommandRunner;
-import com.google.devtools.moe.client.CommandRunner.CommandException;
+import com.google.devtools.moe.client.CommandException;
 import com.google.devtools.moe.client.FileSystem;
-import com.google.devtools.moe.client.FileSystem.Lifetime;
+import com.google.devtools.moe.client.Lifetime;
 import com.google.devtools.moe.client.Lifetimes;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.codebase.LocalWorkspace;
@@ -120,7 +120,7 @@ public class HgClonedRepository implements LocalWorkspace {
           HgRepositoryFactory.runHgCommand(asList("branch"), localCloneTempDir.getAbsolutePath())
               .trim();
     } catch (CommandException e) {
-      throw new MoeProblem("Could not clone from hg repo at " + repositoryUrl + ": " + e.stderr);
+      throw new MoeProblem("Could not clone from hg repo at " + repositoryUrl + ": " + e.STDERR);
     }
   }
 
@@ -133,7 +133,7 @@ public class HgClonedRepository implements LocalWorkspace {
       updatedToRev = true;
     } catch (CommandException e) {
       throw new MoeProblem(
-          "Could not clone from hg repo at " + localCloneTempDir + ": " + e.stderr);
+          "Could not clone from hg repo at " + localCloneTempDir + ": " + e.STDERR);
     }
   }
 
@@ -153,7 +153,7 @@ public class HgClonedRepository implements LocalWorkspace {
       filesystem.deleteRecursively(new File(archiveLocation, ".hg_archival.txt"));
     } catch (CommandException e) {
       throw new MoeProblem(
-          "Could not archive hg clone at " + localCloneTempDir.getAbsolutePath() + ": " + e.stderr);
+          "Could not archive hg clone at " + localCloneTempDir.getAbsolutePath() + ": " + e.STDERR);
     } catch (IOException e) {
       throw new MoeProblem(
           "IOException archiving clone at "
@@ -170,7 +170,7 @@ public class HgClonedRepository implements LocalWorkspace {
    * Runs an hg command with the given arguments, in this cloned repository's directory.
    *
    * @param args  a list of arguments to the 'hg' command
-   * @return the stdout output of the command
+   * @return the STDOUT output of the command
    */
   String runHgCommand(String... args) throws CommandException {
     return cmd.runCommand(

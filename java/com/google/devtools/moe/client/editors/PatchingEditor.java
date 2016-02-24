@@ -19,6 +19,7 @@ package com.google.devtools.moe.client.editors;
 import static com.google.common.base.Strings.isNullOrEmpty;
 
 import com.google.common.collect.ImmutableList;
+import com.google.devtools.moe.client.CommandException;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
@@ -37,8 +38,8 @@ import java.util.Map;
  */
 public class PatchingEditor implements Editor {
 
-  private final CommandRunner cmd = Injector.INSTANCE.cmd(); // TODO(cgruber) @Inject
-  private final FileSystem filesystem = Injector.INSTANCE.fileSystem(); // TODO(cgruber) @Inject
+  private final CommandRunner cmd = Injector.INSTANCE.getCommand(); // TODO(cgruber) @Inject
+  private final FileSystem filesystem = Injector.INSTANCE.getFileSystem(); // TODO(cgruber) @Inject
   private final String name;
 
   PatchingEditor(String editorName) {
@@ -70,7 +71,7 @@ public class PatchingEditor implements Editor {
       }
       try {
         Utils.copyDirectory(input.getPath(), tempDir);
-      } catch (IOException | CommandRunner.CommandException e) {
+      } catch (IOException | CommandException e) {
         throw new MoeProblem(e.getMessage());
       }
       try {
@@ -78,7 +79,7 @@ public class PatchingEditor implements Editor {
             "patch",
             ImmutableList.of("-p0", "--input=" + patchFilePath),
             tempDir.getAbsolutePath());
-      } catch (CommandRunner.CommandException e) {
+      } catch (CommandException e) {
         throw new MoeProblem(e.getMessage());
       }
       return new Codebase(filesystem, tempDir, input.getProjectSpace(), input.getExpression());

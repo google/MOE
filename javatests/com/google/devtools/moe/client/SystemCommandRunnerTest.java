@@ -17,7 +17,6 @@
 package com.google.devtools.moe.client;
 
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.moe.client.CommandRunner.CommandException;
 
 import junit.framework.TestCase;
 
@@ -47,8 +46,8 @@ public class SystemCommandRunnerTest extends TestCase {
   }
 
   /**
-   * Tests that a process with a large stdout and stderr doesn't produce stream contention or
-   * deadlock behavior.
+   * Tests that a process with a large STDOUT and STDERR doesn't produce stream contention or
+ deadlock behavior.
    */
   public void testLongStdoutAndStderr() throws Exception {
     int bytesOutput = 1000000;
@@ -64,9 +63,9 @@ public class SystemCommandRunnerTest extends TestCase {
       fail("Non-zero return code didn't raise CommandException.");
 
     } catch (CommandException expected) {
-      assertEquals("returnStatus", 1, expected.returnStatus);
-      assertEquals("stdout length", bytesOutput, expected.stdout.length());
-      assertEquals("stderr length", bytesOutput, expected.stderr.length());
+      assertEquals("returnStatus", 1, expected.RETURN_STATUS);
+      assertEquals("stdout length", bytesOutput, expected.STDOUT.length());
+      assertEquals("stderr length", bytesOutput, expected.STDERR.length());
     }
   }
 }

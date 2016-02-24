@@ -99,7 +99,7 @@ public class SvnCodebaseCreatorTest extends TestCase {
                 ""))
         .andReturn("");
     // Short-circuit Utils.filterFiles for ignore_files_re.
-    expect(Injector.INSTANCE.fileSystem().findFiles(new File("/dummy/path/45")))
+    expect(Injector.INSTANCE.getFileSystem().findFiles(new File("/dummy/path/45")))
         .andReturn(ImmutableSet.<File>of());
 
     control.replay();

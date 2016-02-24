@@ -33,11 +33,11 @@ import javax.inject.Singleton;
  */
 @Singleton
 public class SystemUi extends Ui {
-  private final Logger logger = Logger.getLogger(SystemUi.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(SystemUi.class.getName());
 
   // We store the task that is the current output, if any, so that we can special case a Task that
   // is popped right after it is pushed. In this case, we can output: "Doing...Done" on one line.
-  Ui.Task currentOutput;
+  Task currentOutput;
 
   @Inject
   public SystemUi() {
@@ -56,56 +56,67 @@ public class SystemUi extends Ui {
     currentOutput = null;
   }
 
-  private String indent(String msg) {
-    String indentation = Strings.repeat("  ", stack.size());
-    return indentation + Joiner.on("\n" + indentation).join(Splitter.on('\n').split(msg));
+  /**
+   * Indents a message according to the STACK size.
+   * 
+   * @param message message to be indented.
+   * @return the message indented.
+   */
+  private String indent(String message) {
+    String indentation = Strings.repeat("  ", STACK.size());
+    return indentation + Joiner.on("\n" + indentation).join(Splitter.on('\n').split(message));
   }
 
   @Override
-  public void info(String msg, Object... args) {
+  public void info(String message, Object... args) {
     clearOutput();
-    logHelper(indent(String.format(msg, args)));
+    logHelper(indent(String.format(message, args)));
   }
 
   @Override
-  public void debug(String msg, Object... args) {
-    logger.log(Level.INFO, String.format(msg, args));
+  public void debug(String message, Object... args) {
+    LOGGER.log(Level.INFO, String.format(message, args));
   }
 
+  /**
+   * Logs a message with {@link Level#INFO} level.
+   * 
+   * @param message message to be logged.
+   */
   private void logHelper(String message) {
     System.out.println(message);
-    logger.log(Level.INFO, message);
+    LOGGER.log(Level.INFO, message);
   }
 
   @Override
-  public void error(String msg, Object... args) {
+  public void error(String messageFormat, Object... args) {
     clearOutput();
-    logger.log(Level.SEVERE, String.format(msg, args));
+    LOGGER.log(Level.SEVERE, String.format(messageFormat, args));
   }
 
   @Override
-  public void error(Throwable e, String msg, Object... args) {
+  public void error(Throwable throwable, String messageFormat, Object... args) {
     clearOutput();
-    String message = String.format(msg, args);
-    // Do not expose the stack trace to the user. Just send it to the INFO logs.
-    logger.log(Level.SEVERE, message + ": " + e.getMessage());
-    logger.log(Level.INFO, message, e);
+    String message = String.format(messageFormat, args);
+    // Do not expose the STACK trace to the user. Just send it to the INFO logs.
+    LOGGER.log(Level.SEVERE, message + ": " + throwable.getMessage());
+    LOGGER.log(Level.INFO, message, throwable);
   }
 
   @Override
-  public Ui.Task pushTask(String task, String descriptionFormat, Object... args) {
+  public Task pushTask(String task, String descriptionFormat, Object... args) {
     clearOutput();
     String description = String.format(descriptionFormat, args);
     String indented = indent(description + "... ");
     System.out.print(indented);
-    logger.log(Level.INFO, indented);
+    LOGGER.log(Level.INFO, indented);
 
     currentOutput = super.pushTask(task, description);
     return currentOutput;
   }
 
   @Override
-  public void popTask(Ui.Task task, String result) {
+  public void popTask(Task task, String result) {
     super.popTask(task, result);
     if (result.isEmpty()) {
       result = "Done";
@@ -120,7 +131,9 @@ public class SystemUi extends Ui {
     currentOutput = null;
   }
 
-  /** A Dagger module for binding this implementation of {@link Ui}. */
+  /**
+   * A Dagger module for binding this implementation of {@link Ui}.
+   */
   @dagger.Module
   public static class Module {
     @Provides

@@ -17,6 +17,7 @@
 package com.google.devtools.moe.client.svn;
 
 import com.google.common.collect.ImmutableList;
+import com.google.devtools.moe.client.CommandException;
 import com.google.devtools.moe.client.CommandRunner;
 
 import java.util.Arrays;
@@ -36,13 +37,13 @@ public class SvnUtil {
   }
 
   String runSvnCommandWithWorkingDirectory(String workingDirectory, String command, String... args)
-      throws CommandRunner.CommandException {
+      throws CommandException {
     ImmutableList.Builder<String> withAuthArgs = ImmutableList.builder();
     withAuthArgs.add("--no-auth-cache").add(command).addAll(Arrays.asList(args));
     return cmd.runCommand("svn", withAuthArgs.build(), workingDirectory);
   }
 
-  String runSvnCommand(String command, String... args) throws CommandRunner.CommandException {
+  String runSvnCommand(String command, String... args) throws CommandException {
     return runSvnCommandWithWorkingDirectory("", command, args);
   }
 }

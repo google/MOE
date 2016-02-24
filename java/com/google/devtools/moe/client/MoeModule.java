@@ -45,6 +45,7 @@ import javax.inject.Singleton;
   }
 )
 public class MoeModule {
+  
   @Provides
   @Singleton
   Ui ui(SystemUi sysui) {
@@ -53,32 +54,32 @@ public class MoeModule {
 
   /* Alias to UI which extends this interface */
   @Provides
-  public Messenger messenger(Ui ui) {
+  public Messenger getMessenger(Ui ui) {
     return ui;
   }
 
   @Provides
   @Singleton
-  ProjectContextFactory projectContextFactory(FileReadingProjectContextFactory factory) {
+  ProjectContextFactory getProjectContextFactory(FileReadingProjectContextFactory factory) {
     return factory;
   }
 
   @Provides
   @Singleton
-  CommandRunner commandRunner(SystemCommandRunner runner) {
+  CommandRunner getCommandRunner(SystemCommandRunner runner) {
     return runner;
   }
 
   @Provides
   @Singleton
-  FileSystem fileSystem(SystemFileSystem sysfs) {
-    return sysfs;
+  FileSystem getFileSystem(SystemFileSystem systemFileSystem) {
+    return systemFileSystem;
   }
 
   @Provides
   @Singleton
-  FileDiffer fileDiffer(ConcreteFileDiffer cfd) {
-    return cfd;
+  FileDiffer getFileDiffer(ConcreteFileDiffer fileDiffer) {
+    return fileDiffer;
   }
 
   @Provides

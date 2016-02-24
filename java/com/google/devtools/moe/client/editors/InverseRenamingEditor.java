@@ -65,8 +65,8 @@ public class InverseRenamingEditor implements InverseEditor {
   private static final Joiner FILE_SEP_JOINER = Joiner.on(File.separator);
   private static final Splitter FILE_SEP_SPLITTER = Splitter.on(File.separator);
 
-  private final FileSystem filesystem = Injector.INSTANCE.fileSystem(); // TODO(cgruber) @Inject
-  private final Messenger messenger = Injector.INSTANCE.ui(); // TODO(cgruber) @Inject
+  private final FileSystem filesystem = Injector.INSTANCE.getFileSystem(); // TODO(cgruber) @Inject
+  private final Messenger messenger = Injector.INSTANCE.getUi(); // TODO(cgruber) @Inject
 
   public static InverseRenamingEditor makeInverseRenamingEditor(
       String editorName, EditorConfig config) {

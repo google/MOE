@@ -44,7 +44,7 @@ public class RenamingEditor implements Editor {
   /** CharMatcher for trimming leading and trailing file path separators. */
   private static final CharMatcher SEP_CHAR_MATCHER = CharMatcher.is(File.separatorChar);
 
-  private final FileSystem filesystem = Injector.INSTANCE.fileSystem(); // TODO(cgruber) @Inject
+  private final FileSystem filesystem = Injector.INSTANCE.getFileSystem(); // TODO(cgruber) @Inject
 
   private final String editorName;
   private final Map<Pattern, String> regexMappings;

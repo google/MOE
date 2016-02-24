@@ -21,7 +21,7 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.devtools.moe.client.CommandRunner;
-import com.google.devtools.moe.client.CommandRunner.CommandException;
+import com.google.devtools.moe.client.CommandException;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.Lifetimes;
@@ -105,6 +105,6 @@ public class HgRepositoryFactory implements RepositoryType.Factory {
   }
 
   static String runHgCommand(List<String> args, String workingDirectory) throws CommandException {
-    return Injector.INSTANCE.cmd().runCommand("hg", args, workingDirectory);
+    return Injector.INSTANCE.getCommand().runCommand("hg", args, workingDirectory);
   }
 }

@@ -16,6 +16,7 @@
 
 package com.google.devtools.moe.client.writer;
 
+import com.google.devtools.moe.client.Task;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
@@ -59,7 +60,7 @@ public interface DraftRevision {
      */
     public DraftRevision create(Codebase c, Writer destination, @Nullable RevisionMetadata rm) {
       try {
-        Ui.Task t = ui.pushTask("push_codebase", "Putting files from Codebase into Writer");
+        Task t = ui.pushTask("push_codebase", "Putting files from Codebase into Writer");
         DraftRevision r = destination.putCodebase(c, rm);
         ui.popTask(t, "");
         return r;

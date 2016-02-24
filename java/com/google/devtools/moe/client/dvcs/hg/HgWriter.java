@@ -19,7 +19,7 @@ package com.google.devtools.moe.client.dvcs.hg;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.devtools.moe.client.CommandRunner.CommandException;
+import com.google.devtools.moe.client.CommandException;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
@@ -89,7 +89,7 @@ public class HgWriter extends AbstractDvcsWriter<HgClonedRepository> {
 
   @Override
   public void printPushMessage() {
-    Ui ui = Injector.INSTANCE.ui();
+    Ui ui = Injector.INSTANCE.getUi();
     ui.info("=====");
     ui.info("MOE changes have been committed to a clone at " + getRoot());
     ui.info("Changes may have created a new head. Merge heads if needed, then push to remote.");

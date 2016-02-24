@@ -35,37 +35,37 @@ public class Injector {
   // TODO(cgruber): Eliminate this public static mutable.
   public static Injector INSTANCE;
 
-  @Nullable private final FileSystem fileSystem;
+  @Nullable private final FileSystem FILE_SYSTEM;
 
-  private final CommandRunner cmd;
-  private final ProjectContextFactory contextFactory;
-  private final Ui ui;
+  private final CommandRunner COMMAND;
+  private final ProjectContextFactory CONTEXT_FACTORY;
+  private final Ui UI;
 
   @Inject
   public Injector(
       @Nullable FileSystem fileSystem,
-      CommandRunner cmd,
+      CommandRunner command,
       ProjectContextFactory contextFactory,
       Ui ui) {
-    this.fileSystem = fileSystem;
-    this.cmd = cmd;
-    this.contextFactory = contextFactory;
-    this.ui = ui;
+    this.FILE_SYSTEM = fileSystem;
+    this.COMMAND = command;
+    this.CONTEXT_FACTORY = contextFactory;
+    this.UI = ui;
   }
 
-  public CommandRunner cmd() {
-    return cmd;
+  public CommandRunner getCommand() {
+    return COMMAND;
   }
 
-  public ProjectContextFactory contextFactory() {
-    return contextFactory;
+  public ProjectContextFactory getContextFactory() {
+    return CONTEXT_FACTORY;
   }
 
-  public FileSystem fileSystem() {
-    return fileSystem;
+  public FileSystem getFileSystem() {
+    return FILE_SYSTEM;
   }
 
-  public Ui ui() {
-    return ui;
+  public Ui getUi() {
+    return UI;
   }
 }

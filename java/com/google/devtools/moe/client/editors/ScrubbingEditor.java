@@ -19,6 +19,7 @@ package com.google.devtools.moe.client.editors;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.devtools.moe.client.CommandException;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
@@ -39,8 +40,8 @@ import java.util.Map;
  */
 public class ScrubbingEditor implements Editor {
 
-  private final CommandRunner cmd = Injector.INSTANCE.cmd(); // TODO(cgruber) @Inject
-  private final FileSystem filesystem = Injector.INSTANCE.fileSystem(); // TODO(cgruber) @Inject
+  private final CommandRunner cmd = Injector.INSTANCE.getCommand(); // TODO(cgruber) @Inject
+  private final FileSystem filesystem = Injector.INSTANCE.getFileSystem(); // TODO(cgruber) @Inject
 
   /**
    * A {@code Supplier} that extracts the scrubber binary. We use a Supplier because we don't want
@@ -58,12 +59,12 @@ public class ScrubbingEditor implements Editor {
                 // TODO(dbentley): what will this resource be under ant?
                 File scrubberBinary =
                     Injector.INSTANCE
-                        .fileSystem()
+                        .getFileSystem()
                         .getResourceAsFile("/devtools/moe/scrubber/scrubber.par");
-                Injector.INSTANCE.fileSystem().setExecutable(scrubberBinary);
+                Injector.INSTANCE.getFileSystem().setExecutable(scrubberBinary);
                 return scrubberBinary;
               } catch (IOException ioEx) {
-                Injector.INSTANCE.ui().error(ioEx, "Error extracting scrubber");
+                Injector.INSTANCE.getUi().error(ioEx, "Error extracting scrubber");
                 throw new MoeProblem("Error extracting scrubber: " + ioEx.getMessage());
               }
             }
@@ -109,13 +110,13 @@ public class ScrubbingEditor implements Editor {
               // TODO(cgruber): Eliminate this static gson method reference.
               input.getPath().getAbsolutePath()),
           SCRUBBER_BINARY_SUPPLIER.get().getParentFile().getPath());
-    } catch (CommandRunner.CommandException e) {
+    } catch (CommandException e) {
       throw new MoeProblem(e.getMessage());
     }
     File expandedDir = null;
     try {
       expandedDir = Utils.expandTar(outputTar);
-    } catch (IOException | CommandRunner.CommandException e) {
+    } catch (IOException | CommandException e) {
       throw new MoeProblem(e.getMessage());
     }
     return new Codebase(filesystem, expandedDir, input.getProjectSpace(), input.getExpression());

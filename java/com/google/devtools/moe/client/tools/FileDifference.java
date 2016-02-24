@@ -19,6 +19,7 @@ package com.google.devtools.moe.client.tools;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.devtools.moe.client.CommandException;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.MoeProblem;
@@ -153,12 +154,12 @@ public abstract class FileDifference {
             // -N treats absent files as empty.
             ImmutableList.of("-N", file1.getAbsolutePath(), file2.getAbsolutePath()),
             "");
-      } catch (CommandRunner.CommandException e) {
-        if (e.returnStatus != DIFF_ERROR_CODE_FILES_DIFFERENT
-            && e.returnStatus != DIFF_ERROR_CODE_FILES_BINARY) {
-          throw new MoeProblem("diff returned unknown status: %d", e.returnStatus);
+      } catch (CommandException e) {
+        if (e.RETURN_STATUS != DIFF_ERROR_CODE_FILES_DIFFERENT
+            && e.RETURN_STATUS != DIFF_ERROR_CODE_FILES_BINARY) {
+          throw new MoeProblem("diff returned unknown status: %d", e.RETURN_STATUS);
         }
-        contentDiff = e.stdout;
+        contentDiff = e.STDOUT;
       }
 
       return FileDifference.create(

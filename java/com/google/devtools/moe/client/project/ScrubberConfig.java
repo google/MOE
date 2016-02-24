@@ -81,7 +81,7 @@ public class ScrubberConfig {
         UsernamesConfig usernamesConfig =
             GsonModule.provideGson() // TODO(cgruber): Eliminate this static reference.
                 .fromJson(
-                    Injector.INSTANCE.fileSystem().fileToString(new File(usernamesFile)),
+                    Injector.INSTANCE.getFileSystem().fileToString(new File(usernamesFile)),
                     UsernamesConfig.class);
         addUsernames(usernamesToScrub, usernamesConfig.getScrubbableUsernames());
         addUsernames(usernamesToPublish, usernamesConfig.getPublishableUsernames());

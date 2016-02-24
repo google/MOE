@@ -20,7 +20,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.devtools.moe.client.Messenger;
 import com.google.devtools.moe.client.MoeUserProblem;
 import com.google.devtools.moe.client.Ui;
-import com.google.devtools.moe.client.Ui.Task;
+import com.google.devtools.moe.client.Task;
 import com.google.devtools.moe.client.github.GithubAPI.PullRequest;
 import com.google.devtools.moe.client.github.GithubClient;
 import com.google.devtools.moe.client.github.PullRequestUrl;

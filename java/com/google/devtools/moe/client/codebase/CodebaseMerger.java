@@ -20,8 +20,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import com.google.devtools.moe.client.CommandException;
 import com.google.devtools.moe.client.CommandRunner;
-import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
@@ -239,12 +239,12 @@ public class CodebaseMerger {
       mergedFiles.add(mergedFile.getAbsolutePath());
     } catch (CommandException e) {
       // If merge fails with exit status 1, then a conflict occurred. Make a note of the filepath.
-      if (e.returnStatus == 1) {
+      if (e.RETURN_STATUS == 1) {
         failedToMergeFiles.add(mergedFile.getAbsolutePath());
       } else {
         throw new MoeProblem(
             "Merge returned with unexpected status %d when trying to run \"merge -p %s %s %s\"",
-            e.returnStatus,
+            e.RETURN_STATUS,
             destFile.getAbsolutePath(),
             origFile.getAbsolutePath(),
             modFile.getAbsolutePath());

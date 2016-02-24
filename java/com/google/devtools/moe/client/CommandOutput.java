@@ -17,23 +17,23 @@
 package com.google.devtools.moe.client;
 
 /**
- * A problem that we do not expect to routinely happen. They should end 
- * execution of MOE and require intervention by moe-team.
+ * The complete result, including stdout and stderr, of running a command.
  */
-public class MoeProblem extends RuntimeException {
+public class CommandOutput {
+  
+  private final String stdout;
+  private final String stderr;
 
-  // TODO(cgruber): Figure out why this is public mutable and fix.
-  public String explanation;
-  private final Object[] args;
-
-  // TODO(cgruber): Check not null and ensure no one is calling it that way.
-  public MoeProblem(String explanation, Object... args) {
-    this.explanation = explanation;
-    this.args = args;
+  public CommandOutput(String stdout, String stderr) {
+    this.stdout = stdout;
+    this.stderr = stderr;
   }
 
-  @Override
-  public String getMessage() {
-    return String.format(explanation, args);
+  public String getStdout() {
+    return stdout;
+  }
+
+  public String getStderr() {
+    return stderr;
   }
 }

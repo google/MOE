@@ -18,7 +18,7 @@ package com.google.devtools.moe.client.testing;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.moe.client.FileSystem.Lifetime;
+import com.google.devtools.moe.client.Lifetime;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.Lifetimes;
 import com.google.devtools.moe.client.NullFileSystemModule;

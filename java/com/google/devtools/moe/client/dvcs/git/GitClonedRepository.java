@@ -20,10 +20,10 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.devtools.moe.client.CommandException;
 import com.google.devtools.moe.client.CommandRunner;
-import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.FileSystem;
-import com.google.devtools.moe.client.FileSystem.Lifetime;
+import com.google.devtools.moe.client.Lifetime;
 import com.google.devtools.moe.client.Lifetimes;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.codebase.LocalWorkspace;
@@ -119,7 +119,7 @@ public class GitClonedRepository implements LocalWorkspace {
       clonedLocally = true;
       this.revId = "HEAD";
     } catch (CommandException e) {
-      throw new MoeProblem("Could not clone from git repo at " + repositoryUrl + ": " + e.stderr);
+      throw new MoeProblem("Could not clone from git repo at " + repositoryUrl + ": " + e.STDERR);
     }
   }
 
@@ -137,7 +137,7 @@ public class GitClonedRepository implements LocalWorkspace {
       }
       this.revId = revId;
     } catch (CommandException e) {
-      throw new MoeProblem("Could not update git repo at " + localCloneTempDir + ": " + e.stderr);
+      throw new MoeProblem("Could not update git repo at " + localCloneTempDir + ": " + e.STDERR);
     }
   }
 
@@ -179,7 +179,7 @@ public class GitClonedRepository implements LocalWorkspace {
           "Could not archive git clone at "
               + localCloneTempDir.getAbsolutePath()
               + ": "
-              + e.stderr);
+              + e.STDERR);
     } catch (IOException e) {
       throw new MoeProblem(
           "IOException archiving clone at "

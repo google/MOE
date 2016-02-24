@@ -21,7 +21,7 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.moe.client.CommandRunner.CommandException;
+import com.google.devtools.moe.client.CommandException;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.repositories.AbstractRevisionHistory;
 import com.google.devtools.moe.client.repositories.Revision;
@@ -78,7 +78,7 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
       changesetID =
           HgRepositoryFactory.runHgCommand(args, tipClone.getLocalTempDir().getAbsolutePath());
     } catch (CommandException e) {
-      throw new MoeProblem("Failed hg run: %s %d %s %s", args, e.returnStatus, e.stdout, e.stderr);
+      throw new MoeProblem("Failed hg run: %s %d %s %s", args, e.RETURN_STATUS, e.STDOUT, e.STDERR);
     }
 
     return Revision.create(changesetID, tipClone.getRepositoryName());
@@ -115,7 +115,7 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
     try {
       log = HgRepositoryFactory.runHgCommand(args, tipClone.getLocalTempDir().getAbsolutePath());
     } catch (CommandException e) {
-      throw new MoeProblem("Failed hg run: %s %d %s %s", args, e.returnStatus, e.stdout, e.stderr);
+      throw new MoeProblem("Failed hg run: %s %d %s %s", args, e.RETURN_STATUS, e.STDOUT, e.STDERR);
     }
 
     return parseMetadata(log);
@@ -180,7 +180,7 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
               tipClone.getLocalTempDir().getAbsolutePath());
     } catch (CommandException e) {
       throw new MoeProblem(
-          "Failed hg run: %s %d %s %s", e.args, e.returnStatus, e.stdout, e.stderr);
+          "Failed hg run: %s %d %s %s", e.ARGS, e.RETURN_STATUS, e.STDOUT, e.STDERR);
     }
 
     ImmutableList.Builder<Revision> result = ImmutableList.<Revision>builder();

@@ -51,7 +51,7 @@ public class SvnWriterCreator implements WriterCreator {
     Revision r = revisionHistory.findHighestRevision(options.get("revision"));
     File tempDir =
         Injector.INSTANCE
-            .fileSystem()
+            .getFileSystem()
             .getTemporaryDirectory(String.format("svn_writer_%s_", r.revId()));
     SvnWriter writer = new SvnWriter(config, r, tempDir, util);
     writer.checkOut();

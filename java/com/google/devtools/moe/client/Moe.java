@@ -42,7 +42,7 @@ import javax.inject.Singleton;
  * Errors are SEVERE logs written to STDERR.
  */
 public class Moe {
-  static final Logger allMoeLogger = Logger.getLogger("com.google.devtools.moe");
+  static final Logger ALL_MOE_LOGGER = Logger.getLogger("com.google.devtools.moe");
 
   /**
    * The Dagger surface for the MOE application.
@@ -51,49 +51,56 @@ public class Moe {
   @Singleton
   @dagger.Component(modules = MoeModule.class)
   public abstract static class Component {
-    abstract Injector context(); // Legacy context object for static initialization.
-    public abstract OptionsParser optionsParser();
-    public abstract Directives directives();
+    abstract Injector getContext(); // Legacy getContext object for static initialization.
+    public abstract OptionsParser GetOptionsParser();
+    public abstract Directives getDirectives();
   }
+  
   /**
-   * a main() that works with the new Task framework.
+   * Implements the main method of MOE and works with the new Task framework.
+   * 
+   * @param args arguments passed to the MOE system.
    */
   public static void main(String... args) {
     ConsoleHandler sysErrHandler = new ConsoleHandler();
     sysErrHandler.setLevel(Level.WARNING);
-    allMoeLogger.addHandler(sysErrHandler);
-    allMoeLogger.setUseParentHandlers(false);
+    ALL_MOE_LOGGER.addHandler(sysErrHandler);
+    ALL_MOE_LOGGER.setUseParentHandlers(false);
     System.exit(doMain(args));
   }
 
-  /** Implements the main method logic for Moe, returning an error code if there is any */
+  /**
+   * Implements the main method logic for Moe, returning an error code if there 
+   * is any.
+   * 
+   * @param args arguments passed to the MOE system.
+   */
   static int doMain(String... args) {
     if (args.length < 1) {
       System.err.println("Usage: moe <directive>");
       return 1;
     }
     // This needs to get called first, so that DirectiveFactory can report errors appropriately.
-    Moe.Component component =
-        DaggerMoe_Component.builder().optionsModule(new OptionsModule(args)).build();
-    boolean debug = component.optionsParser().debug();
-    Injector.INSTANCE = component.context();
-    Ui ui = component.context().ui();
+    Moe.Component component = DaggerMoe_Component.builder().optionsModule(new OptionsModule(args)).build();
+    boolean debug = component.GetOptionsParser().debug();
+    Injector.INSTANCE = component.getContext();
+    Ui ui = component.getContext().getUi();
 
     try {
-      Directive directive = component.directives().getSelectedDirective();
+      Directive directive = component.getDirectives().getSelectedDirective();
       if (directive == null) {
         return 1; // Directive lookup will have reported the error already..
       }
 
-      boolean parseError = !component.optionsParser().parseFlags(directive);
+      boolean parseError = !component.GetOptionsParser().parseFlags(directive);
       if (directive.shouldDisplayHelp() || parseError) {
         return parseError ? 1 : 0;
       }
 
       int result = directive.perform();
-      Ui.Task terminateTask = ui.pushTask(MOE_TERMINATION_TASK_NAME, "Final clean-up");
+      Task terminateTask = ui.pushTask(MOE_TERMINATION_TASK_NAME, "Final clean-up");
       try {
-        component.context().fileSystem().cleanUpTempDirs();
+        component.getContext().getFileSystem().cleanUpTempDirs();
       } catch (IOException e) {
         ui.info(
             "WARNING: Moe enocuntered a problem cleaning up temporary directories: %s",

@@ -20,7 +20,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
-import com.google.devtools.moe.client.Ui.Task;
+import com.google.devtools.moe.client.Task;
 import com.google.devtools.moe.client.testing.TestingModule;
 
 import junit.framework.TestCase;
@@ -199,22 +199,22 @@ public class SystemFileSystemTest extends TestCase {
 
   public void testCleanUpTempDirsWithTasks() throws Exception {
     Injector.INSTANCE = DaggerSystemFileSystemTest_Component.create().context();
-    FileSystem fs = Injector.INSTANCE.fileSystem();
+    FileSystem fs = Injector.INSTANCE.getFileSystem();
 
     File taskless = fs.getTemporaryDirectory("taskless", Lifetimes.moeExecution());
     Files.touch(taskless);
 
-    Task outer = Injector.INSTANCE.ui().pushTask("outer", "outer");
+    Task outer = Injector.INSTANCE.getUi().pushTask("outer", "outer");
     File outer1 = touchTempDir("outer1", fs);
     File outer2 = touchTempDir("outer2", fs);
 
-    Task inner = Injector.INSTANCE.ui().pushTask("inner", "inner");
+    Task inner = Injector.INSTANCE.getUi().pushTask("inner", "inner");
     File inner1 = touchTempDir("inner1", fs);
     File inner2 = touchTempDir("inner2", fs);
     File innerPersist = fs.getTemporaryDirectory("innerPersist", Lifetimes.moeExecution());
     Files.touch(innerPersist);
 
-    Injector.INSTANCE.ui().popTask(inner, "popping inner, persisting nothing");
+    Injector.INSTANCE.getUi().popTask(inner, "popping inner, persisting nothing");
     assertFalse("inner1", inner1.exists());
     assertFalse("inner2", inner2.exists());
     assertTrue("innerPersist", innerPersist.exists());
@@ -222,47 +222,47 @@ public class SystemFileSystemTest extends TestCase {
     assertTrue("outer1", outer1.exists());
     assertTrue("outer2", outer2.exists());
 
-    Injector.INSTANCE.ui().popTask(outer, "popping outer, persisting nothing");
+    Injector.INSTANCE.getUi().popTask(outer, "popping outer, persisting nothing");
     assertFalse("outer1", outer1.exists());
     assertFalse("outer2", outer2.exists());
     assertTrue("innerPersist", innerPersist.exists());
     assertTrue("taskless", taskless.exists());
 
     Task moeTermination =
-        Injector.INSTANCE.ui().pushTask(Ui.MOE_TERMINATION_TASK_NAME, "Final clean-up");
+        Injector.INSTANCE.getUi().pushTask(Ui.MOE_TERMINATION_TASK_NAME, "Final clean-up");
     fs.cleanUpTempDirs();
-    Injector.INSTANCE.ui().popTask(moeTermination, "Finished clean-up");
+    Injector.INSTANCE.getUi().popTask(moeTermination, "Finished clean-up");
     assertFalse("innerPersist", innerPersist.exists());
     assertFalse("taskless", taskless.exists());
   }
 
   public void testMarkAsPersistentWithTasks() throws Exception {
     Injector.INSTANCE = DaggerSystemFileSystemTest_Component.create().context();
-    FileSystem fs = Injector.INSTANCE.fileSystem();
+    FileSystem fs = Injector.INSTANCE.getFileSystem();
 
-    Task outer = Injector.INSTANCE.ui().pushTask("outer", "outer");
+    Task outer = Injector.INSTANCE.getUi().pushTask("outer", "outer");
     File outer1 = touchTempDir("outer1", fs);
     File outer2 = touchTempDir("outer2", fs);
 
-    Task inner = Injector.INSTANCE.ui().pushTask("inner", "inner");
+    Task inner = Injector.INSTANCE.getUi().pushTask("inner", "inner");
     File inner1 = touchTempDir("inner1", fs);
     File inner2 = touchTempDir("inner2", fs);
 
-    Injector.INSTANCE.ui().popTaskAndPersist(inner, inner1);
+    Injector.INSTANCE.getUi().popTaskAndPersist(inner, inner1);
     assertTrue("inner1", inner1.exists());
     assertFalse("inner2", inner2.exists());
     assertTrue("outer1", outer1.exists());
     assertTrue("outer2", outer2.exists());
 
-    Injector.INSTANCE.ui().popTaskAndPersist(outer, outer1);
+    Injector.INSTANCE.getUi().popTaskAndPersist(outer, outer1);
     assertFalse("inner1", inner1.exists());
     assertTrue("outer1", outer1.exists());
     assertFalse("outer2", outer2.exists());
 
     Task moeTermination =
-        Injector.INSTANCE.ui().pushTask(Ui.MOE_TERMINATION_TASK_NAME, "Final clean-up");
+        Injector.INSTANCE.getUi().pushTask(Ui.MOE_TERMINATION_TASK_NAME, "Final clean-up");
     fs.cleanUpTempDirs();
-    Injector.INSTANCE.ui().popTask(moeTermination, "Finished clean-up");
+    Injector.INSTANCE.getUi().popTask(moeTermination, "Finished clean-up");
     // outer1 was persisted from a top-level task, so it shouldn't be cleaned up at all.
     assertTrue("outer1", outer1.exists());
   }

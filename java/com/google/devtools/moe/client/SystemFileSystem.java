@@ -16,7 +16,6 @@
 
 package com.google.devtools.moe.client;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.Files.walkFileTree;
 
 import com.google.common.base.Preconditions;
@@ -31,7 +30,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
@@ -50,7 +48,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  */
 @Singleton
 public class SystemFileSystem implements FileSystem {
-  private final Map<File, Lifetime> tempDirLifetimes = Maps.newHashMap();
+  private final Map<File, Lifetime> temporaryDirectoryOfLifetimes = Maps.newHashMap();
 
   @Inject
   public SystemFileSystem() {}
@@ -62,20 +60,20 @@ public class SystemFileSystem implements FileSystem {
 
   @Override
   public File getTemporaryDirectory(String prefix, Lifetime lifetime) {
-    File tempDir;
+    File temporaryDirectory;
     try {
-      tempDir = File.createTempFile("moe_" + prefix, "");
-      tempDir.delete();
+      temporaryDirectory = File.createTempFile("moe_" + prefix, "");
+      temporaryDirectory.delete();
     } catch (IOException e) {
       throw new MoeProblem("could not create temp file: " + e.getMessage());
     }
-    tempDirLifetimes.put(tempDir, lifetime);
-    return tempDir;
+    temporaryDirectoryOfLifetimes.put(temporaryDirectory, lifetime);
+    return temporaryDirectory;
   }
 
   @Override
   public void cleanUpTempDirs() throws IOException {
-    Iterator<Entry<File, Lifetime>> tempDirIterator = tempDirLifetimes.entrySet().iterator();
+    Iterator<Entry<File, Lifetime>> tempDirIterator = temporaryDirectoryOfLifetimes.entrySet().iterator();
     while (tempDirIterator.hasNext()) {
       Entry<File, Lifetime> entry = tempDirIterator.next();
       if (entry.getValue().shouldCleanUp()) {
@@ -88,15 +86,12 @@ public class SystemFileSystem implements FileSystem {
   @Override
   public void setLifetime(File path, Lifetime lifetime) {
     Preconditions.checkState(
-        tempDirLifetimes.containsKey(path),
+        temporaryDirectoryOfLifetimes.containsKey(path),
         "Trying to set the Lifetime for an unknown path: %s",
         path);
-    tempDirLifetimes.put(path, lifetime);
+    temporaryDirectoryOfLifetimes.put(path, lifetime);
   }
 
-  /**
-   * Find files under a path.
-   */
   @Override
   public Set<File> findFiles(File path) {
     Set<File> result = Sets.newHashSet();
@@ -104,13 +99,19 @@ public class SystemFileSystem implements FileSystem {
     return result;
   }
 
-  void findFilesRecursiveHelper(File f, Set<File> result) {
-    if (f.exists() && f.isFile()) {
-      result.add(f);
+  /**
+   * Finds a file recursively in a directory.
+   * 
+   * @param file file to be searched.
+   * @param result set where the found files will be added.
+   */
+  void findFilesRecursiveHelper(File file, Set<File> result) {
+    if (file.exists() && file.isFile()) {
+      result.add(file);
       return;
     }
 
-    for (File subFile : f.listFiles()) {
+    for (File subFile : file.listFiles()) {
       findFilesRecursiveHelper(subFile, result);
     }
   }
@@ -121,64 +122,64 @@ public class SystemFileSystem implements FileSystem {
   }
 
   @Override
-  public boolean exists(File f) {
-    return f.exists();
+  public boolean exists(File file) {
+    return file.exists();
   }
 
   @Override
-  public String getName(File f) {
-    return f.getName();
+  public String getName(File file) {
+    return file.getName();
   }
 
   @Override
-  public boolean isFile(File f) {
-    return f.isFile();
+  public boolean isFile(File file) {
+    return file.isFile();
   }
 
   @Override
-  public boolean isDirectory(File f) {
-    return f.isDirectory();
+  public boolean isDirectory(File file) {
+    return file.isDirectory();
   }
 
   @Override
-  public boolean isExecutable(File f) {
-    return exists(f) && f.canExecute();
+  public boolean isExecutable(File file) {
+    return exists(file) && file.canExecute();
   }
 
   @Override
-  public boolean isReadable(File f) {
-    return exists(f) && f.canRead();
+  public boolean isReadable(File file) {
+    return exists(file) && file.canRead();
   }
 
   @Override
-  public void setExecutable(File f) {
-    f.setExecutable(true, false);
+  public void setExecutable(File file) {
+    file.setExecutable(true, false);
   }
 
   @Override
-  public void setNonExecutable(File f) {
-    f.setExecutable(false, false);
+  public void setNonExecutable(File file) {
+    file.setExecutable(false, false);
   }
 
   @Override
-  public void makeDirsForFile(File f) throws IOException {
-    Files.createParentDirs(f);
+  public void makeDirsForFile(File file) throws IOException {
+    Files.createParentDirs(file);
   }
 
   @Override
-  public void makeDirs(File f) throws IOException {
-    Files.createParentDirs(new File(f, "foo"));
+  public void makeDirs(File file) throws IOException {
+    Files.createParentDirs(new File(file, "foo"));
   }
 
   @Override
-  public void copyFile(File src, File dest) throws IOException {
-    Files.copy(src, dest);
-    dest.setExecutable(src.canExecute(), false);
+  public void copyFile(File source, File destination) throws IOException {
+    Files.copy(source, destination);
+    destination.setExecutable(source.canExecute(), false);
   }
 
   @Override
-  public void write(String contents, File f) throws IOException {
-    Files.write(contents, f, UTF_8);
+  public void write(String contents, File file) throws IOException {
+    Files.write(contents, file, UTF_8);
   }
 
   @Override
@@ -186,10 +187,17 @@ public class SystemFileSystem implements FileSystem {
     deleteRecursively(file.toPath());
   }
 
+  /**
+   * Deletes a file recursively.
+   * Note, this does not attempt to perform the action securely and is 
+   * vulnerable to a racey replacement of a directory about to be deleted with 
+   * a symlink which can lead to files outside the parent directory to be deleted.
+   * 
+   * @param path path of the file to be deleted.
+   * 
+   * @throws IOException if some error occurs while deleting the file.
+   */
   private void deleteRecursively(final Path path) throws IOException {
-    // Note, this does not attempt to perform the action securely and is vulnerable to a
-    // racey replacement of a directory about to be deleted with a symlink which can lead to
-    // files outside the parent directory to be deleted.
     final List<IOException> exceptions = new ArrayList<>();
     walkFileTree(path, new SimpleFileVisitor<Path>() {
       @Override
@@ -201,6 +209,7 @@ public class SystemFileSystem implements FileSystem {
         }
         return FileVisitResult.CONTINUE;
       }
+      
       @Override
       public FileVisitResult postVisitDirectory(Path dir, IOException ignore) throws IOException {
         // Since we're collecting exceptions in visitFile and never throwing, ignore the exception.
@@ -241,11 +250,13 @@ public class SystemFileSystem implements FileSystem {
   }
 
   @Override
-  public String fileToString(File f) throws IOException {
-    return Files.toString(f, UTF_8);
+  public String fileToString(File file) throws IOException {
+    return Files.toString(file, UTF_8);
   }
 
-  /** A Dagger module for binding this implementation of {@link FileSystem}. */
+  /** 
+   * A Dagger module for binding this implementation of {@link FileSystem}.
+   */
   @dagger.Module
   public static class Module {
     @Provides

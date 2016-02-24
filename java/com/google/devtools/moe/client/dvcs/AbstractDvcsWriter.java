@@ -17,7 +17,7 @@
 package com.google.devtools.moe.client.dvcs;
 
 import com.google.common.collect.Sets;
-import com.google.devtools.moe.client.CommandRunner.CommandException;
+import com.google.devtools.moe.client.CommandException;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
@@ -76,7 +76,7 @@ public abstract class AbstractDvcsWriter<T extends LocalWorkspace> implements Wr
     Set<String> writerRepoFiles =
         Utils.filterByRegEx(
             Utils.makeFilenamesRelative(
-                Injector.INSTANCE.fileSystem().findFiles(getRoot()), getRoot()),
+                Injector.INSTANCE.getFileSystem().findFiles(getRoot()), getRoot()),
             getIgnoreFilePatterns());
 
     Set<String> filesToUpdate = Sets.union(codebaseFiles, writerRepoFiles);
@@ -86,11 +86,11 @@ public abstract class AbstractDvcsWriter<T extends LocalWorkspace> implements Wr
         putFile(filename, incomingChangeCodebase);
       } catch (CommandException e) {
         StringBuilder sb = new StringBuilder("Problem occurred while running '");
-        sb.append(e.cmd);
-        for (String arg : e.args) {
+        sb.append(e.COMMAND);
+        for (String arg : e.ARGS) {
           sb.append(" ").append(arg);
         }
-        sb.append("': ").append(e.stderr);
+        sb.append("': ").append(e.STDERR);
         throw new MoeProblem(sb.toString());
       }
     }
@@ -115,7 +115,7 @@ public abstract class AbstractDvcsWriter<T extends LocalWorkspace> implements Wr
 
   private void putFile(String relativeFilename, Codebase incomingChangeCodebase)
       throws CommandException {
-    FileSystem fs = Injector.INSTANCE.fileSystem();
+    FileSystem fs = Injector.INSTANCE.getFileSystem();
     File src = incomingChangeCodebase.getFile(relativeFilename);
     File dest = new File(getRoot().getAbsolutePath(), relativeFilename);
     boolean srcExists = fs.exists(src);
@@ -171,7 +171,7 @@ public abstract class AbstractDvcsWriter<T extends LocalWorkspace> implements Wr
       try {
         commitChanges(revMetaData);
         Injector.INSTANCE
-            .ui()
+            .getUi()
             .info("Converted draft revision to writer at " + getRoot().getAbsolutePath());
       } catch (CommandException e) {
         throw new WritingError("Error committing: " + e);

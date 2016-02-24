@@ -17,23 +17,27 @@
 package com.google.devtools.moe.client;
 
 /**
- * A problem that we do not expect to routinely happen. They should end 
- * execution of MOE and require intervention by moe-team.
+ * Class describing the task data structure.
  */
-public class MoeProblem extends RuntimeException {
+public class Task {
+  
+  public final String taskName;
+  public final String description;
 
-  // TODO(cgruber): Figure out why this is public mutable and fix.
-  public String explanation;
-  private final Object[] args;
-
-  // TODO(cgruber): Check not null and ensure no one is calling it that way.
-  public MoeProblem(String explanation, Object... args) {
-    this.explanation = explanation;
-    this.args = args;
+  public Task(String taskName, String description) {
+    this.taskName = taskName;
+    this.description = description;
   }
+
+  public Task(String taskName, String descriptionFormat, Object... args) {
+    this.taskName = taskName;
+    // TODO(cgruber) make this lazy once Task is an autovalue.
+    this.description = String.format(descriptionFormat, args);
+  } // TODO(cgruber) make this lazy once Task is an autovalue.
 
   @Override
-  public String getMessage() {
-    return String.format(explanation, args);
+  public String toString() {
+    return taskName;
   }
+  
 }
