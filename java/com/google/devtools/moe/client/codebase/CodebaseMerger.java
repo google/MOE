@@ -141,12 +141,18 @@ public class CodebaseMerger {
    */
   public void report() {
     ui.message("Merged codebase generated at: %s", mergedCodebase.getPath().getAbsolutePath());
-    ui.message(
-        "%d files merged successfully\n%d files have merge "
-            + "conflicts. Edit the following files to resolve conflicts:\n%s",
-        mergedFiles.size(),
-        failedToMergeFiles.size(),
-        failedToMergeFiles);
+    if (failedToMergeFiles.isEmpty()) {
+      ui.message(
+          "%d files merged successfully. No merge conflicts.",
+          mergedFiles.size());
+    } else {
+      ui.message(
+          "%d files merged successfully.\n%d files have merge "
+              + "conflicts. Edit the following files to resolve conflicts:\n%s",
+          mergedFiles.size(),
+          failedToMergeFiles.size(),
+          failedToMergeFiles);
+    }
   }
 
   private boolean areDifferent(String filename, File x, File y) {

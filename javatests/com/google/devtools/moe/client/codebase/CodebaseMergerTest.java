@@ -450,11 +450,7 @@ public class CodebaseMergerTest extends TestCase {
     // Expect in call to report()
     ui.message("Merged codebase generated at: %s", mergedCodebaseLocation.getAbsolutePath());
     ui.message(
-        "%d files merged successfully\n"
-            + "%d files have merge conflicts. Edit the following files to resolve conflicts:\n%s",
-        1,
-        0,
-        ImmutableSet.of());
+        "%d files merged successfully. No merge conflicts.", 1);
 
     control.replay();
 
