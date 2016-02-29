@@ -48,7 +48,7 @@ public class Term {
   }
 
   private static String quote(String s) {
-    if (CharMatcher.JAVA_LETTER_OR_DIGIT.matchesAllOf(s)) {
+    if (CharMatcher.javaLetterOrDigit().matchesAllOf(s)) {
       return s;
     }
     return "\"" + s + "\"";
