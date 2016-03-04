@@ -82,7 +82,7 @@ public class RepositoryExpression extends AbstractExpression {
     }
 
     Ui.Task createTask =
-        Injector.INSTANCE.ui().pushTask("create_codebase", "Creating from '%s'", this);
+        Injector.INSTANCE.ui().pushTask("create_codebase", "Creating codebase for '%s'", this);
     Codebase c = cc.create(term.options);
     Injector.INSTANCE.ui().popTaskAndPersist(createTask, c.getPath());
     return c;

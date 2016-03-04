@@ -24,8 +24,10 @@ import com.google.common.collect.Maps;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Stores the Revisions found by crawling a repository history with a {@link RevisionMatcher}.
@@ -45,19 +47,19 @@ public class RevisionGraph {
    * Returns a breadth-first revision history result, from the starting revisions backwards through
    * all parents not filtered out by the {@code RevisionMatcher}.
    */
-  // TODO(user): Switch from List to something else? Iterable?
-  // TODO(user): When we start to use getBreadthFirstHistory() legitimately, make sure this
-  // doesn't visit the same parent N times via its N children (unless it suits our implementation).
   public List<Revision> getBreadthFirstHistory() {
     ImmutableList.Builder<Revision> historyBuilder = ImmutableList.builder();
+    Set<Revision> seen = new HashSet<Revision>();
     Deque<Revision> workList = new ArrayDeque<>();
     workList.addAll(startingRevisions);
     while (!workList.isEmpty()) {
       Revision current = workList.removeFirst();
-      if (matchingRevsAndMetadata.containsKey(current)) {
-        historyBuilder.add(current);
-        RevisionMetadata metadata = matchingRevsAndMetadata.get(current);
-        workList.addAll(metadata.parents);
+      if (seen.add(current)) {
+        if (matchingRevsAndMetadata.containsKey(current)) {
+          historyBuilder.add(current);
+          RevisionMetadata metadata = matchingRevsAndMetadata.get(current);
+          workList.addAll(metadata.parents);
+        }
       }
     }
     return historyBuilder.build();

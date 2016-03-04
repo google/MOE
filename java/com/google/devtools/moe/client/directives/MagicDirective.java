@@ -79,7 +79,7 @@ public class MagicDirective extends Directive {
   private final Db.Factory dbFactory;
   private final Ui ui;
   private final Migrator migrator;
-  private final Bookkeeper bookkeeper;
+  private final Lazy<Bookkeeper> bookkeeper;
 
   @Inject
   MagicDirective(
@@ -87,7 +87,7 @@ public class MagicDirective extends Directive {
       Lazy<ProjectContext> context,
       Db.Factory dbFactory,
       Ui ui,
-      Bookkeeper bookkeeper,
+      Lazy<Bookkeeper> bookkeeper,
       Migrator migrator) {
     this.context = context;
     this.config = config;
@@ -107,7 +107,7 @@ public class MagicDirective extends Directive {
 
     Set<String> skipRevisions = ImmutableSet.copyOf(this.skipRevisions);
 
-    if (bookkeeper.bookkeep(db, context.get()) != 0) {
+    if (bookkeeper.get().bookkeep(db) != 0) {
       // Bookkeeping has failed, so fail here as well.
       return 1;
     }

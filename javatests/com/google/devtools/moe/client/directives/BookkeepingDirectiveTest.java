@@ -123,12 +123,16 @@ public class BookkeepingDirectiveTest extends TestCase {
     Db.Writer dbWriter = new FileDb.Writer(GsonModule.provideGson(), filesystem);
     BookkeepingDirective d =
         new BookkeepingDirective(
-            EagerLazy.fromInstance(context),
             dbFactory,
-            new Bookkeeper(codebaseDiffer, dbWriter, ui));
+            EagerLazy.fromInstance(new Bookkeeper(context, codebaseDiffer, dbWriter, ui)));
     d.dbLocation = DB_FILE.getAbsolutePath();
 
-    expectDiffs();
+    expect(
+        cmd.runCommand(
+            "diff",
+            ImmutableList.of(
+                "-N", "-u", "/dummy/codebase/int/1/file", "/dummy/codebase/pub/1/file"), ""))
+        .andReturn("unused");
 
     control.replay();
     assertEquals(0, d.perform());
@@ -138,9 +142,6 @@ public class BookkeepingDirectiveTest extends TestCase {
     DbStorage expectedDb = new DbStorage();
     expectedDb.addEquivalence(
         RepositoryEquivalence.create(Revision.create(1, "int"), Revision.create(1, "pub")));
-    expectedDb.addMigration(
-        SubmittedMigration.create(
-            Revision.create("migrated_from", "int"), Revision.create("migrated_to", "pub")));
 
     assertEquals(GsonModule.provideGson().toJson(expectedDb), filesystem.fileToString(DB_FILE));
   }
@@ -170,9 +171,8 @@ public class BookkeepingDirectiveTest extends TestCase {
     Db.Writer dbWriter = new FileDb.Writer(GsonModule.provideGson(), filesystem);
     BookkeepingDirective d =
         new BookkeepingDirective(
-            EagerLazy.fromInstance(context),
             dbFactory,
-            new Bookkeeper(codebaseDiffer, dbWriter, ui));
+            EagerLazy.fromInstance(new Bookkeeper(context, codebaseDiffer, dbWriter, ui)));
     d.dbLocation = DB_FILE.getAbsolutePath();
 
     expectDiffs();
@@ -215,9 +215,8 @@ public class BookkeepingDirectiveTest extends TestCase {
     Db.Writer dbWriter = new FileDb.Writer(GsonModule.provideGson(), filesystem);
     BookkeepingDirective d =
         new BookkeepingDirective(
-            EagerLazy.fromInstance(context),
             dbFactory,
-            new Bookkeeper(codebaseDiffer, dbWriter, ui));
+            EagerLazy.fromInstance(new Bookkeeper(context, codebaseDiffer, dbWriter, ui)));
     d.dbLocation = DB_FILE.getAbsolutePath();
 
     expectDiffs();

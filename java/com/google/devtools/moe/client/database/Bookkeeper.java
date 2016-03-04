@@ -17,12 +17,13 @@
 package com.google.devtools.moe.client.database;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
+import com.google.devtools.moe.client.Ui.Task;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.migrations.MigrationConfig;
-import com.google.devtools.moe.client.parser.Expression;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.project.TranslatorConfig;
@@ -32,7 +33,10 @@ import com.google.devtools.moe.client.repositories.RevisionHistory.SearchType;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.tools.CodebaseDiffer;
 
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -43,81 +47,138 @@ import javax.inject.Inject;
  * Logic behind keeping MOE db up to date (moe bookkeeping)
  */
 public class Bookkeeper {
+  private static final Logger logger = Logger.getLogger(Bookkeeper.class.getName());
+
   /** The regex for MOE-migrated changes, as found in the changelog of the to-repo. */
   private static final Pattern MIGRATED_REV_PATTERN = Pattern.compile("MOE_MIGRATED_REVID=(\\S*)");
 
+  private final ProjectContext context;
   private final CodebaseDiffer differ;
   private final Db.Writer dbWriter;
   private final Ui ui;
 
-
   @Inject
-  public Bookkeeper(CodebaseDiffer differ, Db.Writer dbWriter, Ui ui) {
+  public Bookkeeper(ProjectContext context, CodebaseDiffer differ, Db.Writer dbWriter, Ui ui) {
+    this.context = context;
     this.differ = differ;
     this.dbWriter = dbWriter;
     this.ui = ui;
   }
 
+  private Revision head(String repositoryName) {
+    return context.getRepository(repositoryName).revisionHistory().findHighestRevision(null);
+  }
+
   /**
    * Diff codebases at HEADs of fromRepository and toRepository, adding an Equivalence to db if
    * equivalent at HEADs.
+   *
+   * @return a {@link RepositoryEquivalence} if the codebases at the given revisions are equivalent
    */
-  private void updateHeadEquivalence(
-      String fromRepository, String toRepository, Db db, ProjectContext context) {
-    Codebase to, from;
-    RevisionHistory fromHistory = context.getRepository(fromRepository).revisionHistory();
-    RevisionHistory toHistory = context.getRepository(toRepository).revisionHistory();
-    Revision toHead = toHistory.findHighestRevision(null);
-    Revision fromHead = fromHistory.findHighestRevision(null);
+  private RepositoryEquivalence tryHeadEquivalence(
+      Revision from, Revision to, Db db, boolean inverse) {
+    Ui.Task checkHeadsTask =
+        ui.pushTask(
+            "checking head equivalency",
+            "Checking head equivalence between '%s' and '%s'",
+            from,
+            to);
+    RepositoryEquivalence equivalence =
+        inverse ? determineEquivalence(to, from) : determineEquivalence(from, to);
+    if (equivalence != null) {
+      ui.message("SUCCESS: Found Equivalence between %s and %s", from, to);
+      db.noteEquivalence(equivalence);
+    } else {
+      ui.message("No equivalence found between %s and %s", from, to);
+    }
+    ui.popTask(checkHeadsTask, equivalence != null ? "Found!!" : "Not Found.");
+    return equivalence;
+  }
 
+  /**
+   * Determines if the two revisions given are equivalent - that is to say, when fromRevision
+   * is translated into the project space of toRevision, are their codebases without difference.
+   *
+   * @return a RepositoryEquivalence if the two codebases (after transformation) are equivalent.
+   */
+  private RepositoryEquivalence determineEquivalence(Revision fromRevision, Revision toRevision) {
+    Codebase to, from;
     try {
-      to =
-          new RepositoryExpression(toRepository).atRevision(toHead.revId()).createCodebase(context);
+      String toSpace =
+          context.config().getRepositoryConfig(toRevision.repositoryName()).getProjectSpace();
       from =
-          new RepositoryExpression(fromRepository)
-              .atRevision(fromHead.revId())
-              .translateTo(to.getProjectSpace())
+          new RepositoryExpression(fromRevision.repositoryName())
+              .atRevision(fromRevision.revId())
+              .translateTo(toSpace)
+              .createCodebase(context);
+      to =
+          new RepositoryExpression(toRevision.repositoryName())
+              .atRevision(toRevision.revId())
               .createCodebase(context);
     } catch (CodebaseCreationError e) {
       throw new MoeProblem(e, "Could not generate codebase");
     }
-
     Ui.Task t = ui.pushTask("diff_codebases", "Diff codebases '%s' and '%s'", from, to);
-    if (!differ.diffCodebases(from, to).areDifferent()) {
-      db.noteEquivalence(RepositoryEquivalence.create(fromHead, toHead));
-    }
-    ui.popTask(t, "");
+    boolean equivalent = !differ.diffCodebases(from, to).areDifferent();
+    ui.popTask(t, equivalent ? "No Difference" : "Difference Found");
+    return equivalent ? RepositoryEquivalence.create(fromRevision, toRevision) : null;
   }
 
   /**
-   * Find Revisions in toRepository that were the result of a migration, and call
-   * processMigration() on each.
+   * Find Revisions in toRepository that were the result of a migration and record them, noting
+   * any found equivalences along the way.
    */
-  private void updateCompletedMigrations(
-      String fromRepository, String toRepository, Db db, ProjectContext context, boolean inverse) {
+  private void noteCompletedMigrations(
+      String fromRepository, String toRepository, Db db, boolean inverse) {
+    Ui.Task checkMigrationsTask =
+        ui.pushTask(
+            "check_migrations",
+            "Checking completed migrations for new equivalence between '%s' and '%s'",
+            fromRepository,
+            toRepository);
 
     RevisionHistory toHistory = context.getRepository(toRepository).revisionHistory();
     RepositoryEquivalenceMatcher.Result equivMatch =
         toHistory.findRevisions(
             null /*revision*/,
             new RepositoryEquivalenceMatcher(fromRepository, db),
-            SearchType.LINEAR);
+            SearchType.BRANCHED);
 
-    List<Revision> linearToRevs =
+    List<Revision> toRevs =
         equivMatch.getRevisionsSinceEquivalence().getBreadthFirstHistory();
     ui.message(
-        "Found %d revisions in %s since equivalence (%s): %s",
-        linearToRevs.size(),
+        "Found %d revisions in %s since equivalence (%s)",
+        toRevs.size(),
         toRepository,
-        equivMatch.getEquivalences(),
-        Joiner.on(", ").join(linearToRevs));
-
-    for (Revision toRev : linearToRevs) {
+        equivMatch.getEquivalences());
+    logger.fine("Revisions since equivalence: " + Joiner.on(" ").join(toRevs));
+    int countUnmigrated = 0;
+    int countProcessed = 0;
+    for (Revision toRev : toRevs) {
+      // Look up the migrated commit
       String fromRevId = getMigratedRevId(toHistory.getMetadata(toRev));
       if (fromRevId != null) {
-        processMigration(Revision.create(fromRevId, fromRepository), toRev, db, context, inverse);
+        SubmittedMigration migration =
+            SubmittedMigration.create(Revision.create(fromRevId, fromRepository), toRev);
+        logger.fine("Processing submitted migration: " + migration);
+        if (processMigration(migration, db, inverse) != null) {
+          ui.message("Equivalence found - skipping remaining revisions in this migration.");
+          countProcessed++; // Since we're short circuiting, count this commit as processed
+          break;
+        }
+      } else {
+        countUnmigrated++;
+        logger.finer("Ignoring non-migrated revision " + toRev);
       }
+      countProcessed++;
     }
+    ui.message("Ignored %s commits that were not migrated by MOE", countUnmigrated);
+    if (countProcessed < toRevs.size()) {
+      ui.message(
+          "Skipped %s commits that preceded a discovered migration",
+          toRevs.size() - countProcessed);
+    }
+    ui.popTask(checkMigrationsTask, "");
   }
 
   @Nullable
@@ -129,55 +190,37 @@ public class Bookkeeper {
   /**
    * Check a submitted migration for equivalence by translating the from-repo to the to-repo, or
    * in the case of an inverse translation, translating the to-repo to the from-repo via the
-   * forward-translator.
+   * forward-translator.  A representation of that equivalence is returned, if one is found, or
+   * null if no equivalence is found.
    */
-  private void processMigration(
-      Revision fromRev, Revision toRev, Db db, ProjectContext context, boolean inverse) {
-    SubmittedMigration migration = SubmittedMigration.create(fromRev, toRev);
+  private RepositoryEquivalence processMigration(
+      SubmittedMigration migration, Db db, boolean inverse) {
     if (!db.noteMigration(migration)) {
       ui.message(
-          "Skipping bookkeeping of this SubmittedMigration because it was already in the Db: %s",
-          migration);
-      return;
+          "Skipping: already recorded %s -> %s", migration.fromRevision(), migration.toRevision());
+      return null;
+    }
+    Task t = ui.pushTask("process_migration", "Bookkeeping migrated revision %s", migration);
+    // If an inverse translator, use the forward translator (but backwards)
+    RepositoryEquivalence equivalence = (inverse)
+        ? determineEquivalence(migration.toRevision(), migration.fromRevision())
+        : determineEquivalence(migration.fromRevision(), migration.toRevision());
+    if (equivalence != null) {
+      db.noteEquivalence(equivalence);
+      ui.message("SUCCESS: Equivalence found and recorded: %s", equivalence);
     }
 
-    Codebase to, from;
-    try {
-      Expression toEx = new RepositoryExpression(toRev.repositoryName()).atRevision(toRev.revId());
-      Expression fromEx =
-          new RepositoryExpression(fromRev.repositoryName()).atRevision(fromRev.revId());
-
-      // Use the forward-translator to check an inverse-translated migration.
-      if (inverse) {
-        String fromProjectSpace =
-            context.config().getRepositoryConfig(fromRev.repositoryName()).getProjectSpace();
-        toEx = toEx.translateTo(fromProjectSpace);
-      } else {
-        String toProjectSpace =
-            context.config().getRepositoryConfig(toRev.repositoryName()).getProjectSpace();
-        fromEx = fromEx.translateTo(toProjectSpace);
-      }
-
-      to = toEx.createCodebase(context);
-      from = fromEx.createCodebase(context);
-    } catch (CodebaseCreationError e) {
-      throw new MoeProblem(e, "Could not generate codebase");
-    }
-
-    Ui.Task t = ui.pushTask("diff_codebases", "Diff codebases '%s' and '%s'", from, to);
-    if (!differ.diffCodebases(from, to).areDifferent()) {
-      RepositoryEquivalence newEquiv = RepositoryEquivalence.create(fromRev, toRev);
-      db.noteEquivalence(newEquiv);
-      ui.message("Codebases are identical, noted new equivalence: %s", newEquiv);
-    }
+    dbWriter.write(db);
     ui.popTask(t, "");
+    return equivalence;
   }
 
   /**
    * Look up the TranslatorConfig for translation of fromRepo to toRepo in the ProjectContext.
    */
-  private static TranslatorConfig getTranslatorConfig(
-      String fromRepo, String toRepo, ProjectContext context) {
+  private TranslatorConfig getTranslatorConfig(MigrationConfig migrationConfig) {
+    String fromRepo = migrationConfig.getFromRepository();
+    String toRepo = migrationConfig.getToRepository();
     String fromProjectSpace = context.config().getRepositoryConfig(fromRepo).getProjectSpace();
     String toProjectSpace = context.config().getRepositoryConfig(toRepo).getProjectSpace();
     List<TranslatorConfig> transConfigs = context.config().translators();
@@ -187,7 +230,7 @@ public class Bookkeeper {
         return transConfig;
       }
     }
-    throw new MoeProblem("Couldn't find a translator for " + fromRepo + " -> " + toRepo);
+    throw new MoeProblem("Couldn't find a translator for %s -> %s", fromRepo, toRepo);
   }
 
   /**
@@ -200,53 +243,41 @@ public class Bookkeeper {
    * MOE's way of keeping the db up-to-date.
    *
    * @param db the database to update
-   * @param context the ProjectContext to evaluate in
    * @return 0 on success, 1 on failure
    */
-  public int bookkeep(Db db, ProjectContext context) {
-    Ui.Task t = ui.pushTask("perform_checks", "Updating database");
+  public int bookkeep(Db db) {
+    Ui.Task t = ui.pushTask("bookkeeping", "Updating database");
 
+    Set<Set<Revision>> testedHeadEquivalences = new LinkedHashSet<>();
     for (MigrationConfig config : context.migrationConfigs().values()) {
       Ui.Task bookkeepOneMigrationTask =
           ui.pushTask(
-              "bookkeping_one_migration",
+              "bookkeeping " + config.getName(),
               "Doing bookkeeping between '%s' and '%s' for migration '%s'",
               config.getFromRepository(),
               config.getToRepository(),
               config.getName());
 
-      TranslatorConfig migrationTranslator =
-          getTranslatorConfig(config.getFromRepository(), config.getToRepository(), context);
+      TranslatorConfig translator = getTranslatorConfig(config);
 
-      // TODO(user): ? Switch the order of these two checks, so that we don't have to look back
-      // through the history for irrelevant equivalences if there's one at head.
-      Ui.Task checkMigrationsTask =
-          ui.pushTask(
-              "check_migrations",
-              "Checking completed migrations for new equivalence between '%s' and '%s'",
-              config.getFromRepository(),
-              config.getToRepository());
-      updateCompletedMigrations(
+      Revision fromHead = head(config.getFromRepository());
+      Revision toHead = head(config.getToRepository());
+      if (testedHeadEquivalences.add(ImmutableSet.of(fromHead, toHead))) {
+        // If we haven't checked the inverse head-map of this pair, then check it, else skip.
+        // This avoids checking head twice (once for forward mapping, once for inverse mapping)
+        if (tryHeadEquivalence(fromHead, toHead, db, translator.isInverse()) != null) {
+          // An equivalence at head was noted, don't bother noting all the intermediates.
+          ui.popTask(bookkeepOneMigrationTask, "");
+          continue;
+        }
+      }
+      // Check each migration in turn, to see if we have an equivalence at some point in
+      // the recent migration history.
+      noteCompletedMigrations(
           config.getFromRepository(),
           config.getToRepository(),
           db,
-          context,
-          migrationTranslator.isInverse());
-      ui.popTask(checkMigrationsTask, "");
-
-      // Skip head-equivalence checking for inverse translation -- assume it will be performed via
-      // the forward-translated migration.
-      if (!migrationTranslator.isInverse()) {
-        Ui.Task checkHeadsTask =
-            ui.pushTask(
-                "check_heads",
-                "Checking head equivalence between '%s' and '%s'",
-                config.getFromRepository(),
-                config.getToRepository());
-        updateHeadEquivalence(config.getFromRepository(), config.getToRepository(), db, context);
-        ui.popTask(checkHeadsTask, "");
-      }
-
+          translator.isInverse());
       ui.popTask(bookkeepOneMigrationTask, "");
     }
     ui.popTask(t, "");

@@ -130,7 +130,7 @@ public class Ui {
     String indented = indent(description + "... ");
     out.print(indented);
     Task t = new Task(task, descriptionFormat, args);
-    stack.addFirst(t);
+    stack.push(t);
     currentOutput = t;
     return t;
   }
@@ -148,10 +148,10 @@ public class Ui {
       throw new MoeProblem("Tried to end task %s, but stack is empty", task.taskName);
     }
 
-    Task top = stack.removeFirst();
+    Task top = stack.pop();
 
     if (top != task) {
-      throw new MoeProblem("Tried to end task %s, but stack contains: %s", task.taskName, stack);
+      throw new MoeProblem("Tried to end task %s, but top level task was: %s", task.taskName, top);
     }
 
     if (fileSystem != null) {
