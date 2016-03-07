@@ -124,12 +124,29 @@ public class MigrateBranchDirective extends Directive {
   }
 
   protected int performBranchMigration(
-      String dbLocation, String originalFromRepository, String branchLabel, String overrideUrl) {
+      String dbLocation,
+      String originalFromRepositoryName,
+      String branchLabel,
+      String overrideUrl) {
+    return performBranchMigration(
+        dbLocation,
+        originalFromRepositoryName + (overrideUrl.isEmpty() ? "" : "_fork"),
+        originalFromRepositoryName,
+        branchLabel,
+        overrideUrl);
+  }
+
+  protected int performBranchMigration(
+      String dbLocation,
+      String fromRepositoryName,
+      String originalFromRepositoryName,
+      String branchLabel,
+      String overrideUrl) {
     Db db = dbFactory.load(dbLocation);
 
     MigrationConfig migrationConfig =
         findMigrationConfigForRepository(
-            overrideUrl, originalFromRepository + "_fork", originalFromRepository);
+            overrideUrl, fromRepositoryName, originalFromRepositoryName);
 
     Ui.Task migrationTask =
         ui.pushTask(
@@ -138,12 +155,13 @@ public class MigrateBranchDirective extends Directive {
             migrationConfig.getName(),
             branchLabel);
 
-    RepositoryConfig baseRepoConfig = config.get().getRepositoryConfig(originalFromRepository);
-    RepositoryType baseRepoType = repositories.create(originalFromRepository, baseRepoConfig);
+
+    RepositoryConfig baseRepoConfig = config.get().getRepositoryConfig(originalFromRepositoryName);
+    RepositoryType baseRepoType = repositories.create(originalFromRepositoryName, baseRepoConfig);
     RepositoryConfig fromRepoConfig =
         config
             .get()
-            .getRepositoryConfig(originalFromRepository)
+            .getRepositoryConfig(originalFromRepositoryName)
             .copyWithBranch(branchLabel)
             .copyWithUrl(overrideUrl);
     RepositoryType fromRepoType =
@@ -206,7 +224,7 @@ public class MigrateBranchDirective extends Directive {
         throw new MoeProblem(e.getMessage());
       }
       ScrubberConfig scrubber =
-          config.get().findScrubberConfig(originalFromRepository, migration.toRepository());
+          config.get().findScrubberConfig(originalFromRepositoryName, migration.toRepository());
 
       dr =
           migrator.migrate(

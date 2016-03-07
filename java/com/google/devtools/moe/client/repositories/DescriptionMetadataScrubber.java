@@ -22,6 +22,8 @@ import com.google.common.collect.ImmutableList;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
+import javax.inject.Inject;
+
 /**
  * Scrubs a {@code RevisionMetadata} by formatting its {@link RevisionMetadata#description} per
  * {@link MetadataScrubberConfig#getLogFormat()}.
@@ -38,14 +40,12 @@ import org.joda.time.format.DateTimeFormatter;
  */
 public class DescriptionMetadataScrubber extends MetadataScrubber {
   private static final DateTimeFormatter DATE_FMT = DateTimeFormat.forPattern("yyyy/MM/dd");
-  private final String logFormat;
 
-  public DescriptionMetadataScrubber(String logFormat) {
-    this.logFormat = logFormat;
-  }
+  @Inject
+  public DescriptionMetadataScrubber() {}
 
   @Override
-  public RevisionMetadata scrub(RevisionMetadata rm) {
+  public RevisionMetadata execute(RevisionMetadata rm, MetadataScrubberConfig config) {
     ImmutableList.Builder<String> parentRevIds = ImmutableList.builder();
     for (Revision parent : rm.parents) {
       parentRevIds.add(parent.revId());
@@ -53,7 +53,8 @@ public class DescriptionMetadataScrubber extends MetadataScrubber {
     String parentsString = Joiner.on(", ").join(parentRevIds.build());
 
     String scrubbedDescription =
-        logFormat
+        config
+            .getLogFormat()
             .replace("{id}", rm.id)
             .replace("{author}", rm.author)
             .replace("{date}", DATE_FMT.print(rm.date))

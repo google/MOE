@@ -40,6 +40,7 @@ import com.google.devtools.moe.client.writer.DraftRevision;
 import com.google.devtools.moe.client.writer.Writer;
 
 import java.util.List;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -49,11 +50,14 @@ import javax.inject.Inject;
  */
 public class Migrator {
   private final DraftRevision.Factory revisionFactory;
+  private final Set<MetadataScrubber> metadataScrubbers;
   private final Ui ui;
 
   @Inject
-  public Migrator(DraftRevision.Factory revisionFactory, Ui ui) {
+  public Migrator(
+      DraftRevision.Factory revisionFactory, Set<MetadataScrubber> metadataScrubbers, Ui ui) {
     this.revisionFactory = revisionFactory;
+    this.metadataScrubbers = metadataScrubbers;
     this.ui = ui;
   }
 
@@ -77,7 +81,7 @@ public class Migrator {
       Codebase fromCodebase,
       Revision mostRecentFromRev,
       MetadataScrubberConfig metadataScrubberConfig,
-      ScrubberConfig scrubber,
+      ScrubberConfig scrubberConfig,
       Writer destination,
       Expression referenceToCodebase) {
 
@@ -87,7 +91,7 @@ public class Migrator {
             revisionHistory, migration.fromRevisions(), metadataScrubberConfig, mostRecentFromRev);
 
     return revisionFactory.create(
-        fromCodebase, destination, possiblyScrubAuthors(metadata, scrubber));
+        fromCodebase, destination, possiblyScrubAuthors(metadata, scrubberConfig));
   }
 
   public RevisionMetadata possiblyScrubAuthors(RevisionMetadata metadata, ScrubberConfig scrubber) {
@@ -187,13 +191,16 @@ public class Migrator {
       @Nullable MetadataScrubberConfig sc,
       @Nullable Revision fromRevision) {
     ImmutableList.Builder<RevisionMetadata> rmBuilder = ImmutableList.builder();
-    List<MetadataScrubber> scrubbers =
-        (sc == null) ? ImmutableList.<MetadataScrubber>of() : sc.getScrubbers();
 
     for (Revision rev : revs) {
       RevisionMetadata rm = revisionHistory.getMetadata(rev);
-      for (MetadataScrubber scrubber : scrubbers) {
-        rm = scrubber.scrub(rm);
+      for (MetadataScrubber scrubber : metadataScrubbers) {
+        try {
+          rm = scrubber.scrub(rm, sc);
+        } catch (RuntimeException e) {
+          throw new MoeProblem(
+              e, "Error processing %s: %s", scrubber.getClass().getSimpleName(), e.getMessage());
+        }
       }
       rmBuilder.add(rm);
     }

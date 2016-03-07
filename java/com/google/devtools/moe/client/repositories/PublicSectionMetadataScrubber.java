@@ -22,6 +22,9 @@ import com.google.common.base.Splitter;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import javax.annotation.Nullable;
+import javax.inject.Inject;
+
 /**
  * Scrubs a {@code RevisionMetadata} by replacing the description with just the "Public:" section if
  * one exists.
@@ -31,10 +34,16 @@ public class PublicSectionMetadataScrubber extends MetadataScrubber {
   private static final Pattern PUBLIC_SECTION_PATTERN = Pattern.compile("^\\s*Public:\\s*$");
   private static final Pattern END_PUBLIC_SECTION_PATTERN = Pattern.compile("^\\s*$");
 
+  @Inject
   public PublicSectionMetadataScrubber() {}
 
   @Override
-  public RevisionMetadata scrub(RevisionMetadata rm) {
+  protected boolean shouldScrub(@Nullable MetadataScrubberConfig config) {
+    return true;
+  }
+
+  @Override
+  public RevisionMetadata execute(RevisionMetadata rm, MetadataScrubberConfig unused) {
     List<String> lines = Splitter.on('\n').splitToList(rm.description);
     int startPublicSection = -1;
     int endPublicSection = -1;

@@ -19,12 +19,14 @@ package com.google.devtools.moe.client.directives;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.migrations.Migrator;
 import com.google.devtools.moe.client.project.ProjectConfig;
 import com.google.devtools.moe.client.project.ProjectContext;
+import com.google.devtools.moe.client.repositories.MetadataScrubber;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
@@ -39,6 +41,7 @@ import junit.framework.TestCase;
 import java.io.ByteArrayOutputStream;
 
 public class OneMigrationDirectiveTest extends TestCase {
+  private static final ImmutableSet<MetadataScrubber> NO_SCRUBBERS = ImmutableSet.of();
   private final ByteArrayOutputStream stream = new ByteArrayOutputStream();
   private final Ui ui = new Ui(stream, /* fileSystem */ null);
   private final SystemCommandRunner cmd = new SystemCommandRunner();
@@ -47,6 +50,7 @@ public class OneMigrationDirectiveTest extends TestCase {
 
   @Override
   public void setUp() throws Exception {
+    Injector.INSTANCE = new Injector(null, cmd, ui);
     super.setUp();
     Repositories repositories =
         new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(null)));
@@ -71,7 +75,7 @@ public class OneMigrationDirectiveTest extends TestCase {
             context,
             ui,
             new DraftRevision.Factory(ui),
-            new Migrator(new DraftRevision.Factory(ui), ui));
+            new Migrator(new DraftRevision.Factory(ui), NO_SCRUBBERS, ui));
     d.fromRepository = "int(revision=1000)";
     d.toRepository = "pub(revision=2)";
     assertThat(d.perform()).isEqualTo(0);
@@ -85,7 +89,7 @@ public class OneMigrationDirectiveTest extends TestCase {
             context,
             ui,
             new DraftRevision.Factory(ui),
-            new Migrator(new DraftRevision.Factory(ui), ui));
+            new Migrator(new DraftRevision.Factory(ui), NO_SCRUBBERS, ui));
     d.fromRepository = "x(revision=1000)";
     d.toRepository = "pub(revision=2)";
     try {
@@ -104,7 +108,7 @@ public class OneMigrationDirectiveTest extends TestCase {
             context,
             ui,
             new DraftRevision.Factory(ui),
-            new Migrator(new DraftRevision.Factory(ui), ui));
+            new Migrator(new DraftRevision.Factory(ui), NO_SCRUBBERS, ui));
     d.fromRepository = "int(revision=1000)";
     d.toRepository = "x(revision=2)";
     try {

@@ -61,6 +61,10 @@ public final class GithubAPI {
 
     public abstract Repo repo();
 
+    /**
+     * In a pull request, this is the owner/branch information that identifies the branch for
+     * which this commit is a HEAD pointer.
+     */
     public abstract String ref();
 
     public abstract String sha();

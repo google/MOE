@@ -16,6 +16,8 @@
 
 package com.google.devtools.moe.client.repositories;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 
@@ -25,65 +27,77 @@ import org.joda.time.DateTime;
 
 public class PublicSectionMetadataScrubberTest extends TestCase {
 
-  private static RevisionMetadata makeWithDescription(String... desc) {
+  private static final RevisionMetadata REVISION_METADATA =
+      metadata(
+          "Top secret stuff.",
+          "",
+          "Public:  ",
+          "some changes",
+          "intended for public use",
+          "",
+          "unrelated footer");
+
+  private static final PublicSectionMetadataScrubber SCRUBBER = new PublicSectionMetadataScrubber();
+
+  public void testNonDescriptionMetadataUnaffected() {
+    RevisionMetadata rmExpected = metadata("some changes", "intended for public use");
+    assertThat(SCRUBBER.scrub(REVISION_METADATA, null)).isEqualTo(rmExpected);
+  }
+
+  public void testPublicMessageReplacement() {
+    String actual =
+        SCRUBBER.scrub(metadata("Internal", "  Public: \t", "whitespace", "okay"), null)
+            .description;
+    String expected = Joiner.on("\n").join("whitespace", "okay");
+    assertThat(actual).isEqualTo(expected);
+  }
+
+  public void testPublicMessageReplacement_EmptySection() {
+    String actual = SCRUBBER.scrub(metadata("Internal", "Public:"), null).description;
+    assertThat(actual).isEmpty();
+  }
+
+  public void testNoChange() {
+    String actual = SCRUBBER.scrub(metadata("no", "change"), null).description;
+    String expected = Joiner.on("\n").join("no", "change");
+    assertThat(actual).isEqualTo(expected);
+  }
+
+  public void testPublicSectionFirst() {
+    String actual =
+        SCRUBBER.scrub(metadata("Public:", "section", "first", "", "Then internal desc"), null)
+            .description;
+    String expected = Joiner.on("\n").join("section", "first");
+    assertThat(actual).isEqualTo(expected);
+  }
+
+  public void testUnrelatedSectionFirst() {
+    String actual =
+        SCRUBBER.scrub(metadata("Unrelated:", "section", "Public:", "then", "public"), null)
+            .description;
+    String expected = Joiner.on("\n").join("then", "public");
+    assertThat(actual).isEqualTo(expected);
+  }
+
+  public void testSelectLastPublicSectionFromMoreThanOne() {
+    String actual =
+        SCRUBBER.scrub(
+                metadata(
+                    "Public:", "first", "public", "section", "", "Public:", "last", "public",
+                    "section"),
+                null)
+            .description;
+    String expected = Joiner.on("\n").join("last", "public", "section");
+    assertThat(actual).isEqualTo(expected);
+  }
+
+  private static RevisionMetadata metadata(String... description) {
     return new RevisionMetadata(
         "commit_number",
         "author@google.com",
         new DateTime(1L),
-        Joiner.on("\n").join(desc),
+        Joiner.on("\n").join(description),
         ImmutableList.of(
             Revision.create("parentId1", "repo"), Revision.create("parentId2", "repo")));
-  }
-
-  public void testScrub() {
-    RevisionMetadata rm =
-        makeWithDescription(
-            "Top secret stuff.",
-            "",
-            "Public:  ",
-            "some changes",
-            "intended for public use",
-            "",
-            "unrelated footer");
-
-    // Test that fields besides description are unaffected.
-    RevisionMetadata rmExpected = makeWithDescription("some changes", "intended for public use");
-    assertEquals(rmExpected, new PublicSectionMetadataScrubber().scrub(rm));
-
-    // Test various Strings.
-    assertEquals(
-        Joiner.on("\n").join("whitespace", "okay"),
-        new PublicSectionMetadataScrubber()
-            .scrub(makeWithDescription("Internal", "  Public: \t", "whitespace", "okay"))
-            .description);
-
-    assertEquals(
-        Joiner.on("\n").join("no", "change"),
-        new PublicSectionMetadataScrubber().scrub(makeWithDescription("no", "change")).description);
-
-    assertEquals(
-        "",
-        new PublicSectionMetadataScrubber()
-            .scrub(makeWithDescription("Internal", "Public:")).description);
-
-    assertEquals(
-        Joiner.on("\n").join("section", "first"),
-        new PublicSectionMetadataScrubber()
-            .scrub(makeWithDescription("Public:", "section", "first", "", "Then internal desc"))
-            .description);
-
-    assertEquals(
-        "then public",
-        new PublicSectionMetadataScrubber()
-            .scrub(makeWithDescription("Unrelated:", "section", "Public:", "then public"))
-            .description);
-
-    assertEquals(
-        "last public section",
-        new PublicSectionMetadataScrubber()
-            .scrub(
-                makeWithDescription(
-                    "Public:", "first public section", "", "Public:", "last public section"))
-            .description);
   }
 }

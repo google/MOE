@@ -61,7 +61,7 @@ public class Ui {
   @Inject
   public Ui(OutputStream out, @Nullable FileSystem fileSystem) {
     try {
-      this.out = new PrintStream(out, false, "UTF-8");
+      this.out = new PrintStream(out, /*autoFlush*/ true, "UTF-8");
     } catch (UnsupportedEncodingException e) {
       throw new MoeProblem(e, "Invalid character set.");
     }

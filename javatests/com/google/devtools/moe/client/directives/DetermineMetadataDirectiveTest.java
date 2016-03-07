@@ -24,6 +24,7 @@ import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.migrations.Migrator;
 import com.google.devtools.moe.client.project.ProjectContext;
+import com.google.devtools.moe.client.repositories.MetadataScrubber;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.repositories.Revision;
@@ -40,6 +41,7 @@ import org.joda.time.DateTime;
 import java.io.ByteArrayOutputStream;
 
 public class DetermineMetadataDirectiveTest extends TestCase {
+  private static final ImmutableSet<MetadataScrubber> NO_SCRUBBERS = ImmutableSet.of();
   private final ByteArrayOutputStream stream = new ByteArrayOutputStream();
   private final Ui ui = new Ui(stream, /* fileSystem */ null);
   private final SystemCommandRunner cmd = new SystemCommandRunner();
@@ -58,7 +60,9 @@ public class DetermineMetadataDirectiveTest extends TestCase {
     ProjectContext context = contextFactory.create("moe_config.txt");
     DetermineMetadataDirective d =
         new DetermineMetadataDirective(
-            EagerLazy.fromInstance(context), ui, new Migrator(new DraftRevision.Factory(ui), ui));
+            EagerLazy.fromInstance(context),
+            ui,
+            new Migrator(new DraftRevision.Factory(ui), NO_SCRUBBERS, ui));
     d.repositoryExpression = "internal(revision=\"1,2\")";
     assertEquals(0, d.perform());
     RevisionMetadata rm =
@@ -83,7 +87,9 @@ public class DetermineMetadataDirectiveTest extends TestCase {
     ProjectContext context = contextFactory.create("moe_config.txt");
     DetermineMetadataDirective d =
         new DetermineMetadataDirective(
-            EagerLazy.fromInstance(context), ui, new Migrator(new DraftRevision.Factory(ui), ui));
+            EagerLazy.fromInstance(context),
+            ui,
+            new Migrator(new DraftRevision.Factory(ui), NO_SCRUBBERS, ui));
     d.repositoryExpression = "internal(revision=7)";
     assertEquals(0, d.perform());
     RevisionMetadata rm =

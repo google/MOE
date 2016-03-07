@@ -23,8 +23,7 @@ import java.util.List;
  * Configuration for a MOE metadata scrubber.
  */
 public class MetadataScrubberConfig {
-
-  private List<String> usernamesToScrub;
+  private List<String> usernamesToScrub = ImmutableList.of();
   private boolean scrubConfidentialWords = true;
   private List<String> sensitiveRes = ImmutableList.of();
 
@@ -32,7 +31,7 @@ public class MetadataScrubberConfig {
    * Formatting for changelog adapted from fromRepository for commits in toRepository. See
    * {@link DescriptionMetadataScrubber}.
    */
-  private String logFormat = "{description}\n\tChange on {date} by {author}";
+  private String logFormat = "{description}\n\n\tChange on {date} by {author}\n";
 
   public MetadataScrubberConfig() {} // Constructed by gson
 
@@ -56,26 +55,5 @@ public class MetadataScrubberConfig {
 
   public String getLogFormat() {
     return logFormat;
-  }
-
-  /**
-   * @return the list of {@link MetadataScrubber}s as determined by this configuration
-   */
-  public List<MetadataScrubber> getScrubbers() {
-    ImmutableList.Builder<MetadataScrubber> scrubbersBuilder = ImmutableList.builder();
-
-    if (usernamesToScrub != null && !usernamesToScrub.isEmpty()) {
-      scrubbersBuilder.add(new MetadataUsernameScrubber(getUsernamesToScrub()));
-    }
-
-    if (scrubConfidentialWords) {
-      // Here is where you can use a MetadataScrubber that scrubs confidential words.
-    }
-
-    scrubbersBuilder.add(new PublicSectionMetadataScrubber());
-
-    scrubbersBuilder.add(new DescriptionMetadataScrubber(logFormat));
-
-    return scrubbersBuilder.build();
   }
 }

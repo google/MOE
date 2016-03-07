@@ -16,22 +16,25 @@
 
 package com.google.devtools.moe.client.repositories;
 
-import java.util.List;
+import javax.inject.Inject;
 
 /**
  * This MetadataScrubber replaces any of the target usernames with the replacement string.
  */
 public class MetadataUsernameScrubber extends MetadataScrubber {
+  private static final String REPLACEMENT = "<user>";
 
-  private List<String> usernamesToScrub;
-  private final String replacement = "<user>";
+  @Inject
+  public MetadataUsernameScrubber() {}
 
-  public MetadataUsernameScrubber(List<String> usernames) {
-    this.usernamesToScrub = usernames;
+  @Override
+  protected boolean shouldScrub(MetadataScrubberConfig config) {
+    return config != null && !config.getUsernamesToScrub().isEmpty();
   }
 
   @Override
-  public RevisionMetadata scrub(RevisionMetadata rm) {
-    return MetadataScrubber.stripFromAllFields(rm, usernamesToScrub, replacement, true);
+  public RevisionMetadata execute(RevisionMetadata rm, MetadataScrubberConfig config) {
+    return MetadataScrubber.stripFromAllFields(
+        rm, config.getUsernamesToScrub(), REPLACEMENT, /*wordAlone*/ true);
   }
 }

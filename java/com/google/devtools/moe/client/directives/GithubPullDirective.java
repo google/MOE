@@ -106,6 +106,7 @@ public class GithubPullDirective extends Directive {
     int result =
         delegate.performBranchMigration(
             dbLocation,
+            metadata.head().repo().owner().login() + "_" + metadata.head().ref(),
             repoConfigName,
             metadata.head().ref(),
             metadata.head().repo().cloneUrl());

@@ -25,6 +25,7 @@ import com.google.devtools.moe.client.project.FileReadingProjectContextFactory;
 import com.google.devtools.moe.client.project.ProjectConfig;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.project.ProjectContextFactory;
+import com.google.devtools.moe.client.repositories.MetadataScrubber;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.tools.FileDifference.ConcreteFileDiffer;
 import com.google.devtools.moe.client.tools.FileDifference.FileDiffer;
@@ -47,7 +48,8 @@ import javax.inject.Singleton;
     DirectivesModule.class,
     FileDb.Module.class,
     GsonModule.class,
-    UiModule.class
+    UiModule.class,
+    MetadataScrubber.Module.class
   }
 )
 public class MoeModule {
