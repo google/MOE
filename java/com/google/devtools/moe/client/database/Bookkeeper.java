@@ -175,7 +175,7 @@ public class Bookkeeper {
     ui.message("Ignored %s commits that were not migrated by MOE", countUnmigrated);
     if (countProcessed < toRevs.size()) {
       ui.message(
-          "Skipped %s commits that preceded a discovered migration",
+          "Skipped %s commits that preceded a discovered equivalence",
           toRevs.size() - countProcessed);
     }
     ui.popTask(checkMigrationsTask, "");

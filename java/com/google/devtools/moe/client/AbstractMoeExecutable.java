@@ -121,7 +121,7 @@ public abstract class AbstractMoeExecutable<T extends AbstractMoeExecutable<T>> 
       ui.popTask(terminateTask, "");
       return result;
     } catch (InvalidProject e) {
-      logHelper(debug, Level.SEVERE, "Couldn't create project", e);
+      logHelper(debug, Level.SEVERE, "Invalid project configuration", e);
     } catch (MoeUserProblem e) {
       e.reportTo(ui);
       if (debug) {
