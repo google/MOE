@@ -17,6 +17,7 @@
 package com.google.devtools.moe.client;
 
 import static com.google.devtools.moe.client.Ui.MOE_TERMINATION_TASK_NAME;
+import static java.util.logging.Level.SEVERE;
 import static java.util.logging.Level.WARNING;
 
 import com.google.devtools.moe.client.directives.Directive;
@@ -120,17 +121,23 @@ public abstract class AbstractMoeExecutable<T extends AbstractMoeExecutable<T>> 
       }
       ui.popTask(terminateTask, "");
       return result;
-    } catch (InvalidProject e) {
-      logHelper(debug, Level.SEVERE, "Invalid project configuration", e);
-    } catch (MoeUserProblem e) {
-      e.reportTo(ui);
+    } catch (InvalidProject ip) {
+      ui.message("ERROR: Invalid project configuration: %s", ip.getMessage());
       if (debug) {
-        globalLogger.log(WARNING, "", e);
+        globalLogger.log(SEVERE, "", ip);
       }
-    } catch (MoeProblem m) {
-      logHelper(debug, Level.SEVERE, "Moe encountered a problem", m);
+    } catch (MoeUserProblem mup) {
+      mup.reportTo(ui);
+      if (debug) {
+        globalLogger.log(WARNING, "", mup);
+      }
+    } catch (MoeProblem mp) {
+      ui.message("ERROR: Moe encountered a problem: %s", mp.getMessage());
+      if (debug) {
+        globalLogger.log(SEVERE, "", mp);
+      }
     } catch (Throwable t) {
-      globalLogger.log(Level.SEVERE, "Unhandled exception " + t.getClass().getSimpleName(), t);
+      globalLogger.log(SEVERE, "Unhandled exception " + t.getClass().getSimpleName(), t);
     }
     return 1;
   }
@@ -142,14 +149,6 @@ public abstract class AbstractMoeExecutable<T extends AbstractMoeExecutable<T>> 
    */
   protected abstract Component<T> initializeComponent(String[] args);
 
-  private static void logHelper(boolean debug, Level level, String message, Throwable t) {
-    globalLogger.log(level, message);
-    if (!debug) {
-      globalLogger.log(level, t.getMessage());
-    } else {
-      globalLogger.log(level, "", t);
-    }
-  }
   /**
    * The Dagger surface for a MOE application.
    *
