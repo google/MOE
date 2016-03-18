@@ -31,7 +31,6 @@ import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
-import com.google.devtools.moe.client.tools.EagerLazy;
 import com.google.devtools.moe.client.writer.DraftRevision;
 
 import junit.framework.TestCase;
@@ -60,9 +59,7 @@ public class DetermineMetadataDirectiveTest extends TestCase {
     ProjectContext context = contextFactory.create("moe_config.txt");
     DetermineMetadataDirective d =
         new DetermineMetadataDirective(
-            EagerLazy.fromInstance(context),
-            ui,
-            new Migrator(new DraftRevision.Factory(ui), NO_SCRUBBERS, ui));
+            context, ui, new Migrator(new DraftRevision.Factory(ui), NO_SCRUBBERS, ui));
     d.repositoryExpression = "internal(revision=\"1,2\")";
     assertEquals(0, d.perform());
     RevisionMetadata rm =
@@ -87,9 +84,7 @@ public class DetermineMetadataDirectiveTest extends TestCase {
     ProjectContext context = contextFactory.create("moe_config.txt");
     DetermineMetadataDirective d =
         new DetermineMetadataDirective(
-            EagerLazy.fromInstance(context),
-            ui,
-            new Migrator(new DraftRevision.Factory(ui), NO_SCRUBBERS, ui));
+            context, ui, new Migrator(new DraftRevision.Factory(ui), NO_SCRUBBERS, ui));
     d.repositoryExpression = "internal(revision=7)";
     assertEquals(0, d.perform());
     RevisionMetadata rm =

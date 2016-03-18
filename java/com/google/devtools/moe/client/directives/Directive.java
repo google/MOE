@@ -41,7 +41,29 @@ public abstract class Directive extends MoeOptions {
   protected abstract int performDirectiveBehavior();
 
   /**
-   * Get description suitable for command-line help.
+   * A template for directive-specific modules. This cannot guarantee that everything is valid
+   * but at least ensures that the two methods are present.  Ultimately this should include a
+   * processor to validate each directive module, or generate the module from the directive.
    */
-  public abstract String getDescription();
+  public interface Module<T extends Directive> {
+    /**
+     * Overrides of this method must be annotated with {@code @Provides(MAP) @StringKey(COMMAND)}
+     * where COMMAND is a constant string representing the moe command label (e.g. "magic" or
+     * "bookkeep").
+     *
+     * @return the command description with this particular command i.e. an instance of
+     *     the enclosing class
+     */
+    String description();
+
+    /**
+     * Overrides of this method must be annotated with {@code @Provides(MAP) @StringKey(COMMAND)}
+     * where COMMAND is a constant string representing the moe command label (e.g. "magic" or
+     * "bookkeep").
+     *
+     * @return the directive associated with this particular command i.e. an instance of
+     *     the enclosing class
+     */
+    Directive directive(T impl);
+  }
 }

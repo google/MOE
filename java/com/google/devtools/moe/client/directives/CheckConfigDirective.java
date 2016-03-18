@@ -16,9 +16,13 @@
 
 package com.google.devtools.moe.client.directives;
 
+import static dagger.Provides.Type.MAP;
+
+import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.project.ProjectContext;
 
-import dagger.Lazy;
+import dagger.Provides;
+import dagger.mapkeys.StringKey;
 
 import javax.inject.Inject;
 
@@ -26,21 +30,40 @@ import javax.inject.Inject;
  * Reads a MOE Project's configuration and reads it, checking for errors.
  */
 public class CheckConfigDirective extends Directive {
-  private final Lazy<ProjectContext> context;
+  private final ProjectContext context;
+  private final Ui ui;
 
   @Inject
-  CheckConfigDirective(Lazy<ProjectContext> context) {
+  CheckConfigDirective(ProjectContext context, Ui ui) {
     this.context = context;
+    this.ui = ui;
   }
 
   @Override
   protected int performDirectiveBehavior() {
-    context.get(); // force resolution and parsing.
+    ui.message("Successfully parsed configuration for project %s", context.config().name());
     return 0;
   }
 
-  @Override
-  public String getDescription() {
-    return "Checks that the project's configuration is valid";
+  /**
+   * A module to supply the directive and a description into maps in the graph.
+   */
+  @dagger.Module
+  public static class Module implements Directive.Module<CheckConfigDirective> {
+    private static final String COMMAND = "check_config";
+
+    @Override
+    @Provides(type = MAP)
+    @StringKey(COMMAND)
+    public Directive directive(CheckConfigDirective directive) {
+      return directive;
+    }
+
+    @Override
+    @Provides(type = MAP)
+    @StringKey(COMMAND)
+    public String description() {
+      return "Checks that the project's configuration is valid";
+    }
   }
 }

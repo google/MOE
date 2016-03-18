@@ -24,17 +24,13 @@ import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.migrations.Migrator;
-import com.google.devtools.moe.client.project.ProjectConfig;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.MetadataScrubber;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
-import com.google.devtools.moe.client.tools.EagerLazy;
 import com.google.devtools.moe.client.writer.DraftRevision;
-
-import dagger.Lazy;
 
 import junit.framework.TestCase;
 
@@ -45,8 +41,7 @@ public class OneMigrationDirectiveTest extends TestCase {
   private final ByteArrayOutputStream stream = new ByteArrayOutputStream();
   private final Ui ui = new Ui(stream, /* fileSystem */ null);
   private final SystemCommandRunner cmd = new SystemCommandRunner();
-  private Lazy<ProjectContext> context;
-  private Lazy<ProjectConfig> config;
+  private ProjectContext context;
 
   @Override
   public void setUp() throws Exception {
@@ -64,14 +59,13 @@ public class OneMigrationDirectiveTest extends TestCase {
             + "\"translators\":[{\"from_project_space\":\"internal\","
             + "\"to_project_space\":\"public\",\"steps\":[{\"name\":\"id_step\","
             + "\"editor\":{\"type\":\"identity\"}}]}]}");
-    context = EagerLazy.fromInstance(contextFactory.create("moe_config.txt"));
-    config = EagerLazy.fromInstance(context.get().config());
+    context = contextFactory.create("moe_config.txt");
   }
 
   public void testOneMigration() throws Exception {
     OneMigrationDirective d =
         new OneMigrationDirective(
-            config,
+            context.config(),
             context,
             ui,
             new DraftRevision.Factory(ui),
@@ -85,7 +79,7 @@ public class OneMigrationDirectiveTest extends TestCase {
   public void testOneMigrationFailOnFromRevision() throws Exception {
     OneMigrationDirective d =
         new OneMigrationDirective(
-            config,
+            context.config(),
             context,
             ui,
             new DraftRevision.Factory(ui),
@@ -104,7 +98,7 @@ public class OneMigrationDirectiveTest extends TestCase {
   public void testOneMigrationFailOnToRevision() throws Exception {
     OneMigrationDirective d =
         new OneMigrationDirective(
-            config,
+            context.config(),
             context,
             ui,
             new DraftRevision.Factory(ui),

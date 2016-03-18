@@ -26,7 +26,6 @@ import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
-import com.google.devtools.moe.client.tools.EagerLazy;
 
 import junit.framework.TestCase;
 
@@ -46,7 +45,7 @@ public class HighestRevisionDirectiveTest extends TestCase {
         "moe_config.txt",
         "{\"name\": \"foo\", \"repositories\": {\"internal\": {\"type\": \"dummy\"}}}");
     ProjectContext context = contextFactory.create("moe_config.txt");
-    HighestRevisionDirective d = new HighestRevisionDirective(EagerLazy.fromInstance(context), ui);
+    HighestRevisionDirective d = new HighestRevisionDirective(context, ui);
     d.repository = "internal";
     assertThat(d.perform()).isEqualTo(0);
     assertThat(stream.toString()).contains("Highest revision in repository \"internal\": 1");
@@ -57,7 +56,7 @@ public class HighestRevisionDirectiveTest extends TestCase {
         "moe_config.txt",
         "{\"name\": \"foo\", \"repositories\": {\"internal\": {\"type\": \"dummy\"}}}");
     ProjectContext context = contextFactory.create("moe_config.txt");
-    HighestRevisionDirective d = new HighestRevisionDirective(EagerLazy.fromInstance(context), ui);
+    HighestRevisionDirective d = new HighestRevisionDirective(context, ui);
     d.repository = "internal(revision=4)";
     assertThat(d.perform()).isEqualTo(0);
     assertThat(stream.toString()).contains("Highest revision in repository \"internal\": 4");

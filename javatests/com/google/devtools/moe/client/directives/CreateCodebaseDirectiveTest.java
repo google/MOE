@@ -27,7 +27,6 @@ import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
-import com.google.devtools.moe.client.tools.EagerLazy;
 
 import junit.framework.TestCase;
 
@@ -52,8 +51,7 @@ public class CreateCodebaseDirectiveTest extends TestCase {
         "moe_config.txt",
         "{\"name\": \"foo\", \"repositories\": {\"internal\": {\"type\": \"dummy\"}}}");
     ProjectContext context = contextFactory.create("moe_config.txt");
-    CreateCodebaseDirective d =
-        new CreateCodebaseDirective(EagerLazy.fromInstance(context), cmd, ui);
+    CreateCodebaseDirective d = new CreateCodebaseDirective(context, cmd, ui);
     d.codebase = "internal";
     assertEquals(0, d.perform());
     assertThat(stream.toString())
@@ -69,8 +67,7 @@ public class CreateCodebaseDirectiveTest extends TestCase {
             + "\"internal\": {\"type\": \"dummy\"}}, \"editors\": {"
             + "\"identity\": {\"type\":\"identity\"}}}");
     ProjectContext context = contextFactory.create("moe_config.txt");
-    CreateCodebaseDirective d =
-        new CreateCodebaseDirective(EagerLazy.fromInstance(context), cmd, ui);
+    CreateCodebaseDirective d = new CreateCodebaseDirective(context, cmd, ui);
     d.codebase = "internal|identity";
     assertEquals(0, d.perform());
     assertThat(stream.toString())

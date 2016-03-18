@@ -27,7 +27,6 @@ import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.testing.DummyDb;
 import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
-import com.google.devtools.moe.client.tools.EagerLazy;
 
 import junit.framework.TestCase;
 
@@ -48,8 +47,7 @@ public class LastEquivalenceDirectiveTest extends TestCase {
         "moe_config.txt",
         "{\"name\": \"foo\", \"repositories\": {\"internal\": {\"type\": \"dummy\"}}}");
     ProjectContext context = contextFactory.create("moe_config.txt");
-    LastEquivalenceDirective d =
-        new LastEquivalenceDirective(EagerLazy.fromInstance(context), dbFactory, ui);
+    LastEquivalenceDirective d = new LastEquivalenceDirective(context, dbFactory, ui);
     d.dbLocation = "dummy";
     d.fromRepository = "internal(revision=1)";
     d.withRepository = "public";

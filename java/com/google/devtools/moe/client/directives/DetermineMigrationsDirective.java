@@ -16,6 +16,8 @@
 
 package com.google.devtools.moe.client.directives;
 
+import static dagger.Provides.Type.MAP;
+
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.database.Db;
@@ -25,7 +27,8 @@ import com.google.devtools.moe.client.migrations.Migrator;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 
-import dagger.Lazy;
+import dagger.Provides;
+import dagger.mapkeys.StringKey;
 
 import org.kohsuke.args4j.Option;
 
@@ -48,14 +51,14 @@ public class DetermineMigrationsDirective extends Directive {
   @Option(name = "--db", required = true, usage = "Location of MOE database")
   String dbLocation = "";
 
-  private final Lazy<ProjectContext> context;
+  private final ProjectContext context;
   private final Db.Factory dbFactory;
   private final Ui ui;
   private final Migrator migrator;
 
   @Inject
   public DetermineMigrationsDirective(
-      Lazy<ProjectContext> context, Db.Factory dbFactory, Ui ui, Migrator migrator) {
+      ProjectContext context, Db.Factory dbFactory, Ui ui, Migrator migrator) {
     this.context = context;
     this.dbFactory = dbFactory;
     this.ui = ui;
@@ -65,13 +68,12 @@ public class DetermineMigrationsDirective extends Directive {
   @Override
   protected int performDirectiveBehavior() {
     Db db = dbFactory.load(dbLocation);
-
-    MigrationConfig config = context.get().migrationConfigs().get(migrationName);
+    MigrationConfig config = context.migrationConfigs().get(migrationName);
     if (config == null) {
       throw new MoeProblem("No migration found with name " + migrationName);
     }
 
-    RepositoryType fromRepo = context.get().getRepository(config.getFromRepository());
+    RepositoryType fromRepo = context.getRepository(config.getFromRepository());
     List<Migration> migrations = migrator.findMigrationsFromEquivalency(fromRepo, config, db);
     for (Migration migration : migrations) {
       ui.message("Pending migration: " + migration);
@@ -80,8 +82,25 @@ public class DetermineMigrationsDirective extends Directive {
     return 0;
   }
 
-  @Override
-  public String getDescription() {
-    return "Finds and prints the unmigrated revisions for a migration";
+  /**
+   * A module to supply the directive and a description into maps in the graph.
+   */
+  @dagger.Module
+  public static class Module implements Directive.Module<DetermineMigrationsDirective> {
+    private static final String COMMAND = "determine_migrations";
+
+    @Override
+    @Provides(type = MAP)
+    @StringKey(COMMAND)
+    public Directive directive(DetermineMigrationsDirective directive) {
+      return directive;
+    }
+
+    @Override
+    @Provides(type = MAP)
+    @StringKey(COMMAND)
+    public String description() {
+      return "Finds and prints the unmigrated revisions for a named migration configuration";
+    }
   }
 }

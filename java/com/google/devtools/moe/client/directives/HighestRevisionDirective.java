@@ -16,6 +16,8 @@
 
 package com.google.devtools.moe.client.directives;
 
+import static dagger.Provides.Type.MAP;
+
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.parser.Parser;
@@ -26,7 +28,8 @@ import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
 
-import dagger.Lazy;
+import dagger.Provides;
+import dagger.mapkeys.StringKey;
 
 import org.kohsuke.args4j.Option;
 
@@ -45,11 +48,11 @@ public class HighestRevisionDirective extends Directive {
   )
   String repository = "";
 
-  private final Lazy<ProjectContext> context;
+  private final ProjectContext context;
   private final Ui ui;
 
   @Inject
-  HighestRevisionDirective(Lazy<ProjectContext> context, Ui ui) {
+  HighestRevisionDirective(ProjectContext context, Ui ui) {
     this.context = context;
     this.ui = ui;
   }
@@ -63,7 +66,7 @@ public class HighestRevisionDirective extends Directive {
       throw new MoeProblem(e, "Couldn't parse " + repository);
     }
 
-    RepositoryType r = context.get().getRepository(repoEx.getRepositoryName());
+    RepositoryType r = context.getRepository(repoEx.getRepositoryName());
 
     RevisionHistory rh = r.revisionHistory();
     if (rh == null) {
@@ -79,8 +82,25 @@ public class HighestRevisionDirective extends Directive {
     return 0;
   }
 
-  @Override
-  public String getDescription() {
-    return "Finds the highest revision in a source control repository";
+  /**
+   * A module to supply the directive and a description into maps in the graph.
+   */
+  @dagger.Module
+  public static class Module implements Directive.Module<HighestRevisionDirective> {
+    private static final String COMMAND = "highest_revision";
+
+    @Override
+    @Provides(type = MAP)
+    @StringKey(COMMAND)
+    public Directive directive(HighestRevisionDirective directive) {
+      return directive;
+    }
+
+    @Override
+    @Provides(type = MAP)
+    @StringKey(COMMAND)
+    public String description() {
+      return "Finds the highest revision in a source control repository";
+    }
   }
 }

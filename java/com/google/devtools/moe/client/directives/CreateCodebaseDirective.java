@@ -16,6 +16,8 @@
 
 package com.google.devtools.moe.client.directives;
 
+import static dagger.Provides.Type.MAP;
+
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -30,7 +32,8 @@ import com.google.devtools.moe.client.parser.Parser;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
 import com.google.devtools.moe.client.project.ProjectContext;
 
-import dagger.Lazy;
+import dagger.Provides;
+import dagger.mapkeys.StringKey;
 
 import org.kohsuke.args4j.Option;
 
@@ -50,12 +53,12 @@ public class CreateCodebaseDirective extends Directive {
   )
   String tarfile = null;
 
-  private final Lazy<ProjectContext> context;
+  private final ProjectContext context;
   private final CommandRunner cmd;
   private final Ui ui;
 
   @Inject
-  CreateCodebaseDirective(Lazy<ProjectContext> context, CommandRunner cmd, Ui ui) {
+  CreateCodebaseDirective(ProjectContext context, CommandRunner cmd, Ui ui) {
     this.context = context;
     this.cmd = cmd;
     this.ui = ui;
@@ -66,7 +69,7 @@ public class CreateCodebaseDirective extends Directive {
     Task createCodebaseTask = ui.pushTask("create_codebase", "Creating codebase %s", codebase);
     Codebase c;
     try {
-      c = Parser.parseExpression(codebase).createCodebase(context.get());
+      c = Parser.parseExpression(codebase).createCodebase(context);
     } catch (ParseError e) {
       throw new MoeProblem(e, "Error creating codebase");
     } catch (CodebaseCreationError e) {
@@ -102,8 +105,25 @@ public class CreateCodebaseDirective extends Directive {
     ui.message("tar of codebase \"%s\" created at %s", codebase, tarfile);
   }
 
-  @Override
-  public String getDescription() {
-    return "Creates a codebase from a codebase expression";
+  /**
+   * A module to supply the directive and a description into maps in the graph.
+   */
+  @dagger.Module
+  public static class Module implements Directive.Module<CreateCodebaseDirective> {
+    private static final String COMMAND = "create_codebase";
+
+    @Override
+    @Provides(type = MAP)
+    @StringKey(COMMAND)
+    public Directive directive(CreateCodebaseDirective directive) {
+      return directive;
+    }
+
+    @Override
+    @Provides(type = MAP)
+    @StringKey(COMMAND)
+    public String description() {
+      return "Creates a codebase from a codebase expression";
+    }
   }
 }

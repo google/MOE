@@ -16,6 +16,8 @@
 
 package com.google.devtools.moe.client.directives;
 
+import static dagger.Provides.Type.MAP;
+
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
@@ -35,7 +37,8 @@ import com.google.devtools.moe.client.writer.DraftRevision;
 import com.google.devtools.moe.client.writer.Writer;
 import com.google.devtools.moe.client.writer.WritingError;
 
-import dagger.Lazy;
+import dagger.Provides;
+import dagger.mapkeys.StringKey;
 
 import org.kohsuke.args4j.Option;
 
@@ -61,16 +64,16 @@ public class OneMigrationDirective extends Directive {
   )
   String toRepository = "";
 
-  private final Lazy<ProjectConfig> config;
-  private final Lazy<ProjectContext> context;
+  private final ProjectConfig config;
+  private final ProjectContext context;
   private final Ui ui;
   private final DraftRevision.Factory revisionFactory;
   private final Migrator migrator;
 
   @Inject
   OneMigrationDirective(
-      Lazy<ProjectConfig> config,
-      Lazy<ProjectContext> context,
+      ProjectConfig config,
+      ProjectContext context,
       Ui ui,
       DraftRevision.Factory revisionFactory,
       Migrator migrator) {
@@ -90,10 +93,9 @@ public class OneMigrationDirective extends Directive {
     } catch (ParseError e) {
       throw new MoeProblem(e, "Couldn't parse expression");
     }
-    RepositoryConfig repositoryConfig =
-        config.get().getRepositoryConfig(toRepoEx.getRepositoryName());
+    RepositoryConfig repositoryConfig = config.getRepositoryConfig(toRepoEx.getRepositoryName());
     String toProjectSpace = repositoryConfig.getProjectSpace();
-    List<Revision> revs = Revision.fromRepositoryExpression(fromRepoEx, context.get());
+    List<Revision> revs = Revision.fromRepositoryExpression(fromRepoEx, context);
 
     Codebase sourceCodebase;
     try {
@@ -101,14 +103,14 @@ public class OneMigrationDirective extends Directive {
           new RepositoryExpression(fromRepoEx.getRepositoryName())
               .atRevision(revs.get(0).revId())
               .translateTo(toProjectSpace)
-              .createCodebase(context.get());
+              .createCodebase(context);
     } catch (CodebaseCreationError e) {
       throw new MoeProblem(e, "Error creating codebase");
     }
 
     Writer destination;
     try {
-      destination = toRepoEx.createWriter(context.get());
+      destination = toRepoEx.createWriter(context);
     } catch (WritingError e) {
       throw new MoeProblem(e, "Error writing to repo");
     }
@@ -116,14 +118,12 @@ public class OneMigrationDirective extends Directive {
     ui.message("Migrating '%s' to '%s'", fromRepoEx, toRepoEx);
 
 
-    RepositoryType repositoryType = context.get().getRepository(revs.get(0).repositoryName());
+    RepositoryType repositoryType = context.getRepository(revs.get(0).repositoryName());
 
     RevisionMetadata metadata =
         migrator.processMetadata(repositoryType.revisionHistory(), revs, null, revs.get(0));
     ScrubberConfig scrubber =
-        config
-            .get()
-            .findScrubberConfig(fromRepoEx.getRepositoryName(), toRepoEx.getRepositoryName());
+        config.findScrubberConfig(fromRepoEx.getRepositoryName(), toRepoEx.getRepositoryName());
     metadata = migrator.possiblyScrubAuthors(metadata, scrubber);
     DraftRevision draftRevision =
         revisionFactory.create(
@@ -137,8 +137,25 @@ public class OneMigrationDirective extends Directive {
     return 0;
   }
 
-  @Override
-  public String getDescription() {
-    return "Performs a single migration";
+  /**
+   * A module to supply the directive and a description into maps in the graph.
+   */
+  @dagger.Module
+  public static class Module implements Directive.Module<OneMigrationDirective> {
+    private static final String COMMAND = "one_migration";
+
+    @Override
+    @Provides(type = MAP)
+    @StringKey(COMMAND)
+    public Directive directive(OneMigrationDirective directive) {
+      return directive;
+    }
+
+    @Override
+    @Provides(type = MAP)
+    @StringKey(COMMAND)
+    public String description() {
+      return "Performs a single configured migration";
+    }
   }
 }

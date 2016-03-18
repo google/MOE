@@ -16,6 +16,8 @@
 
 package com.google.devtools.moe.client.directives;
 
+import static dagger.Provides.Type.MAP;
+
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
@@ -27,7 +29,8 @@ import com.google.devtools.moe.client.tools.CodebaseDiffer;
 import com.google.devtools.moe.client.tools.CodebaseDifference;
 import com.google.devtools.moe.client.tools.PatchCodebaseDifferenceRenderer;
 
-import dagger.Lazy;
+import dagger.Provides;
+import dagger.mapkeys.StringKey;
 
 import org.kohsuke.args4j.Option;
 
@@ -46,12 +49,12 @@ public class DiffCodebasesDirective extends Directive {
   @Option(name = "--codebase2", required = true, usage = "Codebase2 expression")
   String codebase2Spec = "";
 
-  private final Lazy<ProjectContext> context;
+  private final ProjectContext context;
   private final CodebaseDiffer differ;
   private final Ui ui;
 
   @Inject
-  DiffCodebasesDirective(Lazy<ProjectContext> context, CodebaseDiffer differ, Ui ui) {
+  DiffCodebasesDirective(ProjectContext context, CodebaseDiffer differ, Ui ui) {
     this.context = context;
     this.differ = differ;
     this.ui = ui;
@@ -61,8 +64,8 @@ public class DiffCodebasesDirective extends Directive {
   protected int performDirectiveBehavior() {
     Codebase codebase1, codebase2;
     try {
-      codebase1 = Parser.parseExpression(codebase1Spec).createCodebase(context.get());
-      codebase2 = Parser.parseExpression(codebase2Spec).createCodebase(context.get());
+      codebase1 = Parser.parseExpression(codebase1Spec).createCodebase(context);
+      codebase2 = Parser.parseExpression(codebase2Spec).createCodebase(context);
     } catch (ParseError e) {
       throw new MoeProblem(e, "Error parsing codebase expression");
     } catch (CodebaseCreationError e) {
@@ -79,8 +82,25 @@ public class DiffCodebasesDirective extends Directive {
     return 0;
   }
 
-  @Override
-  public String getDescription() {
-    return "Prints the diff output between two codebase expressions";
+  /**
+   * A module to supply the directive and a description into maps in the graph.
+   */
+  @dagger.Module
+  public static class Module implements Directive.Module<DiffCodebasesDirective> {
+    private static final String COMMAND = "diff_codebases";
+
+    @Override
+    @Provides(type = MAP)
+    @StringKey(COMMAND)
+    public Directive directive(DiffCodebasesDirective directive) {
+      return directive;
+    }
+
+    @Override
+    @Provides(type = MAP)
+    @StringKey(COMMAND)
+    public String description() {
+      return "Prints the diff output between two codebase expressions";
+    }
   }
 }

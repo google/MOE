@@ -16,6 +16,8 @@
 
 package com.google.devtools.moe.client.directives;
 
+import static dagger.Provides.Type.MAP;
+
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.Ui.Task;
@@ -28,7 +30,8 @@ import com.google.devtools.moe.client.writer.DraftRevision;
 import com.google.devtools.moe.client.writer.Writer;
 import com.google.devtools.moe.client.writer.WritingError;
 
-import dagger.Lazy;
+import dagger.Provides;
+import dagger.mapkeys.StringKey;
 
 import org.kohsuke.args4j.Option;
 
@@ -44,12 +47,12 @@ public class ChangeDirective extends Directive {
   @Option(name = "--destination", required = true, usage = "Expression of destination writer")
   String destination = "";
 
-  private final Lazy<ProjectContext> context;
+  private final ProjectContext context;
   private final Ui ui;
   private final DraftRevision.Factory revisionFactory;
 
   @Inject
-  ChangeDirective(Lazy<ProjectContext> context, Ui ui, DraftRevision.Factory revisionFactory) {
+  ChangeDirective(ProjectContext context, Ui ui, DraftRevision.Factory revisionFactory) {
     this.context = context;
     this.ui = ui;
     this.revisionFactory = revisionFactory;
@@ -66,7 +69,7 @@ public class ChangeDirective extends Directive {
 
     Codebase c;
     try {
-      c = Parser.parseExpression(codebase).createCodebase(context.get());
+      c = Parser.parseExpression(codebase).createCodebase(context);
     } catch (ParseError e) {
       throw new MoeProblem(e, "Error parsing codebase");
     } catch (CodebaseCreationError e) {
@@ -75,7 +78,7 @@ public class ChangeDirective extends Directive {
 
     Writer writer;
     try {
-      writer = Parser.parseRepositoryExpression(destination).createWriter(context.get());
+      writer = Parser.parseRepositoryExpression(destination).createWriter(context);
     } catch (ParseError e) {
       throw new MoeProblem(e, "Error parsing change destination");
     } catch (WritingError e) {
@@ -91,9 +94,26 @@ public class ChangeDirective extends Directive {
     return 0;
   }
 
-  @Override
-  public String getDescription() {
-    return "Creates a (pending) change";
+  /**
+   * A module to supply the directive and a description into maps in the graph.
+   */
+  @dagger.Module
+  public static class Module implements Directive.Module<ChangeDirective> {
+    private static final String COMMAND = "change";
+
+    @Override
+    @Provides(type = MAP)
+    @StringKey(COMMAND)
+    public Directive directive(ChangeDirective directive) {
+      return directive;
+    }
+
+    @Override
+    @Provides(type = MAP)
+    @StringKey(COMMAND)
+    public String description() {
+      return "Creates a (pending) change";
+    }
   }
 
 }

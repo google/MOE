@@ -16,6 +16,8 @@
 
 package com.google.devtools.moe.client.directives;
 
+import static dagger.Provides.Type.MAP;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -54,7 +56,8 @@ import com.google.devtools.moe.client.writer.DraftRevision;
 import com.google.devtools.moe.client.writer.Writer;
 import com.google.devtools.moe.client.writer.WritingError;
 
-import dagger.Lazy;
+import dagger.Provides;
+import dagger.mapkeys.StringKey;
 
 import org.kohsuke.args4j.Option;
 
@@ -93,8 +96,8 @@ public class MigrateBranchDirective extends Directive {
   )
   private String overrideUrl = "";
 
-  private final Lazy<ProjectConfig> config;
-  private final Lazy<ProjectContext> context;
+  private final ProjectConfig config;
+  private final ProjectContext context;
   private final Db.Factory dbFactory;
   private final Repositories repositories;
   private final Ui ui;
@@ -104,8 +107,8 @@ public class MigrateBranchDirective extends Directive {
 
   @Inject
   MigrateBranchDirective(
-      Lazy<ProjectConfig> config,
-      Lazy<ProjectContext> context,
+      ProjectConfig config,
+      ProjectContext context,
       Db.Factory dbFactory,
       Repositories repositories,
       Ui ui,
@@ -156,11 +159,10 @@ public class MigrateBranchDirective extends Directive {
             branchLabel);
 
 
-    RepositoryConfig baseRepoConfig = config.get().getRepositoryConfig(originalFromRepositoryName);
+    RepositoryConfig baseRepoConfig = config.getRepositoryConfig(originalFromRepositoryName);
     RepositoryType baseRepoType = repositories.create(originalFromRepositoryName, baseRepoConfig);
     RepositoryConfig fromRepoConfig =
         config
-            .get()
             .getRepositoryConfig(originalFromRepositoryName)
             .copyWithBranch(branchLabel)
             .copyWithUrl(overrideUrl);
@@ -185,7 +187,7 @@ public class MigrateBranchDirective extends Directive {
     RepositoryExpression toRepoExp = new RepositoryExpression(migrationConfig.getToRepository());
     Writer toWriter;
     try {
-      toWriter = toRepoExp.createWriter(context.get());
+      toWriter = toRepoExp.createWriter(context);
     } catch (WritingError e) {
       throw new MoeProblem(e, "Couldn't create local repo %s: %s", toRepoExp, e.getMessage());
     }
@@ -209,7 +211,7 @@ public class MigrateBranchDirective extends Directive {
       Codebase fromCodebase;
       try {
         String toProjectSpace =
-            config.get().getRepositoryConfig(migration.toRepository()).getProjectSpace();
+            config.getRepositoryConfig(migration.toRepository()).getProjectSpace();
 
         fromCodebase =
             new RepositoryExpression(migration.fromRepository())
@@ -218,13 +220,13 @@ public class MigrateBranchDirective extends Directive {
                 .withReferenceToCodebase(referenceToCodebase)
                 .createCodebase(
                     contextWithForkedRepository(
-                        context.get(), migrationConfig.getFromRepository(), fromRepoType));
+                        context, migrationConfig.getFromRepository(), fromRepoType));
 
       } catch (CodebaseCreationError e) {
         throw new MoeProblem(e.getMessage());
       }
       ScrubberConfig scrubber =
-          config.get().findScrubberConfig(originalFromRepositoryName, migration.toRepository());
+          config.findScrubberConfig(originalFromRepositoryName, migration.toRepository());
 
       dr =
           migrator.migrate(
@@ -294,7 +296,7 @@ public class MigrateBranchDirective extends Directive {
       String overrideUrl, final String fromRepository, final String originalFromRepository) {
 
     List<MigrationConfig> configs =
-        FluentIterable.from(context.get().migrationConfigs().values())
+        FluentIterable.from(context.migrationConfigs().values())
             .filter(
                 new Predicate<MigrationConfig>() {
                   @Override
@@ -329,11 +331,6 @@ public class MigrateBranchDirective extends Directive {
     }
   }
 
-  @Override
-  public String getDescription() {
-    return "Updates database and performs all migrations";
-  }
-
   private List<Migration> findMigrationsBetweenBranches(
       Db db,
       String fromRepoName,
@@ -344,6 +341,7 @@ public class MigrateBranchDirective extends Directive {
     Ui.Task determineMigrationsTask = ui.pushTask("determind migrations", "Determine migrations");
     List<Revision> toMigrate = findDescendantRevisions(fromRevisions, baseRevisions);
     ui.popTask(determineMigrationsTask, "");
+
 
     Result equivMatch = migrator.matchEquivalences(db, baseRevisions, toRepoName);
 
@@ -444,5 +442,27 @@ public class MigrateBranchDirective extends Directive {
             })
         .toList()
         .reverse();
+  }
+
+  /**
+   * A module to supply the directive and a description into maps in the graph.
+   */
+  @dagger.Module
+  public static class Module implements Directive.Module<MigrateBranchDirective> {
+    private static final String COMMAND = "migrate_branch";
+
+    @Override
+    @Provides(type = MAP)
+    @StringKey(COMMAND)
+    public Directive directive(MigrateBranchDirective directive) {
+      return directive;
+    }
+
+    @Override
+    @Provides(type = MAP)
+    @StringKey(COMMAND)
+    public String description() {
+      return "Perform a one-directional merge from a branch onto a target repository.";
+    }
   }
 }

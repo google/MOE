@@ -16,6 +16,8 @@
 
 package com.google.devtools.moe.client.directives;
 
+import static dagger.Provides.Type.MAP;
+
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.migrations.Migrator;
@@ -27,7 +29,8 @@ import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 
-import dagger.Lazy;
+import dagger.Provides;
+import dagger.mapkeys.StringKey;
 
 import org.kohsuke.args4j.Option;
 
@@ -47,12 +50,12 @@ public class DetermineMetadataDirective extends Directive {
   )
   String repositoryExpression = "";
 
-  private final Lazy<ProjectContext> context;
+  private final ProjectContext context;
   private final Ui ui;
   private final Migrator migrator;
 
   @Inject
-  DetermineMetadataDirective(Lazy<ProjectContext> context, Ui ui, Migrator migrator) {
+  DetermineMetadataDirective(ProjectContext context, Ui ui, Migrator migrator) {
     this.context = context;
     this.ui = ui;
     this.migrator = migrator;
@@ -67,16 +70,33 @@ public class DetermineMetadataDirective extends Directive {
       throw new MoeProblem(e, "Couldn't parse " + repositoryExpression);
     }
 
-    List<Revision> revs = Revision.fromRepositoryExpression(repoEx, context.get());
-    RepositoryType repositoryType = context.get().getRepository(repoEx.getRepositoryName());
+    List<Revision> revs = Revision.fromRepositoryExpression(repoEx, context);
+    RepositoryType repositoryType = context.getRepository(repoEx.getRepositoryName());
     RevisionMetadata rm =
         migrator.processMetadata(repositoryType.revisionHistory(), revs, null, null);
     ui.message(rm.toString());
     return 0;
   }
 
-  @Override
-  public String getDescription() {
-    return "Consolidates the metadata for a set of revisions";
+  /**
+   * A module to supply the directive and a description into maps in the graph.
+   */
+  @dagger.Module
+  public static class Module implements Directive.Module<DetermineMetadataDirective> {
+    private static final String COMMAND = "determine_metadata";
+
+    @Override
+    @Provides(type = MAP)
+    @StringKey(COMMAND)
+    public Directive directive(DetermineMetadataDirective directive) {
+      return directive;
+    }
+
+    @Override
+    @Provides(type = MAP)
+    @StringKey(COMMAND)
+    public String description() {
+      return "Consolidates the metadata for a set of revisions";
+    }
   }
 }

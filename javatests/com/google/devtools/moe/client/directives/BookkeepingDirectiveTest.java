@@ -40,7 +40,6 @@ import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
 import com.google.devtools.moe.client.testing.InMemoryFileSystem;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
 import com.google.devtools.moe.client.tools.CodebaseDiffer;
-import com.google.devtools.moe.client.tools.EagerLazy;
 import com.google.devtools.moe.client.tools.FileDifference.ConcreteFileDiffer;
 import com.google.devtools.moe.client.tools.FileDifference.FileDiffer;
 
@@ -122,9 +121,7 @@ public class BookkeepingDirectiveTest extends TestCase {
     Db.Factory dbFactory = new FileDb.Factory(filesystem, GsonModule.provideGson());
     Db.Writer dbWriter = new FileDb.Writer(GsonModule.provideGson(), filesystem);
     BookkeepingDirective d =
-        new BookkeepingDirective(
-            dbFactory,
-            EagerLazy.fromInstance(new Bookkeeper(context, codebaseDiffer, dbWriter, ui)));
+        new BookkeepingDirective(dbFactory, new Bookkeeper(context, codebaseDiffer, dbWriter, ui));
     d.dbLocation = DB_FILE.getAbsolutePath();
 
     expect(
@@ -170,9 +167,7 @@ public class BookkeepingDirectiveTest extends TestCase {
     Db.Factory dbFactory = new FileDb.Factory(filesystem, GsonModule.provideGson());
     Db.Writer dbWriter = new FileDb.Writer(GsonModule.provideGson(), filesystem);
     BookkeepingDirective d =
-        new BookkeepingDirective(
-            dbFactory,
-            EagerLazy.fromInstance(new Bookkeeper(context, codebaseDiffer, dbWriter, ui)));
+        new BookkeepingDirective(dbFactory, new Bookkeeper(context, codebaseDiffer, dbWriter, ui));
     d.dbLocation = DB_FILE.getAbsolutePath();
 
     expectDiffs();
@@ -214,9 +209,7 @@ public class BookkeepingDirectiveTest extends TestCase {
     Db.Factory dbFactory = new FileDb.Factory(filesystem, GsonModule.provideGson());
     Db.Writer dbWriter = new FileDb.Writer(GsonModule.provideGson(), filesystem);
     BookkeepingDirective d =
-        new BookkeepingDirective(
-            dbFactory,
-            EagerLazy.fromInstance(new Bookkeeper(context, codebaseDiffer, dbWriter, ui)));
+        new BookkeepingDirective(dbFactory, new Bookkeeper(context, codebaseDiffer, dbWriter, ui));
     d.dbLocation = DB_FILE.getAbsolutePath();
 
     expectDiffs();

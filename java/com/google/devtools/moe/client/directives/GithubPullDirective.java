@@ -16,6 +16,8 @@
 
 package com.google.devtools.moe.client.directives;
 
+import static dagger.Provides.Type.MAP;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.MoeUserProblem;
@@ -27,7 +29,8 @@ import com.google.devtools.moe.client.github.PullRequestUrl;
 import com.google.devtools.moe.client.project.ProjectConfig;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 
-import dagger.Lazy;
+import dagger.Provides;
+import dagger.mapkeys.StringKey;
 
 import org.kohsuke.args4j.Option;
 
@@ -53,20 +56,18 @@ public class GithubPullDirective extends Directive {
   )
   String url = "";
 
-  private final Lazy<ProjectConfig> config;
+  private final ProjectConfig config;
   private final GithubClient client;
   private final Ui ui;
-  private final Lazy<MigrateBranchDirective> migrateBranchDirective;
+  private final MigrateBranchDirective delegate;
 
+  //@Inject
   GithubPullDirective(
-      Lazy<ProjectConfig> config,
-      Ui ui,
-      GithubClient client,
-      Lazy<MigrateBranchDirective> migrateBranchDirective) {
+      ProjectConfig config, Ui ui, GithubClient client, MigrateBranchDirective delegate) {
     this.config = config;
     this.client = client;
     this.ui = ui;
-    this.migrateBranchDirective = migrateBranchDirective;
+    this.delegate = delegate;
   }
 
   @Override
@@ -99,9 +100,8 @@ public class GithubPullDirective extends Directive {
             metadata.number());
     }
 
-    MigrateBranchDirective delegate = migrateBranchDirective.get();
 
-    String repoConfigName = findRepoConfig(config.get().repositories(), metadata);
+    String repoConfigName = findRepoConfig(config.repositories(), metadata);
     ui.message("Using '%s' as the source repository.", repoConfigName);
     int result =
         delegate.performBranchMigration(
@@ -171,8 +171,39 @@ public class GithubPullDirective extends Directive {
         && matcher.group(2).equals(pullRequestUrl.project());
   }
 
-  @Override
-  public String getDescription() {
-    return "Migrates the branch underlying a github pull request into a configured repository";
+  /**
+   * A module to supply the directive and a description into maps in the graph.
+   *
+   * <p>Note: This module breaks the pattern due to an eclipse bug that generates an empty
+   * dagger factory for this concrete type, when using an
+   * {@literal @}{@link javax.inject.Inject} constructor.
+   */
+  @dagger.Module
+  public static class Module implements Directive.Module<GithubPullDirective> {
+    private static final String COMMAND = "github_pull";
+
+    @Override
+    @Provides(type = MAP)
+    @StringKey(COMMAND)
+    public Directive directive(GithubPullDirective directive) {
+      return directive;
+    }
+
+    // TODO(cgruber,b/27699944) Figure out why dagger breaks in eclipse when using @Inject
+    @Provides
+    static GithubPullDirective githubPull(
+        ProjectConfig config,
+        Ui ui,
+        GithubClient client,
+        MigrateBranchDirective migrateBranchDirective) {
+      return new GithubPullDirective(config, ui, client, migrateBranchDirective);
+    }
+
+    @Override
+    @Provides(type = MAP)
+    @StringKey(COMMAND)
+    public String description() {
+      return "Migrates the branch underlying a github pull request into a configured repository";
+    }
   }
 }

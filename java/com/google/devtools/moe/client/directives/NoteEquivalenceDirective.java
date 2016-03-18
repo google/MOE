@@ -16,6 +16,8 @@
 
 package com.google.devtools.moe.client.directives;
 
+import static dagger.Provides.Type.MAP;
+
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.database.Db;
@@ -27,7 +29,8 @@ import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.repositories.Revision;
 
-import dagger.Lazy;
+import dagger.Provides;
+import dagger.mapkeys.StringKey;
 
 import org.kohsuke.args4j.Option;
 
@@ -55,14 +58,14 @@ public class NoteEquivalenceDirective extends Directive {
   )
   String repo2 = "";
 
-  private final Lazy<ProjectContext> context;
+  private final ProjectContext context;
   private final Db.Factory dbFactory;
   private final Db.Writer dbWriter;
   private final Ui ui;
 
   @Inject
   NoteEquivalenceDirective(
-      Lazy<ProjectContext> context, Db.Factory dbFactory, Db.Writer dbWriter, Ui ui) {
+      ProjectContext context, Db.Factory dbFactory, Db.Writer dbWriter, Ui ui) {
     this.context = context;
     this.dbFactory = dbFactory;
     this.dbWriter = dbWriter;
@@ -87,8 +90,8 @@ public class NoteEquivalenceDirective extends Directive {
 
     // Sanity check: make sure the given repos and revisions exist.
     // TODO(cgruber): directly inject map of repositories (or error-checking wrapper)
-    RepositoryType repo1 = context.get().getRepository(repoEx1.getRepositoryName());
-    RepositoryType repo2 = context.get().getRepository(repoEx2.getRepositoryName());
+    RepositoryType repo1 = context.getRepository(repoEx1.getRepositoryName());
+    RepositoryType repo2 = context.getRepository(repoEx2.getRepositoryName());
 
     Revision realRev1 = repo1.revisionHistory().findHighestRevision(repoEx1.getOption("revision"));
     Revision realRev2 = repo2.revisionHistory().findHighestRevision(repoEx2.getOption("revision"));
@@ -102,8 +105,25 @@ public class NoteEquivalenceDirective extends Directive {
     return 0;
   }
 
-  @Override
-  public String getDescription() {
-    return "Notes a new equivalence in a database file.";
+  /**
+   * A module to supply the directive and a description into maps in the graph.
+   */
+  @dagger.Module
+  public static class Module implements Directive.Module<NoteEquivalenceDirective> {
+    private static final String COMMAND = "note_equivalence";
+
+    @Override
+    @Provides(type = MAP)
+    @StringKey(COMMAND)
+    public Directive directive(NoteEquivalenceDirective directive) {
+      return directive;
+    }
+
+    @Override
+    @Provides(type = MAP)
+    @StringKey(COMMAND)
+    public String description() {
+      return "Notes a new equivalence in the database file.";
+    }
   }
 }

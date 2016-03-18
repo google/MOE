@@ -27,7 +27,6 @@ import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
-import com.google.devtools.moe.client.tools.EagerLazy;
 import com.google.devtools.moe.client.writer.DraftRevision;
 
 import junit.framework.TestCase;
@@ -52,8 +51,7 @@ public class ChangeDirectiveTest extends TestCase {
         "moe_config.txt",
         "{\"name\": \"foo\", \"repositories\": {\"internal\": {\"type\": \"dummy\"}}}");
     ProjectContext context = contextFactory.create("moe_config.txt");
-    ChangeDirective d =
-        new ChangeDirective(EagerLazy.fromInstance(context), ui, new DraftRevision.Factory(ui));
+    ChangeDirective d = new ChangeDirective(context, ui, new DraftRevision.Factory(ui));
     d.codebase = "internal";
     d.destination = "internal";
     assertEquals(0, d.perform());

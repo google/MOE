@@ -16,10 +16,15 @@
 
 package com.google.devtools.moe.client.directives;
 
+
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.devtools.moe.client.MoeUserProblem;
 import com.google.devtools.moe.client.Ui;
 
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.TreeMap;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -30,16 +35,30 @@ import javax.inject.Qualifier;
  * Manages the collection of available directives.
  */
 public class Directives {
+  private static final String INVALID_BINDING_FMT =
+      "Invalid programming state: every command must have both a description and a directive:\n"
+          + "\tMissing Descriptions for: %s\n"
+          + "\tMissing Directives for: %s\n";
 
   /** JSR-330 qualifier to distinguish a binding for the String representing the selection */
   @Qualifier
   public @interface SelectedDirective {}
 
+  private final Map<String, String> descriptions;
   private final Map<String, Provider<Directive>> directives;
   private final String directiveName;
 
   @Inject
-  Directives(Map<String, Provider<Directive>> directives, @SelectedDirective String directiveName) {
+  Directives(
+      Map<String, String> descriptions,
+      Map<String, Provider<Directive>> directives,
+      @SelectedDirective String directiveName) {
+    checkState(
+        descriptions.keySet().equals(directives.keySet()),
+        INVALID_BINDING_FMT,
+        new LinkedHashSet<>(directives.keySet()).removeAll(descriptions.keySet()),
+        new LinkedHashSet<>(descriptions.keySet()).removeAll(directives.keySet()));
+    this.descriptions = descriptions;
     this.directives = directives;
     this.directiveName = directiveName;
   }
@@ -59,11 +78,34 @@ public class Directives {
     public void reportTo(Ui messenger) {
       // Bad input, print all possible directives
       messenger.message(directiveName + " is not a valid directive. Must be one of: ");
-
-      for (Map.Entry<String, Provider<Directive>> entry : directives.entrySet()) {
-        // TODO(cgruber): make this a table map so this isn't needed.
-        messenger.message("* " + entry.getKey() + ": " + entry.getValue().get().getDescription());
+      for (Map.Entry<String, String> entry : new TreeMap<>(descriptions).entrySet()) {
+        messenger.message("* " + entry.getKey() + ": " + entry.getValue());
       }
     }
   }
+
+  /**
+   * A module to install the available directives.
+   */
+  @dagger.Module(
+    includes = {
+      BookkeepingDirective.Module.class,
+      ChangeDirective.Module.class,
+      CheckConfigDirective.Module.class,
+      CreateCodebaseDirective.Module.class,
+      DetermineMetadataDirective.Module.class,
+      DetermineMigrationsDirective.Module.class,
+      DiffCodebasesDirective.Module.class,
+      FindEquivalenceDirective.Module.class,
+      GithubPullDirective.Module.class,
+      HighestRevisionDirective.Module.class,
+      LastEquivalenceDirective.Module.class,
+      MagicDirective.Module.class,
+      MergeCodebasesDirective.Module.class,
+      MigrateBranchDirective.Module.class,
+      NoteEquivalenceDirective.Module.class,
+      OneMigrationDirective.Module.class,
+    }
+  )
+  public static class Module {}
 }

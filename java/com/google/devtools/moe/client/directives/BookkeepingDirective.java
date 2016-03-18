@@ -16,10 +16,13 @@
 
 package com.google.devtools.moe.client.directives;
 
+import static dagger.Provides.Type.MAP;
+
 import com.google.devtools.moe.client.database.Bookkeeper;
 import com.google.devtools.moe.client.database.Db;
 
-import dagger.Lazy;
+import dagger.Provides;
+import dagger.mapkeys.StringKey;
 
 import org.kohsuke.args4j.Option;
 
@@ -33,10 +36,10 @@ public class BookkeepingDirective extends Directive {
   String dbLocation = "";
 
   private final Db.Factory dbFactory;
-  private final Lazy<Bookkeeper> bookkeeper;
+  private final Bookkeeper bookkeeper;
 
   @Inject
-  BookkeepingDirective(Db.Factory dbFactory, Lazy<Bookkeeper> bookkeeper) {
+  BookkeepingDirective(Db.Factory dbFactory, Bookkeeper bookkeeper) {
     this.dbFactory = dbFactory;
     this.bookkeeper = bookkeeper;
   }
@@ -44,11 +47,28 @@ public class BookkeepingDirective extends Directive {
   @Override
   protected int performDirectiveBehavior() {
     Db db = dbFactory.load(dbLocation);
-    return bookkeeper.get().bookkeep(db);
+    return bookkeeper.bookkeep(db);
   }
 
-  @Override
-  public String getDescription() {
-    return "Updates the database";
+  /**
+   * A module to supply the directive and a description into maps in the graph.
+   */
+  @dagger.Module
+  public static class Module implements Directive.Module<BookkeepingDirective> {
+    private static final String COMMAND = "bookkeep";
+
+    @Override
+    @Provides(type = MAP)
+    @StringKey(COMMAND)
+    public Directive directive(BookkeepingDirective directive) {
+      return directive;
+    }
+
+    @Override
+    @Provides(type = MAP)
+    @StringKey(COMMAND)
+    public String description() {
+      return "Updates the database";
+    }
   }
 }

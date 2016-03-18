@@ -16,6 +16,8 @@
 
 package com.google.devtools.moe.client.directives;
 
+import static dagger.Provides.Type.MAP;
+
 import com.google.common.base.Joiner;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
@@ -31,7 +33,8 @@ import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
 import com.google.devtools.moe.client.repositories.RevisionHistory.SearchType;
 
-import dagger.Lazy;
+import dagger.Provides;
+import dagger.mapkeys.StringKey;
 
 import org.kohsuke.args4j.Option;
 
@@ -60,12 +63,12 @@ public class LastEquivalenceDirective extends Directive {
   )
   String withRepository = "";
 
-  private final Lazy<ProjectContext> context;
+  private final ProjectContext context;
   private final Db.Factory dbFactory;
   private final Ui ui;
 
   @Inject
-  LastEquivalenceDirective(Lazy<ProjectContext> context, Db.Factory dbFactory, Ui ui) {
+  LastEquivalenceDirective(ProjectContext context, Db.Factory dbFactory, Ui ui) {
     this.context = context;
     this.dbFactory = dbFactory;
     this.ui = ui;
@@ -83,7 +86,7 @@ public class LastEquivalenceDirective extends Directive {
     }
 
     // TODO(cgruber) use repository map directly.
-    RepositoryType r = context.get().getRepository(repoEx.getRepositoryName());
+    RepositoryType r = context.getRepository(repoEx.getRepositoryName());
 
     RevisionHistory rh = r.revisionHistory();
     if (rh == null) {
@@ -109,8 +112,25 @@ public class LastEquivalenceDirective extends Directive {
     return 0;
   }
 
-  @Override
-  public String getDescription() {
-    return "Finds the last equivalence";
+  /**
+   * A module to supply the directive and a description into maps in the graph.
+   */
+  @dagger.Module
+  public static class Module implements Directive.Module<LastEquivalenceDirective> {
+    private static final String COMMAND = "last_equivalence";
+
+    @Override
+    @Provides(type = MAP)
+    @StringKey(COMMAND)
+    public Directive directive(LastEquivalenceDirective directive) {
+      return directive;
+    }
+
+    @Override
+    @Provides(type = MAP)
+    @StringKey(COMMAND)
+    public String description() {
+      return "Finds the last known equivalence between two repositories";
+    }
   }
 }

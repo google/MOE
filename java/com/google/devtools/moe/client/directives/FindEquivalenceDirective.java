@@ -16,6 +16,8 @@
 
 package com.google.devtools.moe.client.directives;
 
+import static dagger.Provides.Type.MAP;
+
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.database.Db;
@@ -25,7 +27,8 @@ import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.Revision;
 
-import dagger.Lazy;
+import dagger.Provides;
+import dagger.mapkeys.StringKey;
 
 import org.kohsuke.args4j.Option;
 
@@ -58,12 +61,12 @@ public class FindEquivalenceDirective extends Directive {
   )
   String inRepository = "";
 
-  private final Lazy<ProjectContext> context;
+  private final ProjectContext context;
   private final Db.Factory dbFactory;
   private final Ui ui;
 
   @Inject
-  FindEquivalenceDirective(Lazy<ProjectContext> context, Db.Factory dbFactory, Ui ui) {
+  FindEquivalenceDirective(ProjectContext context, Db.Factory dbFactory, Ui ui) {
     this.context = context;
     this.dbFactory = dbFactory;
     this.ui = ui;
@@ -75,7 +78,7 @@ public class FindEquivalenceDirective extends Directive {
 
     try {
       RepositoryExpression repoEx = Parser.parseRepositoryExpression(fromRepository);
-      List<Revision> revs = Revision.fromRepositoryExpression(repoEx, context.get());
+      List<Revision> revs = Revision.fromRepositoryExpression(repoEx, context);
       printEquivalences(revs, inRepository, db);
       return 0;
     } catch (ParseError e) {
@@ -113,9 +116,25 @@ public class FindEquivalenceDirective extends Directive {
     }
   }
 
+  /**
+   * A module to supply the directive and a description into maps in the graph.
+   */
+  @dagger.Module
+  public static class Module implements Directive.Module<FindEquivalenceDirective> {
+    private static final String COMMAND = "find_equivalence";
 
-  @Override
-  public String getDescription() {
-    return "Finds revisions in one repository that are equivalent to a given revision in another";
+    @Override
+    @Provides(type = MAP)
+    @StringKey(COMMAND)
+    public Directive directive(FindEquivalenceDirective directive) {
+      return directive;
+    }
+
+    @Override
+    @Provides(type = MAP)
+    @StringKey(COMMAND)
+    public String description() {
+      return "Finds revisions in one repository that are equivalent to a given revision in another";
+    }
   }
 }

@@ -16,6 +16,8 @@
 
 package com.google.devtools.moe.client.directives;
 
+import static dagger.Provides.Type.MAP;
+
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.MoeProblem;
@@ -28,7 +30,8 @@ import com.google.devtools.moe.client.parser.Parser.ParseError;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.tools.FileDifference.FileDiffer;
 
-import dagger.Lazy;
+import dagger.Provides;
+import dagger.mapkeys.StringKey;
 
 import org.kohsuke.args4j.Option;
 
@@ -59,7 +62,7 @@ public class MergeCodebasesDirective extends Directive {
   )
   String destinationExpression = "";
 
-  private final Lazy<ProjectContext> context;
+  private final ProjectContext context;
   private final FileDiffer differ;
   private final Ui ui;
   private final FileSystem filesystem;
@@ -67,11 +70,7 @@ public class MergeCodebasesDirective extends Directive {
 
   @Inject
   MergeCodebasesDirective(
-      Lazy<ProjectContext> context,
-      FileDiffer differ,
-      Ui ui,
-      FileSystem filesystem,
-      CommandRunner cmd) {
+      ProjectContext context, FileDiffer differ, Ui ui, FileSystem filesystem, CommandRunner cmd) {
     this.context = context;
     this.differ = differ;
     this.ui = ui;
@@ -83,10 +82,9 @@ public class MergeCodebasesDirective extends Directive {
   protected int performDirectiveBehavior() {
     Codebase originalCodebase, destinationCodebase, modifiedCodebase;
     try {
-      originalCodebase = Parser.parseExpression(originalExpression).createCodebase(context.get());
-      modifiedCodebase = Parser.parseExpression(modifiedExpression).createCodebase(context.get());
-      destinationCodebase =
-          Parser.parseExpression(destinationExpression).createCodebase(context.get());
+      originalCodebase = Parser.parseExpression(originalExpression).createCodebase(context);
+      modifiedCodebase = Parser.parseExpression(modifiedExpression).createCodebase(context);
+      destinationCodebase = Parser.parseExpression(destinationExpression).createCodebase(context);
     } catch (ParseError e) {
       throw new MoeProblem(e, "Error parsing");
     } catch (CodebaseCreationError e) {
@@ -98,8 +96,25 @@ public class MergeCodebasesDirective extends Directive {
     return 0;
   }
 
-  @Override
-  public String getDescription() {
-    return "Merges three codebases into a new codebase";
+  /**
+   * A module to supply the directive and a description into maps in the graph.
+   */
+  @dagger.Module
+  public static class Module implements Directive.Module<MergeCodebasesDirective> {
+    private static final String COMMAND = "merge_codebases";
+
+    @Override
+    @Provides(type = MAP)
+    @StringKey(COMMAND)
+    public Directive directive(MergeCodebasesDirective directive) {
+      return directive;
+    }
+
+    @Override
+    @Provides(type = MAP)
+    @StringKey(COMMAND)
+    public String description() {
+      return "Merges three codebases into a new codebase";
+    }
   }
 }

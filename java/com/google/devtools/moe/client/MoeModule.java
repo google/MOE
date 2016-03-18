@@ -17,7 +17,7 @@ package com.google.devtools.moe.client;
 
 import com.google.devtools.moe.client.Ui.UiModule;
 import com.google.devtools.moe.client.database.FileDb;
-import com.google.devtools.moe.client.directives.DirectivesModule;
+import com.google.devtools.moe.client.directives.Directives;
 import com.google.devtools.moe.client.gson.GsonModule;
 import com.google.devtools.moe.client.options.OptionsModule;
 import com.google.devtools.moe.client.options.OptionsModule.Argument;
@@ -45,7 +45,7 @@ import javax.inject.Singleton;
   includes = {
     Repositories.Defaults.class,
     OptionsModule.class,
-    DirectivesModule.class,
+    Directives.Module.class,
     FileDb.Module.class,
     GsonModule.class,
     UiModule.class,

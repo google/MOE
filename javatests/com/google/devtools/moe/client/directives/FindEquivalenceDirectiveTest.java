@@ -28,7 +28,6 @@ import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.testing.DummyDb;
 import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
-import com.google.devtools.moe.client.tools.EagerLazy;
 
 import junit.framework.TestCase;
 
@@ -49,8 +48,7 @@ public class FindEquivalenceDirectiveTest extends TestCase {
         "moe_config.txt",
         "{\"name\": \"test\",\"repositories\": {\"internal\": {\"type\": \"dummy\"}}}");
     ProjectContext context = contextFactory.create("moe_config.txt");
-    FindEquivalenceDirective d =
-        new FindEquivalenceDirective(EagerLazy.fromInstance(context), dbFactory, ui);
+    FindEquivalenceDirective d = new FindEquivalenceDirective(context, dbFactory, ui);
     d.dbLocation = "dummy";
     d.fromRepository = "internal(revision=1)";
     d.inRepository = "public";
