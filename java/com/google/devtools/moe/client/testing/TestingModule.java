@@ -18,6 +18,7 @@ package com.google.devtools.moe.client.testing;
 import static dagger.Provides.Type.SET;
 
 import com.google.devtools.moe.client.Ui.UiModule;
+import com.google.devtools.moe.client.options.OptionsModule.Flag;
 import com.google.devtools.moe.client.project.ProjectContextFactory;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.tools.FileDifference.ConcreteFileDiffer;
@@ -31,23 +32,35 @@ import javax.inject.Singleton;
 /**
  * A simple Dagger module to provide some nearly-universally-used in-memory test fakes.
  */
-@Module(includes = UiModule.class)
+@Module(includes = {UiModule.class, TestingModule.DebugModule.class})
 public class TestingModule {
 
   @Provides
   @Singleton
-  public ProjectContextFactory factory(InMemoryProjectContextFactory factory) {
+  static ProjectContextFactory factory(InMemoryProjectContextFactory factory) {
     return factory;
   }
 
   @Provides
   @Singleton
-  FileDiffer fileDiffer(ConcreteFileDiffer cfd) {
+  static FileDiffer fileDiffer(ConcreteFileDiffer cfd) {
     return cfd;
   }
 
   @Provides(type = SET)
-  RepositoryType.Factory dummyRepository(DummyRepositoryFactory implementation) {
+  static RepositoryType.Factory dummyRepository(DummyRepositoryFactory implementation) {
     return implementation;
+  }
+
+  /**
+   * Module to supply debug flags into the testing graph.
+   */
+  @Module
+  public static class DebugModule {
+    @Provides
+    @Flag("trace")
+    static boolean trace() {
+      return false;
+    }
   }
 }

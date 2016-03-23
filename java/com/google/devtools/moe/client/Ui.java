@@ -22,8 +22,12 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.devtools.moe.client.FileSystem.Lifetime;
+import com.google.devtools.moe.client.options.OptionsModule.Flag;
 
 import dagger.Provides;
+
+import org.joda.time.DateTime;
+import org.joda.time.Duration;
 
 import java.io.File;
 import java.io.IOException;
@@ -50,6 +54,7 @@ public class Ui {
 
   private final PrintStream out;
   private final Deque<Task> stack = new ArrayDeque<Task>();
+  private final boolean trace;
 
   // We store the task that is the current output, if any, so that we can special case a Task that
   // is popped right after it is pushed. In this case, we can output: "Doing...Done" on one line.
@@ -58,13 +63,18 @@ public class Ui {
   @Nullable //TODO(cgruber): Make this not nullable (No-Op filesystem for testing perhaps?)
   protected final FileSystem fileSystem;
 
-  @Inject
   public Ui(OutputStream out, @Nullable FileSystem fileSystem) {
+    this(out, fileSystem, false);
+  }
+
+  @Inject
+  public Ui(OutputStream out, @Nullable FileSystem fileSystem, @Flag("trace") boolean trace) {
     try {
       this.out = new PrintStream(out, /*autoFlush*/ true, "UTF-8");
     } catch (UnsupportedEncodingException e) {
       throw new MoeProblem(e, "Invalid character set.");
     }
+    this.trace = trace;
     this.fileSystem = fileSystem;
   }
 
@@ -93,6 +103,7 @@ public class Ui {
   public static class Task {
     public final String taskName;
     public final String description;
+    public final DateTime start = DateTime.now();
 
     public Task(String taskName, String description) {
       this.taskName = taskName;
@@ -109,6 +120,10 @@ public class Ui {
     public String toString() {
       return taskName;
     }
+
+    public Duration duration() {
+      return new Duration(start, DateTime.now());
+    }
   }
 
   /**
@@ -117,19 +132,19 @@ public class Ui {
    * <p>MOE's UI operates on a stack model. Tasks get pushed onto the stack and then what is popped
    * must be the top task on the stack, allowing nesting only.
    *
-   * @param task  the name of the task; should be sensical to a computer
+   * @param taskName  the name of the task; should be sensical to a computer
    * @param descriptionFormat  a String.format() template for the description of what MOE is
    *     about to do, suitable for a user.
    * @param args  arguments which will be used to format the descriptionFormat template
    *
    * @returns the Task created
    */
-  public Task pushTask(String task, String descriptionFormat, Object... args) {
+  public Task pushTask(String taskName, String descriptionFormat, Object... args) {
     clearOutput();
     String description = String.format(descriptionFormat, args);
     String indented = indent(description + "... ");
     out.print(indented);
-    Task t = new Task(task, descriptionFormat, args);
+    Task t = new Task(taskName, descriptionFormat, args);
     stack.push(t);
     currentOutput = t;
     return t;
@@ -164,6 +179,9 @@ public class Ui {
 
     if (result.isEmpty()) {
       result = "Done";
+    }
+    if (trace) {
+      result = result + " [" + task.duration().getMillis() + "ms]";
     }
     if (currentOutput == task) {
       // The last thing we printed was starting this task

@@ -17,6 +17,7 @@ package com.google.devtools.moe.client.options;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.directives.Directives.SelectedDirective;
 
 import dagger.Provides;
@@ -117,12 +118,33 @@ public class OptionsModule {
     return processedArgs.toArray(new String[args.size()]);
   }
 
+  @Provides
+  @Singleton
+  @Flag("trace")
+  static boolean traceFlagged(String... preprocessedArgs) {
+    // Note, this is a stand-in to permit injection of this flag prior to the move to JCommander.
+    // Ultimately this will be processed via the options parser instead of hand-parsed, but in the
+    // short-term the global flags need to be pre-processed so we don't require parsing all of the
+    // things before we even know what directive we're using, which args4j doesn't support.
+    // TODO(cgruber): Don't parse this manually once JCommander has replaced args4j.
+    return ImmutableSet.copyOf(preprocessedArgs).contains("--trace");
+  }
+
   /**
    * A JSR-330 {@link Qualifier} annotation to distinguish injected argument values from other
    * injected {@link String} values.
    */
   @Qualifier
   public @interface Argument {
+    String value();
+  }
+
+  /**
+   * A JSR-330 {@link Qualifier} annotation to distinguish injected flag values from other
+   * injected {@link String} values.
+   */
+  @Qualifier
+  public @interface Flag {
     String value();
   }
 }

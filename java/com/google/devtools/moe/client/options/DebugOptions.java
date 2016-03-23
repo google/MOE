@@ -24,7 +24,14 @@ public class DebugOptions {
   @Option(name = "--debug", handler = BooleanOptionHandler.class, usage = "Logs debug information.")
   boolean debug = false;
 
+  @Option(name = "--trace", handler = BooleanOptionHandler.class, usage = "Logs task timing.")
+  boolean trace = false;
+
   public boolean debug() {
     return debug;
+  }
+
+  public boolean trace() {
+    return trace;
   }
 }

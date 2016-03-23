@@ -16,6 +16,8 @@
 
 package com.google.devtools.moe.client;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import junit.framework.TestCase;
 
 import java.io.ByteArrayOutputStream;
@@ -26,7 +28,7 @@ public class TaskTest extends TestCase {
     Ui ui = new Ui(new ByteArrayOutputStream(), new SystemFileSystem());
     Ui.Task t = ui.pushTask("foo", "bar");
     ui.popTask(t, "");
-    assertEquals("bar", t.description);
+    assertThat(t.description).isEqualTo("bar");
 
     t = ui.pushTask("foo", "bar");
     try {
@@ -35,5 +37,21 @@ public class TaskTest extends TestCase {
       return;
     }
     fail("Expected failure");
+  }
+
+  public void taskTiming_withDebug() throws Exception {
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    Ui ui = new Ui(baos, new SystemFileSystem(), true);
+    Ui.Task t = ui.pushTask("foo", "bar");
+    ui.popTask(t, "");
+    assertThat(baos.toString()).containsMatch("\\[[0-9]*ms\\]");
+  }
+
+  public void taskTiming_WithoutDebug() throws Exception {
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    Ui ui = new Ui(baos, new SystemFileSystem(), false);
+    Ui.Task t = ui.pushTask("foo", "bar");
+    ui.popTask(t, "");
+    assertThat(baos.toString()).doesNotContainMatch("\\[[0-9]*ms\\]");
   }
 }
