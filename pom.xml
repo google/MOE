@@ -48,7 +48,7 @@
     </dependency>
     <dependency>
       <groupId>com.google.code.findbugs</groupId>
-      <artifactId>annotations</artifactId>
+      <artifactId>jsr305</artifactId>
       <version>3.0.1</version>
       <optional>true</optional>
     </dependency>
@@ -120,6 +120,12 @@
                   <mainClass>com.google.devtools.moe.client.Moe</mainClass>
                 </transformer>
               </transformers>
+             <artifactSet>
+                <excludes>
+                  <exclude>*:dagger-compiler</exclude>
+                  <exclude>*:auto-value</exclude>
+                </excludes>
+             </artifactSet>
             </configuration>
           </execution>
         </executions>
