@@ -12,7 +12,7 @@
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-      <version>18.0</version>
+      <version>19.0</version>
     </dependency>
     <dependency>
       <groupId>com.google.code.gson</groupId>
@@ -25,26 +25,31 @@
       <version>2.5.0</version>
     </dependency>
     <dependency>
+      <groupId>com.mikesamuel</groupId>
+      <artifactId>json-sanitizer</artifactId>
+      <version>1.1</version>
+    </dependency>
+    <dependency>
       <groupId>com.google.dagger</groupId>
       <artifactId>dagger</artifactId>
-      <version>2.0.1</version>
+      <version>2.1</version>
     </dependency>
     <dependency>
       <groupId>com.google.dagger</groupId>
       <artifactId>dagger-compiler</artifactId>
-      <version>2.0.1</version>
+      <version>2.1</version>
       <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>com.google.auto.value</groupId>
       <artifactId>auto-value</artifactId>
-      <version>1.1</version>
+      <version>1.2-rc1</version>
       <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>com.google.code.findbugs</groupId>
       <artifactId>annotations</artifactId>
-      <version>3.0.0</version>
+      <version>3.0.1</version>
       <optional>true</optional>
     </dependency>
     <dependency>
@@ -56,13 +61,13 @@
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>4.12</version>
-      <!-- Should be test scoped, once -->
+      <!-- Should be test scoped, once the testing library is extracted -->
       <!-- scope>test</scope -->
     </dependency>
     <dependency>
       <groupId>com.google.truth</groupId>
       <artifactId>truth</artifactId>
-      <version>0.27</version>
+      <version>0.28</version>
       <scope>test</scope>
     </dependency>
    <dependency>
