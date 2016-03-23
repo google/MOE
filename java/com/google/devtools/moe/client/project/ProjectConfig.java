@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.gson.AutoValueGsonAdapter;
 import com.google.devtools.moe.client.gson.GsonModule;
+import com.google.devtools.moe.client.gson.JsonStructureChecker;
 import com.google.devtools.moe.client.migrations.MigrationConfig;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;

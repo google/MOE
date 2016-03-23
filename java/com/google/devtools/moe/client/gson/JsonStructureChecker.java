@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.google.devtools.moe.client.project;
+package com.google.devtools.moe.client.gson;
 
 import com.google.common.base.Joiner;
-import com.google.common.escape.SourceCodeEscapers;
+import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -31,11 +31,11 @@ import java.util.Map;
 /**
  * Checks that two GSON JsonElements are structurally equivalent.
  */
-final class JsonStructureChecker {
+public final class JsonStructureChecker {
   /** property name chain leading to the current element being processed. */
   private final Deque<String> keys = new ArrayDeque<>();
 
-  static void requireSimilar(JsonElement a, JsonElement b) {
+  public static void requireSimilar(JsonElement a, JsonElement b) {
     new JsonStructureChecker().requireSimilarNoKey(a, b);
   }
 
@@ -98,7 +98,7 @@ final class JsonStructureChecker {
     if (isIdentifierName(k)) {
       humanReadableKey = "." + k;
     } else {
-      humanReadableKey = "[\"" + SourceCodeEscapers.javascriptEscaper().escape(k) + "\"]";
+      humanReadableKey = "[\"" + JavascriptEscaper.escape(k) + "\"]";
     }
     keys.add(humanReadableKey);
   }
