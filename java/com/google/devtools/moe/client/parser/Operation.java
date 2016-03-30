@@ -39,9 +39,11 @@ public class Operation {
 
   @Override
   public boolean equals(Object o) {
-    if (!(o instanceof Operation)) {
-      return false;
-    }
-    return toString().equals(o.toString());
+    return o instanceof Operation && toString().equals(o.toString());
+  }
+
+  @Override
+  public int hashCode() {
+    return toString().hashCode();
   }
 }
