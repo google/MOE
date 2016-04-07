@@ -11,10 +11,14 @@ before_install:
   - export M2_HOME=$PWD/apache-maven-3.1.1
   - export PATH=$M2_HOME/bin:$PATH
   - mvn --version
+  - pip install codecov
 
 install: mvn -P!standard-with-extra-repos -U install clean --fail-never --quiet -DskipTests=true -Dinvoker.skip=true
 
 script: mvn -P!standard-with-extra-repos -U verify --fail-at-end -Dsource.skip=true -Dmaven.javadoc.skip=true
+
+after_success:
+  - codecov
 
 env:
   global:
