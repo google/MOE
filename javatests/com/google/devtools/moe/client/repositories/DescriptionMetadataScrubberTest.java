@@ -24,14 +24,17 @@ import com.google.common.collect.ImmutableList;
 import junit.framework.TestCase;
 
 import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
 
 public class DescriptionMetadataScrubberTest extends TestCase {
 
-  private static final RevisionMetadata REVISION_METADATA =
+    private static final DateTime DATE_TIME = new DateTime(1L);
+
+    private static final RevisionMetadata REVISION_METADATA =
       new RevisionMetadata(
           "commit_number",
           "author@google.com",
-          new DateTime(1L),
+          DATE_TIME,
           "some changes",
           ImmutableList.of(
               Revision.create("parentId1", "repo"), Revision.create("parentId2", "repo")));
@@ -41,7 +44,7 @@ public class DescriptionMetadataScrubberTest extends TestCase {
         new RevisionMetadata(
             "commit_number",
             "author@google.com",
-            new DateTime(1L),
+            DATE_TIME,
             "some changes!!!",
             ImmutableList.of(
                 Revision.create("parentId1", "repo"), Revision.create("parentId2", "repo")));
@@ -60,12 +63,13 @@ public class DescriptionMetadataScrubberTest extends TestCase {
   }
 
   public void testVariousScrubbingFormats() {
-    assertFormatResults("{description} on {date}", "some changes on 1969/12/31");
+    String date = DateTimeFormat.forPattern("yyyy/MM/dd").print(DATE_TIME);
+    assertFormatResults("{description} on {date}", "some changes on " + date);
     assertFormatResults(
         "{description} on {date}\nby: {author}",
-        "some changes on 1969/12/31\nby: author@google.com");
+        "some changes on " + date + "\nby: author@google.com");
     assertFormatResults(
-        "{date} saw the birth of {id}", "1969/12/31 saw the birth of commit_number");
+        "{date} saw the birth of {id}", date + " saw the birth of commit_number");
     assertFormatResults("my parents are ({parents})", "my parents are (parentId1, parentId2)");
   }
 
