@@ -75,7 +75,7 @@ public class RevisionMetadataTest extends TestCase {
             .id("id1, id2")
             .author("auth1, auth2")
             .date(new DateTime(2L))
-            .description("description1\n-------------\ndescription2")
+            .description("description1\n\n-------------\ndescription2")
             .withParents(Revision.create("revId1", "repo"), Revision.create("revId2", "repo"))
             .build();
 
@@ -108,8 +108,8 @@ public class RevisionMetadataTest extends TestCase {
             .author("auth1, auth2")
             .date(new DateTime(2L))
             .description(
-                "description1\n-------------\ndescription2"
-                    + "\n-------------\nCreated by MOE: https://github.com/google/moe\n"
+                "description1\n\n-------------\ndescription2"
+                    + "\n\n-------------\nCreated by MOE: https://github.com/google/moe\n"
                     + "MOE_MIGRATED_REVID="
                     + migrationFromRev.revId())
             .withParents(Revision.create("revId1", "repo"), Revision.create("revId2", "repo"))

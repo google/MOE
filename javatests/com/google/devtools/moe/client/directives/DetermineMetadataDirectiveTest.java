@@ -61,17 +61,17 @@ public class DetermineMetadataDirectiveTest extends TestCase {
             context, ui, new Migrator(new DraftRevision.Factory(ui), NO_SCRUBBERS, ui, null));
     d.repositoryExpression = "internal(revision=\"1,2\")";
     assertEquals(0, d.perform());
-    RevisionMetadata rm =
+    RevisionMetadata expected =
         RevisionMetadata.builder()
             .id("1, 2")
             .author("author, author")
             .date(new DateTime(1L))
-            .description("description\n-------------\ndescription")
+            .description("description\n\n-------------\ndescription")
             .withParents(
                 Revision.create("parent", "internal"), Revision.create("parent", "internal"))
             .build();
 
-    assertThat(stream.toString().trim()).isEqualTo(rm.toString().trim());
+    assertThat(stream.toString().trim()).isEqualTo(expected.toString().trim());
   }
 
   /**

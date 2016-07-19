@@ -173,7 +173,7 @@ public abstract class RevisionMetadata {
         .id(Joiner.on(", ").join(idBuilder.build()))
         .author(Joiner.on(", ").join(authorBuilder.build()))
         .date(newDate)
-        .description(Joiner.on("\n-------------\n").join(descBuilder.build()))
+        .description(Joiner.on("\n\n-------------\n").join(descBuilder.build()))
         .build();
   }
 }
