@@ -207,7 +207,7 @@ public class MigrateBranchDirective extends Directive {
                         context, migrationConfig.getFromRepository(), fromRepoType));
 
       } catch (CodebaseCreationError e) {
-        throw new MoeProblem(e.getMessage());
+        throw new MoeProblem("%s", e.getMessage());
       }
       ScrubberConfig scrubber =
           config.findScrubberConfig(originalFromRepositoryName, migration.toRepository());

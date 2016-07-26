@@ -135,7 +135,7 @@ public class FileDb implements Db, HasDbStorage {
           DbStorage storage = ((HasDbStorage) db).getStorage();
           filesystem.write(gson.toJson(storage) + "\n", new File(db.location()));
         } catch (IOException e) {
-          throw new MoeProblem("I/O Error writing database: " + e.getMessage());
+          throw new MoeProblem(e, "I/O Error writing database");
         }
       } else {
         throw new MoeProblem("Database does not support exporting its internal storage.");
@@ -169,7 +169,7 @@ public class FileDb implements Db, HasDbStorage {
               location.toString(), new DbStorage(), new FileDb.Writer(gson, filesystem));
         }
       } catch (IOException e) {
-        throw new MoeProblem(e.getMessage());
+        throw new MoeProblem(e, "Could not load %s", location);
       }
     }
   }

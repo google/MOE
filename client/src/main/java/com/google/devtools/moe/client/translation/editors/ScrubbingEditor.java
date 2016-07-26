@@ -109,8 +109,10 @@ public class ScrubbingEditor implements Editor, InverseEditor {
     File expandedDir = null;
     try {
       expandedDir = tarUtils.expandTar(outputTar);
-    } catch (IOException | CommandRunner.CommandException e) {
-      throw new MoeProblem(e.getMessage());
+    } catch (IOException e) {
+      throw new MoeProblem(e, "Failed to run scrubber on copied content of input codebase");
+    } catch (CommandRunner.CommandException e) {
+      throw new MoeProblem("%s", e.getMessage());
     }
     return Codebase.create(expandedDir, input.projectSpace(), input.expression());
   }

@@ -74,12 +74,12 @@ public class ShellEditor implements Editor {
     try {
       filesystem.copyDirectory(input.path(), tempDir);
     } catch (IOException e) {
-      throw new MoeProblem(e.getMessage());
+      throw new MoeProblem(e, "Failed to copy directory %s to %s", input.path(), tempDir);
     }
     try {
       cmd.runCommand("bash", ImmutableList.of("-c", this.commandString), tempDir.getAbsolutePath());
     } catch (CommandRunner.CommandException e) {
-      throw new MoeProblem(e.getMessage());
+      throw new MoeProblem("Command failed: %s", e.getMessage());
     }
     return Codebase.create(tempDir, input.projectSpace(), input.expression());
   }

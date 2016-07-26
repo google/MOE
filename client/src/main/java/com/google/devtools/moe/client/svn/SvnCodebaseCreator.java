@@ -69,7 +69,7 @@ public class SvnCodebaseCreator extends CodebaseCreator {
       util.runSvnCommand(
           "export", config.getUrl(), "-r", rev.revId(), exportPath.getAbsolutePath());
     } catch (CommandRunner.CommandException e) {
-      throw new MoeProblem("could not export from svn" + e.getMessage());
+      throw new MoeProblem("could not export from svn: %s", e.getMessage());
     }
 
     // Filter codebase by ignore_file_res.

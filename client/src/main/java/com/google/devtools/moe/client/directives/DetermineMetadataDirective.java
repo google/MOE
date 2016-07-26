@@ -66,7 +66,7 @@ public class DetermineMetadataDirective extends Directive {
     try {
       repoEx = Parser.parseRepositoryExpression(repositoryExpression);
     } catch (ParseError e) {
-      throw new MoeProblem(e, "Couldn't parse " + repositoryExpression);
+      throw new MoeProblem(e, "Couldn't parse %s", repositoryExpression);
     }
 
     List<Revision> revs = Revision.fromRepositoryExpression(repoEx, context);

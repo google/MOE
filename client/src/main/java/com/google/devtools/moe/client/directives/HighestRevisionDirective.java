@@ -62,19 +62,19 @@ public class HighestRevisionDirective extends Directive {
     try {
       repoEx = Parser.parseRepositoryExpression(repository);
     } catch (ParseError e) {
-      throw new MoeProblem(e, "Couldn't parse " + repository);
+      throw new MoeProblem(e, "Couldn't parse %s", repository);
     }
 
     RepositoryType r = context.getRepository(repoEx.getRepositoryName());
 
     RevisionHistory rh = r.revisionHistory();
     if (rh == null) {
-      throw new MoeProblem("Repository " + r.name() + " does not support revision history.");
+      throw new MoeProblem("Repository %s does not support revision history.", r.name());
     }
 
     Revision rev = rh.findHighestRevision(repoEx.getOption("revision"));
     if (rev == null) {
-      throw new MoeProblem("Could not find the most recent revision in repository " + r.name());
+      throw new MoeProblem("Could not find the most recent revision in repository %s", r.name());
     }
 
     ui.message("Highest revision in repository \"" + r.name() + "\": " + rev.revId());

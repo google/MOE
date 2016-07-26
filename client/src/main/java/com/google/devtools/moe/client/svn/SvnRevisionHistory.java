@@ -89,7 +89,7 @@ public class SvnRevisionHistory extends AbstractRevisionHistory {
       }
       return resultBuilder.build();
     } catch (Exception e) {
-      throw new MoeProblem("Could not parse xml log: " + log + e.getMessage());
+      throw new MoeProblem(e, "Could not parse xml log: %s", log);
     }
   }
 
@@ -145,7 +145,7 @@ public class SvnRevisionHistory extends AbstractRevisionHistory {
       }
       return resultBuilder.build();
     } catch (Exception e) {
-      throw new MoeProblem("Could not parse xml log: " + log + e.getMessage());
+      throw new MoeProblem(e, "Could not parse xml log: %s", log);
     }
   }
 

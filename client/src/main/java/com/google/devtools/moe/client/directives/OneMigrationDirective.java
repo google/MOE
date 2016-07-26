@@ -138,7 +138,7 @@ public class OneMigrationDirective extends Directive {
     try {
       return Parser.parseRepositoryExpression(expression);
     } catch (ParseError e) {
-      throw new MoeProblem(e, "Couldn't parse expression: " + expression);
+      throw new MoeProblem(e, "Couldn't parse expression: %s", expression);
     }
   }
 

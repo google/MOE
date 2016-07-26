@@ -81,7 +81,7 @@ public class GitWriter extends AbstractDvcsWriter<GitClonedRepository> {
     try {
       return !Strings.isNullOrEmpty(revClone.runGitCommand("status", "--short"));
     } catch (CommandException e) {
-      throw new MoeProblem("Error in git status: " + e);
+      throw new MoeProblem("Error in git status: %s", e);
     }
   }
 
@@ -92,7 +92,7 @@ public class GitWriter extends AbstractDvcsWriter<GitClonedRepository> {
     try {
       moeBranchName = revClone.runGitCommand("rev-parse", "--abbrev-ref", "HEAD").trim();
     } catch (CommandException e) {
-      throw new MoeProblem("'git' command error: " + e);
+      throw new MoeProblem("'git' command error: %s", e);
     }
 
     Ui ui = Injector.INSTANCE.ui();

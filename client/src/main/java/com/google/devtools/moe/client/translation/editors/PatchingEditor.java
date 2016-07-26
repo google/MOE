@@ -74,7 +74,7 @@ public class PatchingEditor implements Editor {
       try {
         filesystem.copyDirectory(input.path(), tempDir);
       } catch (IOException e) {
-        throw new MoeProblem(e.getMessage());
+        throw new MoeProblem(e, "Failed to copy directory %s to %s", input.path(), tempDir);
       }
       try {
         cmd.runCommand(
@@ -82,7 +82,7 @@ public class PatchingEditor implements Editor {
             ImmutableList.of("-p0", "--input=" + patchFilePath),
             tempDir.getAbsolutePath());
       } catch (CommandRunner.CommandException e) {
-        throw new MoeProblem(e.getMessage());
+        throw new MoeProblem("%s", e.getMessage());
       }
       return Codebase.create(tempDir, input.projectSpace(), input.expression());
     }

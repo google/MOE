@@ -85,7 +85,7 @@ public class HgWriter extends AbstractDvcsWriter<HgClonedRepository> {
       String statusStdout = revClone.runHgCommand(getRoot(), ImmutableList.of("status"));
       return !Strings.isNullOrEmpty(statusStdout);
     } catch (CommandException e) {
-      throw new MoeProblem("Error in hg status: " + e);
+      throw new MoeProblem("Error in hg status: %s", e);
     }
   }
 

@@ -158,7 +158,7 @@ public class MagicDirective extends Directive {
         if (skipped > 0) {
           if (skipped != migration.fromRevisions().size()) {
             throw new MoeProblem(
-                "Cannot skip subset of revisions in a single migration: " + migration);
+                "Cannot skip subset of revisions in a single migration: %s", migration);
           }
           ui.message(
               "Skipping %s/%s migration `%s`",
@@ -196,7 +196,7 @@ public class MagicDirective extends Directive {
                   .createCodebase(context);
 
         } catch (CodebaseCreationError e) {
-          throw new MoeProblem(e.getMessage());
+          throw new MoeProblem("%s", e.getMessage());
         }
 
         RepositoryType fromRepoType = context.getRepository(migrationConfig.getFromRepository());

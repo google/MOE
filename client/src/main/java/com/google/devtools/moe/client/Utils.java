@@ -87,7 +87,7 @@ public class Utils {
             try {
               Injector.INSTANCE.fileSystem().deleteRecursively(file);
             } catch (IOException e) {
-              throw new MoeProblem("Error deleting file: " + file);
+              throw new MoeProblem(e, "Error deleting file: %s", file);
             }
           }
           return null;
@@ -106,7 +106,7 @@ public class Utils {
       Injector.INSTANCE.fileSystem().write("#!/bin/sh -e\n" + content, script);
       Injector.INSTANCE.fileSystem().setExecutable(script);
     } catch (IOException e) {
-      throw new MoeProblem("Could not generate shell script: " + e);
+      throw new MoeProblem(e, "Could not generate shell script: %s", name);
     }
   }
 }

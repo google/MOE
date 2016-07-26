@@ -121,7 +121,7 @@ public class HgClonedRepository implements LocalWorkspace {
       clonedLocally = true;
       branch = runHgCommand(localCloneTempDir, ImmutableList.of("branch")).trim();
     } catch (CommandException e) {
-      throw new MoeProblem("Could not clone from hg repo at " + repositoryUrl + ": " + e.stderr);
+      throw new MoeProblem("Could not clone from hg repo at %s: %s", repositoryUrl, e.stderr);
     }
   }
 
@@ -133,8 +133,7 @@ public class HgClonedRepository implements LocalWorkspace {
       runHgCommand(getLocalTempDir(), ImmutableList.of("update", revId));
       updatedToRev = true;
     } catch (CommandException e) {
-      throw new MoeProblem(
-          "Could not clone from hg repo at " + localCloneTempDir + ": " + e.stderr);
+      throw new MoeProblem("Could not clone from hg repo at %s: %s", localCloneTempDir, e.stderr);
     }
   }
 
@@ -154,15 +153,13 @@ public class HgClonedRepository implements LocalWorkspace {
       filesystem.deleteRecursively(new File(archiveLocation, ".hg_archival.txt"));
     } catch (CommandException e) {
       throw new MoeProblem(
-          "Could not archive hg clone at " + localCloneTempDir.getAbsolutePath() + ": " + e.stderr);
+          "Could not archive hg clone at %s: %s", localCloneTempDir.getAbsolutePath(), e.stderr);
     } catch (IOException e) {
       throw new MoeProblem(
-          "IOException archiving clone at "
-              + localCloneTempDir.getAbsolutePath()
-              + " to revision "
-              + revId
-              + ": "
-              + e);
+          e,
+          "Failed to archive clone at %s to revision %s",
+          localCloneTempDir.getAbsolutePath(),
+          revId);
     }
     return archiveLocation;
   }

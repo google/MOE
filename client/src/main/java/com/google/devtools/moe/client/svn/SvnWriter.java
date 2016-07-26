@@ -69,7 +69,7 @@ public class SvnWriter implements Writer {
       util.runSvnCommand(
           "co", "-r", revision.revId(), config.getUrl(), rootDirectory.getAbsolutePath());
     } catch (CommandRunner.CommandException e) {
-      throw new MoeProblem("Could not check out from svn: " + e.stderr);
+      throw new MoeProblem("Could not check out from svn: %s", e.stderr);
     }
   }
 
@@ -150,7 +150,7 @@ public class SvnWriter implements Writer {
         filesystem.makeDirsForFile(dest);
         filesystem.copyFile(src, dest);
       } catch (IOException e) {
-        throw new MoeProblem(e.getMessage());
+        throw new MoeProblem(e, "Failed to copy %s to %s", src, dest);
       }
 
       if (!destExists) {
@@ -180,7 +180,7 @@ public class SvnWriter implements Writer {
         }
       }
     } catch (CommandRunner.CommandException e) {
-      throw new MoeProblem("problem occurred while running svn: " + e.stderr);
+      throw new MoeProblem("problem occurred while running svn: %s", e.stderr);
     }
   }
 

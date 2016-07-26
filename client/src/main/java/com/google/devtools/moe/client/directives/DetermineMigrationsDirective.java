@@ -64,7 +64,7 @@ public class DetermineMigrationsDirective extends Directive {
   protected int performDirectiveBehavior() {
     MigrationConfig config = context.migrationConfigs().get(migrationName);
     if (config == null) {
-      throw new MoeProblem("No migration found with name " + migrationName);
+      throw new MoeProblem("No migration found with name %s", migrationName);
     }
 
     RepositoryType fromRepo = context.getRepository(config.getFromRepository());

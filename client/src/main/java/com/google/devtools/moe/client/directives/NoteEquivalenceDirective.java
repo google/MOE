@@ -70,12 +70,13 @@ public class NoteEquivalenceDirective extends Directive {
 
   @Override
   protected int performDirectiveBehavior() {
-    RepositoryExpression repoEx1 = null, repoEx2 = null;
+    RepositoryExpression repoEx1 = null;
+    RepositoryExpression repoEx2 = null;
     try {
       repoEx1 = Parser.parseRepositoryExpression(repo1);
       repoEx2 = Parser.parseRepositoryExpression(repo2);
     } catch (ParseError e) {
-      throw new MoeProblem(e, "Couldn't parse " + (repoEx1 == null ? repo1 : repo2));
+      throw new MoeProblem(e, "Couldn't parse %s", (repoEx1 == null ? repo1 : repo2));
     }
 
     if (repoEx1.getOption("revision") == null || repoEx2.getOption("revision") == null) {

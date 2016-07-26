@@ -79,7 +79,7 @@ public class LastEquivalenceDirective extends Directive {
     try {
       repoEx = Parser.parseRepositoryExpression(fromRepository);
     } catch (ParseError e) {
-      throw new MoeProblem(e, "Couldn't parse " + fromRepository);
+      throw new MoeProblem(e, "Couldn't parse %s", fromRepository);
     }
 
     // TODO(cgruber) use repository map directly.
@@ -87,7 +87,7 @@ public class LastEquivalenceDirective extends Directive {
 
     RevisionHistory rh = r.revisionHistory();
     if (rh == null) {
-      throw new MoeProblem("Repository " + r.name() + " does not support revision history.");
+      throw new MoeProblem("Repository %s does not support revision history.", r.name());
     }
 
     Revision rev = rh.findHighestRevision(repoEx.getOption("revision"));

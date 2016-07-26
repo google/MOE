@@ -163,7 +163,7 @@ public class RenamingEditor implements Editor, InverseEditor {
           input.path().getAbsoluteFile(),
           tempDir.getAbsoluteFile());
     } catch (IOException e) {
-      throw new MoeProblem(e.getMessage());
+      throw new MoeProblem(e, "Failed to copy %s to %s", input.path(), tempDir);
     }
     return Codebase.create(tempDir, input.projectSpace(), input.expression());
   }

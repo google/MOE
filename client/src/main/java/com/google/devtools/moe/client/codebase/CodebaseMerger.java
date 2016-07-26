@@ -87,7 +87,8 @@ public class CodebaseMerger {
   private final Codebase destinationCodebase;
   private final Codebase modifiedCodebase;
   private final Codebase mergedCodebase;
-  private final Set<String> mergedFiles, failedToMergeFiles;
+  private final Set<String> mergedFiles;
+  private final Set<String> failedToMergeFiles;
 
   public CodebaseMerger(
       Ui ui,
@@ -176,7 +177,7 @@ public class CodebaseMerger {
       filesystem.copyFile(destFile, mergedFile);
       return mergedFile;
     } catch (IOException e) {
-      throw new MoeProblem(e.getMessage());
+      throw new MoeProblem(e, "Failed to copy %s to %s", filename, destFile);
     }
   }
 

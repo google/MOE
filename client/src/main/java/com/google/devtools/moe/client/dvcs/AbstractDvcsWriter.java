@@ -94,7 +94,7 @@ public abstract class AbstractDvcsWriter<T extends LocalWorkspace> implements Wr
           sb.append(" ").append(arg);
         }
         sb.append("': ").append(e.stderr);
-        throw new MoeProblem(sb.toString());
+        throw new MoeProblem("%s", sb);
       }
     }
 

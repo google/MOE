@@ -62,7 +62,7 @@ public class SystemFileSystem extends AbstractFileSystem {
       tempDir = File.createTempFile("moe_" + prefix, "");
       tempDir.delete();
     } catch (IOException e) {
-      throw new MoeProblem("could not create temp file: " + e.getMessage());
+      throw new MoeProblem(e, "could not create temp file");
     }
     tempDirLifetimes.put(tempDir, lifetime);
     return tempDir;

@@ -104,7 +104,7 @@ public class Migrator {
         return metadata.toBuilder().author(null).build();
       }
     } catch (InvalidProject exception) {
-      throw new MoeProblem(exception.getMessage());
+      throw new MoeProblem("%s", exception.getMessage());
     }
     return metadata;
   }
