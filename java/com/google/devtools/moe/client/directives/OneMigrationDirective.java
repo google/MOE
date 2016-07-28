@@ -86,13 +86,8 @@ public class OneMigrationDirective extends Directive {
 
   @Override
   protected int performDirectiveBehavior() {
-    RepositoryExpression toRepoEx, fromRepoEx;
-    try {
-      toRepoEx = Parser.parseRepositoryExpression(toRepository);
-      fromRepoEx = Parser.parseRepositoryExpression(fromRepository);
-    } catch (ParseError e) {
-      throw new MoeProblem(e, "Couldn't parse expression");
-    }
+    RepositoryExpression toRepoEx = parseRepositoryExpression(toRepository);
+    RepositoryExpression fromRepoEx = parseRepositoryExpression(fromRepository);
     RepositoryConfig repositoryConfig = config.getRepositoryConfig(toRepoEx.getRepositoryName());
     String toProjectSpace = repositoryConfig.getProjectSpace();
     List<Revision> revs = Revision.fromRepositoryExpression(fromRepoEx, context);
@@ -135,6 +130,14 @@ public class OneMigrationDirective extends Directive {
 
     ui.message("Created Draft Revision: " + draftRevision.getLocation());
     return 0;
+  }
+
+  RepositoryExpression parseRepositoryExpression(String expression) {
+    try {
+      return Parser.parseRepositoryExpression(expression);
+    } catch (ParseError e) {
+      throw new MoeProblem(e, "Couldn't parse expression: " + expression);
+    }
   }
 
   /**
