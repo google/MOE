@@ -35,7 +35,11 @@ import com.squareup.okhttp.OkHttpClient;
 import dagger.Module;
 import dagger.Provides;
 
+import java.io.File;
+import java.io.IOException;
+
 import javax.annotation.Nullable;
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 /**
@@ -43,6 +47,7 @@ import javax.inject.Singleton;
  */
 @Module(
   includes = {
+    MoeModule.ExecutableModule.class,
     Repositories.Defaults.class,
     OptionsModule.class,
     Directives.Module.class,
@@ -65,7 +70,7 @@ public class MoeModule {
       @Nullable @Argument("config_file") String configFilename, ProjectContextFactory factory) {
     // Handle null filename here, to make a better error message, rather than let dagger do it.
     if (configFilename == null) {
-      throw new MoeProblem("Configuration file path not set.  Did you specify --config_file?");
+      throw new MoeProblem("Configuration file path not set.  Did you specify --config?");
     }
     return factory.create(configFilename);
   }
@@ -84,7 +89,7 @@ public class MoeModule {
 
   @Provides
   @Singleton
-  FileSystem fileSystem(SystemFileSystem sysfs) {
+  protected FileSystem fileSystem(SystemFileSystem sysfs) {
     return sysfs;
   }
 
@@ -98,5 +103,30 @@ public class MoeModule {
   @Singleton
   public OkHttpClient okHttpClient() {
     return new OkHttpClient();
+  }
+
+  @dagger.Module
+  public static class ExecutableModule {
+    // TODO(cgruber): migrate to a hg-specific module once they're injected.
+    @Provides
+    @Singleton
+    @Named("hg_binary")
+    public File hgBinary() {
+      return new File("hg"); // Override this in integration tests
+    }
+
+    // TODO(cgruber): migrate to a scrubber-specific module once they're injected.
+    @Provides
+    @Singleton
+    @Named("scrubber_binary")
+    public static File scrubberBinary(FileSystem filesystem) {
+      try {
+        File scrubberBinary = filesystem.getResourceAsFile("/devtools/moe/scrubber/scrubber.par");
+        filesystem.setExecutable(scrubberBinary);
+        return scrubberBinary;
+      } catch (IOException ioEx) {
+        throw new MoeProblem(ioEx, "Error extracting scrubber.");
+      }
+    }
   }
 }

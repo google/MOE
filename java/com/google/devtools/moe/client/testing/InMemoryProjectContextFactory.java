@@ -51,7 +51,7 @@ public class InMemoryProjectContextFactory extends ProjectContextFactory {
       @Nullable FileSystem filesystem,
       Ui ui,
       Repositories repositories) {
-    super(differ, cmd, filesystem, ui, repositories);
+    super(differ, cmd, filesystem, ui, repositories, null);
     projectConfigs = new HashMap<String, String>();
   }
 

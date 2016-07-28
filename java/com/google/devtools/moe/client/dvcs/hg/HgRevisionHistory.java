@@ -21,6 +21,7 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
+import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.repositories.AbstractRevisionHistory;
@@ -31,6 +32,7 @@ import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
+import java.io.File;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -45,8 +47,13 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
       DateTimeFormat.forPattern("yyyy-MM-dd HH:mm Z");
 
   private final Supplier<HgClonedRepository> tipCloneSupplier;
+  private final CommandRunner runner;
+  private final File hgBinary;
 
-  HgRevisionHistory(Supplier<HgClonedRepository> tipCloneSupplier) {
+  HgRevisionHistory(
+      CommandRunner runner, File hgBinary, Supplier<HgClonedRepository> tipCloneSupplier) {
+    this.runner = runner;
+    this.hgBinary = hgBinary;
     this.tipCloneSupplier = tipCloneSupplier;
   }
 
@@ -76,7 +83,10 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
     HgClonedRepository tipClone = tipCloneSupplier.get();
     try {
       changesetID =
-          HgRepositoryFactory.runHgCommand(args, tipClone.getLocalTempDir().getAbsolutePath());
+          runner.runCommand(
+              hgBinary.getPath(),
+              ImmutableList.copyOf(args),
+              tipClone.getLocalTempDir().getAbsolutePath());
     } catch (CommandException e) {
       throw new MoeProblem("Failed hg run: %s %d %s %s", args, e.returnStatus, e.stdout, e.stderr);
     }
@@ -113,7 +123,12 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
             "--debug");
     String log;
     try {
-      log = HgRepositoryFactory.runHgCommand(args, tipClone.getLocalTempDir().getAbsolutePath());
+      log =
+          runner.runCommand(
+              hgBinary.getPath(),
+              ImmutableList.copyOf(args),
+              tipClone.getLocalTempDir().getAbsolutePath());
+
     } catch (CommandException e) {
       throw new MoeProblem("Failed hg run: %s %d %s %s", args, e.returnStatus, e.stdout, e.stderr);
     }
@@ -174,7 +189,8 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
     String heads;
     try {
       heads =
-          HgRepositoryFactory.runHgCommand(
+          runner.runCommand(
+              hgBinary.getPath(),
               // Format output as "changesetID branch".
               ImmutableList.of("heads", tipClone.getBranch(), "--template={node} {branch}\n"),
               tipClone.getLocalTempDir().getAbsolutePath());
@@ -185,9 +201,7 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
 
     ImmutableList.Builder<Revision> result = ImmutableList.<Revision>builder();
     for (String changesetIDAndBranch : Splitter.on('\n').omitEmptyStrings().split(heads)) {
-      String[] changesetIDAndBranchParts = changesetIDAndBranch.split(" ");
-      String changesetID = changesetIDAndBranchParts[0];
-      String branch = changesetIDAndBranchParts[1];
+      String changesetID = changesetIDAndBranch.split(" ")[0];
       result.add(Revision.create(changesetID, tipClone.getRepositoryName()));
     }
     return result.build();

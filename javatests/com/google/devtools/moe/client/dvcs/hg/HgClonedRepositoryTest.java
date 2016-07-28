@@ -88,7 +88,7 @@ public class HgClonedRepositoryTest extends TestCase {
                 "hg",
                 ImmutableList.<String>of(
                     "clone", repositoryURL, localCloneTempDir, "--rev=" + "mybranch"),
-                "" /*workingDirectory*/))
+                /*workingDirectory*/ null))
         .andReturn("hg clone ok (mock output)");
     expect(cmd.runCommand("hg", ImmutableList.of("branch"), localCloneTempDir))
         .andReturn("mybranch");
@@ -96,7 +96,8 @@ public class HgClonedRepositoryTest extends TestCase {
     // Run test
     control.replay();
 
-    HgClonedRepository repo = new HgClonedRepository(cmd, mockFS, repositoryName, repositoryConfig);
+    HgClonedRepository repo =
+        new HgClonedRepository(cmd, mockFS, new File("hg"), repositoryName, repositoryConfig);
     repo.cloneLocallyAtHead(Lifetimes.persistent());
 
     assertEquals(repositoryName, repo.getRepositoryName());

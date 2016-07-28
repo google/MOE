@@ -17,6 +17,7 @@
 package com.google.devtools.moe.client;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
@@ -51,7 +52,7 @@ public class SystemCommandRunner implements CommandRunner {
     logger.fine(workingDirectory + " $ " + Joiner.on(" ").join(cmdArgs));
 
     ProcessBuilder pb = new ProcessBuilder(cmdArgs);
-    if (workingDirectory != null && !workingDirectory.isEmpty()) {
+    if (!Strings.isNullOrEmpty(workingDirectory)) {
       pb.directory(new File(workingDirectory));
     }
     Process p;

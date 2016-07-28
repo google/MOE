@@ -21,17 +21,16 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.devtools.moe.client.CommandRunner;
-import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.FileSystem;
-import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.Lifetimes;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 
-import java.util.List;
+import java.io.File;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 /**
  * Creates a Mercurial (hg) implementation of {@link RepositoryType}.
@@ -39,11 +38,13 @@ import javax.inject.Inject;
 public class HgRepositoryFactory implements RepositoryType.Factory {
   private final CommandRunner cmd;
   private final FileSystem filesystem;
+  private final File hgBinary;
 
   @Inject
-  HgRepositoryFactory(CommandRunner cmd, FileSystem filesystem) {
+  HgRepositoryFactory(CommandRunner cmd, FileSystem filesystem, @Named("hg_binary") File hgBinary) {
     this.cmd = cmd;
     this.filesystem = filesystem;
+    this.hgBinary = hgBinary;
   }
 
   @Override
@@ -70,7 +71,8 @@ public class HgRepositoryFactory implements RepositoryType.Factory {
         new Supplier<HgClonedRepository>() {
           @Override
           public HgClonedRepository get() {
-            HgClonedRepository tipClone = new HgClonedRepository(cmd, filesystem, name, config);
+            HgClonedRepository tipClone =
+                new HgClonedRepository(cmd, filesystem, hgBinary, name, config);
             tipClone.cloneLocallyAtHead(Lifetimes.currentTask());
             return tipClone;
           }
@@ -83,13 +85,14 @@ public class HgRepositoryFactory implements RepositoryType.Factory {
             new Supplier<HgClonedRepository>() {
               @Override
               public HgClonedRepository get() {
-                HgClonedRepository tipClone = new HgClonedRepository(cmd, filesystem, name, config);
+                HgClonedRepository tipClone =
+                    new HgClonedRepository(cmd, filesystem, hgBinary, name, config);
                 tipClone.cloneLocallyAtHead(Lifetimes.moeExecution());
                 return tipClone;
               }
             });
 
-    HgRevisionHistory rh = new HgRevisionHistory(memoizedSupplier);
+    HgRevisionHistory rh = new HgRevisionHistory(cmd, hgBinary, memoizedSupplier);
 
     String projectSpace = config.getProjectSpace();
     if (projectSpace == null) {
@@ -97,14 +100,11 @@ public class HgRepositoryFactory implements RepositoryType.Factory {
     }
 
     HgCodebaseCreator cc =
-        new HgCodebaseCreator(cmd, filesystem, memoizedSupplier, rh, projectSpace, name, config);
+        new HgCodebaseCreator(
+            cmd, filesystem, hgBinary, memoizedSupplier, rh, projectSpace, name, config);
 
     HgWriterCreator wc = new HgWriterCreator(freshSupplier, rh);
 
     return RepositoryType.create(name, rh, cc, wc);
-  }
-
-  static String runHgCommand(List<String> args, String workingDirectory) throws CommandException {
-    return Injector.INSTANCE.cmd().runCommand("hg", args, workingDirectory);
   }
 }

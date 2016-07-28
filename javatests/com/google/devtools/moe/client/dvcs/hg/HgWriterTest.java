@@ -65,7 +65,8 @@ public class HgWriterTest extends TestCase {
   /* Helper methods */
 
   private void expectHgCmd(String... args) throws CommandException {
-    expect(mockRevClone.runHgCommand(args)).andReturn("" /*stdout*/);
+    expect(mockRevClone.runHgCommand(WRITER_ROOT, ImmutableList.copyOf(args)))
+        .andReturn("" /*stdout*/);
   }
 
   /* End helper methods */

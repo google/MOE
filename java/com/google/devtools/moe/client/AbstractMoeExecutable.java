@@ -16,10 +16,12 @@
 
 package com.google.devtools.moe.client;
 
+import static com.google.common.base.Functions.toStringFunction;
 import static com.google.devtools.moe.client.Ui.MOE_TERMINATION_TASK_NAME;
 import static java.util.logging.Level.SEVERE;
 import static java.util.logging.Level.WARNING;
 
+import com.google.common.collect.FluentIterable;
 import com.google.devtools.moe.client.directives.Directive;
 import com.google.devtools.moe.client.directives.Directives;
 import com.google.devtools.moe.client.options.OptionsParser;
@@ -97,6 +99,21 @@ public abstract class AbstractMoeExecutable<T extends AbstractMoeExecutable<T>> 
     return 0;
   }
 
+  /**
+   * Executes {@link #run(String...)} after applying toString() to each of the arguments.
+   */
+  public final int run(Object... args) {
+    return run(FluentIterable.from(args).transform(toStringFunction()).toArray(String.class));
+  }
+
+  /**
+   * The main logic flow of MOE.
+   *
+   * <p>{@code run(String...)} first initializes moe's infrastructure, then attempts to
+   * select the named command, then parses flags in the context of that command, and then
+   * performs that command having staged all of that command's requirements (or exits on error
+   * or reports the help text, if needed).
+   */
   public final int run(String... args) {
     try {
       int result = init(args);

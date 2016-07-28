@@ -25,10 +25,13 @@ import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.tools.FileDifference.FileDiffer;
 
+import dagger.Lazy;
+
 import java.io.File;
 import java.io.IOException;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 /**
  * Creates a ProjectContext from a configuration file loaded from the file system.
@@ -41,8 +44,9 @@ public class FileReadingProjectContextFactory extends ProjectContextFactory {
       CommandRunner cmd,
       FileSystem filesystem,
       Ui ui,
-      Repositories repositories) {
-    super(differ, cmd, filesystem, ui, repositories);
+      Repositories repositories,
+      @Named("scrubber_binary") Lazy<File> scrubberBinary) {
+    super(differ, cmd, filesystem, ui, repositories, scrubberBinary);
   }
 
   @Override

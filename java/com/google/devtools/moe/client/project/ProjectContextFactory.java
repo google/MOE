@@ -43,6 +43,9 @@ import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.tools.FileDifference.FileDiffer;
 
+import dagger.Lazy;
+
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 
@@ -59,19 +62,22 @@ public abstract class ProjectContextFactory {
   private final FileSystem filesystem;
   protected final Ui ui;
   private final Repositories repositories;
+  private final Lazy<File> scrubberBinary;
 
   public ProjectContextFactory(
       FileDiffer differ,
       CommandRunner cmd,
       @Nullable FileSystem filesystem,
       Ui ui,
-      Repositories repositories) {
+      Repositories repositories,
+      Lazy<File> scrubberBinary) { // TODO(cgruber) remove when editors are injected.
     // TODO(cgruber):push nullability back from this point.
     this.differ = differ;
     this.repositories = Preconditions.checkNotNull(repositories);
     this.cmd = cmd;
     this.filesystem = filesystem;
     this.ui = ui;
+    this.scrubberBinary = scrubberBinary;
   }
 
   /**
@@ -145,7 +151,7 @@ public abstract class ProjectContextFactory {
       case identity:
         return IdentityEditor.makeIdentityEditor(editorName, config);
       case scrubber:
-        return ScrubbingEditor.makeScrubbingEditor(editorName, config);
+        return ScrubbingEditor.makeScrubbingEditor(scrubberBinary, editorName, config);
       case patcher:
         return PatchingEditor.makePatchingEditor(editorName, config);
       case shell:

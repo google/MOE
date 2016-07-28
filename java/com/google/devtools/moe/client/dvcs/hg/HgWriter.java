@@ -18,7 +18,6 @@ package com.google.devtools.moe.client.dvcs.hg;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
@@ -48,7 +47,7 @@ public class HgWriter extends AbstractDvcsWriter<HgClonedRepository> {
 
   @Override
   protected void addFile(String relativeFilename) throws CommandException {
-    revClone.runHgCommand("add", relativeFilename);
+    revClone.runHgCommand(getRoot(), ImmutableList.of("add", relativeFilename));
   }
 
   @Override
@@ -58,29 +57,30 @@ public class HgWriter extends AbstractDvcsWriter<HgClonedRepository> {
 
   @Override
   protected void removeFile(String relativeFilename) throws CommandException {
-    revClone.runHgCommand("rm", relativeFilename);
+    revClone.runHgCommand(getRoot(), ImmutableList.of("rm", relativeFilename));
   }
 
   @Override
   protected void commitChanges(RevisionMetadata rm) throws CommandException {
-    List<String> args =
-        Lists.newArrayList(
-            "commit",
-            "--message",
-            rm.description,
-            "--date",
-            rm.date.getMillis() / 1000 + " " + -rm.date.getZone().getOffset(rm.date) / 1000);
+    ImmutableList.Builder<String> args =
+        ImmutableList.<String>builder()
+            .add(
+                "commit",
+                "--message",
+                rm.description,
+                "--date",
+                rm.date.getMillis() / 1000 + " " + -rm.date.getZone().getOffset(rm.date) / 1000);
     if (rm.author != null) {
       args.add("--user");
       args.add(rm.author);
     }
-    revClone.runHgCommand(args.toArray(new String[args.size()]));
+    revClone.runHgCommand(getRoot(), args.build());
   }
 
   @Override
   protected boolean hasPendingChanges() {
     try {
-      String statusStdout = revClone.runHgCommand("status");
+      String statusStdout = revClone.runHgCommand(getRoot(), ImmutableList.of("status"));
       return !Strings.isNullOrEmpty(statusStdout);
     } catch (CommandException e) {
       throw new MoeProblem("Error in hg status: " + e);

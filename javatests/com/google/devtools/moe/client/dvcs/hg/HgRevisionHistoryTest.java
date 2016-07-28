@@ -62,6 +62,7 @@ public class HgRevisionHistoryTest extends TestCase {
 
   private static final String MOCK_REPO_NAME = "mockrepo";
   private static final String CLONE_TEMP_DIR = "/tmp/hg_tipclone_mockrepo_12345";
+  private static final File HG_CMD = new File("hg");
 
   private final IMocksControl control = EasyMock.createControl();
   private final CommandRunner cmd = control.createMock(CommandRunner.class);
@@ -113,7 +114,8 @@ public class HgRevisionHistoryTest extends TestCase {
 
     control.replay();
 
-    HgRevisionHistory revHistory = new HgRevisionHistory(Suppliers.ofInstance(mockRepo));
+    HgRevisionHistory revHistory =
+        new HgRevisionHistory(cmd, HG_CMD, Suppliers.ofInstance(mockRepo));
     Revision rev = revHistory.findHighestRevision(null);
     assertEquals(MOCK_REPO_NAME, rev.repositoryName());
     assertEquals("mockChangesetID", rev.revId());
@@ -146,7 +148,8 @@ public class HgRevisionHistoryTest extends TestCase {
     control.replay();
 
     try {
-      HgRevisionHistory revHistory = new HgRevisionHistory(Suppliers.ofInstance(mockRepo));
+      HgRevisionHistory revHistory =
+          new HgRevisionHistory(cmd, HG_CMD, Suppliers.ofInstance(mockRepo));
       revHistory.findHighestRevision("bogusChangeset");
       fail("'hg log' didn't fail on bogus changeset ID");
     } catch (MoeProblem expected) {
@@ -175,7 +178,8 @@ public class HgRevisionHistoryTest extends TestCase {
 
     control.replay();
 
-    HgRevisionHistory revHistory = new HgRevisionHistory(Suppliers.ofInstance(mockRepo));
+    HgRevisionHistory revHistory =
+        new HgRevisionHistory(cmd, HG_CMD, Suppliers.ofInstance(mockRepo));
     RevisionMetadata result = revHistory.getMetadata(Revision.create(2, "mockrepo"));
     assertEquals("2", result.id);
     assertEquals("uid@google.com", result.author);
@@ -209,7 +213,8 @@ public class HgRevisionHistoryTest extends TestCase {
 
     control.replay();
 
-    HgRevisionHistory revHistory = new HgRevisionHistory(Suppliers.ofInstance(mockRepo));
+    HgRevisionHistory revHistory =
+        new HgRevisionHistory(cmd, HG_CMD, Suppliers.ofInstance(mockRepo));
     RevisionMetadata result = revHistory.getMetadata(Revision.create(2, "mockrepo"));
     assertEquals("2", result.id);
     assertEquals("u<id@google.com", result.author);
@@ -222,7 +227,7 @@ public class HgRevisionHistoryTest extends TestCase {
 
   public void testParseMetadata() throws Exception {
     HgRevisionHistory rh =
-        new HgRevisionHistory(Suppliers.ofInstance(mockClonedRepo(MOCK_REPO_NAME)));
+        new HgRevisionHistory(cmd, HG_CMD, Suppliers.ofInstance(mockClonedRepo(MOCK_REPO_NAME)));
 
     control.replay();
 
@@ -249,7 +254,7 @@ public class HgRevisionHistoryTest extends TestCase {
 
     control.replay();
 
-    HgRevisionHistory rh = new HgRevisionHistory(Suppliers.ofInstance(mockRepo));
+    HgRevisionHistory rh = new HgRevisionHistory(cmd, HG_CMD, Suppliers.ofInstance(mockRepo));
     ImmutableList<Revision> revs = ImmutableList.copyOf(rh.findHeadRevisions());
     assertEquals(MOCK_REPO_NAME, revs.get(0).repositoryName());
     assertEquals("mockChangesetID1", revs.get(0).revId());
@@ -301,7 +306,7 @@ public class HgRevisionHistoryTest extends TestCase {
 
     control.replay();
 
-    HgRevisionHistory rh = new HgRevisionHistory(Suppliers.ofInstance(mockRepo));
+    HgRevisionHistory rh = new HgRevisionHistory(cmd, HG_CMD, Suppliers.ofInstance(mockRepo));
     List<Revision> newRevisions =
         rh
             .findRevisions(null, new RepositoryEquivalenceMatcher("public", db), SearchType.LINEAR)
@@ -406,7 +411,7 @@ public class HgRevisionHistoryTest extends TestCase {
 
     FileDb database = new FileDb(null, GsonModule.provideGson().fromJson(testDb1, DbStorage.class));
 
-    HgRevisionHistory history = new HgRevisionHistory(Suppliers.ofInstance(mockRepo));
+    HgRevisionHistory history = new HgRevisionHistory(cmd, HG_CMD, Suppliers.ofInstance(mockRepo));
 
     Result result =
         history.findRevisions(
@@ -523,7 +528,7 @@ public class HgRevisionHistoryTest extends TestCase {
 
     FileDb database = new FileDb(null, GsonModule.provideGson().fromJson(testDb2, DbStorage.class));
 
-    HgRevisionHistory history = new HgRevisionHistory(Suppliers.ofInstance(mockRepo));
+    HgRevisionHistory history = new HgRevisionHistory(cmd, HG_CMD, Suppliers.ofInstance(mockRepo));
     Result result =
         history.findRevisions(
             Revision.create(4, "repo2"),

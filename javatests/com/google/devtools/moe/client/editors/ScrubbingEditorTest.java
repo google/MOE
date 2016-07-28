@@ -28,6 +28,7 @@ import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.gson.GsonModule;
 import com.google.devtools.moe.client.project.ScrubberConfig;
 import com.google.devtools.moe.client.testing.TestingModule;
+import com.google.devtools.moe.client.tools.EagerLazy;
 
 import dagger.Provides;
 
@@ -83,15 +84,11 @@ public class ScrubbingEditorTest extends TestCase {
             null /* CodebaseExpression is not needed here. */);
 
 
-    expect(fileSystem.getResourceAsFile("/devtools/moe/scrubber/scrubber.par"))
-        .andReturn(scrubberBin);
-    fileSystem.setExecutable(scrubberBin);
-
     expect(fileSystem.getTemporaryDirectory("scrubber_run_")).andReturn(scrubberRun);
     expect(
             cmd.runCommand(
                 // Matches the ./scrubber.par used in ScrubbingEditor.java
-                "./scrubber.par",
+                "/scrubber_extraction_foo/scrubber.par",
                 ImmutableList.of(
                     "--temp_dir",
                     "/scrubber_run_foo",
@@ -132,11 +129,12 @@ public class ScrubbingEditorTest extends TestCase {
             .fromJson(
                 "{\"scrub_unknown_users\":\"true\",\"usernames_file\":null}", ScrubberConfig.class);
 
-    new ScrubbingEditor("scrubber", scrubberConfig)
-        .edit(
-            codebase,
-            null /* this edit doesn't require a ProjectContext */,
-            ImmutableMap.<String, String>of() /* this edit doesn't require options */);
+    ScrubbingEditor editor =
+        new ScrubbingEditor(EagerLazy.fromInstance(scrubberBin), "scrubber", scrubberConfig);
+    editor.edit(
+        codebase,
+        null /* this edit doesn't require a ProjectContext */,
+        ImmutableMap.<String, String>of() /* this edit doesn't require options */);
     control.verify();
   }
 }

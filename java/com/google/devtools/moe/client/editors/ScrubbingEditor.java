@@ -16,8 +16,6 @@
 
 package com.google.devtools.moe.client.editors;
 
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
@@ -30,6 +28,8 @@ import com.google.devtools.moe.client.project.EditorConfig;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.project.ScrubberConfig;
 
+import dagger.Lazy;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
@@ -38,41 +38,15 @@ import java.util.Map;
  * A ScrubbingEditor invokes the MOE scrubber on a Codebase.
  */
 public class ScrubbingEditor implements Editor {
-
   private final CommandRunner cmd = Injector.INSTANCE.cmd(); // TODO(cgruber) @Inject
   private final FileSystem filesystem = Injector.INSTANCE.fileSystem(); // TODO(cgruber) @Inject
-
-  /**
-   * A {@code Supplier} that extracts the scrubber binary. We use a Supplier because we don't want
-   * to extract the scrubber until it's needed. (A run of MOE may initialize a project context and
-   * instantiate editors without actually editing.) It is memoized because we only need one copy of
-   * the scrubber binary across MOE execution.
-   */
-  // TODO(cgruber): Inject this
-  private static final Supplier<File> SCRUBBER_BINARY_SUPPLIER =
-      Suppliers.memoize(
-          new Supplier<File>() {
-            @Override
-            public File get() {
-              try {
-                // TODO(dbentley): what will this resource be under ant?
-                File scrubberBinary =
-                    Injector.INSTANCE
-                        .fileSystem()
-                        .getResourceAsFile("/devtools/moe/scrubber/scrubber.par");
-                Injector.INSTANCE.fileSystem().setExecutable(scrubberBinary);
-                return scrubberBinary;
-              } catch (IOException ioEx) {
-                throw new MoeProblem(ioEx, "Error extracting scrubber.");
-              }
-            }
-          });
-
+  private final Lazy<File> executable;
   private final String name;
   private final ScrubberConfig scrubberConfig;
 
-  ScrubbingEditor(String editorName, ScrubberConfig scrubberConfig) {
-    name = editorName;
+  ScrubbingEditor(Lazy<File> executable, String editorName, ScrubberConfig scrubberConfig) {
+    this.executable = executable;
+    this.name = editorName;
     this.scrubberConfig = scrubberConfig;
   }
 
@@ -94,9 +68,7 @@ public class ScrubbingEditor implements Editor {
     File outputTar = new File(tempDir, "scrubbed.tar");
     try {
       cmd.runCommand(
-          // The ./ preceding scrubber.par is sometimes needed.
-          // TODO(user): figure out why
-          "./scrubber.par",
+          executable.get().getCanonicalPath(),
           ImmutableList.of(
               "--temp_dir",
               tempDir.getAbsolutePath(),
@@ -107,9 +79,9 @@ public class ScrubbingEditor implements Editor {
               (scrubberConfig == null) ? "{}" : GsonModule.provideGson().toJson(scrubberConfig),
               // TODO(cgruber): Eliminate this static gson method reference.
               input.getPath().getAbsolutePath()),
-          SCRUBBER_BINARY_SUPPLIER.get().getParentFile().getPath());
-    } catch (CommandRunner.CommandException e) {
-      throw new MoeProblem(e.getMessage());
+          executable.get().getParentFile().getPath());
+    } catch (CommandRunner.CommandException | IOException e) {
+      throw new MoeProblem(e, "Problem executing the scrubber: %s", e.getMessage());
     }
     File expandedDir = null;
     try {
@@ -120,7 +92,8 @@ public class ScrubbingEditor implements Editor {
     return new Codebase(filesystem, expandedDir, input.getProjectSpace(), input.getExpression());
   }
 
-  public static ScrubbingEditor makeScrubbingEditor(String editorName, EditorConfig config) {
-    return new ScrubbingEditor(editorName, config.scrubberConfig());
+  public static ScrubbingEditor makeScrubbingEditor(
+      Lazy<File> executable, String editorName, EditorConfig config) {
+    return new ScrubbingEditor(executable, editorName, config.scrubberConfig());
   }
 }
