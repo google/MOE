@@ -142,7 +142,7 @@ public class FileDb implements Db, HasDbStorage {
   }
 
   /** A Factory to produce {@link FileDb} instances. */
-  static final class Factory {
+  static class Factory {
     private final Gson gson;
     private final FileSystem filesystem;
 
@@ -179,28 +179,34 @@ public class FileDb implements Db, HasDbStorage {
     // TODO(cgruber): Make this into a map-binding based dispatch so new db types can be added.
     @Provides
     @Singleton
-    Db db(
+    static Db db(
         ProjectConfig config,
         @Nullable @Argument("db") String override,
         FileDb.Factory factory,
         Ui ui) {
-      String location = !isNullOrEmpty(override) ? override : config.databaseFile();
+      String location = !isNullOrEmpty(override) ? override : config.databaseUri();
       if (isNullOrEmpty(location)) {
         throw new InvalidProject(
             "Database location was not set in the project configuration nor on the comamnd-line.");
       }
-      if (location.startsWith("dummy")) {
+      if (location.equals("dummy") || location.startsWith("dummy:")) {
         return new DummyDb(true, ui);
       }
+
+      // File-based
+      Path path;
       if (location.startsWith("file:")) {
         try {
-          return factory.load(Paths.get(new URI(location)));
-        } catch (URISyntaxException e) {
+          path = Paths.get(new URI(location));
+        } catch (URISyntaxException | IllegalArgumentException e) {
           throw new InvalidProject(e, "Invalid URI for database location: %s", location);
         }
+      } else {
+        // Legacy: assume a file db.
+        path = Paths.get(location);
       }
-      // Legacy: assume a file db.
-      return factory.load(Paths.get(location));
+      System.out.println(path);
+      return factory.load(path);
     }
   }
 }

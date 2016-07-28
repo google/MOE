@@ -50,13 +50,16 @@ public abstract class ProjectConfig {
   public abstract String name();
 
   /**
-   * Default location of the database MOE should use for this project
+   * Location of the database MOE should use for this project.
+   *
+   * <p>While this should be a URI, implementers may choose to honor "/foo" as "file:///foo" or
+   * "foo" as a relative file to support legacy clients.
    *
    * <p>This can be overridden by the {@code --db} command-line flag, and can be null, in which
    * case any code-path that requires a database will require that it be set on the command-line.
    */
   @Nullable
-  public abstract String databaseFile();
+  public abstract String databaseUri();
 
   /** The set of configured editors for this project */
   public abstract Map<String, EditorConfig> editors();
@@ -86,7 +89,7 @@ public abstract class ProjectConfig {
   public abstract static class Builder {
     public abstract Builder name(String name);
 
-    public abstract Builder databaseFile(String name);
+    public abstract Builder databaseUri(String name);
 
     public abstract Builder editors(Map<String, EditorConfig> editors);
 

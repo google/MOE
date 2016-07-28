@@ -160,19 +160,19 @@ public class ProjectConfigTest extends TestCase {
         ProjectConfig.parse(
             "{"
                 + " 'name': 'foo',"
-                + " 'database_file': '/foo/bar/database.json',"
+                + " 'database_uri': '/foo/bar/database.json',"
                 + " 'repositories': {"
                 + "   'x': {}"
                 + " }"
                 + "}");
-    assertThat(p.databaseFile()).isEqualTo("/foo/bar/database.json");
+    assertThat(p.databaseUri()).isEqualTo("/foo/bar/database.json");
   }
 
   public void testDatabaseFileNull() {
     ProjectConfig p =
         ProjectConfig.parse(
             "{" + " 'name': 'foo'," + " 'repositories': {" + "   'x': {}" + " }" + "}");
-    assertThat(p.databaseFile()).isNull();
+    assertThat(p.databaseUri()).isNull();
   }
 
   public void testJsonSemanticsMismatch() throws Exception {

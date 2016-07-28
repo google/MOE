@@ -18,6 +18,8 @@ package com.google.devtools.moe.client.database;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.easymock.EasyMock.expect;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
@@ -27,14 +29,18 @@ import com.google.devtools.moe.client.SystemFileSystem;
 import com.google.devtools.moe.client.gson.GsonModule;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.repositories.Revision;
+import com.google.devtools.moe.client.testing.DummyDb;
 import com.google.gson.Gson;
 
 import junit.framework.TestCase;
 
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
+import org.mockito.Mockito;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Tests for the FileDb
@@ -233,4 +239,31 @@ public class FileDbTest extends TestCase {
     return new FileDb(location, dbStorage, new FileDb.Writer(GSON, filesystem));
   }
 
+  public void testDatabaseUriSwitching_dummy() {
+    FileDb.Factory factory = new FileDb.Factory(null, null);
+    assertThat(FileDb.Module.db(null, "dummy", factory, null)).isInstanceOf(DummyDb.class);
+    assertThat(FileDb.Module.db(null, "dummy:blah", factory, null)).isInstanceOf(DummyDb.class);
+  }
+
+  public void testDatabaseUriSwitching_legacyFilePath() {
+    FileDb.Factory factory = spy(new FileDb.Factory(null, null));
+    Mockito.doReturn(null).when(factory).load(Mockito.<Path>any());
+    FileDb.Module.db(null, "/blah", factory, null);
+    verify(factory).load(Paths.get("/blah"));
+  }
+
+  public void testDatabaseUriSwitching_fileUrl() {
+    FileDb.Factory factory = spy(new FileDb.Factory(null, null));
+    Mockito.doReturn(null).when(factory).load(Mockito.<Path>any());
+    FileDb.Module.db(null, "file:///blah", factory, null);
+    verify(factory).load(Paths.get("/blah")); // URI compresses this.
+  }
+
+  public void testDatabaseUriSwitching_badUrl() {
+    try {
+      FileDb.Module.db(null, "file://blah", null, null);
+      fail("Should have thrown");
+    } catch (InvalidProject expected) {
+    }
+  }
 }
