@@ -21,8 +21,8 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
-import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
-import com.google.devtools.moe.client.testing.DummyRepositoryFactory.DummyCommit;
+import com.google.devtools.moe.client.testing.DummyCommit;
+import com.google.devtools.moe.client.testing.DummyRevisionHistory;
 
 import junit.framework.TestCase;
 
@@ -44,7 +44,11 @@ public class MigrateBranchDirectiveTest extends TestCase {
     DummyCommit c03 = DummyCommit.create("3", AUTHOR, "rev 3", new DateTime(33600000L), c02);
     DummyCommit c04 = DummyCommit.create("4", AUTHOR, "rev 4", new DateTime(43600000L), c03);
     RevisionHistory parentBranch =
-        new DummyRepositoryFactory.DummyRevisionHistory("foo", false, c01, c02, c03, c04);
+        DummyRevisionHistory.builder()
+            .name("foo")
+            .permissive(false) // strict
+            .add(c01, c02, c03, c04)
+            .build();
 
     // Setup revision branch (which includes all ancestors)
     DummyCommit c05 = DummyCommit.create("5", AUTHOR, "rev 5", new DateTime(53600000L), c02);
@@ -52,8 +56,11 @@ public class MigrateBranchDirectiveTest extends TestCase {
     DummyCommit c07 = DummyCommit.create("7", AUTHOR, "rev 7", new DateTime(73600000L), c06, c03);
     DummyCommit c08 = DummyCommit.create("8", AUTHOR, "rev 8", new DateTime(83600000L), c07);
     RevisionHistory branch =
-        new DummyRepositoryFactory.DummyRevisionHistory(
-            "foo_fork", false, c01, c02, c03, c04, c05, c06, c07, c08);
+        DummyRevisionHistory.builder()
+            .name("foo_fork")
+            .permissive(false) // strict
+            .add(c01, c02, c03, c04, c05, c06, c07, c08)
+            .build();
     MigrateBranchDirective directive = new MigrateBranchDirective(null, null, null, ui, null);
     List<Revision> revisions = directive.findDescendantRevisions(branch, parentBranch);
 

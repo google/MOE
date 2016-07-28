@@ -21,8 +21,6 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
-import com.google.devtools.moe.client.testing.DummyRepositoryFactory.DummyCommit;
-import com.google.devtools.moe.client.testing.DummyRepositoryFactory.DummyRevisionHistory;
 
 import junit.framework.TestCase;
 
@@ -37,7 +35,7 @@ public class DummyRepositoryFactoryTest extends TestCase {
   public void testCommmitsBecomeRevisions() throws Exception {
     DummyCommit c1 = DummyCommit.create("1", "foo@foo.bar", "rev 1", new DateTime(1 * HOUR));
     DummyCommit c2 = DummyCommit.create("2", "bar@foo.bar", "rev 2", new DateTime(2 * HOUR), c1);
-    DummyRevisionHistory history = new DummyRevisionHistory("foo", c1, c2);
+    DummyRevisionHistory history = DummyRevisionHistory.builder().name("foo").add(c1, c2).build();
     assertThat(history.findHighestRevision(null)).isEqualTo(Revision.create("2", "foo"));
     assertThat(history.findHighestRevision("2")).isEqualTo(Revision.create("2", "foo"));
     assertThat(history.findHighestRevision("1")).isEqualTo(Revision.create("1", "foo"));
@@ -46,7 +44,7 @@ public class DummyRepositoryFactoryTest extends TestCase {
   public void testMetadataCreatedFromCommits() throws Exception {
     DummyCommit c1 = DummyCommit.create("1", "foo@foo.bar", "rev 1", new DateTime(1 * HOUR));
     DummyCommit c2 = DummyCommit.create("2", "bar@foo.bar", "rev 2", new DateTime(2 * HOUR), c1);
-    DummyRevisionHistory history = new DummyRevisionHistory("foo", c1, c2);
+    DummyRevisionHistory history = DummyRevisionHistory.builder().name("foo").add(c1, c2).build();
 
     Revision head = history.findHighestRevision(null);
     assertThat(head).isEqualTo(Revision.create("2", "foo")); // just to make sure.
@@ -67,33 +65,38 @@ public class DummyRepositoryFactoryTest extends TestCase {
   }
 
   public void testLenientFindHeadInEmptyHistoryReturnsCannedDefault() {
-    DummyRevisionHistory history = new DummyRevisionHistory("foo", true);
+    DummyRevisionHistory history =
+        DummyRevisionHistory.builder().name("foo").permissive(true).build();
     assertThat(history.findHighestRevision(null)).isEqualTo(Revision.create("1", "foo"));
   }
 
   public void testStrictFindHeadInEmptyHistoryReturnsNull() {
-    DummyRevisionHistory history = new DummyRevisionHistory("foo", false);
+    DummyRevisionHistory history =
+        DummyRevisionHistory.builder().name("foo").permissive(false).build();
     assertThat(history.findHighestRevision(null)).isNull();
   }
 
   public void testLenientFindNonExistentRevisionReturnsAskedForRevision() {
-    DummyRevisionHistory history = new DummyRevisionHistory("foo", true);
+    DummyRevisionHistory history =
+        DummyRevisionHistory.builder().name("foo").permissive(true).build();
     assertThat(history.findHighestRevision("5")).isEqualTo(Revision.create("5", "foo"));
   }
 
   public void testStrictFindNonExistentRevisionReturnsNull() {
-    DummyRevisionHistory history = new DummyRevisionHistory("foo", false);
+    DummyRevisionHistory history =
+        DummyRevisionHistory.builder().name("foo").permissive(false).build();
     assertThat(history.findHighestRevision("5")).isNull();
   }
 
   public void testDefaultGetMetadataReturnsCannedData() {
-    // default preserved for backward compatibility with older tests.
-    testGetMetadataReturnsCannedData(new DummyRevisionHistory("foo" /* , true */));
+    // default permissibility preserved for backward compatibility with older tests.
+    testGetMetadataReturnsCannedData(DummyRevisionHistory.builder().name("foo").build());
   }
 
   public void testLenientGetMetadataReturnsCannedData() {
     // lenient mode for backward compatibility with older tests.
-    testGetMetadataReturnsCannedData(new DummyRevisionHistory("foo", true));
+    testGetMetadataReturnsCannedData(
+        DummyRevisionHistory.builder().name("foo").permissive(true).build());
   }
 
   private void testGetMetadataReturnsCannedData(RevisionHistory history) {
@@ -107,7 +110,8 @@ public class DummyRepositoryFactoryTest extends TestCase {
   }
 
   public void testStrictGetMetadataReturnsNull() {
-    DummyRevisionHistory history = new DummyRevisionHistory("foo", false);
+    DummyRevisionHistory history =
+        DummyRevisionHistory.builder().name("foo").permissive(false).build();
     RevisionMetadata metadata = history.getMetadata(Revision.create("1", "foo"));
     assertThat(metadata).isNull();
   }
