@@ -30,7 +30,7 @@ import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 
 import dagger.Provides;
-import dagger.mapkeys.StringKey;
+import dagger.multibindings.StringKey;
 
 import org.kohsuke.args4j.Option;
 

@@ -22,7 +22,7 @@ import com.google.devtools.moe.client.database.Bookkeeper;
 import com.google.devtools.moe.client.database.Db;
 
 import dagger.Provides;
-import dagger.mapkeys.StringKey;
+import dagger.multibindings.StringKey;
 
 import org.kohsuke.args4j.Option;
 

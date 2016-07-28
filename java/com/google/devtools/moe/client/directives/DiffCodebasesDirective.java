@@ -30,7 +30,7 @@ import com.google.devtools.moe.client.tools.CodebaseDifference;
 import com.google.devtools.moe.client.tools.PatchCodebaseDifferenceRenderer;
 
 import dagger.Provides;
-import dagger.mapkeys.StringKey;
+import dagger.multibindings.StringKey;
 
 import org.kohsuke.args4j.Option;
 

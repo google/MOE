@@ -22,7 +22,7 @@ import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.project.ProjectContext;
 
 import dagger.Provides;
-import dagger.mapkeys.StringKey;
+import dagger.multibindings.StringKey;
 
 import javax.inject.Inject;
 
