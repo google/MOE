@@ -205,7 +205,6 @@ public class FileDb implements Db, HasDbStorage {
         // Legacy: assume a file db.
         path = Paths.get(location);
       }
-      System.out.println(path);
       return factory.load(path);
     }
   }
