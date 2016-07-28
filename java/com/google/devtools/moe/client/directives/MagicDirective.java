@@ -72,7 +72,7 @@ public class MagicDirective extends Directive {
   @Option(
     name = "--skip_revision",
     required = false,
-    usage = "Revisions to skip; can include multiple --skip_revision options"
+    usage = "Revisions to skip, e.g. 'internal{1234}'; can include multiple --skip_revision options"
   )
   List<String> skipRevisions = new ArrayList<>();
 
