@@ -49,16 +49,21 @@ import javax.inject.Inject;
  * Perform the one_migration and migrate directives
  */
 public class Migrator {
+  private final Db db;
   private final DraftRevision.Factory revisionFactory;
   private final Set<MetadataScrubber> metadataScrubbers;
   private final Ui ui;
 
   @Inject
   public Migrator(
-      DraftRevision.Factory revisionFactory, Set<MetadataScrubber> metadataScrubbers, Ui ui) {
+      DraftRevision.Factory revisionFactory,
+      Set<MetadataScrubber> metadataScrubbers,
+      Ui ui,
+      Db db) {
     this.revisionFactory = revisionFactory;
     this.metadataScrubbers = metadataScrubbers;
     this.ui = ui;
+    this.db = db;
   }
 
   /**
@@ -108,15 +113,14 @@ public class Migrator {
 
   /**
    * @param migrationConfig  the migration specification
-   * @param db  the MOE db which will be used to find the last equivalence
    * @return a list of pending Migrations since last {@link RepositoryEquivalence} per
    *     migrationConfig
    */
   public List<Migration> findMigrationsFromEquivalency(
-      RepositoryType fromRepo, MigrationConfig migrationConfig, Db db) {
+      RepositoryType fromRepo, MigrationConfig migrationConfig) {
 
     Result equivMatch =
-        matchEquivalences(db, fromRepo.revisionHistory(), migrationConfig.getToRepository());
+        matchEquivalences(fromRepo.revisionHistory(), migrationConfig.getToRepository());
 
     List<Revision> revisionsSinceEquivalence =
         Lists.reverse(equivMatch.getRevisionsSinceEquivalence().getBreadthFirstHistory());
@@ -128,7 +132,6 @@ public class Migrator {
       return ImmutableList.of();
     }
 
-    // TODO(user): Figure out how to report all equivalences.
     List<RepositoryEquivalence> equivalences = equivMatch.getEquivalences();
     if (equivalences.isEmpty()) {
       // Occurs if Moe magic is used on an empty target repo.
@@ -170,10 +173,8 @@ public class Migrator {
   /**
    * Returns a result containing the known/discovered equivalences.
    */
-  public Result matchEquivalences(Db db, RevisionHistory history, String toRepository) {
-    // TODO(user): Decide whether to migrate linear or graph history here. Once DVCS Writers
-    // support writing a graph of Revisions, we'll need to opt for linear or graph history based
-    // on the MigrationConfig (e.g. whether or not the destination repo is linear-only).
+  public Result matchEquivalences(RevisionHistory history, String toRepository) {
+    // TODO(cgruber): Migrate this to a graph walk.
     Result equivMatch =
         history.findRevisions(
             null, // Start at head.

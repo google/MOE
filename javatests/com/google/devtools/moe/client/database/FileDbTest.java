@@ -23,36 +23,29 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.devtools.moe.client.FileSystem;
-import com.google.devtools.moe.client.Injector;
-import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.SystemFileSystem;
-import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.gson.GsonModule;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.repositories.Revision;
+import com.google.gson.Gson;
 
 import junit.framework.TestCase;
 
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 
 /**
  * Tests for the FileDb
  */
 public class FileDbTest extends TestCase {
-  private final ByteArrayOutputStream stream = new ByteArrayOutputStream();
-  private final Ui ui = new Ui(stream, /* fileSystem */ null);
-  private final SystemCommandRunner cmd = new SystemCommandRunner();
+  private static final Gson GSON = GsonModule.provideGson();
   private final FileSystem filesystem = new SystemFileSystem();
-  private final Db.Factory factory = new FileDb.Factory(filesystem, GsonModule.provideGson());
 
   @Override
   public void setUp() throws Exception {
     super.setUp();
-    Injector.INSTANCE = new Injector(filesystem, cmd, ui);
   }
 
   public void testValidDb() throws Exception {
@@ -74,7 +67,7 @@ public class FileDbTest extends TestCase {
                 "  ]",
                 "}",
                 "");
-    FileDb db = (FileDb) factory.parseJson(dbText);
+    FileDb db = parseJson(dbText);
     assertEquals(
         db.getEquivalences(),
         ImmutableSet.of(
@@ -83,12 +76,12 @@ public class FileDbTest extends TestCase {
   }
 
   public void testEmptyDb() throws Exception {
-    FileDb db = (FileDb) factory.parseJson("{}");
+    FileDb db = parseJson("{}");
     assertThat(db.getEquivalences()).isEmpty();
   }
 
   public void testNoteEquivalence() throws Exception {
-    FileDb db = (FileDb) factory.parseJson("{\"equivalences\":[]}");
+    FileDb db = parseJson("{\"equivalences\":[]}");
     RepositoryEquivalence e =
         RepositoryEquivalence.create(
             Revision.create("r1", "name1"), Revision.create("r2", "name2"));
@@ -97,7 +90,7 @@ public class FileDbTest extends TestCase {
   }
 
   public void testNoteMigration() throws Exception {
-    FileDb db = (FileDb) factory.parseJson("{}");
+    FileDb db = parseJson("{}");
     SubmittedMigration migration =
         SubmittedMigration.create(Revision.create("r1", "name1"), Revision.create("r2", "name2"));
     assertTrue(db.noteMigration(migration));
@@ -135,7 +128,7 @@ public class FileDbTest extends TestCase {
                 "}",
                 "");
 
-    FileDb db = (FileDb) factory.parseJson(dbText);
+    FileDb db = parseJson(null, dbText);
     assertEquals(
         db.findEquivalences(Revision.create("r1", "name1"), "name2"),
         ImmutableSet.of(Revision.create("r2", "name2"), Revision.create("r3", "name2")));
@@ -144,8 +137,8 @@ public class FileDbTest extends TestCase {
   public void testMakeDbFromFile() throws Exception {
     IMocksControl control = EasyMock.createControl();
     FileSystem filesystem = control.createMock(FileSystem.class);
-    FileDb.Factory factory = new FileDb.Factory(filesystem, GsonModule.provideGson());
     File dbFile = new File("/path/to/db");
+    FileDb.Factory factory = new FileDb.Factory(filesystem, GsonModule.provideGson());
     String dbText =
         Joiner.on("\n")
             .join(
@@ -169,23 +162,22 @@ public class FileDbTest extends TestCase {
     expect(filesystem.exists(dbFile)).andReturn(true);
 
     control.replay();
-    assertEquals(
-        ((FileDb) factory.parseJson(dbText)).getEquivalences(),
-        ((FileDb) factory.load(dbFile.getPath())).getEquivalences());
+    assertThat(factory.load(dbFile.toPath()).getEquivalences())
+        .isEqualTo(parseJson(dbFile.getPath(), dbText).getEquivalences());
     control.verify();
   }
 
   public void testWriteDbToFile() throws Exception {
     IMocksControl control = EasyMock.createControl();
     FileSystem filesystem = control.createMock(FileSystem.class);
-    Db.Writer writer = new FileDb.Writer(GsonModule.provideGson(), filesystem);
     File dbFile = new File("/path/to/db");
     String dbText = "{\n  \"equivalences\": [],\n  \"migrations\": []\n}";
-    Db db = factory.parseJson(dbText);
+    DbStorage dbStorage = GSON.fromJson(dbText, DbStorage.class);
+    Db db = new FileDb(dbFile.getPath(), dbStorage, new FileDb.Writer(GSON, filesystem));
     filesystem.write(dbText, dbFile);
     EasyMock.expectLastCall();
     control.replay();
-    writer.writeToLocation(dbFile.getPath(), db);
+    db.write();
     control.verify();
   }
 
@@ -221,7 +213,7 @@ public class FileDbTest extends TestCase {
                 "  ]",
                 "}",
                 "");
-    FileDb db = (FileDb) factory.parseJson(dbText.replace('\'', '"'));
+    FileDb db = parseJson(dbText.replace('\'', '"'));
     RepositoryEquivalence equivalence = Iterables.getOnlyElement(db.getEquivalences());
     assertEquals("r1", equivalence.getRevisionForRepository("name1").revId());
     assertEquals("r2", equivalence.getRevisionForRepository("name2").revId());
@@ -231,4 +223,14 @@ public class FileDbTest extends TestCase {
     assertEquals("name2", migration.toRevision().repositoryName());
     assertEquals("r2", migration.toRevision().revId());
   }
+
+  private FileDb parseJson(String dbText) throws InvalidProject {
+    return parseJson(null, dbText);
+  }
+
+  private FileDb parseJson(String location, String dbText) throws InvalidProject {
+    DbStorage dbStorage = GSON.fromJson(dbText, DbStorage.class);
+    return new FileDb(location, dbStorage, new FileDb.Writer(GSON, filesystem));
+  }
+
 }

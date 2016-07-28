@@ -16,10 +16,12 @@
 
 package com.google.devtools.moe.client.database;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * MOE's database, storing all Equivalences and SubmittedMigrations in order from those between
@@ -58,5 +60,29 @@ public class DbStorage {
    */
   public boolean addMigration(SubmittedMigration m) {
     return !migrations.contains(m) && migrations.add(m);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(equivalences, migrations);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper("DbStorage")
+        .add("equivalences", equivalences)
+        .add("migrations", migrations)
+        .omitNullValues()
+        .toString();
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (obj instanceof DbStorage) {
+      DbStorage other = (DbStorage) obj;
+      return Objects.equals(equivalences, other.equivalences)
+          && Objects.equals(migrations, other.migrations);
+    }
+    return false;
   }
 }

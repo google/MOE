@@ -46,7 +46,7 @@ import javax.inject.Inject;
  * Get the last Equivalence between two repositories.
  */
 public class LastEquivalenceDirective extends Directive {
-  @Option(name = "--db", required = true, usage = "Location of MOE database")
+  @Option(name = "--db", required = false, usage = "Location of MOE database")
   String dbLocation = "";
 
   @Option(
@@ -64,20 +64,18 @@ public class LastEquivalenceDirective extends Directive {
   String withRepository = "";
 
   private final ProjectContext context;
-  private final Db.Factory dbFactory;
+  private final Db db;
   private final Ui ui;
 
   @Inject
-  LastEquivalenceDirective(ProjectContext context, Db.Factory dbFactory, Ui ui) {
+  LastEquivalenceDirective(ProjectContext context, Db db, Ui ui) {
     this.context = context;
-    this.dbFactory = dbFactory;
+    this.db = db;
     this.ui = ui;
   }
 
   @Override
   protected int performDirectiveBehavior() {
-    Db db = dbFactory.load(dbLocation);
-
     RepositoryExpression repoEx;
     try {
       repoEx = Parser.parseRepositoryExpression(fromRepository);

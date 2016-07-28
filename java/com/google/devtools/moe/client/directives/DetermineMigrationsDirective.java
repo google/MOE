@@ -20,7 +20,6 @@ import static dagger.Provides.Type.MAP;
 
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
-import com.google.devtools.moe.client.database.Db;
 import com.google.devtools.moe.client.migrations.Migration;
 import com.google.devtools.moe.client.migrations.MigrationConfig;
 import com.google.devtools.moe.client.migrations.Migrator;
@@ -38,7 +37,7 @@ import javax.inject.Inject;
 
 /**
  * Print the results of
- * {@link Migrator#findMigrationsFromEquivalency(RepositoryType, MigrationConfig, Db)}
+ * {@link Migrator#findMigrationsFromEquivalency(RepositoryType, MigrationConfig)}
  */
 public class DetermineMigrationsDirective extends Directive {
   @Option(
@@ -48,33 +47,29 @@ public class DetermineMigrationsDirective extends Directive {
   )
   String migrationName = "";
 
-  @Option(name = "--db", required = true, usage = "Location of MOE database")
+  @Option(name = "--db", required = false, usage = "Location of MOE database")
   String dbLocation = "";
 
   private final ProjectContext context;
-  private final Db.Factory dbFactory;
   private final Ui ui;
   private final Migrator migrator;
 
   @Inject
-  public DetermineMigrationsDirective(
-      ProjectContext context, Db.Factory dbFactory, Ui ui, Migrator migrator) {
+  public DetermineMigrationsDirective(ProjectContext context, Ui ui, Migrator migrator) {
     this.context = context;
-    this.dbFactory = dbFactory;
     this.ui = ui;
     this.migrator = migrator;
   }
 
   @Override
   protected int performDirectiveBehavior() {
-    Db db = dbFactory.load(dbLocation);
     MigrationConfig config = context.migrationConfigs().get(migrationName);
     if (config == null) {
       throw new MoeProblem("No migration found with name " + migrationName);
     }
 
     RepositoryType fromRepo = context.getRepository(config.getFromRepository());
-    List<Migration> migrations = migrator.findMigrationsFromEquivalency(fromRepo, config, db);
+    List<Migration> migrations = migrator.findMigrationsFromEquivalency(fromRepo, config);
     for (Migration migration : migrations) {
       ui.message("Pending migration: " + migration);
     }

@@ -15,11 +15,16 @@
  */
 package com.google.devtools.moe.client.database;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
+
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.MoeProblem;
+import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.database.Db.HasDbStorage;
+import com.google.devtools.moe.client.options.OptionsModule.Argument;
 import com.google.devtools.moe.client.project.InvalidProject;
+import com.google.devtools.moe.client.project.ProjectConfig;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.testing.DummyDb;
 import com.google.gson.Gson;
@@ -29,8 +34,13 @@ import dagger.Provides;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Set;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -41,11 +51,13 @@ public class FileDb implements Db, HasDbStorage {
 
   private final String location;
   private final DbStorage dbStorage;
+  private final FileDb.Writer writer;
 
   // TODO(cgruber): Rationalize DbStorage.
-  public FileDb(String location, DbStorage dbStorage) {
+  public FileDb(String location, DbStorage dbStorage, FileDb.Writer writer) {
     this.location = location;
     this.dbStorage = dbStorage;
+    this.writer = writer;
   }
 
   @Override
@@ -96,11 +108,16 @@ public class FileDb implements Db, HasDbStorage {
     return dbStorage;
   }
 
+  @Override
+  public void write() {
+    writer.write(this);
+  }
+
   /**
    * Writes a database implementing {@link HasDbStorage} to the supplied filesystem at a given
    * location, or at the location originally attached to the database.
    */
-  public static class Writer implements Db.Writer {
+  public static class Writer {
     private final Gson gson;
     private final FileSystem filesystem;
 
@@ -110,17 +127,11 @@ public class FileDb implements Db, HasDbStorage {
       this.filesystem = filesystem;
     }
 
-    @Override
     public void write(Db db) {
-      writeToLocation(db.location(), db);
-    }
-
-    @Override
-    public void writeToLocation(String dbLocation, Db db) {
       if (db instanceof HasDbStorage) {
         try {
           DbStorage storage = ((HasDbStorage) db).getStorage();
-          filesystem.write(gson.toJson(storage), new File(dbLocation));
+          filesystem.write(gson.toJson(storage), new File(db.location()));
         } catch (IOException e) {
           throw new MoeProblem("I/O Error writing database: " + e.getMessage());
         }
@@ -130,47 +141,33 @@ public class FileDb implements Db, HasDbStorage {
     }
   }
 
-  /** An injectable Factory to produce {@link FileDb} instances. */
-  // TODO(cgruber) @AutoFactory?
-  public static class Factory implements Db.Factory {
+  /** A Factory to produce {@link FileDb} instances. */
+  static final class Factory {
     private final Gson gson;
     private final FileSystem filesystem;
 
     @Inject
-    public Factory(FileSystem filesystem, Gson gson) {
+    Factory(FileSystem filesystem, Gson gson) {
       this.filesystem = filesystem;
       this.gson = gson;
     }
 
-    @Override
-    public Db parseJson(String dbText) throws InvalidProject {
-      return parseJson(null, dbText);
-    }
-
-    public Db parseJson(String location, String dbText) throws InvalidProject {
+    FileDb load(Path location) throws MoeProblem, InvalidProject {
       try {
-        DbStorage dbStorage = gson.fromJson(dbText, DbStorage.class);
-        return new FileDb(location, dbStorage);
-      } catch (JsonParseException e) {
-        throw new InvalidProject("Could not parse MOE DB: " + e.getMessage());
-      }
-    }
-
-    @Override
-    public Db load(String location) throws MoeProblem {
-      if (location.equals("dummy")) {
-        return new DummyDb(true);
-      } else {
-        try {
-          if (filesystem.exists(new File(location))) {
-            String dbText = filesystem.fileToString(new File(location));
-            return parseJson(location, dbText);
-          } else {
-            return new FileDb(location, new DbStorage());
+        if (filesystem.exists(location.toFile())) {
+          String dbText = filesystem.fileToString(location.toFile());
+          try {
+            DbStorage dbStorage = gson.fromJson(dbText, DbStorage.class);
+            return new FileDb(location.toString(), dbStorage, new FileDb.Writer(gson, filesystem));
+          } catch (JsonParseException e) {
+            throw new InvalidProject("Could not parse MOE DB: " + e.getMessage());
           }
-        } catch (IOException e) {
-          throw new MoeProblem(e.getMessage());
+        } else {
+          return new FileDb(
+              location.toString(), new DbStorage(), new FileDb.Writer(gson, filesystem));
         }
+      } catch (IOException e) {
+        throw new MoeProblem(e.getMessage());
       }
     }
   }
@@ -178,16 +175,32 @@ public class FileDb implements Db, HasDbStorage {
   /** Supplies the various bindings needed to use this database in a dagger graph. */
   @dagger.Module
   public static class Module {
-    @Provides
-    @Singleton
-    Db.Factory dbFactory(FileDb.Factory impl) {
-      return impl;
-    }
 
+    // TODO(cgruber): Make this into a map-binding based dispatch so new db types can be added.
     @Provides
     @Singleton
-    Db.Writer dbWriter(FileDb.Writer impl) {
-      return impl;
+    Db db(
+        ProjectConfig config,
+        @Nullable @Argument("db") String override,
+        FileDb.Factory factory,
+        Ui ui) {
+      String location = !isNullOrEmpty(override) ? override : config.databaseFile();
+      if (isNullOrEmpty(location)) {
+        throw new InvalidProject(
+            "Database location was not set in the project configuration nor on the comamnd-line.");
+      }
+      if (location.startsWith("dummy")) {
+        return new DummyDb(true, ui);
+      }
+      if (location.startsWith("file:")) {
+        try {
+          return factory.load(Paths.get(new URI(location)));
+        } catch (URISyntaxException e) {
+          throw new InvalidProject(e, "Invalid URI for database location: %s", location);
+        }
+      }
+      // Legacy: assume a file db.
+      return factory.load(Paths.get(location));
     }
   }
 }

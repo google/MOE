@@ -42,7 +42,7 @@ import javax.inject.Inject;
  * Finds revisions in a repository that are equivalent to a given revision.
  */
 public class FindEquivalenceDirective extends Directive {
-  @Option(name = "--db", required = true, usage = "Location of MOE database")
+  @Option(name = "--db", required = false, usage = "Location of MOE database")
   String dbLocation = "";
 
   @Option(
@@ -62,24 +62,23 @@ public class FindEquivalenceDirective extends Directive {
   String inRepository = "";
 
   private final ProjectContext context;
-  private final Db.Factory dbFactory;
+
+  private final Db db;
   private final Ui ui;
 
   @Inject
-  FindEquivalenceDirective(ProjectContext context, Db.Factory dbFactory, Ui ui) {
+  FindEquivalenceDirective(ProjectContext context, Db db, Ui ui) {
     this.context = context;
-    this.dbFactory = dbFactory;
+    this.db = db;
     this.ui = ui;
   }
 
   @Override
   protected int performDirectiveBehavior() {
-    Db db = dbFactory.load(dbLocation);
-
     try {
       RepositoryExpression repoEx = Parser.parseRepositoryExpression(fromRepository);
       List<Revision> revs = Revision.fromRepositoryExpression(repoEx, context);
-      printEquivalences(revs, inRepository, db);
+      printEquivalences(revs, inRepository);
       return 0;
     } catch (ParseError e) {
       throw new MoeProblem(e, "Couldn't parse %s", fromRepository);
@@ -91,9 +90,8 @@ public class FindEquivalenceDirective extends Directive {
    *
    * @param revs a list of Revisions to find equivalences for
    * @param inRepo the String of the name of the repository to look for equivalences in
-   * @param db the database to consult for equivalences
    */
-  public void printEquivalences(List<Revision> revs, String inRepo, Db db) {
+  public void printEquivalences(List<Revision> revs, String inRepo) {
     for (Revision rev : revs) {
       Set<Revision> equivalences = db.findEquivalences(rev, inRepo);
       StringBuilder result = new StringBuilder();

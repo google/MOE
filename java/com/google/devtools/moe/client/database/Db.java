@@ -16,7 +16,6 @@
 
 package com.google.devtools.moe.client.database;
 
-import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.repositories.Revision;
 
 import java.util.Set;
@@ -51,6 +50,12 @@ public interface Db {
   boolean noteMigration(SubmittedMigration migration);
 
   /**
+   * Write out any pending changes and release any held resources.  If the Db implementation
+   * writes on-demand, this may have no effect.
+   */
+  void write();
+
+  /**
    * A means by which implementations can supply their internal storage value object.
    *
    * <p>This is a way of permitting what would normally be a violation of encapsulation for
@@ -63,31 +68,5 @@ public interface Db {
 
     /** Supplies the underlying storage value holder */
     DbStorage getStorage();
-  }
-
-  /**
-   * An object that writes a database to some location.
-   */
-  public interface Writer {
-    /**
-     * Writes the Db contents to the location from which it originated.
-     */
-    void write(Db db);
-
-    /**
-     * Writes the Db contents to the given location.
-     */
-    void writeToLocation(String dbLocation, Db db);
-  }
-
-  /**
-   * A factory to produce {@link Db} instances.
-   */
-  public interface Factory {
-    /** Parse db contents from a JSON string */
-    Db parseJson(String jsonDb) throws InvalidProject;
-
-    /** Load a database from the given path */
-    Db load(String path);
   }
 }

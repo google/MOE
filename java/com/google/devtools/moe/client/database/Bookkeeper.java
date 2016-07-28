@@ -54,14 +54,14 @@ public class Bookkeeper {
 
   private final ProjectContext context;
   private final CodebaseDiffer differ;
-  private final Db.Writer dbWriter;
+  private final Db db;
   private final Ui ui;
 
   @Inject
-  public Bookkeeper(ProjectContext context, CodebaseDiffer differ, Db.Writer dbWriter, Ui ui) {
+  public Bookkeeper(ProjectContext context, CodebaseDiffer differ, Db db, Ui ui) {
     this.context = context;
     this.differ = differ;
-    this.dbWriter = dbWriter;
+    this.db = db;
     this.ui = ui;
   }
 
@@ -210,7 +210,7 @@ public class Bookkeeper {
       ui.message("SUCCESS: Equivalence found and recorded: %s", equivalence);
     }
 
-    dbWriter.write(db);
+    db.write();
     ui.popTask(t, "");
     return equivalence;
   }
@@ -242,10 +242,9 @@ public class Bookkeeper {
    * <p>Bookkeep should be run before performing any directive which reads from the db, since it is
    * MOE's way of keeping the db up-to-date.
    *
-   * @param db the database to update
    * @return 0 on success, 1 on failure
    */
-  public int bookkeep(Db db) {
+  public int bookkeep() {
     Ui.Task t = ui.pushTask("bookkeeping", "Updating database");
 
     Set<Set<Revision>> testedHeadEquivalences = new LinkedHashSet<>();
@@ -281,7 +280,7 @@ public class Bookkeeper {
       ui.popTask(bookkeepOneMigrationTask, "");
     }
     ui.popTask(t, "");
-    dbWriter.write(db);
+    db.write();
     return 0;
   }
 }

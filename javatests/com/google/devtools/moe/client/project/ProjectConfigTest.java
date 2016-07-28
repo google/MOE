@@ -16,6 +16,8 @@
 
 package com.google.devtools.moe.client.project;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import junit.framework.TestCase;
 
 public class ProjectConfigTest extends TestCase {
@@ -151,6 +153,26 @@ public class ProjectConfigTest extends TestCase {
                 + "}");
     assertEquals(1, p.repositories().size());
     assertNotNull(p.getRepositoryConfig("internal"));
+  }
+
+  public void testDatabaseFile() {
+    ProjectConfig p =
+        ProjectConfig.parse(
+            "{"
+                + " 'name': 'foo',"
+                + " 'database_file': '/foo/bar/database.json',"
+                + " 'repositories': {"
+                + "   'x': {}"
+                + " }"
+                + "}");
+    assertThat(p.databaseFile()).isEqualTo("/foo/bar/database.json");
+  }
+
+  public void testDatabaseFileNull() {
+    ProjectConfig p =
+        ProjectConfig.parse(
+            "{" + " 'name': 'foo'," + " 'repositories': {" + "   'x': {}" + " }" + "}");
+    assertThat(p.databaseFile()).isNull();
   }
 
   public void testJsonSemanticsMismatch() throws Exception {

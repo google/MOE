@@ -37,6 +37,8 @@ import com.google.json.JsonSanitizer;
 import java.io.StringReader;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 /**
  * Configuration for a MOE Project
  */
@@ -44,14 +46,28 @@ import java.util.Map;
 @JsonAdapter(AutoValueGsonAdapter.class)
 public abstract class ProjectConfig {
 
+  /** The name of this project */
   public abstract String name();
 
+  /**
+   * Default location of the database MOE should use for this project
+   *
+   * <p>This can be overridden by the {@code --db} command-line flag, and can be null, in which
+   * case any code-path that requires a database will require that it be set on the command-line.
+   */
+  @Nullable
+  public abstract String databaseFile();
+
+  /** The set of configured editors for this project */
   public abstract Map<String, EditorConfig> editors();
 
+  /** The set of migration configurations that have been set for this project. */
   public abstract ImmutableList<MigrationConfig> migrations();
 
+  /** The configured repositories this project is aware of. */
   public abstract Map<String, RepositoryConfig> repositories();
 
+  /** The set of translations that have been configured for this project. */
   public abstract ImmutableList<TranslatorConfig> translators();
 
   public static Builder builder() {
@@ -69,6 +85,8 @@ public abstract class ProjectConfig {
   @AutoValue.Builder
   public abstract static class Builder {
     public abstract Builder name(String name);
+
+    public abstract Builder databaseFile(String name);
 
     public abstract Builder editors(Map<String, EditorConfig> editors);
 

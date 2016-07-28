@@ -27,7 +27,6 @@ import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.database.Bookkeeper;
-import com.google.devtools.moe.client.database.Db;
 import com.google.devtools.moe.client.database.RepositoryEquivalence;
 import com.google.devtools.moe.client.migrations.Migration;
 import com.google.devtools.moe.client.migrations.MigrationConfig;
@@ -60,7 +59,7 @@ import javax.inject.Inject;
  * migrations and new equivalences stored in the db.
  */
 public class MagicDirective extends Directive {
-  @Option(name = "--db", required = true, usage = "Location of MOE database")
+  @Option(name = "--db", required = false, usage = "Location of MOE database")
   String dbLocation = "";
 
   @Option(
@@ -79,7 +78,6 @@ public class MagicDirective extends Directive {
 
   private final ProjectConfig config;
   private final ProjectContext context;
-  private final Db.Factory dbFactory;
   private final Ui ui;
   private final Migrator migrator;
   private final Bookkeeper bookkeeper;
@@ -88,13 +86,11 @@ public class MagicDirective extends Directive {
   MagicDirective(
       ProjectConfig config,
       ProjectContext context,
-      Db.Factory dbFactory,
       Ui ui,
       Bookkeeper bookkeeper,
       Migrator migrator) {
     this.context = context;
     this.config = config;
-    this.dbFactory = dbFactory;
     this.ui = ui;
     this.bookkeeper = bookkeeper;
     this.migrator = migrator;
@@ -102,15 +98,13 @@ public class MagicDirective extends Directive {
 
   @Override
   protected int performDirectiveBehavior() {
-    Db db = dbFactory.load(dbLocation);
-
     List<String> migrationNames =
         ImmutableList.copyOf(
             migrations.isEmpty() ? context.migrationConfigs().keySet() : migrations);
 
     Set<String> skipRevisions = ImmutableSet.copyOf(this.skipRevisions);
 
-    if (bookkeeper.bookkeep(db) != 0) {
+    if (bookkeeper.bookkeep() != 0) {
       // Bookkeeping has failed, so fail here as well.
       return 1;
     }
@@ -129,7 +123,7 @@ public class MagicDirective extends Directive {
 
       RepositoryType fromRepo = context.getRepository(migrationConfig.getFromRepository());
       List<Migration> migrations =
-          migrator.findMigrationsFromEquivalency(fromRepo, migrationConfig, db);
+          migrator.findMigrationsFromEquivalency(fromRepo, migrationConfig);
 
       if (migrations.isEmpty()) {
         ui.message("No pending revisions to migrate for %s", migrationName);

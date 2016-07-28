@@ -22,13 +22,10 @@ import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.database.Db;
 import com.google.devtools.moe.client.database.RepositoryEquivalence;
 import com.google.devtools.moe.client.database.SubmittedMigration;
-import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.repositories.Revision;
 
 import java.util.ArrayList;
 import java.util.Set;
-
-import javax.inject.Inject;
 
 /**
  * Db for testing
@@ -37,11 +34,15 @@ public class DummyDb implements Db {
 
   private static final Joiner JOINER = Joiner.on("\n");
 
-  public boolean returnEquivalences;
+  private final Ui ui;
+  private final boolean returnEquivalences;
+
   public ArrayList<RepositoryEquivalence> equivalences;
   public ArrayList<SubmittedMigration> migrations;
 
-  public DummyDb(boolean returnEquivalences) {
+
+  public DummyDb(boolean returnEquivalences, Ui ui) {
+    this.ui = ui;
     this.returnEquivalences = returnEquivalences;
     this.equivalences = new ArrayList<RepositoryEquivalence>();
     this.migrations = new ArrayList<SubmittedMigration>();
@@ -49,7 +50,7 @@ public class DummyDb implements Db {
 
   @Override
   public String location() {
-    return "memory";
+    return "dummy://";
   }
 
   @Override
@@ -72,47 +73,11 @@ public class DummyDb implements Db {
     return !migrations.contains(migration) && migrations.add(migration);
   }
 
-  /** Creates DummyDb instances */
-  public static class Factory implements Db.Factory {
-    public boolean returnEquivalences;
-
-    @Inject
-    public Factory(boolean returnEquivalences) {
-      this.returnEquivalences = returnEquivalences;
-    }
-
-    @Override
-    public DummyDb parseJson(String ignore) throws InvalidProject {
-      return new DummyDb(returnEquivalences);
-    }
-
-    @Override
-    public DummyDb load(String ignore) {
-      return new DummyDb(returnEquivalences);
-    }
-  }
-
-  /** Simulates writing a database out, logging output to the messenger/UI. */
-  public static class Writer implements Db.Writer {
-    private final Ui ui;
-
-    @Inject
-    public Writer(Ui ui) {
-      this.ui = ui;
-    }
-
-    @Override
-    public void write(Db db) {
-      writeToLocation(db.location(), db);
-    }
-
-    @Override
-    public void writeToLocation(String dbLocation, Db db) {
-      DummyDb dummyDb = (DummyDb) db;
-      ui.message(
-          "Equivalences:\n%s\nMigrations:\n%s",
-          JOINER.join(dummyDb.equivalences),
-          JOINER.join(dummyDb.migrations));
-    }
+  @Override
+  public void write() {
+    ui.message(
+        "Equivalences:\n%s\nMigrations:\n%s",
+        JOINER.join(this.equivalences),
+        JOINER.join(this.migrations));
   }
 }

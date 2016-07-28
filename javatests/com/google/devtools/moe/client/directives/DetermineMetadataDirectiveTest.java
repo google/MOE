@@ -59,7 +59,7 @@ public class DetermineMetadataDirectiveTest extends TestCase {
     ProjectContext context = contextFactory.create("moe_config.txt");
     DetermineMetadataDirective d =
         new DetermineMetadataDirective(
-            context, ui, new Migrator(new DraftRevision.Factory(ui), NO_SCRUBBERS, ui));
+            context, ui, new Migrator(new DraftRevision.Factory(ui), NO_SCRUBBERS, ui, null));
     d.repositoryExpression = "internal(revision=\"1,2\")";
     assertEquals(0, d.perform());
     RevisionMetadata rm =
@@ -84,7 +84,7 @@ public class DetermineMetadataDirectiveTest extends TestCase {
     ProjectContext context = contextFactory.create("moe_config.txt");
     DetermineMetadataDirective d =
         new DetermineMetadataDirective(
-            context, ui, new Migrator(new DraftRevision.Factory(ui), NO_SCRUBBERS, ui));
+            context, ui, new Migrator(new DraftRevision.Factory(ui), NO_SCRUBBERS, ui, null));
     d.repositoryExpression = "internal(revision=7)";
     assertEquals(0, d.perform());
     RevisionMetadata rm =

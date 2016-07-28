@@ -254,7 +254,7 @@ public class SvnRevisionHistoryTest extends TestCase {
   }
 
   public void testFindNewRevisions() {
-    DummyDb db = new DummyDb(false);
+    DummyDb db = new DummyDb(false, null);
 
     // Mock call for findHighestRevision
     try {
@@ -449,7 +449,8 @@ public class SvnRevisionHistoryTest extends TestCase {
 
     control.replay();
 
-    FileDb database = new FileDb(null, GsonModule.provideGson().fromJson(testDb1, DbStorage.class));
+    FileDb database =
+        new FileDb(null, GsonModule.provideGson().fromJson(testDb1, DbStorage.class), null);
     SvnRevisionHistory history = new SvnRevisionHistory("repo2", "http://foo/svn/trunk/", util);
 
     Result result =
@@ -555,7 +556,8 @@ public class SvnRevisionHistoryTest extends TestCase {
 
     control.replay();
 
-    FileDb database = new FileDb(null, GsonModule.provideGson().fromJson(testDb2, DbStorage.class));
+    FileDb database =
+        new FileDb(null, GsonModule.provideGson().fromJson(testDb2, DbStorage.class), null);
     SvnRevisionHistory history = new SvnRevisionHistory("repo2", "http://foo/svn/trunk/", util);
 
     Result result =

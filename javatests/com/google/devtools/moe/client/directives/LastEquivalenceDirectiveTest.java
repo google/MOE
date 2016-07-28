@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.Ui;
+import com.google.devtools.moe.client.database.Db;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.repositories.RepositoryType;
@@ -40,14 +41,14 @@ public class LastEquivalenceDirectiveTest extends TestCase {
       new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(null)));
   private final InMemoryProjectContextFactory contextFactory =
       new InMemoryProjectContextFactory(null, cmd, null, ui, repositories);
-  private final DummyDb.Factory dbFactory = new DummyDb.Factory(true);
+  private final Db db = new DummyDb(true, ui);
 
   public void testPerform() throws Exception {
     contextFactory.projectConfigs.put(
         "moe_config.txt",
         "{\"name\": \"foo\", \"repositories\": {\"internal\": {\"type\": \"dummy\"}}}");
     ProjectContext context = contextFactory.create("moe_config.txt");
-    LastEquivalenceDirective d = new LastEquivalenceDirective(context, dbFactory, ui);
+    LastEquivalenceDirective d = new LastEquivalenceDirective(context, db, ui);
     d.dbLocation = "dummy";
     d.fromRepository = "internal(revision=1)";
     d.withRepository = "public";

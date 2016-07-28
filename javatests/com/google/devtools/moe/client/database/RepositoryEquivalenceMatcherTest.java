@@ -33,7 +33,6 @@ import java.util.List;
  * Unit tests for EquivalenceMatcher
  */
 public class RepositoryEquivalenceMatcherTest extends TestCase {
-
   /*
    * A database that holds the following equivalences:
    * repo1{1001} == repo2{1}
@@ -52,9 +51,11 @@ public class RepositoryEquivalenceMatcherTest extends TestCase {
   @Override
   public void setUp() {
     try {
-      database = (FileDb) new FileDb.Factory(null, GsonModule.provideGson()).parseJson(testDb1);
+      DbStorage dbStorage = GsonModule.provideGson().fromJson(testDb1, DbStorage.class);
+      database = new FileDb(null, dbStorage, null);
     } catch (InvalidProject e) {
       e.printStackTrace();
+      throw e;
     }
     matcher = new RepositoryEquivalenceMatcher("repo2", database);
   }

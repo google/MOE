@@ -41,7 +41,7 @@ import javax.inject.Inject;
  * database file at that path with the new equivalence.
  */
 public class NoteEquivalenceDirective extends Directive {
-  @Option(name = "--db", required = true, usage = "Path of MOE database file to update or create")
+  @Option(name = "--db", required = false, usage = "Path of MOE database file to update or create")
   String dbLocation = "";
 
   @Option(
@@ -59,23 +59,18 @@ public class NoteEquivalenceDirective extends Directive {
   String repo2 = "";
 
   private final ProjectContext context;
-  private final Db.Factory dbFactory;
-  private final Db.Writer dbWriter;
+  private final Db db;
   private final Ui ui;
 
   @Inject
-  NoteEquivalenceDirective(
-      ProjectContext context, Db.Factory dbFactory, Db.Writer dbWriter, Ui ui) {
+  NoteEquivalenceDirective(ProjectContext context, Db db, Ui ui) {
     this.context = context;
-    this.dbFactory = dbFactory;
-    this.dbWriter = dbWriter;
+    this.db = db;
     this.ui = ui;
   }
 
   @Override
   protected int performDirectiveBehavior() {
-    Db db = dbFactory.load(dbLocation);
-
     RepositoryExpression repoEx1 = null, repoEx2 = null;
     try {
       repoEx1 = Parser.parseRepositoryExpression(repo1);
@@ -98,7 +93,7 @@ public class NoteEquivalenceDirective extends Directive {
 
     RepositoryEquivalence newEq = RepositoryEquivalence.create(realRev1, realRev2);
     db.noteEquivalence(newEq);
-    dbWriter.write(db);
+    db.write();
 
     ui.message("Noted equivalence: " + newEq);
 

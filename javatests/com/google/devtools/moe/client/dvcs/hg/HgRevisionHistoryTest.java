@@ -266,7 +266,7 @@ public class HgRevisionHistoryTest extends TestCase {
 
   public void testFindNewRevisions() throws Exception {
     HgClonedRepository mockRepo = mockClonedRepo(MOCK_REPO_NAME);
-    DummyDb db = new DummyDb(false);
+    DummyDb db = new DummyDb(false, null);
 
     expect(
             cmd.runCommand(
@@ -409,7 +409,8 @@ public class HgRevisionHistoryTest extends TestCase {
 
     control.replay();
 
-    FileDb database = new FileDb(null, GsonModule.provideGson().fromJson(testDb1, DbStorage.class));
+    FileDb database =
+        new FileDb(null, GsonModule.provideGson().fromJson(testDb1, DbStorage.class), null);
 
     HgRevisionHistory history = new HgRevisionHistory(cmd, HG_CMD, Suppliers.ofInstance(mockRepo));
 
@@ -526,7 +527,8 @@ public class HgRevisionHistoryTest extends TestCase {
 
     control.replay();
 
-    FileDb database = new FileDb(null, GsonModule.provideGson().fromJson(testDb2, DbStorage.class));
+    FileDb database =
+        new FileDb(null, GsonModule.provideGson().fromJson(testDb2, DbStorage.class), null);
 
     HgRevisionHistory history = new HgRevisionHistory(cmd, HG_CMD, Suppliers.ofInstance(mockRepo));
     Result result =

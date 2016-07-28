@@ -207,7 +207,7 @@ public class GitRevisionHistoryTest extends TestCase {
   public void testFindNewRevisions_all() throws Exception {
     GitClonedRepository mockRepo = mockClonedRepo(repositoryName);
     mockFindHeadRevisions(mockRepo);
-    DummyDb db = new DummyDb(false);
+    DummyDb db = new DummyDb(false, null);
 
     // Breadth-first search order.
     expectLogCommandIgnoringMissing(mockRepo, LOG_FORMAT_ALL_METADATA, "head")
@@ -249,7 +249,7 @@ public class GitRevisionHistoryTest extends TestCase {
     // Create a fake db that has equivalences for parent1, so that
     // parent1 isn't included in the output.
     DummyDb db =
-        new DummyDb(true) {
+        new DummyDb(true, null) {
           @Override
           public Set<Revision> findEquivalences(Revision revision, String otherRepository) {
             if (revision.revId().equals("parent1")) {
@@ -336,7 +336,8 @@ public class GitRevisionHistoryTest extends TestCase {
 
     control.replay();
 
-    FileDb database = new FileDb(null, GsonModule.provideGson().fromJson(testDb1, DbStorage.class));
+    FileDb database =
+        new FileDb(null, GsonModule.provideGson().fromJson(testDb1, DbStorage.class), null);
 
     GitRevisionHistory history = new GitRevisionHistory(Suppliers.ofInstance(mockRepo));
 
@@ -416,7 +417,8 @@ public class GitRevisionHistoryTest extends TestCase {
 
     control.replay();
 
-    FileDb database = new FileDb(null, GsonModule.provideGson().fromJson(testDb2, DbStorage.class));
+    FileDb database =
+        new FileDb(null, GsonModule.provideGson().fromJson(testDb2, DbStorage.class), null);
 
     GitRevisionHistory history = new GitRevisionHistory(Suppliers.ofInstance(mockRepo));
 
@@ -473,7 +475,8 @@ public class GitRevisionHistoryTest extends TestCase {
 
     control.replay();
 
-    FileDb database = new FileDb(null, GsonModule.provideGson().fromJson(testDb1, DbStorage.class));
+    FileDb database =
+        new FileDb(null, GsonModule.provideGson().fromJson(testDb1, DbStorage.class), null);
 
     GitRevisionHistory history = new GitRevisionHistory(Suppliers.ofInstance(mockRepo));
 

@@ -16,13 +16,13 @@
 package com.google.devtools.moe.client.options;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.directives.Directives.SelectedDirective;
 
 import dagger.Provides;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -46,12 +46,31 @@ public class OptionsModule {
 
   @Provides
   @Nullable
+  @Argument("db")
+  static String dbLocation(String... args) {
+    // TODO(cgruber) Migrate to JCommander, so we don't have to manually parse some of these.
+    // TODO(cgruber) make this not-nullable when only db-requiring commands yank in the db location.
+    return findArgValue(args, "--db");
+  }
+
+  @Provides
+  @Nullable
   @Argument("config_file")
   static String configFile(String... args) {
     // TODO(cgruber) Migrate to JCommander, so we don't have to manually parse some of these.
-    List<String> matchingArgs = ImmutableList.of("-c", "--config", "--config_file");
+    // TODO(cgruber) make this not-nullable when only config-requiring commands yank in the config.
+    return findArgValue(args, "-c", "--config", "--config_file");
+  }
+
+  /**
+   * @param matchingArgs
+   * @param args
+   */
+  @Nullable
+  private static String findArgValue(String[] args, String... matchingArgs) {
+    List<String> matches = Arrays.asList(matchingArgs);
     for (int i = 0; i < args.length; i++) {
-      if (matchingArgs.contains(args[i])) {
+      if (matches.contains(args[i])) {
         if ((i + 1) >= args.length) {
           throw new IllegalArgumentException("'" + args[i] + "' specified without a parameter");
         }
@@ -61,14 +80,12 @@ public class OptionsModule {
         return args[i + 1];
       }
       // check for "--config=" style.
-      for (String prefix : matchingArgs) {
+      for (String prefix : matches) {
         if (args[i].startsWith(prefix + "=")) {
           return args[i].substring(prefix.length() + 1);
         }
       }
     }
-    // Some commands may not require config
-    // TODO(cgruber) make this not-nullable when only config-requiring commands yank in the config.
     return null;
   }
 

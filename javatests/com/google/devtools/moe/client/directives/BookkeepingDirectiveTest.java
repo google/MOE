@@ -16,6 +16,7 @@
 
 package com.google.devtools.moe.client.directives;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.easymock.EasyMock.expect;
 
 import com.google.common.collect.ImmutableList;
@@ -66,6 +67,7 @@ public class BookkeepingDirectiveTest extends TestCase {
   private final Ui ui = new Ui(stream, /* fileSystem */ null);
   private final IMocksControl control = EasyMock.createControl();
   private final CommandRunner cmd = control.createMock(CommandRunner.class);
+  private final DbStorage storage = new DbStorage();
 
   private static InMemoryProjectContextFactory init(InMemoryProjectContextFactory contextFactory)
       throws Exception {
@@ -101,13 +103,19 @@ public class BookkeepingDirectiveTest extends TestCase {
    * Bookkeeping for codebases the same at head, different at migrated revs.
    */
   public void testHeadsEquivalent() throws Exception {
+
     ImmutableMap<String, String> files =
         ImmutableMap.of(
-            "/path/to/db", "{\"equivalences\":[], \"migrations\":[]}",
-            "/dummy/codebase/int/1/file", "1",
-            "/dummy/codebase/pub/1/file", "1 (equivalent)",
-            "/dummy/codebase/int/migrated_from/file", "migrated_from",
-            "/dummy/codebase/pub/migrated_to/", "dir (different)");
+            DB_FILE.getPath(),
+            "{\"equivalences\":[], \"migrations\":[]}",
+            "/dummy/codebase/int/1/file",
+            "1",
+            "/dummy/codebase/pub/1/file",
+            "1 (equivalent)",
+            "/dummy/codebase/int/migrated_from/file",
+            "migrated_from",
+            "/dummy/codebase/pub/migrated_to/",
+            "dir (different)");
     FileSystem filesystem = new InMemoryFileSystem(files);
     FileDiffer fileDiffer = new ConcreteFileDiffer(cmd, filesystem);
     CodebaseDiffer codebaseDiffer = new CodebaseDiffer(fileDiffer);
@@ -118,10 +126,11 @@ public class BookkeepingDirectiveTest extends TestCase {
         init(new InMemoryProjectContextFactory(fileDiffer, cmd, filesystem, ui, repositories));
     ProjectContext context = contextFactory.create("moe_config.txt");
     Injector.INSTANCE = new Injector(filesystem, cmd, ui);
-    Db.Factory dbFactory = new FileDb.Factory(filesystem, GsonModule.provideGson());
-    Db.Writer dbWriter = new FileDb.Writer(GsonModule.provideGson(), filesystem);
+    Db db =
+        new FileDb(
+            DB_FILE.getPath(), storage, new FileDb.Writer(GsonModule.provideGson(), filesystem));
     BookkeepingDirective d =
-        new BookkeepingDirective(dbFactory, new Bookkeeper(context, codebaseDiffer, dbWriter, ui));
+        new BookkeepingDirective(new Bookkeeper(context, codebaseDiffer, db, ui));
     d.dbLocation = DB_FILE.getAbsolutePath();
 
     expect(
@@ -140,7 +149,7 @@ public class BookkeepingDirectiveTest extends TestCase {
     expectedDb.addEquivalence(
         RepositoryEquivalence.create(Revision.create(1, "int"), Revision.create(1, "pub")));
 
-    assertEquals(GsonModule.provideGson().toJson(expectedDb), filesystem.fileToString(DB_FILE));
+    assertThat(storage).isEqualTo(expectedDb);
   }
 
   /**
@@ -164,10 +173,11 @@ public class BookkeepingDirectiveTest extends TestCase {
         init(new InMemoryProjectContextFactory(fileDiffer, cmd, filesystem, ui, repositories));
     ProjectContext context = contextFactory.create("moe_config.txt");
     Injector.INSTANCE = new Injector(filesystem, cmd, ui);
-    Db.Factory dbFactory = new FileDb.Factory(filesystem, GsonModule.provideGson());
-    Db.Writer dbWriter = new FileDb.Writer(GsonModule.provideGson(), filesystem);
+    Db db =
+        new FileDb(
+            DB_FILE.getPath(), storage, new FileDb.Writer(GsonModule.provideGson(), filesystem));
     BookkeepingDirective d =
-        new BookkeepingDirective(dbFactory, new Bookkeeper(context, codebaseDiffer, dbWriter, ui));
+        new BookkeepingDirective(new Bookkeeper(context, codebaseDiffer, db, ui));
     d.dbLocation = DB_FILE.getAbsolutePath();
 
     expectDiffs();
@@ -182,7 +192,7 @@ public class BookkeepingDirectiveTest extends TestCase {
         SubmittedMigration.create(
             Revision.create("migrated_from", "int"), Revision.create("migrated_to", "pub")));
 
-    assertEquals(GsonModule.provideGson().toJson(expectedDb), filesystem.fileToString(DB_FILE));
+    assertThat(storage).isEqualTo(expectedDb);
   }
 
   /**
@@ -206,10 +216,11 @@ public class BookkeepingDirectiveTest extends TestCase {
         init(new InMemoryProjectContextFactory(fileDiffer, cmd, filesystem, ui, repositories));
     ProjectContext context = contextFactory.create("moe_config.txt");
     Injector.INSTANCE = new Injector(filesystem, cmd, ui);
-    Db.Factory dbFactory = new FileDb.Factory(filesystem, GsonModule.provideGson());
-    Db.Writer dbWriter = new FileDb.Writer(GsonModule.provideGson(), filesystem);
+    Db db =
+        new FileDb(
+            DB_FILE.getPath(), storage, new FileDb.Writer(GsonModule.provideGson(), filesystem));
     BookkeepingDirective d =
-        new BookkeepingDirective(dbFactory, new Bookkeeper(context, codebaseDiffer, dbWriter, ui));
+        new BookkeepingDirective(new Bookkeeper(context, codebaseDiffer, db, ui));
     d.dbLocation = DB_FILE.getAbsolutePath();
 
     expectDiffs();
@@ -227,6 +238,6 @@ public class BookkeepingDirectiveTest extends TestCase {
         SubmittedMigration.create(
             Revision.create("migrated_from", "int"), Revision.create("migrated_to", "pub")));
 
-    assertEquals(GsonModule.provideGson().toJson(expectedDb), filesystem.fileToString(DB_FILE));
+    assertThat(storage).isEqualTo(expectedDb);
   }
 }

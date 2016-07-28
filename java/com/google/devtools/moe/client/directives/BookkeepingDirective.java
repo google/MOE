@@ -19,7 +19,6 @@ package com.google.devtools.moe.client.directives;
 import static dagger.Provides.Type.MAP;
 
 import com.google.devtools.moe.client.database.Bookkeeper;
-import com.google.devtools.moe.client.database.Db;
 
 import dagger.Provides;
 import dagger.multibindings.StringKey;
@@ -32,22 +31,19 @@ import javax.inject.Inject;
  * Perform the necessary checks to update MOE's db.
  */
 public class BookkeepingDirective extends Directive {
-  @Option(name = "--db", required = true, usage = "Location of MOE database")
+  @Option(name = "--db", required = false, usage = "Location of MOE database")
   String dbLocation = "";
 
-  private final Db.Factory dbFactory;
   private final Bookkeeper bookkeeper;
 
   @Inject
-  BookkeepingDirective(Db.Factory dbFactory, Bookkeeper bookkeeper) {
-    this.dbFactory = dbFactory;
+  BookkeepingDirective(Bookkeeper bookkeeper) {
     this.bookkeeper = bookkeeper;
   }
 
   @Override
   protected int performDirectiveBehavior() {
-    Db db = dbFactory.load(dbLocation);
-    return bookkeeper.bookkeep(db);
+    return bookkeeper.bookkeep();
   }
 
   /**

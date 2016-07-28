@@ -41,14 +41,14 @@ public class FindEquivalenceDirectiveTest extends TestCase {
       new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(null)));
   private final InMemoryProjectContextFactory contextFactory =
       new InMemoryProjectContextFactory(null, cmd, null, ui, repositories);
-  private final Db.Factory dbFactory = new DummyDb.Factory(true);
+  private final Db db = new DummyDb(true, ui);
 
   public void testFindEquivalenceDirective() throws Exception {
     contextFactory.projectConfigs.put(
         "moe_config.txt",
         "{\"name\": \"test\",\"repositories\": {\"internal\": {\"type\": \"dummy\"}}}");
     ProjectContext context = contextFactory.create("moe_config.txt");
-    FindEquivalenceDirective d = new FindEquivalenceDirective(context, dbFactory, ui);
+    FindEquivalenceDirective d = new FindEquivalenceDirective(context, db, ui);
     d.dbLocation = "dummy";
     d.fromRepository = "internal(revision=1)";
     d.inRepository = "public";

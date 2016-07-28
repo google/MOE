@@ -32,7 +32,6 @@ import com.google.devtools.moe.client.MoeUserProblem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
-import com.google.devtools.moe.client.database.Db;
 import com.google.devtools.moe.client.database.RepositoryEquivalence;
 import com.google.devtools.moe.client.database.RepositoryEquivalenceMatcher.Result;
 import com.google.devtools.moe.client.editors.Editor;
@@ -79,7 +78,7 @@ import javax.inject.Inject;
  * direction, and does no bookkeeping.
  */
 public class MigrateBranchDirective extends Directive {
-  @Option(name = "--db", required = true, usage = "Location of MOE database")
+  @Option(name = "--db", required = false, usage = "Location of MOE database")
   private String dbLocation = "";
 
   // TODO(cgruber) determine this from implicit signals.
@@ -98,7 +97,6 @@ public class MigrateBranchDirective extends Directive {
 
   private final ProjectConfig config;
   private final ProjectContext context;
-  private final Db.Factory dbFactory;
   private final Repositories repositories;
   private final Ui ui;
   private final Migrator migrator;
@@ -109,13 +107,11 @@ public class MigrateBranchDirective extends Directive {
   MigrateBranchDirective(
       ProjectConfig config,
       ProjectContext context,
-      Db.Factory dbFactory,
       Repositories repositories,
       Ui ui,
       Migrator migrator) {
     this.config = config;
     this.context = context;
-    this.dbFactory = dbFactory;
     this.repositories = repositories;
     this.ui = ui;
     this.migrator = migrator;
@@ -123,16 +119,14 @@ public class MigrateBranchDirective extends Directive {
 
   @Override
   protected int performDirectiveBehavior() {
-    return performBranchMigration(dbLocation, registeredFromRepository, branchLabel, overrideUrl);
+    return performBranchMigration(registeredFromRepository, branchLabel, overrideUrl);
   }
 
   protected int performBranchMigration(
-      String dbLocation,
       String originalFromRepositoryName,
       String branchLabel,
       String overrideUrl) {
     return performBranchMigration(
-        dbLocation,
         originalFromRepositoryName + (overrideUrl.isEmpty() ? "" : "_fork"),
         originalFromRepositoryName,
         branchLabel,
@@ -140,13 +134,10 @@ public class MigrateBranchDirective extends Directive {
   }
 
   protected int performBranchMigration(
-      String dbLocation,
       String fromRepositoryName,
       String originalFromRepositoryName,
       String branchLabel,
       String overrideUrl) {
-    Db db = dbFactory.load(dbLocation);
-
     MigrationConfig migrationConfig =
         findMigrationConfigForRepository(
             overrideUrl, fromRepositoryName, originalFromRepositoryName);
@@ -171,7 +162,6 @@ public class MigrateBranchDirective extends Directive {
 
     List<Migration> migrations =
         findMigrationsBetweenBranches(
-            db,
             migrationConfig.getFromRepository(),
             migrationConfig.getToRepository(),
             baseRepoType.revisionHistory(),
@@ -332,7 +322,6 @@ public class MigrateBranchDirective extends Directive {
   }
 
   private List<Migration> findMigrationsBetweenBranches(
-      Db db,
       String fromRepoName,
       String toRepoName,
       RevisionHistory baseRevisions,
@@ -342,8 +331,7 @@ public class MigrateBranchDirective extends Directive {
     List<Revision> toMigrate = findDescendantRevisions(fromRevisions, baseRevisions);
     ui.popTask(determineMigrationsTask, "");
 
-
-    Result equivMatch = migrator.matchEquivalences(db, baseRevisions, toRepoName);
+    Result equivMatch = migrator.matchEquivalences(baseRevisions, toRepoName);
 
     RepositoryEquivalence latestEquivalence = equivMatch.getEquivalences().get(0);
 

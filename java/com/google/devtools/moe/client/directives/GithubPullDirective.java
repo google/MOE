@@ -105,7 +105,6 @@ public class GithubPullDirective extends Directive {
     ui.message("Using '%s' as the source repository.", repoConfigName);
     int result =
         delegate.performBranchMigration(
-            dbLocation,
             metadata.head().repo().owner().login() + "_" + metadata.head().ref(),
             repoConfigName,
             metadata.head().ref(),

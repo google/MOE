@@ -69,7 +69,7 @@ public class OneMigrationDirectiveTest extends TestCase {
             context,
             ui,
             new DraftRevision.Factory(ui),
-            new Migrator(new DraftRevision.Factory(ui), NO_SCRUBBERS, ui));
+            new Migrator(new DraftRevision.Factory(ui), NO_SCRUBBERS, ui, null));
     d.fromRepository = "int(revision=1000)";
     d.toRepository = "pub(revision=2)";
     assertThat(d.perform()).isEqualTo(0);
@@ -83,7 +83,7 @@ public class OneMigrationDirectiveTest extends TestCase {
             context,
             ui,
             new DraftRevision.Factory(ui),
-            new Migrator(new DraftRevision.Factory(ui), NO_SCRUBBERS, ui));
+            new Migrator(new DraftRevision.Factory(ui), NO_SCRUBBERS, ui, null));
     d.fromRepository = "x(revision=1000)";
     d.toRepository = "pub(revision=2)";
     try {
@@ -102,7 +102,7 @@ public class OneMigrationDirectiveTest extends TestCase {
             context,
             ui,
             new DraftRevision.Factory(ui),
-            new Migrator(new DraftRevision.Factory(ui), NO_SCRUBBERS, ui));
+            new Migrator(new DraftRevision.Factory(ui), NO_SCRUBBERS, ui, null));
     d.fromRepository = "int(revision=1000)";
     d.toRepository = "x(revision=2)";
     try {
