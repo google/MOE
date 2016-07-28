@@ -31,6 +31,8 @@ import com.google.devtools.moe.client.repositories.RevisionMetadata;
 
 import org.joda.time.DateTime;
 
+import java.util.HashMap;
+
 /**
  * A fake implementation of {@link RevisionHistory} for testing.
  *
@@ -147,34 +149,83 @@ public abstract class DummyRevisionHistory implements RevisionHistory {
     return new AutoValue_DummyRevisionHistory.Builder().permissive(true);
   }
 
-  public abstract Builder toBuilder();
+  abstract Builder toBuilder();
+
+  public Builder extend() {
+    return toBuilder().syncRunningIndex();
+  }
 
   /**
    * Builds a {@link DummyRevisionHistory} with a set of canned {@link DummyCommit} instances.
    */
   @AutoValue.Builder
   public abstract static class Builder {
+    private final HashMap<String, DummyCommit> runningIndex = new HashMap<>();
+
+    private Builder syncRunningIndex() {
+      // For the copy-builder - set the index up from existing commits so it's ready
+      // for follow-on commits.
+      runningIndex.clear();
+      runningIndex.putAll(indexedCommitsBuilder().build());
+      return this;
+    }
+
     public abstract Builder name(String name);
 
     public abstract Builder permissive(boolean permissive);
 
     abstract ImmutableMap.Builder<String, DummyCommit> indexedCommitsBuilder();
 
+    abstract Builder indexedCommits(ImmutableMap<String, DummyCommit> index);
+
     abstract ImmutableList.Builder<DummyCommit> commitsBuilder();
 
-    public Builder add(DummyCommit... commits) {
+    /**
+     * Adds a commit with the supplied details, but looks up the parents by Id from the already
+     * registered parents.
+     */
+    public final Builder add(
+        String id, String author, String description, DateTime timestamp, String... parentIds) {
+      DummyCommit[] parents = new DummyCommit[parentIds.length];
+      for (int i = 0; i < parents.length; i++) {
+        DummyCommit parent = runningIndex.get(parentIds[i]);
+        if (parent == null) {
+          throw new IllegalArgumentException(
+              "Attempted to set a commit whose parent hasn't been registered");
+        }
+        parents[i] = parent;
+      }
+      add(DummyCommit.create(id, author, description, timestamp, parents));
+      return this;
+    }
+
+    public final Builder add(DummyCommit... commits) {
       addAll(ImmutableList.copyOf(commits));
       return this;
     }
 
-    public Builder addAll(Iterable<DummyCommit> commits) {
+    public final Builder addAll(Iterable<DummyCommit> commits) {
       for (DummyCommit commit : commits) {
         commitsBuilder().add(commit);
-        indexedCommitsBuilder().put(commit.id(), commit);
+        if (runningIndex.put(commit.id(), commit) != null) {
+          throw new IllegalArgumentException(
+              "A commit with id '"
+                  + commit.id()
+                  + "' has already been registered in this history.");
+        }
       }
       return this;
     }
 
-    public abstract DummyRevisionHistory build();
+    abstract DummyRevisionHistory internalBuild();
+
+    public DummyRevisionHistory build() {
+      HashMap<String, DummyCommit> index = new HashMap<>(runningIndex);
+      for (String key : indexedCommitsBuilder().build().keySet()) {
+        index.remove(key);
+      }
+      indexedCommitsBuilder().putAll(index);
+      return internalBuild();
+    }
   }
 }

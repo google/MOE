@@ -25,11 +25,12 @@ import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import junit.framework.TestCase;
 
 import org.joda.time.DateTime;
+import org.junit.Assert;
 
 /**
  * Unit tests for {@link DummyRepositoryFactory}.
  */
-public class DummyRepositoryFactoryTest extends TestCase {
+public class DummyRevisionHistoryTest extends TestCase {
   private static final long HOUR = 360000; // in milliseconds.
 
   public void testCommmitsBecomeRevisions() throws Exception {
@@ -39,6 +40,18 @@ public class DummyRepositoryFactoryTest extends TestCase {
     assertThat(history.findHighestRevision(null)).isEqualTo(Revision.create("2", "foo"));
     assertThat(history.findHighestRevision("2")).isEqualTo(Revision.create("2", "foo"));
     assertThat(history.findHighestRevision("1")).isEqualTo(Revision.create("1", "foo"));
+  }
+
+  public void testUniqueRevisionIds() throws Exception {
+    DummyCommit c1 = DummyCommit.create("1", "foo@foo.bar", "rev 1", new DateTime(1 * HOUR));
+    DummyCommit c2 = DummyCommit.create("1", "bar@foo.bar", "rev 2", new DateTime(2 * HOUR), c1);
+    try {
+      DummyRevisionHistory.builder().name("foo").add(c1, c2);
+      Assert.fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected)
+          .hasMessage("A commit with id '1' has already been registered in this history.");
+    }
   }
 
   public void testMetadataCreatedFromCommits() throws Exception {
@@ -114,5 +127,30 @@ public class DummyRepositoryFactoryTest extends TestCase {
         DummyRevisionHistory.builder().name("foo").permissive(false).build();
     RevisionMetadata metadata = history.getMetadata(Revision.create("1", "foo"));
     assertThat(metadata).isNull();
+  }
+
+  public void testCommmitsCanBeRegistered() throws Exception {
+    DummyRevisionHistory history =
+        DummyRevisionHistory.builder()
+            .name("foo")
+            .permissive(false)
+            .add("1", "foo@foo.bar", "rev 1", new DateTime(1 * HOUR))
+            .add("2", "bar@foo.bar", "rev 2", new DateTime(2 * HOUR), "1")
+            .build();
+    assertThat(history.findHighestRevision(null)).isEqualTo(Revision.create("2", "foo"));
+    assertThat(history.findHighestRevision("2")).isEqualTo(Revision.create("2", "foo"));
+    assertThat(history.findHighestRevision("1")).isEqualTo(Revision.create("1", "foo"));
+  }
+
+  public void testRegisteredCommitParentIsAlreadyRegistered() throws Exception {
+    try {
+      DummyRevisionHistory.builder()
+          .name("foo")
+          .permissive(false)
+          .add("2", "bar@foo.bar", "rev 2", new DateTime(2 * HOUR), "1")
+          .build();
+      Assert.fail();
+    } catch (IllegalArgumentException expected) {
+    }
   }
 }
