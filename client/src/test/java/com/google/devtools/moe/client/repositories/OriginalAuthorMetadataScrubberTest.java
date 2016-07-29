@@ -18,15 +18,20 @@ package com.google.devtools.moe.client.repositories;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.google.devtools.moe.client.Ui;
+
 import junit.framework.TestCase;
 
 import org.joda.time.DateTime;
 
+import java.io.ByteArrayOutputStream;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /** Unit test for the {@link OriginalAuthorMetadataScrubber}. */
 public class OriginalAuthorMetadataScrubberTest extends TestCase {
-  private final OriginalAuthorMetadataScrubber oams = new OriginalAuthorMetadataScrubber();
+  private final ByteArrayOutputStream out = new ByteArrayOutputStream();
+  private final Ui ui = new Ui(out, null);
+  private final OriginalAuthorMetadataScrubber oams = new OriginalAuthorMetadataScrubber(ui);
 
   private final AtomicBoolean shouldScrub = new AtomicBoolean(false);
   private final MetadataScrubberConfig config =
@@ -79,6 +84,35 @@ public class OriginalAuthorMetadataScrubberTest extends TestCase {
     RevisionMetadata actual = oams.scrub(initial, config);
     assertThat(actual).isEqualTo(initial);
     assertThat(actual).isSameAs(initial);
+  }
+
+  public void testSanitizeAuthor_Clean_FullSpec() {
+    assertThat(oams.sanitizeAuthor("Foo <foo@foo.com>")).isEqualTo("Foo <foo@foo.com>");
+  }
+
+  public void testSanitizeAuthor_Clean_OnlyEmail() {
+    assertThat(oams.sanitizeAuthor("<foo@foo.com>")).isEqualTo("<foo@foo.com>");
+  }
+
+  public void testSanitizeAuthor_Clean_Username() {
+    assertThat(oams.sanitizeAuthor("<user>")).isEqualTo("<user>");
+  }
+
+  public void testSanitizeAuthor_Dirty_Email() {
+    assertThat(oams.sanitizeAuthor("user@blah.com")).isEqualTo("user <user@blah.com>");
+    assertThat(oams.sanitizeAuthor("blah%foo+blah@blah.com"))
+        .isEqualTo("blah%foo+blah <blah%foo+blah@blah.com>");
+    assertThat(oams.sanitizeAuthor("  user@blah.com ")).isEqualTo("user <user@blah.com>");
+  }
+
+  public void testSanitizeAuthor_Dirty_Username() {
+    assertThat(oams.sanitizeAuthor("userblah")).isEqualTo("userblah <userblah>");
+  }
+
+  public void testSanitizeAuthor_Dirty_Unknown() {
+    assertThat(oams.sanitizeAuthor("user blah")).isEqualTo("user blah <undetermined_user>");
+    assertThat(out.toString()).contains("WARNING: unknown author format");
+    assertThat(out.toString()).contains("user blah");
   }
 
   public void testExtractField() {
