@@ -181,14 +181,14 @@ public class HgRevisionHistoryTest extends TestCase {
     HgRevisionHistory revHistory =
         new HgRevisionHistory(cmd, HG_CMD, Suppliers.ofInstance(mockRepo));
     RevisionMetadata result = revHistory.getMetadata(Revision.create(2, "mockrepo"));
-    assertEquals("2", result.id);
-    assertEquals("uid@google.com", result.author);
-    assertThat(result.date).isEquivalentAccordingToCompareTo(DATE);
-    assertEquals("description", result.description);
+    assertEquals("2", result.id());
+    assertEquals("uid@google.com", result.author());
+    assertThat(result.date()).isEquivalentAccordingToCompareTo(DATE);
+    assertEquals("description", result.description());
     assertEquals(
         ImmutableList.of(
             Revision.create("parent1", MOCK_REPO_NAME), Revision.create("parent2", MOCK_REPO_NAME)),
-        result.parents);
+        result.parents());
 
     control.verify();
   }
@@ -216,11 +216,11 @@ public class HgRevisionHistoryTest extends TestCase {
     HgRevisionHistory revHistory =
         new HgRevisionHistory(cmd, HG_CMD, Suppliers.ofInstance(mockRepo));
     RevisionMetadata result = revHistory.getMetadata(Revision.create(2, "mockrepo"));
-    assertEquals("2", result.id);
-    assertEquals("u<id@google.com", result.author);
-    assertThat(result.date).isEquivalentAccordingToCompareTo(DATE);
-    assertEquals(">description&amp", result.description);
-    assertEquals(ImmutableList.of(Revision.create("parent", MOCK_REPO_NAME)), result.parents);
+    assertEquals("2", result.id());
+    assertEquals("u<id@google.com", result.author());
+    assertThat(result.date()).isEquivalentAccordingToCompareTo(DATE);
+    assertEquals(">description&amp", result.description());
+    assertEquals(ImmutableList.of(Revision.create("parent", MOCK_REPO_NAME)), result.parents());
 
     control.verify();
   }
@@ -233,11 +233,11 @@ public class HgRevisionHistoryTest extends TestCase {
 
     RevisionMetadata rm =
         rh.parseMetadata("1 < foo@google.com < " + HG_COMMIT_DATE + " < foo < 1:p1 -1:p2\n");
-    assertEquals("1", rm.id);
-    assertEquals("foo@google.com", rm.author);
-    assertThat(rm.date).isEquivalentAccordingToCompareTo(DATE);
-    assertEquals("foo", rm.description);
-    assertEquals(ImmutableList.of(Revision.create("p1", MOCK_REPO_NAME)), rm.parents);
+    assertEquals("1", rm.id());
+    assertEquals("foo@google.com", rm.author());
+    assertThat(rm.date()).isEquivalentAccordingToCompareTo(DATE);
+    assertEquals("foo", rm.description());
+    assertEquals(ImmutableList.of(Revision.create("p1", MOCK_REPO_NAME)), rm.parents());
 
     control.verify();
   }

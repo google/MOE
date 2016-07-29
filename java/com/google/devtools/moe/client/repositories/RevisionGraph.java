@@ -58,7 +58,7 @@ public class RevisionGraph {
         if (matchingRevsAndMetadata.containsKey(current)) {
           historyBuilder.add(current);
           RevisionMetadata metadata = matchingRevsAndMetadata.get(current);
-          workList.addAll(metadata.parents);
+          workList.addAll(metadata.parents());
         }
       }
     }

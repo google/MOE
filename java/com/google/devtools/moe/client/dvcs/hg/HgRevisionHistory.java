@@ -28,7 +28,6 @@ import com.google.devtools.moe.client.repositories.AbstractRevisionHistory;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 
-import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
@@ -173,13 +172,15 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
       }
     }
 
-    DateTime date = HG_DATE_FMT.parseDateTime(unescape(m.group(3)));
-    return new RevisionMetadata(
-        unescape(m.group(1)), // id
-        unescape(m.group(2)), // author
-        date,
-        unescape(m.group(4)), // description
-        parentBuilder.build()); // parents
+    // TODO(cgruber): scan for fields from hg metadata rather than only the description?
+    return RevisionMetadata.builder()
+        .id(unescape(m.group(1)))
+        .author(unescape(m.group(2)))
+        .date(HG_DATE_FMT.parseDateTime(unescape(m.group(3))))
+        .description(unescape(m.group(4)))
+        .withParents(parentBuilder.build())
+        .build();
+
   }
 
   @Override

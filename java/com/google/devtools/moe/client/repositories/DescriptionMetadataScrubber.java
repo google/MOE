@@ -47,7 +47,7 @@ public class DescriptionMetadataScrubber extends MetadataScrubber {
   @Override
   public RevisionMetadata execute(RevisionMetadata rm, MetadataScrubberConfig config) {
     ImmutableList.Builder<String> parentRevIds = ImmutableList.builder();
-    for (Revision parent : rm.parents) {
+    for (Revision parent : rm.parents()) {
       parentRevIds.add(parent.revId());
     }
     String parentsString = Joiner.on(", ").join(parentRevIds.build());
@@ -55,12 +55,11 @@ public class DescriptionMetadataScrubber extends MetadataScrubber {
     String scrubbedDescription =
         config
             .getLogFormat()
-            .replace("{id}", rm.id)
-            .replace("{author}", rm.author)
-            .replace("{date}", DATE_FMT.print(rm.date))
-            .replace("{description}", rm.description)
+            .replace("{id}", rm.id())
+            .replace("{author}", rm.author())
+            .replace("{date}", DATE_FMT.print(rm.date()))
+            .replace("{description}", rm.description())
             .replace("{parents}", parentsString);
-
-    return new RevisionMetadata(rm.id, rm.author, rm.date, scrubbedDescription, rm.parents);
+    return rm.toBuilder().description(scrubbedDescription).build();
   }
 }

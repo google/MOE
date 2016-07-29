@@ -30,7 +30,6 @@ import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.parser.Term;
 import com.google.devtools.moe.client.project.RepositoryConfig;
-import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.testing.TestingModule;
 import com.google.devtools.moe.client.writer.DraftRevision;
@@ -259,8 +258,12 @@ public class SvnWriterTest extends TestCase {
         new Codebase(
             fileSystem, f("/codebase"), "public", e("public", ImmutableMap.<String, String>of()));
     RevisionMetadata rm =
-        new RevisionMetadata(
-            "rev1", "author", new DateTime(1L), "desc", ImmutableList.<Revision>of());
+        RevisionMetadata.builder()
+            .id("rev1")
+            .author("author")
+            .date(new DateTime(1L))
+            .description("desc")
+            .build();
     SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"), null);
     DraftRevision r = e.putCodebase(c, rm);
     control.verify();

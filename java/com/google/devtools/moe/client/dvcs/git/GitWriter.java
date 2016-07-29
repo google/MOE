@@ -34,7 +34,6 @@ import java.util.List;
  * revision (if the configured branch has moved past equivalence).
  */
 public class GitWriter extends AbstractDvcsWriter<GitClonedRepository> {
-
   GitWriter(GitClonedRepository revClone) {
     super(revClone);
   }
@@ -67,10 +66,10 @@ public class GitWriter extends AbstractDvcsWriter<GitClonedRepository> {
   protected void commitChanges(RevisionMetadata rm) throws CommandException {
     List<String> args =
         Lists.newArrayList(
-            "commit", "--all", "--message", rm.description, "--date", rm.date.toString());
-    if (rm.author != null) {
+            "commit", "--all", "--message", rm.description(), "--date", rm.date().toString());
+    if (rm.author() != null) {
       args.add("--author");
-      args.add(rm.author);
+      args.add(rm.author());
     }
     revClone.runGitCommand(args.toArray(new String[args.size()]));
   }

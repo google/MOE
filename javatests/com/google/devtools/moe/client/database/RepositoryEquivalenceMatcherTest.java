@@ -72,7 +72,14 @@ public class RepositoryEquivalenceMatcherTest extends TestCase {
     RevisionGraph nonMatching =
         RevisionGraph.builder(matching)
             .addRevision(
-                startingRev, new RevisionMetadata("id", "author", DateTime.now(), "desc", matching))
+                startingRev,
+                RevisionMetadata.builder()
+                    .id("id")
+                    .author("author")
+                    .date(DateTime.now())
+                    .description("desc")
+                    .withParents(matching)
+                    .build())
             .build();
 
     RepositoryEquivalenceMatcher.Result result = matcher.makeResult(nonMatching, matching);

@@ -26,70 +26,79 @@ public class RevisionMetadataTest extends TestCase {
 
   public void testConcatenate_singleMetadata() {
     RevisionMetadata rm =
-        new RevisionMetadata(
-            "id",
-            "auth",
-            new DateTime(1L),
-            "description",
-            ImmutableList.of(Revision.create("revId", "repo")));
+        RevisionMetadata.builder()
+            .id("id")
+            .author("auth")
+            .date(new DateTime(1L))
+            .description("description")
+            .withParents(Revision.create("revId", "repo"))
+            .build();
 
     assertEquals(rm, RevisionMetadata.concatenate(ImmutableList.of(rm), null));
   }
 
   public void testConcatenate_twoMetadata() {
     RevisionMetadata rm1 =
-        new RevisionMetadata(
-            "id1",
-            "auth1",
-            new DateTime(1L),
-            "description1",
-            ImmutableList.of(Revision.create("revId1", "repo")));
+        RevisionMetadata.builder()
+            .id("id1")
+            .author("auth1")
+            .date(new DateTime(1L))
+            .description("description1")
+            .withParents(Revision.create("revId1", "repo"))
+            .build();
     RevisionMetadata rm2 =
-        new RevisionMetadata(
-            "id2",
-            "auth2",
-            new DateTime(2L),
-            "description2",
-            ImmutableList.of(Revision.create("revId2", "repo")));
+        RevisionMetadata.builder()
+            .id("id2")
+            .author("auth2")
+            .date(new DateTime(2L))
+            .description("description2")
+            .withParents(Revision.create("revId2", "repo"))
+            .build();
 
     RevisionMetadata rmExpected =
-        new RevisionMetadata(
-            "id1, id2",
-            "auth1, auth2",
-            new DateTime(2L),
-            "description1\n-------------\ndescription2",
-            ImmutableList.of(Revision.create("revId1", "repo"), Revision.create("revId2", "repo")));
+        RevisionMetadata.builder()
+            .id("id1, id2")
+            .author("auth1, auth2")
+            .date(new DateTime(2L))
+            .description("description1\n-------------\ndescription2")
+            .withParents(Revision.create("revId1", "repo"), Revision.create("revId2", "repo"))
+            .build();
 
     assertEquals(rmExpected, RevisionMetadata.concatenate(ImmutableList.of(rm1, rm2), null));
   }
 
   public void testConcatenate_withMigrationInfo() {
     RevisionMetadata rm1 =
-        new RevisionMetadata(
-            "id1",
-            "auth1",
-            new DateTime(1L),
-            "description1",
-            ImmutableList.of(Revision.create("revId1", "repo")));
+        RevisionMetadata.builder()
+            .id("id1")
+            .author("auth1")
+            .date(new DateTime(1L))
+            .description("description1")
+            .withParents(Revision.create("revId1", "repo"))
+            .build();
     RevisionMetadata rm2 =
-        new RevisionMetadata(
-            "id2",
-            "auth2",
-            new DateTime(2L),
-            "description2",
-            ImmutableList.of(Revision.create("revId2", "repo")));
+        RevisionMetadata.builder()
+            .id("id2")
+            .author("auth2")
+            .date(new DateTime(2L))
+            .description("description2")
+            .withParents(Revision.create("revId2", "repo"))
+            .build();
+
     Revision migrationFromRev = Revision.create("migrationRevId", "repo");
 
     RevisionMetadata rmExpected =
-        new RevisionMetadata(
-            "id1, id2",
-            "auth1, auth2",
-            new DateTime(2L),
-            "description1\n-------------\ndescription2"
-                + "\n-------------\nCreated by MOE: https://github.com/google/moe\n"
-                + "MOE_MIGRATED_REVID="
-                + migrationFromRev.revId(),
-            ImmutableList.of(Revision.create("revId1", "repo"), Revision.create("revId2", "repo")));
+        RevisionMetadata.builder()
+            .id("id1, id2")
+            .author("auth1, auth2")
+            .date(new DateTime(2L))
+            .description(
+                "description1\n-------------\ndescription2"
+                    + "\n-------------\nCreated by MOE: https://github.com/google/moe\n"
+                    + "MOE_MIGRATED_REVID="
+                    + migrationFromRev.revId())
+            .withParents(Revision.create("revId1", "repo"), Revision.create("revId2", "repo"))
+            .build();
 
     assertEquals(
         rmExpected, RevisionMetadata.concatenate(ImmutableList.of(rm1, rm2), migrationFromRev));

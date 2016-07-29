@@ -32,7 +32,6 @@ import javax.annotation.Nullable;
  * are not injected with their configuration, but receive it on the call stack.
  */
 public abstract class MetadataScrubber {
-
   /**
    * The primary method of a MetadataScrubber. It returns a copy of the RevisionMetadata whose
    * data fields have been scrubbed in the prescribed way.  If no alterations are made, this
@@ -82,16 +81,21 @@ public abstract class MetadataScrubber {
    */
   public static RevisionMetadata stripFromAllFields(
       RevisionMetadata rm, List<String> words, String replacement, boolean wordAlone) {
-    String newId = new String(rm.id);
-    String newAuthor = new String(rm.author);
-    String newDescription = new String(rm.description);
+
+    String newId = rm.id();
+    String newAuthor = rm.author();
+    String newDescription = rm.description();
     for (String word : words) {
       String regex = (wordAlone) ? ("(?i)(\\b)" + word + "(\\b)") : ("(?i)" + word);
       newId = newId.replaceAll(regex, replacement);
       newAuthor = newAuthor.replaceAll(regex, replacement);
       newDescription = newDescription.replaceAll(regex, replacement);
     }
-    return new RevisionMetadata(newId, newAuthor, rm.date, newDescription, rm.parents);
+    return rm.toBuilder()
+        .id(newId)
+        .author(newAuthor)
+        .description(newDescription)
+        .build();
   }
 
   /** Provides the set of default metadata scrubbers */

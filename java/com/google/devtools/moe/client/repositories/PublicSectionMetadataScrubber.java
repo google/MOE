@@ -44,7 +44,7 @@ public class PublicSectionMetadataScrubber extends MetadataScrubber {
 
   @Override
   public RevisionMetadata execute(RevisionMetadata rm, MetadataScrubberConfig unused) {
-    List<String> lines = Splitter.on('\n').splitToList(rm.description);
+    List<String> lines = Splitter.on('\n').splitToList(rm.description());
     int startPublicSection = -1;
     int endPublicSection = -1;
     int currentLine = 0;
@@ -61,7 +61,7 @@ public class PublicSectionMetadataScrubber extends MetadataScrubber {
     String newDesc =
         (startPublicSection >= 0)
             ? Joiner.on("\n").join(lines.subList(startPublicSection + 1, endPublicSection))
-            : rm.description;
-    return new RevisionMetadata(rm.id, rm.author, rm.date, newDesc, rm.parents);
+            : rm.description();
+    return rm.toBuilder().description(newDesc).build();
   }
 }

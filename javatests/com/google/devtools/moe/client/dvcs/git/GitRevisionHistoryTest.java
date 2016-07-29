@@ -160,11 +160,11 @@ public class GitRevisionHistoryTest extends TestCase {
 
     GitRevisionHistory rh = new GitRevisionHistory(Suppliers.ofInstance(mockRepo));
     RevisionMetadata result = rh.getMetadata(Revision.create(1, "mockrepo"));
-    assertEquals("1", result.id);
-    assertEquals("foo@google.com", result.author);
-    assertThat(result.date).isEquivalentAccordingToCompareTo(DATE);
-    assertEquals("description\n", result.description);
-    assertThat(result.parents)
+    assertEquals("1", result.id());
+    assertEquals("foo@google.com", result.author());
+    assertThat(result.date()).isEquivalentAccordingToCompareTo(DATE);
+    assertEquals("description\n", result.description());
+    assertThat(result.parents())
         .containsExactly(Revision.create(2, repositoryName), Revision.create(3, repositoryName))
         .inOrder();
 
@@ -186,11 +186,11 @@ public class GitRevisionHistoryTest extends TestCase {
                 "desc with \n\nmultiple lines\n"));
     control.verify();
 
-    assertEquals("1", rm.id);
-    assertEquals("foo@google.com", rm.author);
-    assertThat(rm.date).isEquivalentAccordingToCompareTo(DATE);
-    assertEquals("desc with \n\nmultiple lines\n", rm.description);
-    assertThat(rm.parents)
+    assertEquals("1", rm.id());
+    assertEquals("foo@google.com", rm.author());
+    assertThat(rm.date()).isEquivalentAccordingToCompareTo(DATE);
+    assertEquals("desc with \n\nmultiple lines\n", rm.description());
+    assertThat(rm.parents())
         .containsExactly(Revision.create(2, repositoryName), Revision.create(3, repositoryName))
         .inOrder();
   }

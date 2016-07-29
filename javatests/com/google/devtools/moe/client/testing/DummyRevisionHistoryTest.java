@@ -63,18 +63,18 @@ public class DummyRevisionHistoryTest extends TestCase {
     assertThat(head).isEqualTo(Revision.create("2", "foo")); // just to make sure.
 
     RevisionMetadata metadata = history.getMetadata(head);
-    assertThat(metadata.id).isEqualTo("2");
-    assertThat(metadata.author).isEqualTo("bar@foo.bar");
-    assertThat(metadata.date).isEqualTo(new DateTime(2 * HOUR));
-    assertThat(metadata.description).isEqualTo("rev 2");
-    assertThat(metadata.parents).containsExactly(Revision.create("1", "foo"));
+    assertThat(metadata.id()).isEqualTo("2");
+    assertThat(metadata.author()).isEqualTo("bar@foo.bar");
+    assertThat(metadata.date()).isEqualTo(new DateTime(2 * HOUR));
+    assertThat(metadata.description()).isEqualTo("rev 2");
+    assertThat(metadata.parents()).containsExactly(Revision.create("1", "foo"));
 
     metadata = history.getMetadata(Revision.create("1", "foo"));
-    assertThat(metadata.id).isEqualTo("1");
-    assertThat(metadata.author).isEqualTo("foo@foo.bar");
-    assertThat(metadata.date).isEqualTo(new DateTime(1 * HOUR));
-    assertThat(metadata.description).isEqualTo("rev 1");
-    assertThat(metadata.parents).isEmpty();
+    assertThat(metadata.id()).isEqualTo("1");
+    assertThat(metadata.author()).isEqualTo("foo@foo.bar");
+    assertThat(metadata.date()).isEqualTo(new DateTime(1 * HOUR));
+    assertThat(metadata.description()).isEqualTo("rev 1");
+    assertThat(metadata.parents()).isEmpty();
   }
 
   public void testLenientFindHeadInEmptyHistoryReturnsCannedDefault() {
@@ -115,11 +115,11 @@ public class DummyRevisionHistoryTest extends TestCase {
   private void testGetMetadataReturnsCannedData(RevisionHistory history) {
     RevisionMetadata metadata = history.getMetadata(Revision.create("1", "foo"));
     assertThat(metadata).isNotNull();
-    assertThat(metadata.id).isEqualTo("1");
-    assertThat(metadata.author).isEqualTo("author");
-    assertThat(metadata.date).isEqualTo(new DateTime(1L));
-    assertThat(metadata.description).isEqualTo("description");
-    assertThat(metadata.parents).containsExactly(Revision.create("parent", "foo"));
+    assertThat(metadata.id()).isEqualTo("1");
+    assertThat(metadata.author()).isEqualTo("author");
+    assertThat(metadata.date()).isEqualTo(new DateTime(1L));
+    assertThat(metadata.description()).isEqualTo("description");
+    assertThat(metadata.parents()).containsExactly(Revision.create("parent", "foo"));
   }
 
   public void testStrictGetMetadataReturnsNull() {

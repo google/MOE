@@ -169,7 +169,13 @@ public class SvnRevisionHistory extends AbstractRevisionHistory {
         description = currNode.getTextContent();
       }
     }
-    return new RevisionMetadata(revId, author, date, description, parents);
+    return RevisionMetadata.builder()
+        .id(revId)
+        .author(author)
+        .date(date)
+        .description(description)
+        .withParents(parents)
+        .build();
   }
 
   @Override

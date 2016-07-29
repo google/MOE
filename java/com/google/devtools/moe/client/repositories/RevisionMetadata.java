@@ -16,6 +16,7 @@
 
 package com.google.devtools.moe.client.repositories;
 
+import com.google.auto.value.AutoValue;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -27,60 +28,82 @@ import java.util.Objects;
 
 import javax.annotation.Nullable;
 
-/**
- * Holds the metadata associated with a Revision.
- */
-// TODO(cgruber) @AutoValue
-public class RevisionMetadata {
-  public final String id;
-
+/** Holds the metadata associated with a Revision. */
+@AutoValue
+public abstract class RevisionMetadata {
+  public abstract String id();
   /**
-   * RevisionHistories should make a best-effort to format their author
-   * information in the git canonical form, i.e.,
-   * Nick Name <username@gmail.com>
+   * RevisionHistories should make a best-effort to format their author information in the git
+   * canonical form, i.e., {@code "Nick Name <username@gmail.com>"}
+   *
+   * <p>Author may be null, as in the case of a scrubbed author, in which case MOE writers should
+   * substitute an appropriately neutral author if that repository type requires it.
    */
-  public final String author;
+  @Nullable
+  public abstract String author();
 
-  public final DateTime date;
-  public final String description;
-  public final List<Revision> parents;
+  public abstract DateTime date();
 
-  public RevisionMetadata(
-      String id, String author, DateTime date, String description, List<Revision> parents) {
-    this.id = id;
-    this.author = author;
-    this.date = Preconditions.checkNotNull(date);
-    this.description = description;
-    this.parents = parents;
-  }
+  public abstract String description();
+
+  public abstract ImmutableList<Revision> parents();
+
+  /** Make a builder from this value object */
+  public abstract Builder toBuilder();
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, author, date, description, parents);
+    return Objects.hash(id(), author(), date(), description(), parents());
   }
 
+  // Override this to preserve backward compatibility since JodaTime's DateTime
+  // does not implement Equals in a useful way and there is no way to specify
+  // that autovalue should prefer some other mechanism for equality
+  // TODO(cgruber) store an Instant or millis or some such.
   @Override
   public boolean equals(Object obj) {
     if (obj instanceof RevisionMetadata) {
       RevisionMetadata revisionMetadataObj = (RevisionMetadata) obj;
-      return (Objects.equals(id, revisionMetadataObj.id)
-          && Objects.equals(author, revisionMetadataObj.author)
-          && date.isEqual(revisionMetadataObj.date)
-          && Objects.equals(description, revisionMetadataObj.description)
-          && Objects.equals(parents, revisionMetadataObj.parents));
+      return (Objects.equals(id(), revisionMetadataObj.id())
+          && Objects.equals(author(), revisionMetadataObj.author())
+          && date().isEqual(revisionMetadataObj.date())
+          && Objects.equals(description(), revisionMetadataObj.description())
+          && Objects.equals(parents(), revisionMetadataObj.parents()));
     }
     return false;
   }
 
-  @Override
-  public String toString() {
-    return String.format(
-        "id: %s\nauthor: %s\ndate: %s\ndescription: %s\nparents: %s",
-        id,
-        author,
-        date,
-        description,
-        Joiner.on(",").join(parents));
+  /**
+   * Builds a {@link RevisionMetadata} from its value elements.  Can also be used to
+   * copy-and-modify a {@link RevisionMetadata} by calling {@link RevisionMetadata#toBuilder()}
+   * and then calling builder methods with the different values.
+   */
+  @AutoValue.Builder
+  public abstract static class Builder {
+    public abstract Builder id(String id);
+
+    public abstract Builder author(@Nullable String author);
+
+    public abstract Builder date(DateTime date);
+
+    public abstract Builder description(String description);
+
+    public abstract ImmutableList.Builder<Revision> parentsBuilder();
+
+    public abstract RevisionMetadata build();
+
+    public Builder withParents(Iterable<Revision> parentRevisions) {
+      parentsBuilder().addAll(parentRevisions);
+      return this;
+    }
+
+    public Builder withParents(Revision... parentRevisions) {
+      return withParents(ImmutableList.copyOf(parentRevisions));
+    }
+  }
+
+  public static RevisionMetadata.Builder builder() {
+    return new AutoValue_RevisionMetadata.Builder();
   }
 
   /**
@@ -89,21 +112,20 @@ public class RevisionMetadata {
   public static RevisionMetadata concatenate(
       List<RevisionMetadata> rms, @Nullable Revision migrationFromRev) {
     Preconditions.checkArgument(!rms.isEmpty());
-
+    RevisionMetadata.Builder builder = RevisionMetadata.builder();
     ImmutableList.Builder<String> idBuilder = ImmutableList.builder();
     ImmutableList.Builder<String> authorBuilder = ImmutableList.builder();
     DateTime newDate = new DateTime(0L);
     ImmutableList.Builder<String> descBuilder = ImmutableList.builder();
-    ImmutableList.Builder<Revision> parentBuilder = ImmutableList.builder();
 
     for (RevisionMetadata rm : rms) {
-      idBuilder.add(rm.id);
-      authorBuilder.add(rm.author);
-      if (newDate.isBefore(rm.date)) {
-        newDate = rm.date;
+      idBuilder.add(rm.id());
+      authorBuilder.add(rm.author());
+      if (newDate.isBefore(rm.date())) {
+        newDate = rm.date();
       }
-      descBuilder.add(rm.description);
-      parentBuilder.addAll(rm.parents);
+      descBuilder.add(rm.description());
+      builder.parentsBuilder().addAll(rm.parents());
     }
 
     if (migrationFromRev != null) {
@@ -113,11 +135,11 @@ public class RevisionMetadata {
               + migrationFromRev.revId());
     }
 
-    String newId = Joiner.on(", ").join(idBuilder.build());
-    String newAuthor = Joiner.on(", ").join(authorBuilder.build());
-    String newDesc = Joiner.on("\n-------------\n").join(descBuilder.build());
-    ImmutableList<Revision> newParents = parentBuilder.build();
-
-    return new RevisionMetadata(newId, newAuthor, newDate, newDesc, newParents);
+    return builder
+        .id(Joiner.on(", ").join(idBuilder.build()))
+        .author(Joiner.on(", ").join(authorBuilder.build()))
+        .date(newDate)
+        .description(Joiner.on("\n-------------\n").join(descBuilder.build()))
+        .build();
   }
 }

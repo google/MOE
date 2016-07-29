@@ -150,16 +150,16 @@ public class SvnRevisionHistoryTest extends TestCase {
                 + SVN_COMMIT_DATE
                 + "</date><msg>message</msg></logentry></log>");
     assertEquals(2, rs.size());
-    assertEquals("2", rs.get(0).id);
-    assertEquals("uid@google.com", rs.get(0).author);
-    assertThat(rs.get(0).date).isEquivalentAccordingToCompareTo(DATE);
-    assertEquals("description", rs.get(0).description);
-    assertEquals(ImmutableList.of(Revision.create(1, "internal_svn")), rs.get(0).parents);
-    assertEquals("1", rs.get(1).id);
-    assertEquals("user@google.com", rs.get(1).author);
-    assertThat(rs.get(1).date).isEquivalentAccordingToCompareTo(DATE);
-    assertEquals("message", rs.get(1).description);
-    assertEquals(ImmutableList.of(), rs.get(1).parents);
+    assertEquals("2", rs.get(0).id());
+    assertEquals("uid@google.com", rs.get(0).author());
+    assertThat(rs.get(0).date()).isEquivalentAccordingToCompareTo(DATE);
+    assertEquals("description", rs.get(0).description());
+    assertEquals(ImmutableList.of(Revision.create(1, "internal_svn")), rs.get(0).parents());
+    assertEquals("1", rs.get(1).id());
+    assertEquals("user@google.com", rs.get(1).author());
+    assertThat(rs.get(1).date()).isEquivalentAccordingToCompareTo(DATE);
+    assertEquals("message", rs.get(1).description());
+    assertEquals(ImmutableList.of(), rs.get(1).parents());
   }
 
   public void testGetMetadata() {
@@ -197,11 +197,11 @@ public class SvnRevisionHistoryTest extends TestCase {
     SvnRevisionHistory history =
         new SvnRevisionHistory("internal_svn", "http://foo/svn/trunk/", util);
     RevisionMetadata result = history.getMetadata(Revision.create(3, "internal_svn"));
-    assertEquals("3", result.id);
-    assertEquals("uid@google.com", result.author);
-    assertThat(result.date).isEquivalentAccordingToCompareTo(DATE);
-    assertEquals("message", result.description);
-    assertEquals(ImmutableList.of(Revision.create(2, "internal_svn")), result.parents);
+    assertEquals("3", result.id());
+    assertEquals("uid@google.com", result.author());
+    assertThat(result.date()).isEquivalentAccordingToCompareTo(DATE);
+    assertEquals("message", result.description());
+    assertEquals(ImmutableList.of(Revision.create(2, "internal_svn")), result.parents());
     control.verify();
   }
 
@@ -247,10 +247,15 @@ public class SvnRevisionHistoryTest extends TestCase {
             ImmutableList.of(Revision.create(6, "internal")));
 
     RevisionMetadata expected =
-        new RevisionMetadata(
-            "7", "user", DATE, "description", ImmutableList.of(Revision.create(6, "internal")));
+        RevisionMetadata.builder()
+            .id("7")
+            .author("user")
+            .date(DATE)
+            .description("description")
+            .withParents(Revision.create(6, "internal"))
+            .build();
 
-    assertEquals(expected, result);
+    assertThat(result).isEqualTo(expected);
   }
 
   public void testFindNewRevisions() {

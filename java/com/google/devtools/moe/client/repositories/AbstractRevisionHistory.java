@@ -60,7 +60,7 @@ public abstract class AbstractRevisionHistory implements RevisionHistory {
         RevisionMetadata metadata = getMetadata(current);
         nonMatchingBuilder.addRevision(current, metadata);
 
-        List<Revision> parentsToSearch = metadata.parents;
+        List<Revision> parentsToSearch = metadata.parents();
         if (parentsToSearch.size() > 0 && searchType == SearchType.LINEAR) {
           parentsToSearch = parentsToSearch.subList(0, 1);
         }

@@ -396,7 +396,7 @@ public class MigrateBranchDirective extends Directive {
         if (metadata == null) {
           throw new MoeProblem("Could not load revision metadata for %s", revision);
         }
-        revisionsToProcess.addAll(metadata.parents);
+        revisionsToProcess.addAll(metadata.parents());
         count++;
       }
     }
@@ -414,7 +414,7 @@ public class MigrateBranchDirective extends Directive {
       }
       if (!commitsInParentBranch.contains(revision.revId())) {
         commitsNotInParentBranch.add(revision.revId());
-        revisionsToProcess.addAll(metadata.parents);
+        revisionsToProcess.addAll(metadata.parents());
       }
     }
     ui.popTask(migrationBranchTask, "");

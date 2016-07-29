@@ -67,12 +67,14 @@ public class HgWriter extends AbstractDvcsWriter<HgClonedRepository> {
             .add(
                 "commit",
                 "--message",
-                rm.description,
+                rm.description(),
                 "--date",
-                rm.date.getMillis() / 1000 + " " + -rm.date.getZone().getOffset(rm.date) / 1000);
-    if (rm.author != null) {
+                rm.date().getMillis() / 1000
+                    + " "
+                    + -rm.date().getZone().getOffset(rm.date()) / 1000);
+    if (rm.author() != null) {
       args.add("--user");
-      args.add(rm.author);
+      args.add(rm.author());
     }
     revClone.runHgCommand(getRoot(), args.build());
   }

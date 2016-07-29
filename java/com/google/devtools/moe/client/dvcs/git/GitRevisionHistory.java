@@ -131,12 +131,16 @@ public class GitRevisionHistory extends AbstractRevisionHistory {
     }
 
     DateTime date = GIT_DATE_FMT.parseDateTime(split.get(2));
-    return new RevisionMetadata(
-        split.get(0), // id
-        split.get(1), // author
-        date,
-        split.get(4), // description
-        parentBuilder.build()); // parents
+
+    // TODO(cgruber): scan for fields from git metadata rather than description?
+    return RevisionMetadata.builder()
+        .id(split.get(0))
+        .author(split.get(1))
+        .date(date)
+        .description(split.get(4))
+        .withParents(parentBuilder.build())
+        .build(); // fields will be auto-extracted from description.
+
   }
 
   @Override

@@ -19,7 +19,6 @@ package com.google.devtools.moe.client.repositories;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
 
 import junit.framework.TestCase;
 
@@ -46,58 +45,62 @@ public class PublicSectionMetadataScrubberTest extends TestCase {
 
   public void testPublicMessageReplacement() {
     String actual =
-        SCRUBBER.scrub(metadata("Internal", "  Public: \t", "whitespace", "okay"), null)
-            .description;
+        SCRUBBER
+            .scrub(metadata("Internal", "  Public: \t", "whitespace", "okay"), null)
+            .description();
     String expected = Joiner.on("\n").join("whitespace", "okay");
     assertThat(actual).isEqualTo(expected);
   }
 
   public void testPublicMessageReplacement_EmptySection() {
-    String actual = SCRUBBER.scrub(metadata("Internal", "Public:"), null).description;
+    String actual = SCRUBBER.scrub(metadata("Internal", "Public:"), null).description();
     assertThat(actual).isEmpty();
   }
 
   public void testNoChange() {
-    String actual = SCRUBBER.scrub(metadata("no", "change"), null).description;
+    String actual = SCRUBBER.scrub(metadata("no", "change"), null).description();
     String expected = Joiner.on("\n").join("no", "change");
     assertThat(actual).isEqualTo(expected);
   }
 
   public void testPublicSectionFirst() {
     String actual =
-        SCRUBBER.scrub(metadata("Public:", "section", "first", "", "Then internal desc"), null)
-            .description;
+        SCRUBBER
+            .scrub(metadata("Public:", "section", "first", "", "Then internal desc"), null)
+            .description();
     String expected = Joiner.on("\n").join("section", "first");
     assertThat(actual).isEqualTo(expected);
   }
 
   public void testUnrelatedSectionFirst() {
     String actual =
-        SCRUBBER.scrub(metadata("Unrelated:", "section", "Public:", "then", "public"), null)
-            .description;
+        SCRUBBER
+            .scrub(metadata("Unrelated:", "section", "Public:", "then", "public"), null)
+            .description();
     String expected = Joiner.on("\n").join("then", "public");
     assertThat(actual).isEqualTo(expected);
   }
 
   public void testSelectLastPublicSectionFromMoreThanOne() {
     String actual =
-        SCRUBBER.scrub(
+        SCRUBBER
+            .scrub(
                 metadata(
                     "Public:", "first", "public", "section", "", "Public:", "last", "public",
                     "section"),
                 null)
-            .description;
+            .description();
     String expected = Joiner.on("\n").join("last", "public", "section");
     assertThat(actual).isEqualTo(expected);
   }
 
   private static RevisionMetadata metadata(String... description) {
-    return new RevisionMetadata(
-        "commit_number",
-        "author@google.com",
-        new DateTime(1L),
-        Joiner.on("\n").join(description),
-        ImmutableList.of(
-            Revision.create("parentId1", "repo"), Revision.create("parentId2", "repo")));
+    return RevisionMetadata.builder()
+        .id("commit_number")
+        .author("author@google.com")
+        .date(new DateTime(1L))
+        .description(Joiner.on("\n").join(description))
+        .withParents(Revision.create("parentId1", "repo"), Revision.create("parentId2", "repo"))
+        .build();
   }
 }

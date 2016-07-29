@@ -18,7 +18,6 @@ package com.google.devtools.moe.client.directives;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.Ui;
@@ -63,13 +62,15 @@ public class DetermineMetadataDirectiveTest extends TestCase {
     d.repositoryExpression = "internal(revision=\"1,2\")";
     assertEquals(0, d.perform());
     RevisionMetadata rm =
-        new RevisionMetadata(
-            "1, 2",
-            "author, author",
-            new DateTime(1L),
-            "description\n-------------\ndescription",
-            ImmutableList.of(
-                Revision.create("parent", "internal"), Revision.create("parent", "internal")));
+        RevisionMetadata.builder()
+            .id("1, 2")
+            .author("author, author")
+            .date(new DateTime(1L))
+            .description("description\n-------------\ndescription")
+            .withParents(
+                Revision.create("parent", "internal"), Revision.create("parent", "internal"))
+            .build();
+
     assertThat(stream.toString().trim()).isEqualTo(rm.toString().trim());
   }
 
@@ -88,12 +89,14 @@ public class DetermineMetadataDirectiveTest extends TestCase {
     d.repositoryExpression = "internal(revision=7)";
     assertEquals(0, d.perform());
     RevisionMetadata rm =
-        new RevisionMetadata(
-            "7",
-            "author",
-            new DateTime(1L),
-            "description",
-            ImmutableList.of(Revision.create("parent", "internal")));
+        RevisionMetadata.builder()
+            .id("7")
+            .author("author")
+            .date(new DateTime(1L))
+            .description("description")
+            .withParents(Revision.create("parent", "internal"))
+            .build();
+
     assertThat(stream.toString().trim()).isEqualTo(rm.toString().trim());
   }
 }

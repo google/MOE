@@ -19,8 +19,6 @@ package com.google.devtools.moe.client.repositories;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
-import com.google.common.collect.ImmutableList;
-
 import junit.framework.TestCase;
 
 import org.joda.time.DateTime;
@@ -28,23 +26,24 @@ import org.joda.time.DateTime;
 public class DescriptionMetadataScrubberTest extends TestCase {
 
   private static final RevisionMetadata REVISION_METADATA =
-      new RevisionMetadata(
-          "commit_number",
-          "author@google.com",
-          new DateTime(1L),
-          "some changes",
-          ImmutableList.of(
-              Revision.create("parentId1", "repo"), Revision.create("parentId2", "repo")));
+      RevisionMetadata.builder()
+          .id("commit_number")
+          .author("author@google.com")
+          .date(new DateTime(1L))
+          .description("some changes")
+          .withParents(Revision.create("parentId1", "repo"), Revision.create("parentId2", "repo"))
+          .build();
 
   public void testNonDescriptionFieldsUnaffacted() {
     RevisionMetadata rmExpected =
-        new RevisionMetadata(
-            "commit_number",
-            "author@google.com",
-            new DateTime(1L),
-            "some changes!!!",
-            ImmutableList.of(
-                Revision.create("parentId1", "repo"), Revision.create("parentId2", "repo")));
+        RevisionMetadata.builder()
+            .id("commit_number")
+            .author("author@google.com")
+            .date(new DateTime(1L))
+            .description("some changes!!!")
+            .withParents(Revision.create("parentId1", "repo"), Revision.create("parentId2", "repo"))
+            .build();
+
 
     RevisionMetadata rmActual =
         new DescriptionMetadataScrubber()
@@ -78,7 +77,7 @@ public class DescriptionMetadataScrubberTest extends TestCase {
           }
         };
     assertWithMessage("Unexpected scrubbing output for format '%s'", format)
-        .that(new DescriptionMetadataScrubber().scrub(REVISION_METADATA, config).description)
+        .that(new DescriptionMetadataScrubber().scrub(REVISION_METADATA, config).description())
         .isEqualTo(expectedOutput);
   }
 }

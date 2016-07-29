@@ -116,19 +116,26 @@ public abstract class DummyRevisionHistory implements RevisionHistory {
                     }
                   })
               .toList();
-      return new RevisionMetadata(
-          commit.id(), commit.author(), commit.timestamp(), commit.description(), parents);
+      return RevisionMetadata.builder()
+          .id(commit.id())
+          .author(commit.author())
+          .date(commit.timestamp())
+          .description(commit.description())
+          .withParents(parents)
+          .build();
     }
     // Support legacy tests.
     if (permissive()) {
-      return new RevisionMetadata(
-          revision.revId(),
-          "author",
-          new DateTime(1L),
-          revision.revId().equals("migrated_to")
-              ? "MOE_MIGRATED_REVID=migrated_from"
-              : "description",
-          ImmutableList.of(Revision.create("parent", name())));
+      return RevisionMetadata.builder()
+          .id(revision.revId())
+          .author("author")
+          .date(new DateTime(1L))
+          .description(
+              revision.revId().equals("migrated_to")
+                  ? "MOE_MIGRATED_REVID=migrated_from"
+                  : "description")
+          .withParents(Revision.create("parent", name()))
+          .build();
     }
     return null;
   }

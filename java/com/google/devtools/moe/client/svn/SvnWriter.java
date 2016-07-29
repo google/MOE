@@ -106,8 +106,7 @@ public class SvnWriter implements Writer {
               "svn update%n"
                   + "svn commit -m \"%s\"%n"
                   + "svn propset -r HEAD svn:author \"%s\" --revprop",
-              rm.description,
-              rm.author);
+              rm.description(), rm.author());
       Utils.makeShellScript(script, rootDirectory.getAbsolutePath() + "/svn_commit.sh");
 
       Injector.INSTANCE

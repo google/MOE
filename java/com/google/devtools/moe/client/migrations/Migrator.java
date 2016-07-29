@@ -101,9 +101,8 @@ public class Migrator {
 
   public RevisionMetadata possiblyScrubAuthors(RevisionMetadata metadata, ScrubberConfig scrubber) {
     try {
-      if (scrubber != null && scrubber.shouldScrubAuthor(metadata.author)) {
-        return new RevisionMetadata(
-            metadata.id, null /* author */, metadata.date, metadata.description, metadata.parents);
+      if (scrubber != null && scrubber.shouldScrubAuthor(metadata.author())) {
+        return metadata.toBuilder().author(null).build();
       }
     } catch (InvalidProject exception) {
       throw new MoeProblem(exception.getMessage());

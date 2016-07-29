@@ -183,7 +183,7 @@ public class Bookkeeper {
 
   @Nullable
   private static String getMigratedRevId(RevisionMetadata metadata) {
-    Matcher migratedRevMatcher = MIGRATED_REV_PATTERN.matcher(metadata.description);
+    Matcher migratedRevMatcher = MIGRATED_REV_PATTERN.matcher(metadata.description());
     return migratedRevMatcher.find() ? migratedRevMatcher.group(1) : null;
   }
 

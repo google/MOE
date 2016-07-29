@@ -35,11 +35,19 @@ public class MetadataUsernameScrubberTest extends TestCase {
 
   public void testScrubOnOneUser() throws Exception {
     RevisionMetadata before =
-        new RevisionMetadata(
-            "100", "Bob Saget", new DateTime(1L), "saget fixed ALL the bugs.", null);
+        RevisionMetadata.builder()
+            .id("100")
+            .author("Bob Saget")
+            .date(new DateTime(1L))
+            .description("saget fixed ALL the bugs.")
+            .build();
     RevisionMetadata expected =
-        new RevisionMetadata(
-            "100", "Bob <user>", new DateTime(1L), "<user> fixed ALL the bugs.", null);
+        RevisionMetadata.builder()
+            .id("100")
+            .author("Bob <user>")
+            .date(new DateTime(1L))
+            .description("<user> fixed ALL the bugs.")
+            .build();
     RevisionMetadata after =
         mus.scrub(
             before,
@@ -54,15 +62,20 @@ public class MetadataUsernameScrubberTest extends TestCase {
 
   public void testScrubOnTwoUsers() throws Exception {
     RevisionMetadata before =
-        new RevisionMetadata(
-            "100", "Bob, Saget", new DateTime(1L), "bob and saget fixed ALL the bugs.", null);
+        RevisionMetadata.builder()
+            .id("100")
+            .author("Bob, Saget")
+            .date(new DateTime(1L))
+            .description("bob and saget fixed ALL the bugs.")
+            .build();
     RevisionMetadata expected =
-        new RevisionMetadata(
-            "100",
-            "<user>, <user>",
-            new DateTime(1L),
-            "<user> and <user> fixed ALL the bugs.",
-            null);
+        RevisionMetadata.builder()
+            .id("100")
+            .author("<user>, <user>")
+            .date(new DateTime(1L))
+            .description("<user> and <user> fixed ALL the bugs.")
+            .build();
+
     RevisionMetadata after =
         mus.scrub(
             before,
@@ -77,19 +90,20 @@ public class MetadataUsernameScrubberTest extends TestCase {
 
   public void testFalsePositive() throws Exception {
     RevisionMetadata before =
-        new RevisionMetadata(
-            "100",
-            "Bob, Saget",
-            new DateTime(1L),
-            "bob and \nsaget went bobbing for apples in Sagetopolis.",
-            null);
+        RevisionMetadata.builder()
+            .id("100")
+            .author("Bob, Saget")
+            .date(new DateTime(1L))
+            .description("bob and \nsaget went bobbing for apples in Sagetopolis.")
+            .build();
     RevisionMetadata expected =
-        new RevisionMetadata(
-            "100",
-            "<user>, <user>",
-            new DateTime(1L),
-            "<user> and \n<user> went bobbing for apples in Sagetopolis.",
-            null);
+        RevisionMetadata.builder()
+            .id("100")
+            .author("<user>, <user>")
+            .date(new DateTime(1L))
+            .description("<user> and \n<user> went bobbing for apples in Sagetopolis.")
+            .build();
+
     RevisionMetadata after =
         mus.scrub(
             before,
