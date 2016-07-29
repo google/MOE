@@ -50,6 +50,9 @@ import javax.inject.Inject;
  * Perform a single migration using command line flags.
  */
 public class OneMigrationDirective extends Directive {
+  @Option(name = "--db", required = false, usage = "Location of MOE database")
+  String dbLocation = "";
+
   @Option(
     name = "--from_repository",
     required = true,

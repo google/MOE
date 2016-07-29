@@ -187,7 +187,7 @@ public class FileDb implements Db, HasDbStorage {
       String location = !isNullOrEmpty(override) ? override : config.databaseUri();
       if (isNullOrEmpty(location)) {
         throw new InvalidProject(
-            "Database location was not set in the project configuration nor on the comamnd-line.");
+            "Database location was not set in the project configuration nor on the command-line.");
       }
       if (location.equals("dummy") || location.startsWith("dummy:")) {
         return new DummyDb(true, ui);
