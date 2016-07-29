@@ -195,7 +195,7 @@ public class SystemFileSystem implements FileSystem {
       @Override
       public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
         try {
-          java.nio.file.Files.delete(file);
+          java.nio.file.Files.deleteIfExists(file);
         } catch (IOException e) {
           exceptions.add(e);
         }
