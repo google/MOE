@@ -21,6 +21,7 @@ import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
+import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Utils;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
@@ -84,7 +85,13 @@ public abstract class AbstractDvcsCodebaseCreator implements CodebaseCreator {
     File archiveLocation;
     String localRoot = options.get("localroot");
     if (Strings.isNullOrEmpty(localRoot)) {
-      Revision rev = revisionHistory.findHighestRevision(options.get("revision"));
+      Revision rev;
+      try {
+        rev = revisionHistory.findHighestRevision(options.get("revision"));
+      } catch (MoeProblem e) {
+        String message = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
+        throw new CodebaseCreationError(message);
+      }
       headClone = headCloneSupplier.get();
       archiveLocation = headClone.archiveAtRevision(rev.revId());
     } else {

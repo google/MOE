@@ -62,6 +62,11 @@ public class DbStorage {
     return !migrations.contains(m) && migrations.add(m);
   }
 
+  /** Returns true if this SubmittedMigration has been recorded in this database. */
+  public boolean hasMigration(SubmittedMigration m) {
+    return migrations.contains(m);
+  }
+
   @Override
   public int hashCode() {
     return Objects.hash(equivalences, migrations);

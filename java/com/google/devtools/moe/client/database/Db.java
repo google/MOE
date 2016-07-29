@@ -49,9 +49,12 @@ public interface Db {
    */
   boolean noteMigration(SubmittedMigration migration);
 
+  /** Checks whether the given {@link SubmittedMigration} exists within this database */
+  boolean hasMigration(SubmittedMigration migration);
+
   /**
-   * Write out any pending changes and release any held resources.  If the Db implementation
-   * writes on-demand, this may have no effect.
+   * Write out any pending changes and release any held resources. If the Db implementation writes
+   * on-demand, this may have no effect.
    */
   void write();
 

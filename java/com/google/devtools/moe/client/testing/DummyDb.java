@@ -74,6 +74,11 @@ public class DummyDb implements Db {
   }
 
   @Override
+  public boolean hasMigration(SubmittedMigration migration) {
+    return migrations.contains(migration);
+  }
+
+  @Override
   public void write() {
     ui.message(
         "Equivalences:\n%s\nMigrations:\n%s",

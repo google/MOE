@@ -104,6 +104,11 @@ public class FileDb implements Db, HasDbStorage {
   }
 
   @Override
+  public boolean hasMigration(SubmittedMigration migration) {
+    return dbStorage.hasMigration(migration);
+  }
+
+  @Override
   public DbStorage getStorage() {
     return dbStorage;
   }
