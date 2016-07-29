@@ -18,17 +18,15 @@ package com.google.devtools.moe.client.options;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.directives.Directives.SelectedDirective;
-
 import dagger.Provides;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import javax.annotation.Nullable;
 import javax.inject.Qualifier;
 import javax.inject.Singleton;
@@ -36,7 +34,7 @@ import javax.inject.Singleton;
 /** Dagger module to seed command-line arguments into the graph */
 @dagger.Module
 public class OptionsModule {
-  private String[] rawArgs;
+  private final String[] rawArgs;
 
   public OptionsModule(String[] args) {
     Preconditions.checkArgument(
@@ -47,10 +45,17 @@ public class OptionsModule {
   @Provides
   @Nullable
   @Argument("db")
-  static String dbLocation(String... args) {
+  static String dbLocationFlag(String... args) {
     // TODO(cgruber) Migrate to JCommander, so we don't have to manually parse some of these.
     // TODO(cgruber) make this not-nullable when only db-requiring commands yank in the db location.
     return findArgValue(args, "--db");
+  }
+
+  @Provides
+  @Argument("help")
+  static boolean helpFlag(String... args) {
+    // TODO(cgruber) Migrate to JCommander, so we don't have to manually parse some of these.
+    return isArgPresent(args, "-h", "--help");
   }
 
   @Provides
@@ -62,10 +67,13 @@ public class OptionsModule {
     return findArgValue(args, "-c", "--config", "--config_file");
   }
 
-  /**
-   * @param matchingArgs
-   * @param args
-   */
+  private static boolean isArgPresent(String[] args, String... matchingArgs) {
+    HashSet<String> argSet = new HashSet<>(Arrays.asList(args));
+    ImmutableSet<String> matches = ImmutableSet.copyOf(matchingArgs);
+    argSet.retainAll(matches);
+    return !argSet.isEmpty();
+  }
+
   @Nullable
   private static String findArgValue(String[] args, String... matchingArgs) {
     List<String> matches = Arrays.asList(matchingArgs);

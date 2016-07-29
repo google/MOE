@@ -21,15 +21,13 @@ import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.NullFileSystemModule;
 import com.google.devtools.moe.client.SystemCommandRunner;
-import com.google.devtools.moe.client.project.FakeProjectContext;
 import com.google.devtools.moe.client.project.ProjectContext;
+import com.google.devtools.moe.client.project.ProjectContext.NoopProjectContext;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
 import com.google.devtools.moe.client.testing.TestingModule;
-
-import junit.framework.TestCase;
-
 import javax.inject.Singleton;
+import junit.framework.TestCase;
 
 public class RepositoryExpressionTest extends TestCase {
 
@@ -49,7 +47,7 @@ public class RepositoryExpressionTest extends TestCase {
 
   public void testMakeWriter_NonexistentRepository() throws Exception {
     try {
-      new RepositoryExpression("internal").createWriter(new FakeProjectContext());
+      new RepositoryExpression("internal").createWriter(new NoopProjectContext());
       fail();
     } catch (MoeProblem expected) {
       assertEquals("No such repository 'internal' in the config. Found: []", expected.getMessage());
@@ -59,7 +57,7 @@ public class RepositoryExpressionTest extends TestCase {
   public void testMakeWriter_DummyRepository() throws Exception {
     final RepositoryType.Factory repositoryFactory = new DummyRepositoryFactory(null);
     ProjectContext context =
-        new FakeProjectContext() {
+        new NoopProjectContext() {
           @Override
           public ImmutableMap<String, RepositoryType> repositories() {
             return ImmutableMap.of("internal", repositoryFactory.create("internal", null));

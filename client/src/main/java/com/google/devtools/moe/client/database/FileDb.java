@@ -29,9 +29,7 @@ import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.testing.DummyDb;
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
-
 import dagger.Provides;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -39,7 +37,6 @@ import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Set;
-
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -187,8 +184,13 @@ public class FileDb implements Db, HasDbStorage {
     static Db db(
         ProjectConfig config,
         @Nullable @Argument("db") String override,
+        @Argument("help") boolean helpFlag,
         FileDb.Factory factory,
         Ui ui) {
+      if (helpFlag) {
+        return new Db.NoopDb();
+      }
+
       String location = !isNullOrEmpty(override) ? override : config.databaseUri();
       if (isNullOrEmpty(location)) {
         throw new InvalidProject(

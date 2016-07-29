@@ -17,7 +17,6 @@
 package com.google.devtools.moe.client.database;
 
 import com.google.devtools.moe.client.repositories.Revision;
-
 import java.util.Set;
 
 /**
@@ -71,5 +70,33 @@ public interface Db {
 
     /** Supplies the underlying storage value holder */
     DbStorage getStorage();
+  }
+
+  final class NoopDb implements Db {
+    @Override
+    public Set<Revision> findEquivalences(Revision revision, String otherRepository) {
+      return null;
+    }
+
+    @Override
+    public boolean hasMigration(SubmittedMigration migration) {
+      return false;
+    }
+
+    @Override
+    public String location() {
+      return null;
+    }
+
+    @Override
+    public void noteEquivalence(RepositoryEquivalence equivalence) {}
+
+    @Override
+    public boolean noteMigration(SubmittedMigration migration) {
+      return false;
+    }
+
+    @Override
+    public void write() {}
   }
 }

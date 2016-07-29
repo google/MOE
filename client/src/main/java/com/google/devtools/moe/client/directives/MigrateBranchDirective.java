@@ -52,13 +52,9 @@ import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.writer.DraftRevision;
 import com.google.devtools.moe.client.writer.Writer;
 import com.google.devtools.moe.client.writer.WritingError;
-
 import dagger.Provides;
 import dagger.multibindings.IntoMap;
 import dagger.multibindings.StringKey;
-
-import org.kohsuke.args4j.Option;
-
 import java.io.File;
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -66,8 +62,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import javax.inject.Inject;
+import org.kohsuke.args4j.Option;
 
 /**
  * Perform a one-directional merge from a branch (and specified branch point) onto the head
@@ -78,21 +74,21 @@ import javax.inject.Inject;
  */
 public class MigrateBranchDirective extends Directive {
   @Option(name = "--db", required = false, usage = "Location of MOE database")
-  private String dbLocation = "";
+  private final String dbLocation = "";
 
   // TODO(cgruber) determine this from implicit signals.
   @Option(name = "--from_repository", required = true, usage = "The label of the source repository")
-  private String registeredFromRepository = "";
+  private final String registeredFromRepository = "";
 
   @Option(name = "--branch", required = true, usage = "the symbolic name of the imported branch")
-  private String branchLabel = "";
+  private final String branchLabel = "";
 
   @Option(
     name = "--override_repository_url",
     required = false,
     usage = "the repository url to use in the case that the branch is in a fork of the repository"
   )
-  private String overrideUrl = "";
+  private final String overrideUrl = "";
 
   private final ProjectConfig config;
   private final ProjectContext context;

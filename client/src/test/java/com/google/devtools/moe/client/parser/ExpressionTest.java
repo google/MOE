@@ -34,23 +34,19 @@ import com.google.devtools.moe.client.editors.ForwardTranslator;
 import com.google.devtools.moe.client.editors.Translator;
 import com.google.devtools.moe.client.editors.TranslatorPath;
 import com.google.devtools.moe.client.editors.TranslatorStep;
-import com.google.devtools.moe.client.project.FakeProjectContext;
 import com.google.devtools.moe.client.project.ProjectContext;
+import com.google.devtools.moe.client.project.ProjectContext.NoopProjectContext;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
 import com.google.devtools.moe.client.testing.TestingModule;
 import com.google.devtools.moe.client.writer.WriterCreator;
-
-import junit.framework.TestCase;
-
-import org.easymock.EasyMock;
-import org.easymock.IMocksControl;
-
 import java.io.File;
 import java.util.Map;
-
 import javax.annotation.Nullable;
 import javax.inject.Singleton;
+import junit.framework.TestCase;
+import org.easymock.EasyMock;
+import org.easymock.IMocksControl;
 
 public class ExpressionTest extends TestCase {
   private static final Map<String, String> EMPTY_MAP = ImmutableMap.of();
@@ -71,7 +67,7 @@ public class ExpressionTest extends TestCase {
 
   public void testNoSuchCreator() throws Exception {
     try {
-      new RepositoryExpression("foo").createCodebase(new FakeProjectContext());
+      new RepositoryExpression("foo").createCodebase(new NoopProjectContext());
       fail();
     } catch (MoeProblem expected) {
       assertEquals("No such repository 'foo' in the config. Found: []", expected.getMessage());
@@ -107,7 +103,7 @@ public class ExpressionTest extends TestCase {
     RepositoryExpression repoEx = new RepositoryExpression("file").withOption("path", "/foo");
 
     control.replay();
-    Codebase c = repoEx.createCodebase(new FakeProjectContext());
+    Codebase c = repoEx.createCodebase(new NoopProjectContext());
     control.verify();
 
     assertEquals(copyLocation, c.getPath());
@@ -117,7 +113,7 @@ public class ExpressionTest extends TestCase {
 
   public void testNoSuchEditor() throws Exception {
     try {
-      ProjectContext context = new FakeProjectContext();
+      ProjectContext context = new NoopProjectContext();
 
       IMocksControl control = EasyMock.createControl();
       RepositoryExpression mockRepoEx = control.createMock(RepositoryExpression.class);
@@ -141,7 +137,7 @@ public class ExpressionTest extends TestCase {
       final Translator t =
           new ForwardTranslator(ImmutableList.<TranslatorStep>of(new TranslatorStep("quux", null)));
       ProjectContext context =
-          new FakeProjectContext() {
+          new NoopProjectContext() {
             @Override
             public ImmutableMap<TranslatorPath, Translator> translators() {
               return ImmutableMap.of(tPath, t);
@@ -187,7 +183,7 @@ public class ExpressionTest extends TestCase {
             ImmutableList.<TranslatorStep>of(new TranslatorStep("quux", translatorEditor)));
 
     ProjectContext context =
-        new FakeProjectContext() {
+        new NoopProjectContext() {
           @Override
           public ImmutableMap<String, RepositoryType> repositories() {
             return ImmutableMap.of("foo", RepositoryType.create("foo", rh, cc, wc));

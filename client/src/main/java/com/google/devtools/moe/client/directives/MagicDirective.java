@@ -39,18 +39,14 @@ import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.writer.DraftRevision;
 import com.google.devtools.moe.client.writer.Writer;
 import com.google.devtools.moe.client.writer.WritingError;
-
 import dagger.Provides;
 import dagger.multibindings.IntoMap;
 import dagger.multibindings.StringKey;
-
-import org.kohsuke.args4j.Option;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-
 import javax.inject.Inject;
+import org.kohsuke.args4j.Option;
 
 /**
  * Update the MOE db then perform all migration(s) specified in the MOE config. Repeated
@@ -74,6 +70,9 @@ public class MagicDirective extends Directive {
     usage = "Revisions to skip, e.g. 'internal{1234}'; can include multiple --skip_revision options"
   )
   List<String> skipRevisions = new ArrayList<>();
+
+  @Option(name = "--skip_bookkeeping", required = false, usage = "Omits bookkeeping operations")
+  boolean skipBookkeeping = false;
 
   private final ProjectConfig config;
   private final ProjectContext context;
@@ -103,7 +102,7 @@ public class MagicDirective extends Directive {
 
     Set<String> skipRevisions = ImmutableSet.copyOf(this.skipRevisions);
 
-    if (bookkeeper.bookkeep() != 0) {
+    if (!skipBookkeeping && bookkeeper.bookkeep() != 0) {
       // Bookkeeping has failed, so fail here as well.
       return 1;
     }

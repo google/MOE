@@ -24,20 +24,17 @@ import com.google.devtools.moe.client.options.OptionsModule.Argument;
 import com.google.devtools.moe.client.project.FileReadingProjectContextFactory;
 import com.google.devtools.moe.client.project.ProjectConfig;
 import com.google.devtools.moe.client.project.ProjectContext;
+import com.google.devtools.moe.client.project.ProjectContext.NoopProjectContext;
 import com.google.devtools.moe.client.project.ProjectContextFactory;
 import com.google.devtools.moe.client.repositories.MetadataScrubber;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.tools.FileDifference.ConcreteFileDiffer;
 import com.google.devtools.moe.client.tools.FileDifference.FileDiffer;
-
 import com.squareup.okhttp.OkHttpClient;
-
 import dagger.Module;
 import dagger.Provides;
-
 import java.io.File;
 import java.io.IOException;
-
 import javax.annotation.Nullable;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -67,7 +64,12 @@ public class MoeModule {
   @Provides
   @Singleton
   ProjectContext projectContext(
-      @Nullable @Argument("config_file") String configFilename, ProjectContextFactory factory) {
+      @Nullable @Argument("config_file") String configFilename,
+      @Argument("help") boolean helpFlag,
+      ProjectContextFactory factory) {
+    if (helpFlag) {
+      return new NoopProjectContext();
+    }
     // Handle null filename here, to make a better error message, rather than let dagger do it.
     if (configFilename == null) {
       throw new MoeProblem("Configuration file path not set.  Did you specify --config?");

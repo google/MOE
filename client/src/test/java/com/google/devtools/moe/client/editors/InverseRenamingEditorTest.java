@@ -25,21 +25,16 @@ import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
-import com.google.devtools.moe.client.project.FakeProjectContext;
 import com.google.devtools.moe.client.project.ProjectContext;
+import com.google.devtools.moe.client.project.ProjectContext.NoopProjectContext;
 import com.google.devtools.moe.client.testing.TestingModule;
-
 import dagger.Provides;
-
-import junit.framework.TestCase;
-
-import org.easymock.EasyMock;
-import org.easymock.IMocksControl;
-
 import java.io.File;
 import java.io.IOException;
-
 import javax.inject.Singleton;
+import junit.framework.TestCase;
+import org.easymock.EasyMock;
+import org.easymock.IMocksControl;
 
 public class InverseRenamingEditorTest extends TestCase {
 
@@ -69,7 +64,7 @@ public class InverseRenamingEditorTest extends TestCase {
   }
 
   public void testEdit() throws Exception {
-    ProjectContext context = new FakeProjectContext();
+    ProjectContext context = new NoopProjectContext();
 
     InverseRenamingEditor inverseRenamey =
         new InverseRenamingEditor(

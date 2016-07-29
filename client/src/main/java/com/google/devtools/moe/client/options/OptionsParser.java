@@ -15,15 +15,14 @@
  */
 package com.google.devtools.moe.client.options;
 
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
-
+import com.google.devtools.moe.client.directives.Directive;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
 
 /**
  * Performs options/flags parsing.
@@ -53,6 +52,16 @@ public class OptionsParser {
    */
   public static boolean debugFlagPresent(String[] preprocessedArgs) {
     return Arrays.asList(preprocessedArgs).contains("--debug");
+  }
+
+  /**
+   * An ultra-thin pre-options-parser to check for the help flag, in order to allow objects to be
+   * initialized to no-op implementations during {@link Directive} creation, since that all has to
+   * happen before the instance can be passed to args processing, to generate the help output.
+   */
+  // TODO(cgruber) Remove this whole structure if we use JCommander and subsidiary args objects.
+  public static boolean helpFlagPresent(String[] preprocessedArgs) {
+    return Arrays.asList(preprocessedArgs).contains("--help");
   }
 
   public boolean debug() {
