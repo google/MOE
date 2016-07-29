@@ -21,7 +21,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-import dagger.Provides;
+import dagger.Binds;
 
 import java.io.File;
 import java.io.IOException;
@@ -166,10 +166,8 @@ public class SystemCommandRunner implements CommandRunner {
 
   /** A Dagger module for binding this implementation of {@link CommandRunner}. */
   @dagger.Module
-  public static class Module {
-    @Provides
-    public CommandRunner runner(SystemCommandRunner impl) {
-      return impl;
-    }
+  public abstract static class Module {
+    @Binds
+    public abstract CommandRunner runner(SystemCommandRunner impl);
   }
 }

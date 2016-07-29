@@ -28,7 +28,7 @@ import com.google.devtools.moe.client.project.ProjectContextFactory;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.tools.FileDifference.FileDiffer;
 
-import dagger.Provides;
+import dagger.Binds;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -62,11 +62,9 @@ public class InMemoryProjectContextFactory extends ProjectContextFactory {
 
   /** A Dagger module for binding this implementation of {@link ProjectContextFactory}. */
   @dagger.Module
-  public static class Module {
-    @Provides
+  public abstract static class Module {
+    @Binds
     @Singleton
-    public ProjectContextFactory factory(InMemoryProjectContextFactory impl) {
-      return impl;
-    }
+    public abstract ProjectContextFactory factory(InMemoryProjectContextFactory impl);
   }
 }

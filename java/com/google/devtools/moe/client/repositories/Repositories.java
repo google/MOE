@@ -26,7 +26,7 @@ import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.noop.NoopRepositoryFactory;
 import com.google.devtools.moe.client.svn.SvnRepositoryFactory;
 
-import dagger.Provides;
+import dagger.Binds;
 import dagger.multibindings.IntoSet;
 
 import java.util.Set;
@@ -75,33 +75,25 @@ public class Repositories implements RepositoryType.Factory {
   }
 
   /**
-   * A dagger module which provides the {@link RepositoryType.Factory} implementations for
-   * the repository types which are supported by default.
+   * A dagger module which provides the {@link RepositoryType.Factory} implementations for the
+   * repository types which are supported by default.
    */
   @dagger.Module
-  public static class Defaults {
-    @Provides
+  public abstract static class Defaults {
+    @Binds
     @IntoSet
-    static RepositoryType.Factory svn(SvnRepositoryFactory concrete) {
-      return concrete;
-    }
+    abstract RepositoryType.Factory svn(SvnRepositoryFactory concrete);
 
-    @Provides
+    @Binds
     @IntoSet
-    static RepositoryType.Factory hg(HgRepositoryFactory concrete) {
-      return concrete;
-    }
+    abstract RepositoryType.Factory hg(HgRepositoryFactory concrete);
 
-    @Provides
+    @Binds
     @IntoSet
-    static RepositoryType.Factory git(GitRepositoryFactory concrete) {
-      return concrete;
-    }
+    abstract RepositoryType.Factory git(GitRepositoryFactory concrete);
 
-    @Provides
+    @Binds
     @IntoSet
-    static RepositoryType.Factory noop(NoopRepositoryFactory concrete) {
-      return concrete;
-    }
+    abstract RepositoryType.Factory noop(NoopRepositoryFactory concrete);
   }
 }

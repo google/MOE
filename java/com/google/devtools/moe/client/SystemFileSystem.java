@@ -26,7 +26,7 @@ import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
 
-import dagger.Provides;
+import dagger.Binds;
 
 import java.io.File;
 import java.io.IOException;
@@ -247,10 +247,8 @@ public class SystemFileSystem implements FileSystem {
 
   /** A Dagger module for binding this implementation of {@link FileSystem}. */
   @dagger.Module
-  public static class Module {
-    @Provides
-    public FileSystem fileSystem(SystemFileSystem impl) {
-      return impl;
-    }
+  public abstract static class Module {
+    @Binds
+    public abstract FileSystem fileSystem(SystemFileSystem impl);
   }
 }

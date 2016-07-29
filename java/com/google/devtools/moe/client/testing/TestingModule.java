@@ -22,35 +22,28 @@ import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.tools.FileDifference.ConcreteFileDiffer;
 import com.google.devtools.moe.client.tools.FileDifference.FileDiffer;
 
+import dagger.Binds;
 import dagger.Module;
 import dagger.Provides;
 import dagger.multibindings.IntoSet;
 
 import javax.inject.Singleton;
 
-/**
- * A simple Dagger module to provide some nearly-universally-used in-memory test fakes.
- */
+/** A simple Dagger module to provide some nearly-universally-used in-memory test fakes. */
 @Module(includes = {UiModule.class, TestingModule.DebugModule.class})
-public class TestingModule {
+public abstract class TestingModule {
 
-  @Provides
+  @Binds
   @Singleton
-  static ProjectContextFactory factory(InMemoryProjectContextFactory factory) {
-    return factory;
-  }
+  abstract ProjectContextFactory factory(InMemoryProjectContextFactory factory);
 
-  @Provides
+  @Binds
   @Singleton
-  static FileDiffer fileDiffer(ConcreteFileDiffer cfd) {
-    return cfd;
-  }
+  abstract FileDiffer fileDiffer(ConcreteFileDiffer cfd);
 
-  @Provides
+  @Binds
   @IntoSet
-  static RepositoryType.Factory dummyRepository(DummyRepositoryFactory implementation) {
-    return implementation;
-  }
+  abstract RepositoryType.Factory dummyRepository(DummyRepositoryFactory implementation);
 
   /**
    * Module to supply debug flags into the testing graph.

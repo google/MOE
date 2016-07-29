@@ -24,7 +24,7 @@ import com.google.common.collect.Sets;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Lifetimes;
 
-import dagger.Provides;
+import dagger.Binds;
 
 import java.io.File;
 import java.util.Iterator;
@@ -304,11 +304,9 @@ public class InMemoryFileSystem implements FileSystem {
 
   /** A Dagger module for binding this implementation of {@link FileSystem}. */
   @dagger.Module
-  public static class Module {
-    @Provides
+  public abstract static class Module {
+    @Binds
     @Singleton
-    public FileSystem fileSystem(InMemoryFileSystem impl) {
-      return impl;
-    }
+    public abstract FileSystem fileSystem(InMemoryFileSystem impl);
   }
 }
