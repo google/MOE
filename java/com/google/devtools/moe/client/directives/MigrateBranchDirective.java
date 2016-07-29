@@ -16,8 +16,6 @@
 
 package com.google.devtools.moe.client.directives;
 
-import static dagger.Provides.Type.MAP;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -56,6 +54,7 @@ import com.google.devtools.moe.client.writer.Writer;
 import com.google.devtools.moe.client.writer.WritingError;
 
 import dagger.Provides;
+import dagger.multibindings.IntoMap;
 import dagger.multibindings.StringKey;
 
 import org.kohsuke.args4j.Option;
@@ -440,14 +439,16 @@ public class MigrateBranchDirective extends Directive {
     private static final String COMMAND = "migrate_branch";
 
     @Override
-    @Provides(type = MAP)
+    @Provides
+    @IntoMap
     @StringKey(COMMAND)
     public Directive directive(MigrateBranchDirective directive) {
       return directive;
     }
 
     @Override
-    @Provides(type = MAP)
+    @Provides
+    @IntoMap
     @StringKey(COMMAND)
     public String description() {
       return "Perform a one-directional merge from a branch onto a target repository.";

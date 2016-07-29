@@ -16,8 +16,6 @@
 
 package com.google.devtools.moe.client.directives;
 
-import static dagger.Provides.Type.MAP;
-
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -43,6 +41,7 @@ import com.google.devtools.moe.client.writer.Writer;
 import com.google.devtools.moe.client.writer.WritingError;
 
 import dagger.Provides;
+import dagger.multibindings.IntoMap;
 import dagger.multibindings.StringKey;
 
 import org.kohsuke.args4j.Option;
@@ -244,14 +243,16 @@ public class MagicDirective extends Directive {
     private static final String COMMAND = "magic";
 
     @Override
-    @Provides(type = MAP)
+    @Provides
+    @IntoMap
     @StringKey(COMMAND)
     public Directive directive(MagicDirective directive) {
       return directive;
     }
 
     @Override
-    @Provides(type = MAP)
+    @Provides
+    @IntoMap
     @StringKey(COMMAND)
     public String description() {
       return "Updates database and performs any configured migrations that have pending commits";

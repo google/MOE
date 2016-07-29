@@ -16,8 +16,6 @@
 
 package com.google.devtools.moe.client.repositories;
 
-import static dagger.Provides.Type.SET;
-
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
@@ -29,6 +27,7 @@ import com.google.devtools.moe.client.repositories.noop.NoopRepositoryFactory;
 import com.google.devtools.moe.client.svn.SvnRepositoryFactory;
 
 import dagger.Provides;
+import dagger.multibindings.IntoSet;
 
 import java.util.Set;
 
@@ -81,22 +80,26 @@ public class Repositories implements RepositoryType.Factory {
    */
   @dagger.Module
   public static class Defaults {
-    @Provides(type = SET)
+    @Provides
+    @IntoSet
     static RepositoryType.Factory svn(SvnRepositoryFactory concrete) {
       return concrete;
     }
 
-    @Provides(type = SET)
+    @Provides
+    @IntoSet
     static RepositoryType.Factory hg(HgRepositoryFactory concrete) {
       return concrete;
     }
 
-    @Provides(type = SET)
+    @Provides
+    @IntoSet
     static RepositoryType.Factory git(GitRepositoryFactory concrete) {
       return concrete;
     }
 
-    @Provides(type = SET)
+    @Provides
+    @IntoSet
     static RepositoryType.Factory noop(NoopRepositoryFactory concrete) {
       return concrete;
     }

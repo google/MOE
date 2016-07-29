@@ -16,8 +16,6 @@
 
 package com.google.devtools.moe.client.directives;
 
-import static dagger.Provides.Type.MAP;
-
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.database.Db;
@@ -28,6 +26,7 @@ import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.Revision;
 
 import dagger.Provides;
+import dagger.multibindings.IntoMap;
 import dagger.multibindings.StringKey;
 
 import org.kohsuke.args4j.Option;
@@ -122,14 +121,16 @@ public class FindEquivalenceDirective extends Directive {
     private static final String COMMAND = "find_equivalence";
 
     @Override
-    @Provides(type = MAP)
+    @Provides
+    @IntoMap
     @StringKey(COMMAND)
     public Directive directive(FindEquivalenceDirective directive) {
       return directive;
     }
 
     @Override
-    @Provides(type = MAP)
+    @Provides
+    @IntoMap
     @StringKey(COMMAND)
     public String description() {
       return "Finds revisions in one repository that are equivalent to a given revision in another";

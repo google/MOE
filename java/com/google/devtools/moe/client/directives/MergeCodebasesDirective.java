@@ -16,8 +16,6 @@
 
 package com.google.devtools.moe.client.directives;
 
-import static dagger.Provides.Type.MAP;
-
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.MoeProblem;
@@ -31,6 +29,7 @@ import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.tools.FileDifference.FileDiffer;
 
 import dagger.Provides;
+import dagger.multibindings.IntoMap;
 import dagger.multibindings.StringKey;
 
 import org.kohsuke.args4j.Option;
@@ -104,14 +103,16 @@ public class MergeCodebasesDirective extends Directive {
     private static final String COMMAND = "merge_codebases";
 
     @Override
-    @Provides(type = MAP)
+    @Provides
+    @IntoMap
     @StringKey(COMMAND)
     public Directive directive(MergeCodebasesDirective directive) {
       return directive;
     }
 
     @Override
-    @Provides(type = MAP)
+    @Provides
+    @IntoMap
     @StringKey(COMMAND)
     public String description() {
       return "Merges three codebases into a new codebase";

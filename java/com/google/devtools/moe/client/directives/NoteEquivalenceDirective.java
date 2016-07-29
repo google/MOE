@@ -16,8 +16,6 @@
 
 package com.google.devtools.moe.client.directives;
 
-import static dagger.Provides.Type.MAP;
-
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.database.Db;
@@ -30,6 +28,7 @@ import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.repositories.Revision;
 
 import dagger.Provides;
+import dagger.multibindings.IntoMap;
 import dagger.multibindings.StringKey;
 
 import org.kohsuke.args4j.Option;
@@ -108,14 +107,16 @@ public class NoteEquivalenceDirective extends Directive {
     private static final String COMMAND = "note_equivalence";
 
     @Override
-    @Provides(type = MAP)
+    @Provides
+    @IntoMap
     @StringKey(COMMAND)
     public Directive directive(NoteEquivalenceDirective directive) {
       return directive;
     }
 
     @Override
-    @Provides(type = MAP)
+    @Provides
+    @IntoMap
     @StringKey(COMMAND)
     public String description() {
       return "Notes a new equivalence in the database file.";

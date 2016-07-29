@@ -16,7 +16,7 @@
 package com.google.devtools.moe.client.repositories;
 
 import dagger.Provides;
-import dagger.Provides.Type;
+import dagger.multibindings.IntoSet;
 
 import java.util.List;
 
@@ -97,17 +97,20 @@ public abstract class MetadataScrubber {
   /** Provides the set of default metadata scrubbers */
   @dagger.Module
   public static class Module {
-    @Provides(type = Type.SET)
+    @Provides
+    @IntoSet
     static MetadataScrubber usernameScrubber(MetadataUsernameScrubber impl) {
       return impl;
     }
 
-    @Provides(type = Type.SET)
+    @Provides
+    @IntoSet
     static MetadataScrubber publicSectionScrubber(PublicSectionMetadataScrubber impl) {
       return impl;
     }
 
-    @Provides(type = Type.SET)
+    @Provides
+    @IntoSet
     static MetadataScrubber descScrubber(DescriptionMetadataScrubber impl) {
       return impl;
     }

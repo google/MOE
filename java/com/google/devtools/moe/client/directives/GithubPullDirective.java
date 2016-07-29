@@ -16,8 +16,6 @@
 
 package com.google.devtools.moe.client.directives;
 
-import static dagger.Provides.Type.MAP;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.MoeUserProblem;
@@ -30,6 +28,7 @@ import com.google.devtools.moe.client.project.ProjectConfig;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 
 import dagger.Provides;
+import dagger.multibindings.IntoMap;
 import dagger.multibindings.StringKey;
 
 import org.kohsuke.args4j.Option;
@@ -182,7 +181,8 @@ public class GithubPullDirective extends Directive {
     private static final String COMMAND = "github_pull";
 
     @Override
-    @Provides(type = MAP)
+    @Provides
+    @IntoMap
     @StringKey(COMMAND)
     public Directive directive(GithubPullDirective directive) {
       return directive;
@@ -199,7 +199,8 @@ public class GithubPullDirective extends Directive {
     }
 
     @Override
-    @Provides(type = MAP)
+    @Provides
+    @IntoMap
     @StringKey(COMMAND)
     public String description() {
       return "Migrates the branch underlying a github pull request into a configured repository";

@@ -16,8 +16,6 @@
 
 package com.google.devtools.moe.client.directives;
 
-import static dagger.Provides.Type.MAP;
-
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.migrations.Migration;
@@ -27,6 +25,7 @@ import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 
 import dagger.Provides;
+import dagger.multibindings.IntoMap;
 import dagger.multibindings.StringKey;
 
 import org.kohsuke.args4j.Option;
@@ -85,14 +84,16 @@ public class DetermineMigrationsDirective extends Directive {
     private static final String COMMAND = "determine_migrations";
 
     @Override
-    @Provides(type = MAP)
+    @Provides
+    @IntoMap
     @StringKey(COMMAND)
     public Directive directive(DetermineMigrationsDirective directive) {
       return directive;
     }
 
     @Override
-    @Provides(type = MAP)
+    @Provides
+    @IntoMap
     @StringKey(COMMAND)
     public String description() {
       return "Finds and prints the unmigrated revisions for a named migration configuration";

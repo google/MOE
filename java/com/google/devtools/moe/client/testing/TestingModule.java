@@ -15,8 +15,6 @@
  */
 package com.google.devtools.moe.client.testing;
 
-import static dagger.Provides.Type.SET;
-
 import com.google.devtools.moe.client.Ui.UiModule;
 import com.google.devtools.moe.client.options.OptionsModule.Flag;
 import com.google.devtools.moe.client.project.ProjectContextFactory;
@@ -26,6 +24,7 @@ import com.google.devtools.moe.client.tools.FileDifference.FileDiffer;
 
 import dagger.Module;
 import dagger.Provides;
+import dagger.multibindings.IntoSet;
 
 import javax.inject.Singleton;
 
@@ -47,7 +46,8 @@ public class TestingModule {
     return cfd;
   }
 
-  @Provides(type = SET)
+  @Provides
+  @IntoSet
   static RepositoryType.Factory dummyRepository(DummyRepositoryFactory implementation) {
     return implementation;
   }
