@@ -25,6 +25,7 @@ import java.util.List;
 public class MetadataScrubberConfig {
   private List<String> usernamesToScrub = ImmutableList.of();
   private boolean scrubConfidentialWords = true;
+  private boolean restoreOriginalAuthor = true;
   private List<String> sensitiveRes = ImmutableList.of();
 
   /**
@@ -46,6 +47,10 @@ public class MetadataScrubberConfig {
    */
   public boolean getScrubConfidentialWords() {
     return scrubConfidentialWords;
+  }
+
+  public boolean getRestoreOriginalAuthor() {
+    return restoreOriginalAuthor;
   }
 
   /** A list of regular expressions for sensitive text to be scrubbed from revision metadata. */

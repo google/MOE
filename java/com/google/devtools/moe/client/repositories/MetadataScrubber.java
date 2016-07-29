@@ -15,10 +15,14 @@
  */
 package com.google.devtools.moe.client.repositories;
 
+import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.LinkedListMultimap;
+
 import dagger.Provides;
 import dagger.multibindings.IntoSet;
 
 import java.util.List;
+import java.util.Map.Entry;
 
 import javax.annotation.Nullable;
 
@@ -85,16 +89,21 @@ public abstract class MetadataScrubber {
     String newId = rm.id();
     String newAuthor = rm.author();
     String newDescription = rm.description();
+    LinkedListMultimap<String, String> newFields = LinkedListMultimap.create(rm.fields());
     for (String word : words) {
       String regex = (wordAlone) ? ("(?i)(\\b)" + word + "(\\b)") : ("(?i)" + word);
       newId = newId.replaceAll(regex, replacement);
       newAuthor = newAuthor.replaceAll(regex, replacement);
       newDescription = newDescription.replaceAll(regex, replacement);
+      for (Entry<String, String> entry : newFields.entries()) {
+        entry.setValue(entry.getValue().replaceAll(regex, replacement));
+      }
     }
     return rm.toBuilder()
         .id(newId)
         .author(newAuthor)
         .description(newDescription)
+        .replacingFieldsWith(ImmutableSetMultimap.copyOf(newFields))
         .build();
   }
 
@@ -116,6 +125,12 @@ public abstract class MetadataScrubber {
     @Provides
     @IntoSet
     static MetadataScrubber descScrubber(DescriptionMetadataScrubber impl) {
+      return impl;
+    }
+
+    @Provides
+    @IntoSet
+    static MetadataScrubber originalAuthorScrubber(OriginalAuthorMetadataScrubber impl) {
       return impl;
     }
   }

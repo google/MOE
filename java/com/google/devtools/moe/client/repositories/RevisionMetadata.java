@@ -20,6 +20,9 @@ import com.google.auto.value.AutoValue;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.SetMultimap;
 
 import org.joda.time.DateTime;
 
@@ -48,6 +51,8 @@ public abstract class RevisionMetadata {
 
   public abstract ImmutableList<Revision> parents();
 
+  public abstract ImmutableSetMultimap<String, String> fields();
+
   /** Make a builder from this value object */
   public abstract Builder toBuilder();
 
@@ -74,9 +79,9 @@ public abstract class RevisionMetadata {
   }
 
   /**
-   * Builds a {@link RevisionMetadata} from its value elements.  Can also be used to
-   * copy-and-modify a {@link RevisionMetadata} by calling {@link RevisionMetadata#toBuilder()}
-   * and then calling builder methods with the different values.
+   * Builds a {@link RevisionMetadata} from its value elements. Can also be used to copy-and-modify
+   * a {@link RevisionMetadata} by calling {@link RevisionMetadata#toBuilder()} and then calling
+   * builder methods with the different values.
    */
   @AutoValue.Builder
   public abstract static class Builder {
@@ -90,7 +95,11 @@ public abstract class RevisionMetadata {
 
     public abstract ImmutableList.Builder<Revision> parentsBuilder();
 
-    public abstract RevisionMetadata build();
+    abstract Builder fields(Multimap<String, String> fields);
+
+    public abstract ImmutableSetMultimap.Builder<String, String> fieldsBuilder();
+
+    abstract RevisionMetadata internalBuild();
 
     public Builder withParents(Iterable<Revision> parentRevisions) {
       parentsBuilder().addAll(parentRevisions);
@@ -99,6 +108,30 @@ public abstract class RevisionMetadata {
 
     public Builder withParents(Revision... parentRevisions) {
       return withParents(ImmutableList.copyOf(parentRevisions));
+    }
+
+    public RevisionMetadata build() {
+      for (String line : internalBuild().description().split("\n")) {
+        int index = line.indexOf('=');
+        if (index >= 0 && line.substring(0, index).matches("[A-aZ-z_-]*")) {
+          String key = line.substring(0, index);
+          String value = (index >= line.length()) ? "" : line.substring(index + 1);
+          fieldsBuilder().put(key, value);
+        }
+      }
+      return internalBuild();
+    }
+
+    /**
+     * Replaces any existing fields with the supplied multimap.
+     *
+     * <p>Typically called on a copy-builder obtained from {@link RevisionMetadata#toBuilder()}.
+     *
+     * <p>If the builder for fields() has already been invoked, this will throw. This must be done
+     * prior to any further fieldsBuilder() mutations.
+     */
+    public Builder replacingFieldsWith(SetMultimap<String, String> newFields) {
+      return fields(newFields);
     }
   }
 
@@ -126,6 +159,7 @@ public abstract class RevisionMetadata {
       }
       descBuilder.add(rm.description());
       builder.parentsBuilder().addAll(rm.parents());
+      builder.fieldsBuilder().putAll(rm.fields());
     }
 
     if (migrationFromRev != null) {

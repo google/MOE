@@ -16,6 +16,8 @@
 
 package com.google.devtools.moe.client.repositories;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.collect.ImmutableList;
 
 import junit.framework.TestCase;
@@ -23,18 +25,31 @@ import junit.framework.TestCase;
 import org.joda.time.DateTime;
 
 public class RevisionMetadataTest extends TestCase {
+  private static final RevisionMetadata DEFAULT_TEST_METADATA =
+      RevisionMetadata.builder()
+          .id("id")
+          .author("auth")
+          .date(new DateTime(1L))
+          .description("description")
+          .build();
 
   public void testConcatenate_singleMetadata() {
     RevisionMetadata rm =
-        RevisionMetadata.builder()
-            .id("id")
-            .author("auth")
-            .date(new DateTime(1L))
-            .description("description")
-            .withParents(Revision.create("revId", "repo"))
-            .build();
+        DEFAULT_TEST_METADATA.toBuilder().withParents(Revision.create("revId", "repo")).build();
 
     assertEquals(rm, RevisionMetadata.concatenate(ImmutableList.of(rm), null));
+  }
+
+  public void testParseFields() {
+    RevisionMetadata rm =
+        DEFAULT_TEST_METADATA
+            .toBuilder()
+            .description("Foo\n" + "FOO_BAR=blah\n" + "foo-bar=blah=foo")
+            .build();
+
+    assertThat(rm.fields()).containsEntry("FOO_BAR", "blah");
+    assertThat(rm.fields()).containsEntry("foo-bar", "blah=foo");
+    assertThat(rm.fields()).hasSize(2);
   }
 
   public void testConcatenate_twoMetadata() {
@@ -103,4 +118,6 @@ public class RevisionMetadataTest extends TestCase {
     assertEquals(
         rmExpected, RevisionMetadata.concatenate(ImmutableList.of(rm1, rm2), migrationFromRev));
   }
+
+
 }

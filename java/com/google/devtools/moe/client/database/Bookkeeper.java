@@ -18,6 +18,7 @@ package com.google.devtools.moe.client.database;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.Ui.Task;
@@ -37,8 +38,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -49,8 +48,8 @@ import javax.inject.Inject;
 public class Bookkeeper {
   private static final Logger logger = Logger.getLogger(Bookkeeper.class.getName());
 
-  /** The regex for MOE-migrated changes, as found in the changelog of the to-repo. */
-  private static final Pattern MIGRATED_REV_PATTERN = Pattern.compile("MOE_MIGRATED_REVID=(\\S*)");
+  /** The field key for MOE-migrated changes, as found in the changelog of the to-repo. */
+  private static final String MIGRATED_REV_KEY = "MOE_MIGRATED_REVID";
 
   private final ProjectContext context;
   private final CodebaseDiffer differ;
@@ -181,10 +180,13 @@ public class Bookkeeper {
     ui.popTask(checkMigrationsTask, "");
   }
 
+  /** Pulls out the first migrated CL field for this bit of metadata. */
   @Nullable
   private static String getMigratedRevId(RevisionMetadata metadata) {
-    Matcher migratedRevMatcher = MIGRATED_REV_PATTERN.matcher(metadata.description());
-    return migratedRevMatcher.find() ? migratedRevMatcher.group(1) : null;
+    ImmutableSet<String> ids = metadata.fields().get(MIGRATED_REV_KEY);
+    // For legacy reasons, in replacing the matcher, just use the first found rev id, if any.
+    // TODO(cgruber) Should this throw on more than one?
+    return Iterables.getFirst(ids, null);
   }
 
   /**
