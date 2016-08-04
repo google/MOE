@@ -265,7 +265,7 @@ public class Ui {
     @Provides
     @Singleton
     public OutputStream uiOutputStream() {
-      return System.out;
+      return System.err;
     }
   }
 }
