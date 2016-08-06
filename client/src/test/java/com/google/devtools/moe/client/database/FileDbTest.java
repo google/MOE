@@ -174,7 +174,7 @@ public class FileDbTest extends TestCase {
     IMocksControl control = EasyMock.createControl();
     FileSystem filesystem = control.createMock(FileSystem.class);
     File dbFile = new File("/path/to/db");
-    String dbText = "{\n  \"equivalences\": [],\n  \"migrations\": []\n}";
+    String dbText = "{\n  \"equivalences\": [],\n  \"migrations\": []\n}\n";
     DbStorage dbStorage = GSON.fromJson(dbText, DbStorage.class);
     Db db = new FileDb(dbFile.getPath(), dbStorage, new FileDb.Writer(GSON, filesystem));
     filesystem.write(dbText, dbFile);

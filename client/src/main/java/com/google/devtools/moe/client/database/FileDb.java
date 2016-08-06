@@ -133,7 +133,7 @@ public class FileDb implements Db, HasDbStorage {
       if (db instanceof HasDbStorage) {
         try {
           DbStorage storage = ((HasDbStorage) db).getStorage();
-          filesystem.write(gson.toJson(storage), new File(db.location()));
+          filesystem.write(gson.toJson(storage) + "\n", new File(db.location()));
         } catch (IOException e) {
           throw new MoeProblem("I/O Error writing database: " + e.getMessage());
         }
