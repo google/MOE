@@ -4,7 +4,6 @@ import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.gson.GsonModule;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
