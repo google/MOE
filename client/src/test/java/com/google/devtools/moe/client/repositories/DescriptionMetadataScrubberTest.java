@@ -29,7 +29,7 @@ public class DescriptionMetadataScrubberTest extends TestCase {
       RevisionMetadata.builder()
           .id("commit_number")
           .author("author@google.com")
-          .date(new DateTime(1L))
+          .date(new DateTime(2010, 1, 1, 0, 0, 0, 0))
           .description("some changes")
           .withParents(Revision.create("parentId1", "repo"), Revision.create("parentId2", "repo"))
           .build();
@@ -39,7 +39,7 @@ public class DescriptionMetadataScrubberTest extends TestCase {
         RevisionMetadata.builder()
             .id("commit_number")
             .author("author@google.com")
-            .date(new DateTime(1L))
+            .date(new DateTime(2010, 1, 1, 0, 0, 0, 0))
             .description("some changes!!!")
             .withParents(Revision.create("parentId1", "repo"), Revision.create("parentId2", "repo"))
             .build();
@@ -59,12 +59,12 @@ public class DescriptionMetadataScrubberTest extends TestCase {
   }
 
   public void testVariousScrubbingFormats() {
-    assertFormatResults("{description} on {date}", "some changes on 1969/12/31");
+    assertFormatResults("{description} on {date}", "some changes on 2010/01/01");
     assertFormatResults(
         "{description} on {date}\nby: {author}",
-        "some changes on 1969/12/31\nby: author@google.com");
+        "some changes on 2010/01/01\nby: author@google.com");
     assertFormatResults(
-        "{date} saw the birth of {id}", "1969/12/31 saw the birth of commit_number");
+        "{date} saw the birth of {id}", "2010/01/01 saw the birth of commit_number");
     assertFormatResults("my parents are ({parents})", "my parents are (parentId1, parentId2)");
   }
 
