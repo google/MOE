@@ -1,7 +1,7 @@
 #!/bin/bash
 
 cmd_dir=$(cd `dirname "$0"` && pwd)
-target_dir="$cmd_dir/../target"
+target_dir="$(dirname $cmd_dir)/client/target"
 jar_file=${target_dir}/moe-*-executable.jar
 if [ ! -f ${jar_file} ]; then
   echo "Monolithic executable jar not found in ${target_dir}"
