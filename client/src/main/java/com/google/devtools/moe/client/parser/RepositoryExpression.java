@@ -19,6 +19,7 @@ package com.google.devtools.moe.client.parser;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.Ui;
+import com.google.devtools.moe.client.Utils.TarUtils;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.codebase.CodebaseCreator;
@@ -75,7 +76,10 @@ public class RepositoryExpression extends AbstractExpression {
     String repositoryName = term.identifier;
     CodebaseCreator cc;
     if (repositoryName.equals("file")) {
-      cc = new FileCodebaseCreator();
+      cc =
+          new FileCodebaseCreator(
+              Injector.INSTANCE.fileSystem(),
+              new TarUtils(Injector.INSTANCE.fileSystem(), Injector.INSTANCE.cmd()));
     } else {
       RepositoryType repo = context.getRepository(repositoryName);
       cc = repo.codebaseCreator();

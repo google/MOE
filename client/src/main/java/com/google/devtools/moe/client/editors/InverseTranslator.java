@@ -134,9 +134,7 @@ public class InverseTranslator implements Translator {
                   refFrom);
 
       inverseTranslated =
-          inverseStep
-              .getInverseEditor()
-              .inverseEdit(inverseTranslated, refFrom, refTo, context, options);
+          inverseStep.getInverseEditor().inverseEdit(inverseTranslated, refFrom, refTo, options);
 
       Injector.INSTANCE.ui().popTaskAndPersist(task, inverseTranslated.path());
       refFrom = forwardTranslationStack.pop();
@@ -173,7 +171,7 @@ public class InverseTranslator implements Translator {
           Injector.INSTANCE
               .ui()
               .pushTask("edit", "Pushing to forward-translation stack: " + forwardEditExp);
-      refTo = forwardStep.editor.edit(refTo, context, options).copyWithExpression(forwardEditExp);
+      refTo = forwardStep.editor.edit(refTo, options).copyWithExpression(forwardEditExp);
       forwardTransStack.push(refTo);
       Injector.INSTANCE.ui().popTaskAndPersist(task, refTo.path());
     }

@@ -16,6 +16,7 @@
 
 package com.google.devtools.moe.client.editors;
 
+import static com.google.devtools.moe.client.project.EditorType.renamer;
 import static org.easymock.EasyMock.expect;
 
 import com.google.common.collect.ImmutableMap;
@@ -24,10 +25,14 @@ import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.codebase.Codebase;
+import com.google.devtools.moe.client.gson.GsonModule;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
-import com.google.devtools.moe.client.project.ProjectContext;
-import com.google.devtools.moe.client.project.ProjectContext.NoopProjectContext;
+import com.google.devtools.moe.client.project.EditorConfig;
+import com.google.devtools.moe.client.project.ScrubberConfig;
 import com.google.devtools.moe.client.testing.TestingModule;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import dagger.Provides;
 import java.io.File;
 import java.io.IOException;
@@ -40,6 +45,8 @@ public class InverseRenamingEditorTest extends TestCase {
 
   private final IMocksControl control = EasyMock.createControl();
   private final FileSystem mockFs = control.createMock(FileSystem.class);
+  private final Gson gson = GsonModule.provideGson();
+  private final ScrubberConfig scrubberConfig = gson.fromJson("{}", ScrubberConfig.class);
 
   // TODO(cgruber): Rework these when statics aren't inherent in the design.
   @dagger.Component(modules = {TestingModule.class, SystemCommandRunner.Module.class, Module.class})
@@ -64,12 +71,10 @@ public class InverseRenamingEditorTest extends TestCase {
   }
 
   public void testEdit() throws Exception {
-    ProjectContext context = new NoopProjectContext();
-
-    InverseRenamingEditor inverseRenamey =
-        new InverseRenamingEditor(
-            new RenamingEditor(
-                "renamey", ImmutableMap.of("internal_root", "public_root"), false /*useRegex*/));
+    JsonObject mappings =
+        new JsonParser().parse("{\"internal_root\": \"public_root\"}").getAsJsonObject();
+    EditorConfig config = EditorConfig.create(renamer, scrubberConfig, "", mappings, false);
+    RenamingEditor inverseRenamey = new RenamingEditor(mockFs, gson, "renamey", config);
 
     Codebase input =
         Codebase.create(new File("/input"), "public", new RepositoryExpression("input"));
@@ -101,7 +106,7 @@ public class InverseRenamingEditorTest extends TestCase {
     control.replay();
     Codebase inverseRenamed =
         inverseRenamey.inverseEdit(
-            input, null /*referenceFrom*/, destination, context, ImmutableMap.<String, String>of());
+            input, null /*referenceFrom*/, destination, ImmutableMap.<String, String>of());
     assertEquals(new File("/output"), inverseRenamed.path());
     control.verify();
   }

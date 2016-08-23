@@ -16,8 +16,7 @@
 package com.google.devtools.moe.client.editors;
 
 import com.google.devtools.moe.client.codebase.Codebase;
-import com.google.devtools.moe.client.project.ProjectContext;
-
+import com.google.devtools.moe.client.project.InvalidProject;
 import java.util.Map;
 
 /**
@@ -45,6 +44,11 @@ public interface InverseEditor {
       Codebase input,
       Codebase referenceFrom,
       Codebase referenceTo,
-      ProjectContext context,
       Map<String, String> options);
+
+  /**
+   * Validates that this InverseEditor is properly configured to permit inversion, and returns the
+   * validated editor.
+   */
+  public InverseEditor validateInversion() throws InvalidProject;
 }

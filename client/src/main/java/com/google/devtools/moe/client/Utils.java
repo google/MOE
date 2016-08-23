@@ -24,18 +24,47 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.gson.Gson;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.inject.Inject;
 
 /**
  * Random utilities and shared code.
  */
 public class Utils {
+
+  /** Utilities to allow code to manipulate {@code .tar} files. */
+  public static final class TarUtils {
+    private final FileSystem filesystem;
+    private final CommandRunner cmd;
+
+    @Inject
+    public TarUtils(FileSystem filesystem, CommandRunner cmd) {
+      this.filesystem = filesystem;
+      this.cmd = cmd;
+    }
+
+    /**
+     * Expands a the {@code .tar} contents of a {@link File} into a temporary working directory, and
+     * returns a {@link File} object pointing to that working directory.
+     */
+    public File expandTar(File tar) throws IOException, CommandException {
+      File expandedDir = filesystem.getTemporaryDirectory("expanded_tar_");
+      filesystem.makeDirs(expandedDir);
+      try {
+        cmd.runCommand(
+            "tar", ImmutableList.of("-xf", tar.getAbsolutePath()), expandedDir.getAbsolutePath());
+      } catch (CommandRunner.CommandException e) {
+        filesystem.deleteRecursively(expandedDir);
+        throw e;
+      }
+      return expandedDir;
+    }
+  }
 
   /**
    * Returns a Set that excludes strings matching any of excludeRes.
@@ -96,69 +125,6 @@ public class Utils {
             return null;
           }
         });
-  }
-
-  /**
-   * Expands the specified File to a new temporary directory, or returns null if the file
-   * type is unsupported.
-   * @param inputFile The File to be extracted.
-   * @return File pointing to a directory, or null.
-   * @throws CommandException
-   * @throws IOException
-   */
-  public static File expandToDirectory(File inputFile) throws IOException, CommandException {
-    // If the specified path already is a directory, return it without modification.
-    if (inputFile.isDirectory()) {
-      return inputFile;
-    }
-
-    // Determine the file type by looking at the file extension.
-    String lowerName = inputFile.getName().toLowerCase();
-    if (lowerName.endsWith(".tar.gz") || lowerName.endsWith(".tar")) {
-      return Utils.expandTar(inputFile);
-    }
-
-    // If this file extension is unknown, return null.
-    return null;
-  }
-
-  public static File expandTar(File tar) throws IOException, CommandException {
-    File expandedDir = Injector.INSTANCE.fileSystem().getTemporaryDirectory("expanded_tar_");
-    Injector.INSTANCE.fileSystem().makeDirs(expandedDir);
-    try {
-      Injector.INSTANCE
-          .cmd()
-          .runCommand(
-              "tar", ImmutableList.of("-xf", tar.getAbsolutePath()), expandedDir.getAbsolutePath());
-    } catch (CommandRunner.CommandException e) {
-      Injector.INSTANCE.fileSystem().deleteRecursively(expandedDir);
-      throw e;
-    }
-    return expandedDir;
-  }
-
-  public static void copyDirectory(File src, File dest) throws IOException, CommandException {
-    if (src == null) {
-      return;
-    }
-    Injector.INSTANCE.fileSystem().makeDirsForFile(dest);
-    if (Injector.INSTANCE.fileSystem().isFile(src)) {
-      Injector.INSTANCE.fileSystem().copyFile(src, dest);
-      return;
-    }
-    File[] files = Injector.INSTANCE.fileSystem().listFiles(src);
-    if (files != null) {
-      for (File subFile : files) {
-        File newFile = new File(dest, Injector.INSTANCE.fileSystem().getName(subFile));
-        if (Injector.INSTANCE.fileSystem().isDirectory(subFile)) {
-          copyDirectory(subFile, newFile);
-        } else {
-          Injector.INSTANCE.fileSystem().makeDirsForFile(newFile);
-          Injector.INSTANCE.fileSystem().copyFile(subFile, newFile);
-        }
-      }
-    }
-    return;
   }
 
   /**

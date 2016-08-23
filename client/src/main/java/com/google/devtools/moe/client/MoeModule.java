@@ -18,6 +18,7 @@ package com.google.devtools.moe.client;
 import com.google.devtools.moe.client.Ui.UiModule;
 import com.google.devtools.moe.client.database.FileDb;
 import com.google.devtools.moe.client.directives.Directives;
+import com.google.devtools.moe.client.editors.Editors;
 import com.google.devtools.moe.client.gson.GsonModule;
 import com.google.devtools.moe.client.options.OptionsModule;
 import com.google.devtools.moe.client.options.OptionsModule.Argument;
@@ -39,13 +40,12 @@ import javax.annotation.Nullable;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-/**
- * Module to register bindings for MOE.
- */
+/** Module to register bindings for MOE. */
 @Module(
   includes = {
     MoeModule.ExecutableModule.class,
     Repositories.Defaults.class,
+    Editors.Defaults.class,
     OptionsModule.class,
     Directives.Module.class,
     FileDb.Module.class,

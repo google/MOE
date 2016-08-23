@@ -16,21 +16,21 @@
 
 package com.google.devtools.moe.client.editors;
 
+import static com.google.devtools.moe.client.project.EditorType.renamer;
 import static org.easymock.EasyMock.expect;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
-import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.codebase.Codebase;
+import com.google.devtools.moe.client.gson.GsonModule;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
-import com.google.devtools.moe.client.testing.TestingModule;
+import com.google.devtools.moe.client.project.EditorConfig;
+import com.google.devtools.moe.client.project.ScrubberConfig;
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import dagger.Provides;
+import com.google.gson.JsonParser;
 import java.io.File;
-import java.util.Map;
-import javax.inject.Singleton;
 import junit.framework.TestCase;
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
@@ -38,41 +38,18 @@ import org.easymock.IMocksControl;
 public class RenamingEditorTest extends TestCase {
   private final IMocksControl control = EasyMock.createControl();
   private final FileSystem fileSystem = control.createMock(FileSystem.class);
-  private final CommandRunner cmd = control.createMock(CommandRunner.class);
-
-  // TODO(cgruber): Rework these when statics aren't inherent in the design.
-  @dagger.Component(modules = {TestingModule.class, Module.class})
-  @Singleton
-  interface Component {
-    Injector context(); // TODO (b/19676630) Remove when bug is fixed.
-  }
-
-  @dagger.Module
-  class Module {
-    @Provides
-    public CommandRunner cmd() {
-      return cmd;
-    }
-
-    @Provides
-    public FileSystem filesystem() {
-      return fileSystem;
-    }
-  }
-
-  @Override
-  protected void setUp() throws Exception {
-    super.setUp();
-    Injector.INSTANCE =
-        DaggerRenamingEditorTest_Component.builder().module(new Module()).build().context();
-  }
+  private final Gson gson = GsonModule.provideGson();
+  private final ScrubberConfig scrubberConfig = gson.fromJson("{}", ScrubberConfig.class);
 
   public void testRenameFile_NoRegex() throws Exception {
-    RenamingEditor renamer =
-        new RenamingEditor(
-            "renamey",
-            ImmutableMap.of("fuzzy/wuzzy", "buzzy", "olddir", "newdir", ".*", "ineffectual_regex"),
-            false /*useRegex*/);
+    String mappings =
+        "{"
+            + "\"fuzzy/wuzzy\": \"buzzy\","
+            + "\"olddir\": \"newdir\","
+            + "\".*\": \"ineffectual_regex\""
+            + "}";
+    EditorConfig config = EditorConfig.create(renamer, scrubberConfig, "", parse(mappings), false);
+    RenamingEditor renamer = new RenamingEditor(fileSystem, gson, "renamey", config);
 
     // Leading '/' should be trimmed.
     assertEquals("tmp/newdir/foo/bar.txt", renamer.renameFile("/tmp/olddir/foo/bar.txt"));
@@ -88,11 +65,10 @@ public class RenamingEditorTest extends TestCase {
   }
 
   public void testRenameFile_Regex() throws Exception {
-    RenamingEditor renamer =
-        new RenamingEditor(
-            "renamey",
-            ImmutableMap.of("/old([^/]*)", "/brand/new$1", "fuzzy/wuzzy", "buzzy"),
-            true /*useRegex*/);
+    String mappings =
+        "{" + "\"/old([^/]*)\": \"/brand/new$1\"," + "\"fuzzy/wuzzy\": \"buzzy\"" + "}";
+    EditorConfig config = EditorConfig.create(renamer, scrubberConfig, "", parse(mappings), true);
+    RenamingEditor renamer = new RenamingEditor(fileSystem, gson, "renamey", config);
 
     assertEquals("tmp/brand/newdir/foo/bar.txt", renamer.renameFile("/tmp/olddir/foo/bar.txt"));
 
@@ -111,9 +87,9 @@ public class RenamingEditorTest extends TestCase {
     File srcContents2 = new File("/src/olddummy/file2");
     File src = new File("/src");
     File dest = new File("/dest");
-
-    RenamingEditor renamer =
-        new RenamingEditor("renamey", ImmutableMap.of("olddummy", "newdummy"), false);
+    String mappings = "{\"olddummy\": \"newdummy\"}";
+    EditorConfig config = EditorConfig.create(renamer, scrubberConfig, "", parse(mappings), false);
+    RenamingEditor renamer = new RenamingEditor(fileSystem, gson, "renamey", config);
 
     expect(fileSystem.isDirectory(src)).andReturn(true);
     expect(fileSystem.listFiles(src)).andReturn(new File[] {new File("/src/olddummy")});
@@ -154,23 +130,16 @@ public class RenamingEditorTest extends TestCase {
 
     control.replay();
 
-    new RenamingEditor("renamey", ImmutableMap.of("moe", "joe"), false)
-        .edit(
-            codebase,
-            null /* this edit doesn't require a ProjectContext */,
-            ImmutableMap.<String, String>of() /* this edit doesn't require options */);
+    String mappings = "{\"moe\": \"joe\"}";
+    EditorConfig config = EditorConfig.create(renamer, scrubberConfig, "", parse(mappings), false);
+    new RenamingEditor(fileSystem, gson, "renamey", config)
+        .edit(codebase, ImmutableMap.<String, String>of());
 
     control.verify();
   }
 
-  public void testParseJsonMap() throws Exception {
-    JsonObject jsonMap = new JsonObject();
-    jsonMap.addProperty("java/com/google/devtools/", "src/");
-    jsonMap.addProperty("javatests/com/google/devtools/", "tests/");
-    Map<String, String> map = RenamingEditor.parseJsonMap(jsonMap);
-    assertEquals(
-        ImmutableMap.of(
-            "java/com/google/devtools/", "src/", "javatests/com/google/devtools/", "tests/"),
-        map);
+  private JsonObject parse(String json) {
+    JsonObject mappings = new JsonParser().parse(json).getAsJsonObject();
+    return mappings;
   }
 }

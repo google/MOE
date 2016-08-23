@@ -25,9 +25,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
-
 import dagger.Binds;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -41,15 +39,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-/**
- * A {@link FileSystem} using the real local filesystem via operations in {@link File}.
- */
+/** A {@link FileSystem} using the real local filesystem via operations in {@link File}. */
 @Singleton
-public class SystemFileSystem implements FileSystem {
+public class SystemFileSystem extends AbstractFileSystem {
   private final Map<File, Lifetime> tempDirLifetimes = Maps.newHashMap();
 
   @Inject

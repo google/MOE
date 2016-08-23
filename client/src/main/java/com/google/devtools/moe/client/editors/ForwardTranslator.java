@@ -42,7 +42,7 @@ public class ForwardTranslator implements Translator {
     for (TranslatorStep s : steps) {
       Ui.Task editTask = Injector.INSTANCE.ui().pushTask("edit", "Translation editor: " + s.name);
       // Pass the translation options to each editor.
-      translated = s.editor.edit(translated, context, options);
+      translated = s.editor.edit(translated, options);
       Injector.INSTANCE.ui().popTaskAndPersist(editTask, translated.path());
     }
     return translated;

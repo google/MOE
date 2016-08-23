@@ -20,36 +20,20 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.devtools.moe.client.CommandRunner;
-import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.editors.Editor;
+import com.google.devtools.moe.client.editors.Editors;
 import com.google.devtools.moe.client.editors.ForwardTranslator;
-import com.google.devtools.moe.client.editors.IdentityEditor;
-import com.google.devtools.moe.client.editors.InverseEditor;
-import com.google.devtools.moe.client.editors.InverseRenamingEditor;
-import com.google.devtools.moe.client.editors.InverseScrubbingEditor;
 import com.google.devtools.moe.client.editors.InverseTranslator;
 import com.google.devtools.moe.client.editors.InverseTranslatorStep;
-import com.google.devtools.moe.client.editors.PatchingEditor;
-import com.google.devtools.moe.client.editors.RenamingEditor;
-import com.google.devtools.moe.client.editors.ScrubbingEditor;
-import com.google.devtools.moe.client.editors.ShellEditor;
 import com.google.devtools.moe.client.editors.Translator;
 import com.google.devtools.moe.client.editors.TranslatorPath;
 import com.google.devtools.moe.client.editors.TranslatorStep;
 import com.google.devtools.moe.client.migrations.MigrationConfig;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.repositories.RepositoryType;
-import com.google.devtools.moe.client.tools.FileDifference.FileDiffer;
-
-import dagger.Lazy;
-
-import java.io.File;
 import java.util.List;
 import java.util.Map;
-
-import javax.annotation.Nullable;
 
 /**
  * Creates a {@link ProjectContext} given a context file name.
@@ -57,27 +41,15 @@ import javax.annotation.Nullable;
 // TODO(cgruber): Move most of the create logic to ProjectConfig, since they're basically accessors
 public abstract class ProjectContextFactory {
 
-  private final FileDiffer differ;
-  private final CommandRunner cmd;
-  private final FileSystem filesystem;
   protected final Ui ui;
   private final Repositories repositories;
-  private final Lazy<File> scrubberBinary;
+  private final Editors editors;
 
-  public ProjectContextFactory(
-      FileDiffer differ,
-      CommandRunner cmd,
-      @Nullable FileSystem filesystem,
-      Ui ui,
-      Repositories repositories,
-      Lazy<File> scrubberBinary) { // TODO(cgruber) remove when editors are injected.
+  public ProjectContextFactory(Ui ui, Repositories repositories, Editors editors) {
     // TODO(cgruber):push nullability back from this point.
-    this.differ = differ;
     this.repositories = Preconditions.checkNotNull(repositories);
-    this.cmd = cmd;
-    this.filesystem = filesystem;
     this.ui = ui;
-    this.scrubberBinary = scrubberBinary;
+    this.editors = editors;
   }
 
   /**
@@ -119,7 +91,7 @@ public abstract class ProjectContextFactory {
   private ImmutableMap<String, Editor> buildEditors(ProjectConfig config) throws InvalidProject {
     ImmutableMap.Builder<String, Editor> builder = ImmutableMap.builder();
     for (Map.Entry<String, EditorConfig> entry : config.editors().entrySet()) {
-      builder.put(entry.getKey(), makeEditorFromConfig(entry.getKey(), entry.getValue()));
+      builder.put(entry.getKey(), editors.makeEditorFromConfig(entry.getKey(), entry.getValue()));
     }
     return builder.build();
   }
@@ -146,22 +118,7 @@ public abstract class ProjectContextFactory {
     return builder.build();
   }
 
-  Editor makeEditorFromConfig(String editorName, EditorConfig config) throws InvalidProject {
-    switch (config.type()) {
-      case identity:
-        return IdentityEditor.makeIdentityEditor(editorName, config);
-      case scrubber:
-        return ScrubbingEditor.makeScrubbingEditor(scrubberBinary, editorName, config);
-      case patcher:
-        return PatchingEditor.makePatchingEditor(editorName, config);
-      case shell:
-        return ShellEditor.makeShellEditor(editorName, config);
-      case renamer:
-        return RenamingEditor.makeRenamingEditor(editorName, config);
-      default:
-        throw new InvalidProject("Invalid editor type: \"%s\"", config.type());
-    }
-  }
+
 
   Translator makeTranslatorFromConfig(TranslatorConfig transConfig, ProjectConfig projConfig)
       throws InvalidProject {
@@ -181,7 +138,7 @@ public abstract class ProjectContextFactory {
     for (StepConfig sc : stepConfigs) {
       steps.add(
           new TranslatorStep(
-              sc.getName(), makeEditorFromConfig(sc.getName(), sc.getEditorConfig())));
+              sc.getName(), editors.makeEditorFromConfig(sc.getName(), sc.getEditorConfig())));
     }
     return steps.build();
   }
@@ -193,7 +150,8 @@ public abstract class ProjectContextFactory {
       inverseSteps.add(
           new InverseTranslatorStep(
               "inverse_" + sc.getName(),
-              makeInverseEditorFromConfig("inverse_" + sc.getName(), sc.getEditorConfig())));
+              editors.makeInverseEditorFromConfig(
+                  "inverse_" + sc.getName(), sc.getEditorConfig())));
     }
     return inverseSteps.build();
   }
@@ -216,17 +174,4 @@ public abstract class ProjectContextFactory {
         transConfig.getToProjectSpace());
   }
 
-  private InverseEditor makeInverseEditorFromConfig(String editorName, EditorConfig originalConfig)
-      throws InvalidProject {
-    switch (originalConfig.type()) {
-      case identity:
-        return IdentityEditor.makeIdentityEditor(editorName, originalConfig);
-      case renamer:
-        return InverseRenamingEditor.makeInverseRenamingEditor(editorName, originalConfig);
-      case scrubber:
-        return new InverseScrubbingEditor(differ, cmd, filesystem, ui);
-      default:
-        throw new InvalidProject("Non-invertible editor type: " + originalConfig.type());
-    }
-  }
 }

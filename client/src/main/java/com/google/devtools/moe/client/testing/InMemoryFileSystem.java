@@ -21,24 +21,20 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.devtools.moe.client.AbstractFileSystem;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Lifetimes;
-
 import dagger.Binds;
-
 import java.io.File;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-
 import javax.inject.Singleton;
 
-/**
- * An in-memory {@link FileSystem} for use in testing.
- */
-public class InMemoryFileSystem implements FileSystem {
+/** An in-memory {@link FileSystem} for use in testing. */
+public class InMemoryFileSystem extends AbstractFileSystem {
   private static final Splitter SEP_SPLITTER = Splitter.on(File.separator).omitEmptyStrings();
   private static final String TEMP_DIR_PREFIX = "/tmp/moe_".replace('/', File.separatorChar);
 

@@ -59,7 +59,7 @@ public class EditExpression extends AbstractExpression {
                 codebaseToEdit.path(),
                 editor.getDescription());
 
-    Codebase editedCodebase = editor.edit(codebaseToEdit, context, editOp.term.options);
+    Codebase editedCodebase = editor.edit(codebaseToEdit, editOp.term.options);
 
     Injector.INSTANCE.ui().popTaskAndPersist(editTask, editedCodebase.path());
     return editedCodebase.copyWithExpression(this);

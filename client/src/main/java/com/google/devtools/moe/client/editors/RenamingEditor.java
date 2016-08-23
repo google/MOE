@@ -16,47 +16,69 @@
 
 package com.google.devtools.moe.client.editors;
 
+import com.google.auto.factory.AutoFactory;
+import com.google.auto.factory.Provided;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
+import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.devtools.moe.client.FileSystem;
-import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
+import com.google.devtools.moe.client.Utils;
 import com.google.devtools.moe.client.codebase.Codebase;
-import com.google.devtools.moe.client.gson.GsonModule;
 import com.google.devtools.moe.client.project.EditorConfig;
-import com.google.devtools.moe.client.project.ProjectContext;
-import com.google.gson.JsonObject;
+import com.google.devtools.moe.client.project.EditorType;
+import com.google.devtools.moe.client.project.InvalidProject;
+import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * The renaming editor reorganizes the project's hierarchy.
- */
-public class RenamingEditor implements Editor {
+/** The renaming editor reorganizes the project's hierarchy. */
+@AutoFactory(implementing = Editor.Factory.class)
+public class RenamingEditor implements Editor, InverseEditor {
+  private static final CharMatcher FILE_SEP_CHAR_MATCHER = CharMatcher.is(File.separatorChar);
+  private static final Joiner FILE_SEP_JOINER = Joiner.on(File.separator);
+  private static final Splitter FILE_SEP_SPLITTER = Splitter.on(File.separator);
+  private static final Type MAP_TYPE = new TypeToken<Map<String, String>>() {}.getType();
 
-  /** CharMatcher for trimming leading and trailing file path separators. */
-  private static final CharMatcher SEP_CHAR_MATCHER = CharMatcher.is(File.separatorChar);
-
-  private final FileSystem filesystem = Injector.INSTANCE.fileSystem(); // TODO(cgruber) @Inject
-
+  private final FileSystem filesystem;
   private final String editorName;
   private final Map<Pattern, String> regexMappings;
+  private final boolean useRegex;
 
-  RenamingEditor(String editorName, Map<String, String> mappings, boolean useRegex) {
-    this.editorName = editorName;
+  RenamingEditor(
+      @Provided FileSystem filesystem, @Provided Gson gson, String name, EditorConfig config) {
+    this.filesystem = filesystem;
+    this.editorName = name;
+    if (config.mappings() == null) {
+      throw new MoeProblem("No mappings object found in the config for editor %s", editorName);
+    }
+    regexMappings = mappingsFromConfig(gson, config);
+    this.useRegex = config.useRegex();
+  }
 
+  /** Preprocesses the mappings from the given {@link EditorConfig}. */
+  private static Map<Pattern, String> mappingsFromConfig(Gson gson, EditorConfig config) {
+    Map<String, String> mappings = gson.fromJson(config.mappings(), MAP_TYPE);
     ImmutableMap.Builder<Pattern, String> regexMappingsBuilder = ImmutableMap.builder();
     for (String mapping : mappings.keySet()) {
       regexMappingsBuilder.put(
-          Pattern.compile(useRegex ? mapping : Pattern.quote(mapping)), mappings.get(mapping));
+          Pattern.compile(config.useRegex() ? mapping : Pattern.quote(mapping)),
+          mappings.get(mapping));
     }
-    this.regexMappings = regexMappingsBuilder.build();
+    return regexMappingsBuilder.build();
   }
 
   /**
@@ -65,6 +87,15 @@ public class RenamingEditor implements Editor {
   @Override
   public String getDescription() {
     return "rename step " + editorName;
+  }
+
+  @Override
+  public InverseEditor validateInversion() throws InvalidProject {
+    if (useRegex) {
+      throw new InvalidProject(
+          "Editor type %s is not reversable if use_regex=true", EditorType.renamer);
+    }
+    return this;
   }
 
   /**
@@ -106,7 +137,7 @@ public class RenamingEditor implements Editor {
         String renamed = matcher.replaceFirst(regexMappings.get(searchExp));
         // Erase leading path separators, e.g. when the rule "dir" -> "" maps
         // "dir/filename.txt" to "/filename.txt".
-        return SEP_CHAR_MATCHER.trimLeadingFrom(renamed);
+        return FILE_SEP_CHAR_MATCHER.trimLeadingFrom(renamed);
       }
     }
     throw new MoeProblem(
@@ -116,15 +147,15 @@ public class RenamingEditor implements Editor {
   }
 
   /**
-   * Copies the input Codebase's contents, renaming the files according to this.mappings and
-   * returns a new Codebase with the results.
+   * Copies the input Codebase's contents, renaming the files according to this.mappings and returns
+   * a new Codebase with the results.
    *
    * @param input the Codebase to edit
-   * @param context the ProjectContext for this project
    * @param options a map containing any command line options such as a specific revision
    */
   @Override
-  public Codebase edit(Codebase input, ProjectContext context, Map<String, String> options) {
+  public Codebase edit(Codebase input, Map<String, String> options) {
+
     File tempDir = filesystem.getTemporaryDirectory("rename_run_");
     try {
       copyDirectoryAndRename(
@@ -137,21 +168,82 @@ public class RenamingEditor implements Editor {
     return Codebase.create(tempDir, input.projectSpace(), input.expression());
   }
 
-  public static RenamingEditor makeRenamingEditor(String editorName, EditorConfig config) {
-    if (config.mappings() == null) {
-      throw new MoeProblem("No mappings object found in the config for editor %s", editorName);
+  @Override
+  public Codebase inverseEdit(
+      Codebase input, Codebase referenceFrom, Codebase referenceTo, Map<String, String> options) {
+    File tempDir = filesystem.getTemporaryDirectory("inverse_rename_run_");
+    inverseRenameAndCopy(input, tempDir, referenceTo);
+    return Codebase.create(tempDir, referenceTo.projectSpace(), referenceTo.expression());
+  }
+
+  private void inverseRenameAndCopy(Codebase input, File destination, Codebase reference) {
+    Set<String> renamedFilenames =
+        Utils.makeFilenamesRelative(filesystem.findFiles(input.path()), input.path());
+    Map<String, String> renamedToReferenceMap =
+        makeRenamedToReferenceMap(
+            Utils.makeFilenamesRelative(filesystem.findFiles(reference.path()), reference.path()));
+
+    for (String renamedFilename : renamedFilenames) {
+      String inverseRenamedFilename = inverseRename(renamedFilename, renamedToReferenceMap);
+      copyFile(renamedFilename, inverseRenamedFilename, input.path(), destination);
     }
-    return new RenamingEditor(
-        editorName, RenamingEditor.parseJsonMap(config.mappings()), config.useRegex());
+  }
+
+  private void copyFile(String inputFilename, String destFilename, File inputRoot, File destRoot) {
+    File inputFile = new File(inputRoot, inputFilename);
+    File destFile = new File(destRoot, destFilename);
+    try {
+      filesystem.makeDirsForFile(destFile);
+      filesystem.copyFile(inputFile, destFile);
+    } catch (IOException e) {
+      throw new MoeProblem(e, "%s", e.getMessage());
+    }
   }
 
   /**
-   * Converts Json representing a map to a Java Map.
-   *
-   * @param jsonMappings  the JsonObject representing the renaming rules
+   * Walks backwards through the dir prefixes of renamedFilename looking for a match in
+   * renamedToReferenceMap.
    */
-  static Map<String, String> parseJsonMap(JsonObject jsonMappings) {
-    Type type = new TypeToken<Map<String, String>>() {}.getType();
-    return GsonModule.provideGson().fromJson(jsonMappings, type);
+  private String inverseRename(String renamedFilename, Map<String, String> renamedToReferenceMap) {
+    List<String> renamedAllParts = FILE_SEP_SPLITTER.splitToList(renamedFilename);
+    for (int i = renamedAllParts.size(); i > 0; i--) {
+      String renamedParts = FILE_SEP_JOINER.join(renamedAllParts.subList(0, i));
+      String partsToSubstitute = renamedToReferenceMap.get(renamedParts);
+      if (partsToSubstitute != null) {
+        return renamedFilename.replace(renamedParts, partsToSubstitute);
+      }
+    }
+    // No inverse renaming found.
+    return renamedFilename;
   }
+
+  /**
+   * Returns mappings (renamed path, original/reference path) for all paths in the renamed/input
+   * Codebase.
+   */
+  private Map<String, String> makeRenamedToReferenceMap(Set<String> referenceFilenames) {
+    // Use a HashMap instead of ImmutableMap.Builder because we may put the same key (e.g. a
+    // high-level dir) multiple times. We may want to complain if trying to put a new value for a
+    // dir (i.e. if two different reference paths are renamed to the same path), but we don't now.
+    HashMap<String, String> tmpPathMap = Maps.newHashMap();
+    for (String refFilename : referenceFilenames) {
+
+      String renamed = this.renameFile(refFilename);
+      LinkedList<String> renamedPathParts = Lists.newLinkedList(FILE_SEP_SPLITTER.split(renamed));
+      LinkedList<String> refPathParts = Lists.newLinkedList(FILE_SEP_SPLITTER.split(refFilename));
+
+      // Put a mapping for each directory prefix of the renaming, stopping at the root of either
+      // path. For example, a renaming a/b/c/file -> x/y/file creates mappings for each dir prefix:
+      // - x/y/file -> a/b/c/file
+      // - x/y -> a/b/c
+      // - x -> a/b
+      while (!renamedPathParts.isEmpty() && !refPathParts.isEmpty()) {
+        tmpPathMap.put(FILE_SEP_JOINER.join(renamedPathParts), FILE_SEP_JOINER.join(refPathParts));
+        renamedPathParts.removeLast();
+        refPathParts.removeLast();
+      }
+    }
+    return ImmutableMap.copyOf(tmpPathMap);
+  }
+
 }

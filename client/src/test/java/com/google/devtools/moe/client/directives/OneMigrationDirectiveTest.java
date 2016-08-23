@@ -48,7 +48,7 @@ public class OneMigrationDirectiveTest extends TestCase {
     Repositories repositories =
         new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory()));
     InMemoryProjectContextFactory contextFactory =
-        new InMemoryProjectContextFactory(null, cmd, null, ui, repositories);
+        new InMemoryProjectContextFactory(ui, repositories);
     contextFactory.projectConfigs.put(
         "moe_config.txt",
         "{\"name\":\"foo\",\"repositories\":{"

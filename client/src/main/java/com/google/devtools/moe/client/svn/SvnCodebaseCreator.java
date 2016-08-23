@@ -31,10 +31,8 @@ import com.google.devtools.moe.client.repositories.Revision;
 import java.io.File;
 import java.util.Map;
 
-/**
- * {@link CodebaseCreator} for svn.
- */
-public class SvnCodebaseCreator implements CodebaseCreator {
+/** {@link CodebaseCreator} for svn. */
+public class SvnCodebaseCreator extends CodebaseCreator {
 
   private final FileSystem filesystem;
   private final String name;

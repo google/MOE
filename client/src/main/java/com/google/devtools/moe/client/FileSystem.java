@@ -128,8 +128,14 @@ public interface FileSystem {
   public void copyFile(File src, File dest) throws IOException;
 
   /**
-   * Write contents to File f.
+   * Copy the contents of directory {@code src} into the location represented by the directory
+   * {@code dest}. Note, this will not behave as the unix {@code mv} command in that if {@code dest}
+   * exists, it will simply poplate it, not populate a sub-folder within {@code dest} with {@code
+   * src}'s basename.
    */
+  public void copyDirectory(File src, File dest) throws IOException;
+
+  /** Write contents to File f. */
   public void write(String contents, File f) throws IOException;
 
   /**

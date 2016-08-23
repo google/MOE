@@ -120,7 +120,7 @@ public class BookkeepingDirectiveTest extends TestCase {
         new Repositories(
             ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory()));
     InMemoryProjectContextFactory contextFactory =
-        init(new InMemoryProjectContextFactory(fileDiffer, cmd, filesystem, ui, repositories));
+        init(new InMemoryProjectContextFactory(ui, repositories));
     ProjectContext context = contextFactory.create("moe_config.txt");
     Injector.INSTANCE = new Injector(filesystem, cmd, ui);
     Db db =
@@ -167,7 +167,7 @@ public class BookkeepingDirectiveTest extends TestCase {
         new Repositories(
             ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory()));
     InMemoryProjectContextFactory contextFactory =
-        init(new InMemoryProjectContextFactory(fileDiffer, cmd, filesystem, ui, repositories));
+        init(new InMemoryProjectContextFactory(ui, repositories));
     ProjectContext context = contextFactory.create("moe_config.txt");
     Injector.INSTANCE = new Injector(filesystem, cmd, ui);
     Db db =
@@ -210,7 +210,7 @@ public class BookkeepingDirectiveTest extends TestCase {
         new Repositories(
             ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory()));
     InMemoryProjectContextFactory contextFactory =
-        init(new InMemoryProjectContextFactory(fileDiffer, cmd, filesystem, ui, repositories));
+        init(new InMemoryProjectContextFactory(ui, repositories));
     ProjectContext context = contextFactory.create("moe_config.txt");
     Injector.INSTANCE = new Injector(filesystem, cmd, ui);
     Db db =

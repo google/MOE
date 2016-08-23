@@ -19,7 +19,6 @@ package com.google.devtools.moe.client.directives;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.Repositories;
@@ -32,11 +31,10 @@ import junit.framework.TestCase;
 public class HighestRevisionDirectiveTest extends TestCase {
   private final ByteArrayOutputStream stream = new ByteArrayOutputStream();
   private final Ui ui = new Ui(stream, /* fileSystem */ null);
-  private final SystemCommandRunner cmd = new SystemCommandRunner();
   private final Repositories repositories =
       new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory()));
   private final InMemoryProjectContextFactory contextFactory =
-      new InMemoryProjectContextFactory(null, cmd, null, ui, repositories);
+      new InMemoryProjectContextFactory(ui, repositories);
 
   public void testWithoutRevision() throws Exception {
     contextFactory.projectConfigs.put(

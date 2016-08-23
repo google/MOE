@@ -19,19 +19,12 @@ package com.google.devtools.moe.client.project;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.io.Files;
-import com.google.devtools.moe.client.CommandRunner;
-import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Ui;
+import com.google.devtools.moe.client.editors.Editors;
 import com.google.devtools.moe.client.repositories.Repositories;
-import com.google.devtools.moe.client.tools.FileDifference.FileDiffer;
-
-import dagger.Lazy;
-
 import java.io.File;
 import java.io.IOException;
-
 import javax.inject.Inject;
-import javax.inject.Named;
 
 /**
  * Creates a ProjectContext from a configuration file loaded from the file system.
@@ -39,14 +32,8 @@ import javax.inject.Named;
 public class FileReadingProjectContextFactory extends ProjectContextFactory {
 
   @Inject
-  public FileReadingProjectContextFactory(
-      FileDiffer differ,
-      CommandRunner cmd,
-      FileSystem filesystem,
-      Ui ui,
-      Repositories repositories,
-      @Named("scrubber_binary") Lazy<File> scrubberBinary) {
-    super(differ, cmd, filesystem, ui, repositories, scrubberBinary);
+  public FileReadingProjectContextFactory(Ui ui, Repositories repositories, Editors editors) {
+    super(ui, repositories, editors);
   }
 
   @Override

@@ -16,11 +16,13 @@
 
 package com.google.devtools.moe.client.testing;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
-import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Utils;
+import com.google.devtools.moe.client.Utils.TarUtils;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.codebase.CodebaseCreator;
@@ -34,11 +36,17 @@ import java.util.Map;
  * Creates a codebase based upon a local existing directory. Primarily used for testing purposes.
  * Works with single files and directories.
  */
-public class FileCodebaseCreator implements CodebaseCreator {
+public class FileCodebaseCreator extends CodebaseCreator {
   private static final String PATH_OPTION = "path";
   private static final String PROJECT_SPACE_OPTION = "projectspace";
 
-  public FileCodebaseCreator() {}
+  private final FileSystem filesystem;
+  private final TarUtils tarUtils;
+
+  public FileCodebaseCreator(FileSystem filesystem, TarUtils tarUtils) {
+    this.filesystem = filesystem;
+    this.tarUtils = tarUtils;
+  }
 
   @Override
   public Codebase create(Map<String, String> options) throws CodebaseCreationError {
@@ -61,29 +69,31 @@ public class FileCodebaseCreator implements CodebaseCreator {
   }
 
   /**
-   * Returns a folder reference to the codebase described by the source file.
-   * Will extract .tar/.tar.gz automatically.
+   * Returns a folder reference to the codebase described by the source file. Will extract
+   * .tar/.tar.gz automatically.
+   *
    * @param sourceFile The file describing a codebase, or a directory.
    * @return A reference to a codebase directory
    * @throws CodebaseCreationError
    */
-  public static File getCodebasePath(File sourceFile) throws CodebaseCreationError {
+  @VisibleForTesting
+  File getCodebasePath(File sourceFile) throws CodebaseCreationError {
     // Check whether the specified path is valid.
-    if (!Injector.INSTANCE.fileSystem().exists(sourceFile)) {
+    if (!filesystem.exists(sourceFile)) {
       throw new CodebaseCreationError(
           "The specified codebase path \"%s\" does not exist.", sourceFile);
     }
 
     try {
       // Get the target path based upon whether we are dealing with a directory or a file.
-      if (Injector.INSTANCE.fileSystem().isDirectory(sourceFile)) {
+      if (filesystem.isDirectory(sourceFile)) {
         // If it is a directory, make a copy and return the path of the copy.
-        File destFile = Injector.INSTANCE.fileSystem().getTemporaryDirectory("file_codebase_copy_");
-        Utils.copyDirectory(sourceFile, destFile);
+        File destFile = filesystem.getTemporaryDirectory("file_codebase_copy_");
+        filesystem.copyDirectory(sourceFile, destFile);
         return destFile;
-      } else if (Injector.INSTANCE.fileSystem().isFile(sourceFile)) {
+      } else if (filesystem.isFile(sourceFile)) {
         // If it is a file, assume that it is an archive and try to extract it.
-        File extractedArchive = Utils.expandToDirectory(sourceFile);
+        File extractedArchive = expandToDirectory(sourceFile);
         if (extractedArchive != null) {
           return extractedArchive;
         }
@@ -102,5 +112,30 @@ public class FileCodebaseCreator implements CodebaseCreator {
             "The '%s'-option of a FileCodebaseCreator must specify either a directory "
                 + "or a .tar/.tar.gz-archive",
             PATH_OPTION));
+  }
+
+  /**
+   * Expands the specified File to a new temporary directory, or returns null if the file type is
+   * unsupported.
+   *
+   * @param inputFile The File to be extracted.
+   * @return File pointing to a directory, or null.
+   * @throws CommandException
+   * @throws IOException
+   */
+  File expandToDirectory(File inputFile) throws IOException, CommandException {
+    // If the specified path already is a directory, return it without modification.
+    if (inputFile.isDirectory()) {
+      return inputFile;
+    }
+
+    // Determine the file type by looking at the file extension.
+    String lowerName = inputFile.getName().toLowerCase();
+    if (lowerName.endsWith(".tar.gz") || lowerName.endsWith(".tar")) {
+      return tarUtils.expandTar(inputFile);
+    }
+
+    // If this file extension is unknown, return null.
+    return null;
   }
 }

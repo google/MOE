@@ -24,7 +24,6 @@ import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.writer.Writer;
 import com.google.devtools.moe.client.writer.WriterCreator;
 import com.google.devtools.moe.client.writer.WritingError;
-
 import java.io.File;
 import java.util.Map;
 
@@ -47,7 +46,6 @@ public class SvnWriterCreator implements WriterCreator {
   @Override
   public Writer create(Map<String, String> options) throws WritingError {
     Utils.checkKeys(options, ImmutableSet.of("revision"));
-    String revId = options.get("revision");
     Revision r = revisionHistory.findHighestRevision(options.get("revision"));
     File tempDir =
         Injector.INSTANCE

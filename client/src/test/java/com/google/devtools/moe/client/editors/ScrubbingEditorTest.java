@@ -16,6 +16,7 @@
 
 package com.google.devtools.moe.client.editors;
 
+import static com.google.devtools.moe.client.project.EditorType.scrubber;
 import static org.easymock.EasyMock.expect;
 
 import com.google.common.base.Joiner;
@@ -23,16 +24,17 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
-import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.Ui;
+import com.google.devtools.moe.client.Utils.TarUtils;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.gson.GsonModule;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
+import com.google.devtools.moe.client.project.EditorConfig;
 import com.google.devtools.moe.client.project.ScrubberConfig;
-import com.google.devtools.moe.client.testing.TestingModule;
 import com.google.devtools.moe.client.tools.EagerLazy;
-import dagger.Provides;
+import com.google.gson.JsonObject;
+import dagger.Lazy;
 import java.io.File;
-import javax.inject.Singleton;
 import junit.framework.TestCase;
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
@@ -41,40 +43,19 @@ public class ScrubbingEditorTest extends TestCase {
   private final IMocksControl control = EasyMock.createControl();
   private final FileSystem fileSystem = control.createMock(FileSystem.class);
   private final CommandRunner cmd = control.createMock(CommandRunner.class);
-
-  // TODO(cgruber): Rework these when statics aren't inherent in the design.
-  @dagger.Component(modules = {TestingModule.class, Module.class})
-  @Singleton
-  interface Component {
-    Injector context(); // TODO (b/19676630) Remove when bug is fixed.
-  }
-
-  @dagger.Module
-  class Module {
-    @Provides
-    public CommandRunner cmd() {
-      return cmd;
-    }
-
-    @Provides
-    public FileSystem filesystem() {
-      return fileSystem;
-    }
-  }
+  private final Ui ui = new Ui(System.out, fileSystem);
+  private final TarUtils tarUtils = new TarUtils(fileSystem, cmd);
 
   public void testScrubbing() throws Exception {
-    Injector.INSTANCE =
-        DaggerScrubbingEditorTest_Component.builder().module(new Module()).build().context();
-
     File scrubberTemp = new File("/scrubber_extraction_foo");
     File scrubberBin = new File(scrubberTemp, "scrubber.par");
     File scrubberRun = new File("/scrubber_run_foo");
     File codebaseFile = new File("/codebase");
     File expandedDir = new File("/expanded_tar_foo");
+    Lazy<File> executable = EagerLazy.fromInstance(scrubberBin);
 
     Codebase codebase =
         Codebase.create(codebaseFile, "internal", new RepositoryExpression("ignored"));
-
 
     expect(fileSystem.getTemporaryDirectory("scrubber_run_")).andReturn(scrubberRun);
     expect(
@@ -120,13 +101,11 @@ public class ScrubbingEditorTest extends TestCase {
         GsonModule.provideGson()
             .fromJson(
                 "{\"scrub_unknown_users\":\"true\",\"usernames_file\":null}", ScrubberConfig.class);
-
+    EditorConfig config =
+        EditorConfig.create(scrubber, scrubberConfig, "tar", new JsonObject(), false);
     ScrubbingEditor editor =
-        new ScrubbingEditor(EagerLazy.fromInstance(scrubberBin), "scrubber", scrubberConfig);
-    editor.edit(
-        codebase,
-        null /* this edit doesn't require a ProjectContext */,
-        ImmutableMap.<String, String>of() /* this edit doesn't require options */);
+        new ScrubbingEditor(cmd, fileSystem, ui, executable, null, tarUtils, "scrubber", config);
+    editor.edit(codebase, ImmutableMap.<String, String>of());
     control.verify();
   }
 }

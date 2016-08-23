@@ -16,18 +16,18 @@
 
 package com.google.devtools.moe.client.editors;
 
+import com.google.auto.factory.AutoFactory;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.project.EditorConfig;
-import com.google.devtools.moe.client.project.ProjectContext;
-
+import com.google.devtools.moe.client.project.InvalidProject;
 import java.util.Map;
 
-/**
- * An IdentityEditor returns the same Codebase.
- */
+/** An IdentityEditor returns the same Codebase. */
+@AutoFactory(implementing = Editor.Factory.class)
 public class IdentityEditor implements Editor, InverseEditor {
 
-  IdentityEditor() {}
+  @SuppressWarnings("unused")
+  public IdentityEditor(String ignored, EditorConfig alsoIgnored) {}
 
   /**
    * Returns a description of what this editor will do.
@@ -37,11 +37,14 @@ public class IdentityEditor implements Editor, InverseEditor {
     return "identity";
   }
 
-  /**
-   * Takes in a Codebase and returns it unedited. Not particularly useful.
-   */
   @Override
-  public Codebase edit(Codebase input, ProjectContext context, Map<String, String> options) {
+  public InverseEditor validateInversion() throws InvalidProject {
+    return this;
+  }
+
+  /** Takes in a Codebase and returns it unedited. Not particularly useful. */
+  @Override
+  public Codebase edit(Codebase input, Map<String, String> options) {
     return input;
   }
 
@@ -50,12 +53,7 @@ public class IdentityEditor implements Editor, InverseEditor {
       Codebase input,
       Codebase referenceFrom,
       Codebase referenceTo,
-      ProjectContext context,
       Map<String, String> options) {
     return input;
-  }
-
-  public static IdentityEditor makeIdentityEditor(String editorName, EditorConfig editor) {
-    return new IdentityEditor();
   }
 }

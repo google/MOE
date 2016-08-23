@@ -18,29 +18,33 @@ package com.google.devtools.moe.client.editors;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 
+import com.google.auto.factory.AutoFactory;
+import com.google.auto.factory.Provided;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
-import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
-import com.google.devtools.moe.client.Utils;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.project.EditorConfig;
-import com.google.devtools.moe.client.project.ProjectContext;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
-/**
- * A PatchingEditor invokes the command patch
- */
+/** A PatchingEditor invokes the command patch */
+@AutoFactory(implementing = Editor.Factory.class)
 public class PatchingEditor implements Editor {
 
-  private final CommandRunner cmd = Injector.INSTANCE.cmd(); // TODO(cgruber) @Inject
-  private final FileSystem filesystem = Injector.INSTANCE.fileSystem(); // TODO(cgruber) @Inject
+  private final CommandRunner cmd;
+  private final FileSystem filesystem;
   private final String name;
 
-  PatchingEditor(String editorName) {
+  PatchingEditor(
+      @Provided CommandRunner cmd,
+      @Provided FileSystem filesystem,
+      String editorName,
+      @SuppressWarnings("unused") EditorConfig ignored) {
+    this.cmd = cmd;
+    this.filesystem = filesystem;
     name = editorName;
   }
 
@@ -57,7 +61,7 @@ public class PatchingEditor implements Editor {
    * results of the patch.
    */
   @Override
-  public Codebase edit(Codebase input, ProjectContext context, Map<String, String> options) {
+  public Codebase edit(Codebase input, Map<String, String> options) {
     File tempDir = filesystem.getTemporaryDirectory("patcher_run_");
     String patchFilePath = options.get("file");
     if (isNullOrEmpty(patchFilePath)) {
@@ -68,8 +72,8 @@ public class PatchingEditor implements Editor {
         throw new MoeProblem("cannot read file %s", patchFilePath);
       }
       try {
-        Utils.copyDirectory(input.path(), tempDir);
-      } catch (IOException | CommandRunner.CommandException e) {
+        filesystem.copyDirectory(input.path(), tempDir);
+      } catch (IOException e) {
         throw new MoeProblem(e.getMessage());
       }
       try {
@@ -82,10 +86,5 @@ public class PatchingEditor implements Editor {
       }
       return Codebase.create(tempDir, input.projectSpace(), input.expression());
     }
-  }
-
-  public static PatchingEditor makePatchingEditor(String editorName, EditorConfig config) {
-    // TODO(user): Don't ignore the config
-    return new PatchingEditor(editorName);
   }
 }

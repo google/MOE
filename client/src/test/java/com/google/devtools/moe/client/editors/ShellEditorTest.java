@@ -16,55 +16,30 @@
 
 package com.google.devtools.moe.client.editors;
 
+import static com.google.devtools.moe.client.project.EditorType.shell;
 import static org.easymock.EasyMock.expect;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
-import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.codebase.Codebase;
+import com.google.devtools.moe.client.gson.GsonModule;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
-import com.google.devtools.moe.client.testing.TestingModule;
-import dagger.Provides;
+import com.google.devtools.moe.client.project.EditorConfig;
+import com.google.devtools.moe.client.project.ScrubberConfig;
+import com.google.gson.JsonObject;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import javax.inject.Singleton;
 import junit.framework.TestCase;
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
 
 public class ShellEditorTest extends TestCase {
+  private static final String CMD = "touch test.txt";
   private final IMocksControl control = EasyMock.createControl();
   private final FileSystem fileSystem = control.createMock(FileSystem.class);
   private final CommandRunner cmd = control.createMock(CommandRunner.class);
-
-  // TODO(cgruber): Rework these when statics aren't inherent in the design.
-  @dagger.Component(modules = {TestingModule.class, Module.class})
-  @Singleton
-  interface Component {
-    Injector context(); // TODO (b/19676630) Remove when bug is fixed.
-  }
-
-  @dagger.Module
-  class Module {
-    @Provides
-    public CommandRunner cmd() {
-      return cmd;
-    }
-
-    @Provides
-    public FileSystem filesystem() {
-      return fileSystem;
-    }
-  }
-
-  @Override
-  protected void setUp() throws Exception {
-    super.setUp();
-    Injector.INSTANCE =
-        DaggerShellEditorTest_Component.builder().module(new Module()).build().context();
-  }
 
   public void testShellStuff() throws Exception {
     File shellRun = new File("/shell_run_foo");
@@ -74,9 +49,7 @@ public class ShellEditorTest extends TestCase {
         Codebase.create(codebaseFile, "internal", new RepositoryExpression("ignored"));
 
     expect(fileSystem.getTemporaryDirectory("shell_run_")).andReturn(shellRun);
-    fileSystem.makeDirsForFile(shellRun);
-    expect(fileSystem.isFile(codebaseFile)).andReturn(false);
-    expect(fileSystem.listFiles(codebaseFile)).andReturn(new File[] {});
+    fileSystem.copyDirectory(codebaseFile, shellRun);
 
     List<String> argsList = new ArrayList<>();
     argsList.add("-c");
@@ -86,11 +59,10 @@ public class ShellEditorTest extends TestCase {
 
     control.replay();
 
-    new ShellEditor("shell_editor", "touch test.txt")
-        .edit(
-            codebase,
-            null /* this edit doesn't require a ProjectContext */,
-            ImmutableMap.<String, String>of() /* this edit doesn't require options */);
+    ScrubberConfig scrubberConfig = GsonModule.provideGson().fromJson("{}", ScrubberConfig.class);
+    EditorConfig config = EditorConfig.create(shell, scrubberConfig, CMD, new JsonObject(), false);
+    new ShellEditor(cmd, fileSystem, "shell_editor", config)
+        .edit(codebase, ImmutableMap.<String, String>of());
 
     control.verify();
   }

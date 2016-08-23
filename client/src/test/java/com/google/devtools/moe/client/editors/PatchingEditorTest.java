@@ -21,16 +21,12 @@ import static org.easymock.EasyMock.expect;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
-import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
-import com.google.devtools.moe.client.testing.TestingModule;
-import dagger.Provides;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
-import javax.inject.Singleton;
 import junit.framework.TestCase;
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
@@ -40,32 +36,6 @@ public class PatchingEditorTest extends TestCase {
   private final FileSystem fileSystem = control.createMock(FileSystem.class);
   private final CommandRunner cmd = control.createMock(CommandRunner.class);
 
-  // TODO(cgruber): Rework these when statics aren't inherent in the design.
-  @dagger.Component(modules = {TestingModule.class, Module.class})
-  @Singleton
-  interface Component {
-    Injector context(); // TODO (b/19676630) Remove when bug is fixed.
-  }
-
-  @dagger.Module
-  class Module {
-    @Provides
-    public CommandRunner cmd() {
-      return cmd;
-    }
-
-    @Provides
-    public FileSystem filesystem() {
-      return fileSystem;
-    }
-  }
-
-  @Override
-  protected void setUp() throws Exception {
-    super.setUp();
-    Injector.INSTANCE =
-        DaggerPatchingEditorTest_Component.builder().module(new Module()).build().context();
-  }
 
   public void testNoSuchPatchFile() throws Exception {
     File patcherRun = new File("/patcher_run_foo");
@@ -81,8 +51,7 @@ public class PatchingEditorTest extends TestCase {
     control.replay();
 
     try {
-      new PatchingEditor("patcher")
-          .edit(codebase, null /* This editor doesn't need a ProjectContext. */, options);
+      new PatchingEditor(cmd, fileSystem, "patcher", null).edit(codebase, options);
       fail();
     } catch (MoeProblem e) {
       assertEquals("cannot read file notFile", e.getMessage());
@@ -103,9 +72,7 @@ public class PatchingEditorTest extends TestCase {
 
     expect(fileSystem.getTemporaryDirectory("patcher_run_")).andReturn(patcherRun);
     expect(fileSystem.isReadable(patchFile)).andReturn(true);
-    fileSystem.makeDirsForFile(patcherRun);
-    expect(fileSystem.isFile(codebaseFile)).andReturn(false);
-    expect(fileSystem.listFiles(codebaseFile)).andReturn(new File[] {});
+    fileSystem.copyDirectory(codebaseFile, patcherRun);
 
     expect(
             cmd.runCommand(
@@ -114,8 +81,7 @@ public class PatchingEditorTest extends TestCase {
 
     control.replay();
 
-    new PatchingEditor("patcher")
-        .edit(codebase, null /* This edit doesn't require a ProjectContext. */, options);
+    new PatchingEditor(cmd, fileSystem, "patcher", null).edit(codebase, options);
 
     control.verify();
   }

@@ -89,14 +89,13 @@ public class ExpressionTest extends TestCase {
                 })
             .build()
             .context();
-    expect(mockFs.exists(new File("/foo"))).andReturn(true);
-    expect(mockFs.isDirectory(new File("/foo"))).andReturn(true);
+    File srcLocation = new File("/foo");
+    expect(mockFs.exists(srcLocation)).andReturn(true);
+    expect(mockFs.isDirectory(srcLocation)).andReturn(true);
     File copyLocation = new File("/tmp/copy");
     expect(mockFs.getTemporaryDirectory("file_codebase_copy_")).andReturn(copyLocation);
     // Short-circuit Utils.copyDirectory().
-    mockFs.makeDirsForFile(copyLocation);
-    expect(mockFs.isFile(new File("/foo"))).andReturn(true);
-    mockFs.copyFile(new File("/foo"), copyLocation);
+    mockFs.copyDirectory(srcLocation, copyLocation);
     mockFs.setLifetime(EasyMock.eq(copyLocation), EasyMock.<Lifetime>anyObject());
     mockFs.cleanUpTempDirs();
 
@@ -210,9 +209,9 @@ public class ExpressionTest extends TestCase {
         Codebase.create(finalDir, "public", new RepositoryExpression(new Term("foo3", EMPTY_MAP)));
 
     expect(cc.create(EMPTY_MAP)).andReturn(firstCb);
-    expect(translatorEditor.edit(firstCb, context, EMPTY_MAP)).andReturn(secondCb);
+    expect(translatorEditor.edit(firstCb, EMPTY_MAP)).andReturn(secondCb);
     expect(e.getDescription()).andReturn("");
-    expect(e.edit(secondCb, context, EMPTY_MAP)).andReturn(finalCb);
+    expect(e.edit(secondCb, EMPTY_MAP)).andReturn(finalCb);
 
     control.replay();
     Codebase c = Parser.parseExpression("foo>public|bar").createCodebase(context);

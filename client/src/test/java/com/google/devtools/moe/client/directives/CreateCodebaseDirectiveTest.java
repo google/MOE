@@ -37,7 +37,7 @@ public class CreateCodebaseDirectiveTest extends TestCase {
   private final Repositories repositories =
       new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory()));
   private final InMemoryProjectContextFactory contextFactory =
-      new InMemoryProjectContextFactory(null, cmd, null, ui, repositories);
+      new InMemoryProjectContextFactory(ui, repositories);
 
   @Override
   public void setUp() {
@@ -53,9 +53,7 @@ public class CreateCodebaseDirectiveTest extends TestCase {
     d.codebase = "internal";
     assertEquals(0, d.perform());
     assertThat(stream.toString())
-        .contains(
-            String.format(
-                "Codebase \"%s\" created at %s", "internal", "/dummy/codebase/internal/1"));
+        .contains("Codebase \"internal\" created at /dummy/codebase/internal/1");
   }
 
   public void testCreateCodebaseWithEditors() throws Exception {
@@ -69,11 +67,7 @@ public class CreateCodebaseDirectiveTest extends TestCase {
     d.codebase = "internal|identity";
     assertEquals(0, d.perform());
     assertThat(stream.toString())
-        .contains(
-            String.format(
-                "Codebase \"%s\" created at %s",
-                "internal|identity",
-                "/dummy/codebase/internal/1"));
+        .contains("Codebase \"internal|identity\" created at /dummy/codebase/internal/1");
 
   }
 }

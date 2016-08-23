@@ -19,21 +19,15 @@ package com.google.devtools.moe.client.testing;
 import static com.google.devtools.moe.client.project.ProjectConfig.parse;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.devtools.moe.client.CommandRunner;
-import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Ui;
+import com.google.devtools.moe.client.editors.Editors;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.ProjectConfig;
 import com.google.devtools.moe.client.project.ProjectContextFactory;
 import com.google.devtools.moe.client.repositories.Repositories;
-import com.google.devtools.moe.client.tools.FileDifference.FileDiffer;
-
 import dagger.Binds;
-
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -46,13 +40,10 @@ public class InMemoryProjectContextFactory extends ProjectContextFactory {
 
   @Inject
   public InMemoryProjectContextFactory(
-      FileDiffer differ,
-      CommandRunner cmd,
-      @Nullable FileSystem filesystem,
       Ui ui,
       Repositories repositories) {
-    super(differ, cmd, filesystem, ui, repositories, null);
-    projectConfigs = new HashMap<String, String>();
+    super(ui, repositories, new Editors.Fake());
+    projectConfigs = new HashMap<>();
   }
 
   @Override

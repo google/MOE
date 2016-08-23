@@ -34,10 +34,8 @@ import com.google.devtools.moe.client.repositories.RevisionHistory;
 import java.io.File;
 import java.util.Map;
 
-/**
- * CodebaseCreator for DVCSes, implemented by cloning a LocalClone to disk.
- */
-public abstract class AbstractDvcsCodebaseCreator implements CodebaseCreator {
+/** CodebaseCreator for DVCSes, implemented by cloning a LocalClone to disk. */
+public abstract class AbstractDvcsCodebaseCreator extends CodebaseCreator {
 
   private final Supplier<? extends LocalWorkspace> headCloneSupplier;
   private final RevisionHistory revisionHistory;

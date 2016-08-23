@@ -21,7 +21,6 @@ import static org.easymock.EasyMock.expectLastCall;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.MoeProblem;
-import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.database.Db;
 import com.google.devtools.moe.client.database.DbStorage;
@@ -41,11 +40,10 @@ import org.easymock.IMocksControl;
 public class NoteEquivalenceDirectiveTest extends TestCase {
   private final ByteArrayOutputStream stream = new ByteArrayOutputStream();
   private final Ui ui = new Ui(stream, /* fileSystem */ null);
-  private final SystemCommandRunner cmd = new SystemCommandRunner();
   private final Repositories repositories =
       new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory()));
   private final InMemoryProjectContextFactory contextFactory =
-      new InMemoryProjectContextFactory(null, cmd, null, ui, repositories);
+      new InMemoryProjectContextFactory(ui, repositories);
   private final IMocksControl control = EasyMock.createControl();
   private final FileDb.Writer dbWriter = control.createMock(FileDb.Writer.class);
   private final DbStorage dbStorage = new DbStorage();

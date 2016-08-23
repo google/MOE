@@ -25,10 +25,8 @@ import com.google.devtools.moe.client.parser.Term;
 import java.io.File;
 import java.util.Map;
 
-/**
- * CodebaseCreator backed by a dummy repository
- */
-public class DummyCodebaseCreator implements CodebaseCreator {
+/** CodebaseCreator backed by a dummy repository */
+public class DummyCodebaseCreator extends CodebaseCreator {
   private final String name;
   private final String projectSpace;
 

@@ -21,18 +21,16 @@ import java.util.Map;
 /**
  * A CodebaseCreator allows us to create Codebases.
  *
- * This may bundle an existing codebase, or check it out from source control.
+ * <p>This may bundle an existing codebase, or check it out from source control.
  */
-public interface CodebaseCreator {
+public abstract class CodebaseCreator {
 
   /**
    * Creates a Codebase.
    *
-   * @param options  options to affect the codebase creation.
-   *
+   * @param options options to affect the codebase creation.
    * @return the created Codebase
-   *
    * @throw CodebaseCreationError if we cannot create the Codebase.
    */
-  Codebase create(Map<String, String> options) throws CodebaseCreationError;
+  public abstract Codebase create(Map<String, String> options) throws CodebaseCreationError;
 }

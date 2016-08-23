@@ -41,7 +41,7 @@ public class ChangeDirectiveTest extends TestCase {
   private final Repositories repositories =
       new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory()));
   private final InMemoryProjectContextFactory contextFactory =
-      new InMemoryProjectContextFactory(null, cmd, null, ui, repositories);
+      new InMemoryProjectContextFactory(ui, repositories);
 
   public void testChange() throws Exception {
     Injector.INSTANCE = new Injector(null, cmd, ui);
