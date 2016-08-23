@@ -16,12 +16,9 @@
 
 package com.google.devtools.moe.client;
 
-import static org.easymock.EasyMock.expect;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.moe.client.Utils.TarUtils;
 import com.google.devtools.moe.client.testing.TestingModule;
 import dagger.Provides;
 import java.io.File;
@@ -96,19 +93,6 @@ public class UtilsTest extends TestCase {
       fail();
     } catch (MoeProblem p) {
     }
-  }
-
-  public void testExpandTar() throws Exception {
-    fileSystem.makeDirs(new File("/dummy/path/45.expanded"));
-    expect(fileSystem.getTemporaryDirectory("expanded_tar_"))
-        .andReturn(new File("/dummy/path/45.expanded"));
-    expect(mockcmd.runCommand(
-            "tar", ImmutableList.of("-xf", "/dummy/path/45.tar"), "/dummy/path/45.expanded"))
-        .andReturn("");
-    control.replay();
-    File expanded = new TarUtils(fileSystem, mockcmd).expandTar(new File("/dummy/path/45.tar"));
-    assertEquals(new File("/dummy/path/45.expanded"), expanded);
-    control.verify();
   }
 
   public void testMakeShellScript() throws Exception {

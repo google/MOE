@@ -19,7 +19,7 @@ package com.google.devtools.moe.client.project;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.devtools.moe.client.Utils;
+import com.google.devtools.moe.client.gson.GsonUtil;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.gson.annotations.SerializedName;
 
@@ -168,7 +168,7 @@ public class RepositoryConfig {
    * Modified copy creator, that supplies a clone with the branch field altered.
    */
   public RepositoryConfig copyWithBranch(String branch) {
-    RepositoryConfig newConfig = Utils.cloneGsonObject(this);
+    RepositoryConfig newConfig = GsonUtil.cloneGsonObject(this);
     newConfig.branch = branch;
     return newConfig;
   }
@@ -177,7 +177,7 @@ public class RepositoryConfig {
    * Modified copy creator, that supplies a clone with the branch field altered.
    */
   public RepositoryConfig copyWithUrl(String url) {
-    RepositoryConfig newConfig = Utils.cloneGsonObject(this);
+    RepositoryConfig newConfig = GsonUtil.cloneGsonObject(this);
     newConfig.url = url;
     return newConfig;
   }

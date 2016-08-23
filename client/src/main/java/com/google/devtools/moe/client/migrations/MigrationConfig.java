@@ -16,7 +16,7 @@
 
 package com.google.devtools.moe.client.migrations;
 
-import com.google.devtools.moe.client.Utils;
+import com.google.devtools.moe.client.gson.GsonUtil;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.repositories.MetadataScrubberConfig;
 
@@ -34,7 +34,7 @@ public class MigrationConfig {
 
   public MigrationConfig copyWithFromRepository(String alternate) {
     // TODO(cgruber) Rip this mechanism of using string labels
-    MigrationConfig clone = Utils.cloneGsonObject(this);
+    MigrationConfig clone = GsonUtil.cloneGsonObject(this);
     clone.fromRepository = alternate;
     return clone;
   }

@@ -15,6 +15,7 @@
  */
 package com.google.devtools.moe.client.gson;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -24,6 +25,9 @@ import com.google.gson.JsonParseException;
  * Utilities shared by database-related gson objects.
  */
 public final class GsonUtil {
+  /** A Gson parser used specifically for cloning Gson-ready objects */
+  private static final Gson CLONER = new Gson();
+
   @SuppressWarnings("unchecked") // Type is assured by gson's context.deserialize method.
   public static <T> T getPropertyOrLegacy(
       JsonDeserializationContext context,
@@ -41,4 +45,16 @@ public final class GsonUtil {
     }
     return (T) context.deserialize(element, type);
   }
+
+  /**
+   * Does a simple clone of a Gson-ready object, by marshalling into a Json intermediary and
+   * processing into a new object.  This is not in any way efficient, but it guarantees the correct
+   * cloning semantics.  It should not be used in tight loops where performance is a concern.
+   */
+  @SuppressWarnings("unchecked")
+  public static <T> T cloneGsonObject(T t) {
+    return (T) CLONER.fromJson(CLONER.toJsonTree(t), t.getClass());
+  }
+
+  private GsonUtil() {}
 }

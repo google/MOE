@@ -22,49 +22,17 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import com.google.devtools.moe.client.CommandRunner.CommandException;
-import com.google.gson.Gson;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.inject.Inject;
 
 /**
  * Random utilities and shared code.
  */
 public class Utils {
-
-  /** Utilities to allow code to manipulate {@code .tar} files. */
-  public static final class TarUtils {
-    private final FileSystem filesystem;
-    private final CommandRunner cmd;
-
-    @Inject
-    public TarUtils(FileSystem filesystem, CommandRunner cmd) {
-      this.filesystem = filesystem;
-      this.cmd = cmd;
-    }
-
-    /**
-     * Expands a the {@code .tar} contents of a {@link File} into a temporary working directory, and
-     * returns a {@link File} object pointing to that working directory.
-     */
-    public File expandTar(File tar) throws IOException, CommandException {
-      File expandedDir = filesystem.getTemporaryDirectory("expanded_tar_");
-      filesystem.makeDirs(expandedDir);
-      try {
-        cmd.runCommand(
-            "tar", ImmutableList.of("-xf", tar.getAbsolutePath()), expandedDir.getAbsolutePath());
-      } catch (CommandRunner.CommandException e) {
-        filesystem.deleteRecursively(expandedDir);
-        throw e;
-      }
-      return expandedDir;
-    }
-  }
 
   /**
    * Returns a Set that excludes strings matching any of excludeRes.
@@ -141,18 +109,5 @@ public class Utils {
     } catch (IOException e) {
       throw new MoeProblem("Could not generate shell script: " + e);
     }
-  }
-
-  /** A Gson parser used specifically for cloning Gson-ready objects */
-  private static final Gson CLONER = new Gson();
-
-  /**
-   * Does a simple clone of a Gson-ready object, by marshalling into a Json intermediary and
-   * processing into a new object.  This is not in any way efficient, but it guarantees the correct
-   * cloning semantics.  It should not be used in tight loops where performance is a concern.
-   */
-  @SuppressWarnings("unchecked")
-  public static <T> T cloneGsonObject(T t) {
-    return (T) CLONER.fromJson(CLONER.toJsonTree(t), t.getClass());
   }
 }
