@@ -23,13 +23,11 @@ import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
-
 import junit.framework.TestCase;
-
 import org.easymock.EasyMock;
 
 public class RepositoriesTest extends TestCase {
-  private final RepositoryType.Factory dummyService = new DummyRepositoryFactory(null);
+  private final RepositoryType.Factory dummyService = new DummyRepositoryFactory();
   private final Repositories repositories = new Repositories(ImmutableSet.of(dummyService));
   private final RepositoryConfig config = EasyMock.createNiceMock(RepositoryConfig.class);
 

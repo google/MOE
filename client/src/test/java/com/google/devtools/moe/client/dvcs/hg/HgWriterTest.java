@@ -32,18 +32,13 @@ import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.testing.TestingModule;
 import com.google.devtools.moe.client.writer.DraftRevision;
-
 import dagger.Provides;
-
+import java.io.File;
+import javax.inject.Singleton;
 import junit.framework.TestCase;
-
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
 import org.joda.time.DateTime;
-
-import java.io.File;
-
-import javax.inject.Singleton;
 
 // TODO(user): Create a FakeFileSystem to replace explicit mocked calls.
 public class HgWriterTest extends TestCase {
@@ -57,8 +52,7 @@ public class HgWriterTest extends TestCase {
   private final FileSystem mockFs = control.createMock(FileSystem.class);
   private final CommandRunner mockCmd = control.createMock(CommandRunner.class);
   private final RepositoryConfig mockRepoConfig = control.createMock(RepositoryConfig.class);
-  private final Codebase codebase =
-      new Codebase(mockFs, CODEBASE_ROOT, PROJECT_SPACE, CODEBASE_EXPR);
+  private final Codebase codebase = Codebase.create(CODEBASE_ROOT, PROJECT_SPACE, CODEBASE_EXPR);
   private final HgClonedRepository mockRevClone = control.createMock(HgClonedRepository.class);
 
   /* Helper methods */

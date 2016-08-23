@@ -23,20 +23,16 @@ import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.codebase.Codebase;
+import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.testing.TestingModule;
-
 import dagger.Provides;
-
-import junit.framework.TestCase;
-
-import org.easymock.EasyMock;
-import org.easymock.IMocksControl;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.inject.Singleton;
+import junit.framework.TestCase;
+import org.easymock.EasyMock;
+import org.easymock.IMocksControl;
 
 public class ShellEditorTest extends TestCase {
   private final IMocksControl control = EasyMock.createControl();
@@ -75,11 +71,7 @@ public class ShellEditorTest extends TestCase {
     File codebaseFile = new File("/codebase");
 
     Codebase codebase =
-        new Codebase(
-            fileSystem,
-            codebaseFile,
-            "internal",
-            null /* CodebaseExpression is not needed here. */);
+        Codebase.create(codebaseFile, "internal", new RepositoryExpression("ignored"));
 
     expect(fileSystem.getTemporaryDirectory("shell_run_")).andReturn(shellRun);
     fileSystem.makeDirsForFile(shellRun);

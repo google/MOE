@@ -26,20 +26,16 @@ import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.gson.GsonModule;
+import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.project.ScrubberConfig;
 import com.google.devtools.moe.client.testing.TestingModule;
 import com.google.devtools.moe.client.tools.EagerLazy;
-
 import dagger.Provides;
-
+import java.io.File;
+import javax.inject.Singleton;
 import junit.framework.TestCase;
-
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
-
-import java.io.File;
-
-import javax.inject.Singleton;
 
 public class ScrubbingEditorTest extends TestCase {
   private final IMocksControl control = EasyMock.createControl();
@@ -77,11 +73,7 @@ public class ScrubbingEditorTest extends TestCase {
     File expandedDir = new File("/expanded_tar_foo");
 
     Codebase codebase =
-        new Codebase(
-            fileSystem,
-            codebaseFile,
-            "internal",
-            null /* CodebaseExpression is not needed here. */);
+        Codebase.create(codebaseFile, "internal", new RepositoryExpression("ignored"));
 
 
     expect(fileSystem.getTemporaryDirectory("scrubber_run_")).andReturn(scrubberRun);

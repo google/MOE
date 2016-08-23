@@ -28,7 +28,6 @@ import com.google.devtools.moe.client.project.EditorConfig;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
-
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -129,13 +128,13 @@ public class RenamingEditor implements Editor {
     File tempDir = filesystem.getTemporaryDirectory("rename_run_");
     try {
       copyDirectoryAndRename(
-          input.getPath().getAbsoluteFile(),
-          input.getPath().getAbsoluteFile(),
+          input.path().getAbsoluteFile(),
+          input.path().getAbsoluteFile(),
           tempDir.getAbsoluteFile());
     } catch (IOException e) {
       throw new MoeProblem(e.getMessage());
     }
-    return new Codebase(filesystem, tempDir, input.getProjectSpace(), input.getExpression());
+    return Codebase.create(tempDir, input.projectSpace(), input.expression());
   }
 
   public static RenamingEditor makeRenamingEditor(String editorName, EditorConfig config) {

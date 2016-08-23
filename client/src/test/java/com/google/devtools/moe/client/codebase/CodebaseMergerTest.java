@@ -27,15 +27,12 @@ import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.tools.FileDifference.ConcreteFileDiffer;
 import com.google.devtools.moe.client.tools.FileDifference.FileDiffer;
-
-import junit.framework.TestCase;
-
-import org.easymock.EasyMock;
-import org.easymock.IMocksControl;
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.List;
+import junit.framework.TestCase;
+import org.easymock.EasyMock;
+import org.easymock.IMocksControl;
 
 /**
  * Unit tests for the CodebaseMerger class.
@@ -67,16 +64,9 @@ public class CodebaseMergerTest extends TestCase {
   private final CommandRunner cmd = control.createMock(CommandRunner.class);
   private final FileDiffer fileDiffer = new ConcreteFileDiffer(cmd, fileSystem);
 
-  private Codebase orig, dest, mod;
-
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    //Injector.INSTANCE = new Injector(fileSystem, cmd, contextFactory, ui);
-    orig = control.createMock(Codebase.class);
-    dest = control.createMock(Codebase.class);
-    mod = control.createMock(Codebase.class);
-  }
+  private final Codebase orig = control.createMock(Codebase.class);
+  private final Codebase dest = control.createMock(Codebase.class);
+  private final Codebase mod = control.createMock(Codebase.class);
 
   /**
    * Test generateMergedFile(...) in the case where the file exists in orig and mod but not dest.
@@ -404,8 +394,13 @@ public class CodebaseMergerTest extends TestCase {
     File mergedCodebaseLocation = new File("merged_codebase_7");
     expect(fileSystem.getTemporaryDirectory("merged_codebase_")).andReturn(mergedCodebaseLocation);
 
-    expect(dest.getRelativeFilenames()).andReturn(ImmutableSet.of("foo"));
-    expect(mod.getRelativeFilenames()).andReturn(ImmutableSet.of("foo", "bar"));
+    File origRoot = new File("orig");
+    expect(orig.path()).andReturn(origRoot).anyTimes();
+    File destRoot = new File("dest");
+    expect(dest.path()).andReturn(destRoot).anyTimes();
+    File modRoot = new File("mod");
+    expect(mod.path()).andReturn(modRoot).anyTimes();
+
 
     // generateMergedFile(...) on foo
     File origFile = new File("orig/foo");
@@ -413,10 +408,12 @@ public class CodebaseMergerTest extends TestCase {
     expect(fileSystem.exists(origFile)).andReturn(true);
 
     File destFile = new File("dest/foo");
+    expect(fileSystem.findFiles(destRoot)).andReturn(ImmutableSet.of(destFile));
     expect(dest.getFile("foo")).andReturn(destFile);
     expect(fileSystem.exists(destFile)).andReturn(true);
 
     File modFile = new File("mod/foo");
+    expect(fileSystem.findFiles(modRoot)).andReturn(ImmutableSet.of(modFile));
     expect(mod.getFile("foo")).andReturn(modFile);
     expect(fileSystem.exists(modFile)).andReturn(true);
 
@@ -431,26 +428,12 @@ public class CodebaseMergerTest extends TestCase {
     expect(cmd.runCommand("merge", mergeArgs, mergedCodebaseLocation.getAbsolutePath()))
         .andReturn("");
 
-    // generateMergedFile(...) on bar
-    origFile = new File("orig/bar");
-    expect(orig.getFile("bar")).andReturn(origFile);
-    expect(fileSystem.exists(origFile)).andReturn(true);
-
-    destFile = new File("dest/bar");
-    expect(dest.getFile("bar")).andReturn(destFile);
-    expect(fileSystem.exists(destFile)).andReturn(true);
-
-    modFile = new File("mod/bar");
-    expect(mod.getFile("bar")).andReturn(modFile);
-    expect(fileSystem.exists(modFile)).andReturn(false);
-
     // No merging of bar, just follow deletion of origFile by not copying destFile to merged
     // codebase.
 
     // Expect in call to report()
     ui.message("Merged codebase generated at: %s", mergedCodebaseLocation.getAbsolutePath());
-    ui.message(
-        "%d files merged successfully. No merge conflicts.", 1);
+    ui.message("%d files merged successfully. No merge conflicts.", 1);
 
     control.replay();
 

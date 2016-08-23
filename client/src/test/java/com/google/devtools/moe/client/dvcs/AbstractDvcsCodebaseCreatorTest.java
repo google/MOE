@@ -32,18 +32,13 @@ import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
 import com.google.devtools.moe.client.testing.TestingModule;
-
 import dagger.Provides;
-
-import junit.framework.TestCase;
-
-import org.easymock.EasyMock;
-import org.easymock.IMocksControl;
-
 import java.io.File;
 import java.util.Collections;
-
 import javax.inject.Singleton;
+import junit.framework.TestCase;
+import org.easymock.EasyMock;
+import org.easymock.IMocksControl;
 
 public class AbstractDvcsCodebaseCreatorTest extends TestCase {
   private static final String MOCK_REPO_NAME = "mockrepo";
@@ -109,9 +104,9 @@ public class AbstractDvcsCodebaseCreatorTest extends TestCase {
 
     Codebase codebase = codebaseCreator.create(Collections.<String, String>emptyMap());
 
-    assertEquals(new File(archiveTempDir), codebase.getPath());
-    assertEquals("public", codebase.getProjectSpace());
-    assertEquals("mockrepo", codebase.getExpression().toString());
+    assertEquals(new File(archiveTempDir), codebase.path());
+    assertEquals("public", codebase.projectSpace());
+    assertEquals("mockrepo", codebase.expression().toString());
 
     control.verify();
   }
@@ -131,9 +126,9 @@ public class AbstractDvcsCodebaseCreatorTest extends TestCase {
 
     Codebase codebase = codebaseCreator.create(ImmutableMap.of("revision", givenRev));
 
-    assertEquals(new File(archiveTempDir), codebase.getPath());
-    assertEquals("public", codebase.getProjectSpace());
-    assertEquals("mockrepo(revision=" + givenRev + ")", codebase.getExpression().toString());
+    assertEquals(new File(archiveTempDir), codebase.path());
+    assertEquals("public", codebase.projectSpace());
+    assertEquals("mockrepo(revision=" + givenRev + ")", codebase.expression().toString());
 
     control.verify();
   }

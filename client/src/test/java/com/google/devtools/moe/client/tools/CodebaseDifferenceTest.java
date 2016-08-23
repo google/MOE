@@ -16,62 +16,47 @@
 
 package com.google.devtools.moe.client.tools;
 
-import static org.easymock.EasyMock.expect;
+import static com.google.common.truth.Truth.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.codebase.Codebase;
+import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.tools.FileDifference.Comparison;
-
+import java.io.File;
 import junit.framework.TestCase;
 
-import org.easymock.EasyMock;
-import org.easymock.IMocksControl;
-
-import java.io.File;
-
 public class CodebaseDifferenceTest extends TestCase {
+  private final FileSystem filesystem = mock(FileSystem.class);
+  private final Codebase c1 =
+      Codebase.create(new File("/1"), "internal", new RepositoryExpression("ignored"));
+  private final Codebase c2 =
+      Codebase.create(new File("/2"), "internal", new RepositoryExpression("ignored"));
+  private final File f1 = new File("/1/foo");
+  private final File f2 = new File("/2/foo");
+  private final FileDifference.FileDiffer fileDiffer = mock(FileDifference.FileDiffer.class);
 
   public void testSame() throws Exception {
-    IMocksControl control = EasyMock.createControl();
-    Codebase c1 = control.createMock(Codebase.class);
-    Codebase c2 = control.createMock(Codebase.class);
-    File f1 = new File("/1/foo");
-    File f2 = new File("/2/foo");
-    FileDifference.FileDiffer fileDiffer = control.createMock(FileDifference.FileDiffer.class);
+    when(filesystem.findFiles(new File("/1"))).thenReturn(ImmutableSet.of(f1));
+    when(filesystem.findFiles(new File("/2"))).thenReturn(ImmutableSet.of(f2));
+    when(fileDiffer.diffFiles("foo", f1, f2))
+        .thenReturn(FileDifference.create("foo", f1, f2, Comparison.SAME, Comparison.SAME, null));
 
-    expect(c1.getRelativeFilenames()).andReturn(ImmutableSet.of("foo"));
-    expect(c2.getRelativeFilenames()).andReturn(ImmutableSet.of("foo"));
-    expect(c1.getFile("foo")).andReturn(f1);
-    expect(c2.getFile("foo")).andReturn(f2);
-    expect(fileDiffer.diffFiles("foo", f1, f2))
-        .andReturn(FileDifference.create("foo", f1, f2, Comparison.SAME, Comparison.SAME, null));
+    CodebaseDifference d = new CodebaseDiffer(fileDiffer, filesystem).diffCodebases(c1, c2);
 
-    control.replay();
-    CodebaseDifference d = new CodebaseDiffer(fileDiffer).diffCodebases(c1, c2);
-    control.verify();
-
-    assertEquals(false, d.areDifferent());
+    assertThat(d.areDifferent()).named("areDifferent").isFalse();
   }
 
   public void testDifferent() throws Exception {
-    IMocksControl control = EasyMock.createControl();
-    Codebase c1 = control.createMock(Codebase.class);
-    Codebase c2 = control.createMock(Codebase.class);
-    File f1 = new File("/1/foo");
-    File f2 = new File("/2/foo");
-    FileDifference.FileDiffer fileDiffer = control.createMock(FileDifference.FileDiffer.class);
+    when(filesystem.findFiles(new File("/1"))).thenReturn(ImmutableSet.of(f1));
+    when(filesystem.findFiles(new File("/2"))).thenReturn(ImmutableSet.of(f2));
+    when(fileDiffer.diffFiles("foo", f1, f2))
+        .thenReturn(FileDifference.create("foo", f1, f2, Comparison.ONLY1, Comparison.SAME, null));
 
-    expect(c1.getRelativeFilenames()).andReturn(ImmutableSet.of("foo"));
-    expect(c2.getRelativeFilenames()).andReturn(ImmutableSet.of("foo"));
-    expect(c1.getFile("foo")).andReturn(f1);
-    expect(c2.getFile("foo")).andReturn(f2);
-    expect(fileDiffer.diffFiles("foo", f1, f2))
-        .andReturn(FileDifference.create("foo", f1, f2, Comparison.ONLY1, Comparison.SAME, null));
+    CodebaseDifference d = new CodebaseDiffer(fileDiffer, filesystem).diffCodebases(c1, c2);
 
-    control.replay();
-    CodebaseDifference d = new CodebaseDiffer(fileDiffer).diffCodebases(c1, c2);
-    control.verify();
-
-    assertEquals(true, d.areDifferent());
+    assertThat(d.areDifferent()).named("areDifferent").isTrue();
   }
 }

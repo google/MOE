@@ -46,15 +46,13 @@ public class TranslateExpression extends AbstractExpression {
   public Codebase createCodebase(ProjectContext context) throws CodebaseCreationError {
     Codebase codebaseToTranslate = exToTranslate.createCodebase(context);
     String toProjectSpace = translateOp.term.identifier;
-    TranslatorPath path = new TranslatorPath(codebaseToTranslate.getProjectSpace(), toProjectSpace);
+    TranslatorPath path = new TranslatorPath(codebaseToTranslate.projectSpace(), toProjectSpace);
     Translator translator = context.translators().get(path);
     if (translator == null) {
       throw new CodebaseCreationError(
           "Could not find translator from project space \"%s\" to \"%s\".\n"
               + "Translators only available for %s",
-          codebaseToTranslate.getProjectSpace(),
-          toProjectSpace,
-          context.translators().keySet());
+          codebaseToTranslate.projectSpace(), toProjectSpace, context.translators().keySet());
     }
 
     Ui.Task translateTask =
@@ -63,8 +61,8 @@ public class TranslateExpression extends AbstractExpression {
             .pushTask(
                 "translate",
                 "Translating %s from project space \"%s\" to \"%s\"",
-                codebaseToTranslate.getPath(),
-                codebaseToTranslate.getProjectSpace(),
+                codebaseToTranslate.path(),
+                codebaseToTranslate.projectSpace(),
                 toProjectSpace);
 
     Codebase translatedCodebase =
@@ -72,9 +70,9 @@ public class TranslateExpression extends AbstractExpression {
 
     // Don't mark the translated codebase for persistence if it wasn't allocated by the Translator.
     if (translatedCodebase.equals(codebaseToTranslate)) {
-      Injector.INSTANCE.ui().popTask(translateTask, translatedCodebase.getPath() + " (unmodified)");
+      Injector.INSTANCE.ui().popTask(translateTask, translatedCodebase.path() + " (unmodified)");
     } else {
-      Injector.INSTANCE.ui().popTaskAndPersist(translateTask, translatedCodebase.getPath());
+      Injector.INSTANCE.ui().popTaskAndPersist(translateTask, translatedCodebase.path());
     }
     return translatedCodebase.copyWithExpression(this).copyWithProjectSpace(toProjectSpace);
   }

@@ -106,9 +106,9 @@ public class ExpressionTest extends TestCase {
     Codebase c = repoEx.createCodebase(new NoopProjectContext());
     control.verify();
 
-    assertEquals(copyLocation, c.getPath());
-    assertEquals("public", c.getProjectSpace());
-    assertEquals(repoEx, c.getExpression());
+    assertEquals(copyLocation, c.path());
+    assertEquals("public", c.projectSpace());
+    assertEquals(repoEx, c.expression());
   }
 
   public void testNoSuchEditor() throws Exception {
@@ -147,7 +147,7 @@ public class ExpressionTest extends TestCase {
       IMocksControl control = EasyMock.createControl();
       RepositoryExpression mockRepoEx = control.createMock(RepositoryExpression.class);
       Codebase mockRepoCodebase = control.createMock(Codebase.class);
-      expect(mockRepoCodebase.getProjectSpace()).andReturn("internal").times(2);
+      expect(mockRepoCodebase.projectSpace()).andReturn("internal").times(2);
       expect(mockRepoEx.createCodebase(context)).andReturn(mockRepoCodebase);
 
       Expression ex =
@@ -201,15 +201,13 @@ public class ExpressionTest extends TestCase {
         };
 
     Codebase firstCb =
-        new Codebase(null, firstDir, "foo", new RepositoryExpression(new Term("foo", EMPTY_MAP)));
+        Codebase.create(firstDir, "foo", new RepositoryExpression(new Term("foo", EMPTY_MAP)));
 
     Codebase secondCb =
-        new Codebase(
-            null, secondDir, "public", new RepositoryExpression(new Term("foo2", EMPTY_MAP)));
+        Codebase.create(secondDir, "public", new RepositoryExpression(new Term("foo2", EMPTY_MAP)));
 
     Codebase finalCb =
-        new Codebase(
-            null, finalDir, "public", new RepositoryExpression(new Term("foo3", EMPTY_MAP)));
+        Codebase.create(finalDir, "public", new RepositoryExpression(new Term("foo3", EMPTY_MAP)));
 
     expect(cc.create(EMPTY_MAP)).andReturn(firstCb);
     expect(translatorEditor.edit(firstCb, context, EMPTY_MAP)).andReturn(secondCb);
@@ -220,8 +218,8 @@ public class ExpressionTest extends TestCase {
     Codebase c = Parser.parseExpression("foo>public|bar").createCodebase(context);
 
     control.verify();
-    assertEquals(finalDir, c.getPath());
-    assertEquals("public", c.getProjectSpace());
-    assertEquals("foo>public|bar", c.getExpression().toString());
+    assertEquals(finalDir, c.path());
+    assertEquals("public", c.projectSpace());
+    assertEquals("foo>public|bar", c.expression().toString());
   }
 }

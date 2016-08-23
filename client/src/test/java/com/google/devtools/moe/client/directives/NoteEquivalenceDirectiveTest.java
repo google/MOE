@@ -33,20 +33,17 @@ import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
-
+import java.io.ByteArrayOutputStream;
 import junit.framework.TestCase;
-
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
-
-import java.io.ByteArrayOutputStream;
 
 public class NoteEquivalenceDirectiveTest extends TestCase {
   private final ByteArrayOutputStream stream = new ByteArrayOutputStream();
   private final Ui ui = new Ui(stream, /* fileSystem */ null);
   private final SystemCommandRunner cmd = new SystemCommandRunner();
   private final Repositories repositories =
-      new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(null)));
+      new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory()));
   private final InMemoryProjectContextFactory contextFactory =
       new InMemoryProjectContextFactory(null, cmd, null, ui, repositories);
   private final IMocksControl control = EasyMock.createControl();

@@ -43,14 +43,11 @@ import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
 import com.google.devtools.moe.client.tools.CodebaseDiffer;
 import com.google.devtools.moe.client.tools.FileDifference.ConcreteFileDiffer;
 import com.google.devtools.moe.client.tools.FileDifference.FileDiffer;
-
-import junit.framework.TestCase;
-
-import org.easymock.EasyMock;
-import org.easymock.IMocksControl;
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import junit.framework.TestCase;
+import org.easymock.EasyMock;
+import org.easymock.IMocksControl;
 
 /**
  * Tests for {@link BookkeepingDirective}. DummyRepository is used, and per the bookkeeping flow,
@@ -118,10 +115,10 @@ public class BookkeepingDirectiveTest extends TestCase {
             "dir (different)");
     FileSystem filesystem = new InMemoryFileSystem(files);
     FileDiffer fileDiffer = new ConcreteFileDiffer(cmd, filesystem);
-    CodebaseDiffer codebaseDiffer = new CodebaseDiffer(fileDiffer);
+    CodebaseDiffer codebaseDiffer = new CodebaseDiffer(fileDiffer, filesystem);
     Repositories repositories =
         new Repositories(
-            ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(filesystem)));
+            ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory()));
     InMemoryProjectContextFactory contextFactory =
         init(new InMemoryProjectContextFactory(fileDiffer, cmd, filesystem, ui, repositories));
     ProjectContext context = contextFactory.create("moe_config.txt");
@@ -165,10 +162,10 @@ public class BookkeepingDirectiveTest extends TestCase {
             "/dummy/codebase/pub/migrated_to/", "empty dir (different)");
     FileSystem filesystem = new InMemoryFileSystem(files);
     FileDiffer fileDiffer = new ConcreteFileDiffer(cmd, filesystem);
-    CodebaseDiffer codebaseDiffer = new CodebaseDiffer(fileDiffer);
+    CodebaseDiffer codebaseDiffer = new CodebaseDiffer(fileDiffer, filesystem);
     Repositories repositories =
         new Repositories(
-            ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(filesystem)));
+            ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory()));
     InMemoryProjectContextFactory contextFactory =
         init(new InMemoryProjectContextFactory(fileDiffer, cmd, filesystem, ui, repositories));
     ProjectContext context = contextFactory.create("moe_config.txt");
@@ -208,10 +205,10 @@ public class BookkeepingDirectiveTest extends TestCase {
             "/dummy/codebase/pub/migrated_to/file", "migrated_to (equivalent)");
     FileSystem filesystem = new InMemoryFileSystem(files);
     FileDiffer fileDiffer = new ConcreteFileDiffer(cmd, filesystem);
-    CodebaseDiffer codebaseDiffer = new CodebaseDiffer(fileDiffer);
+    CodebaseDiffer codebaseDiffer = new CodebaseDiffer(fileDiffer, filesystem);
     Repositories repositories =
         new Repositories(
-            ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(filesystem)));
+            ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory()));
     InMemoryProjectContextFactory contextFactory =
         init(new InMemoryProjectContextFactory(fileDiffer, cmd, filesystem, ui, repositories));
     ProjectContext context = contextFactory.create("moe_config.txt");

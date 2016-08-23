@@ -25,7 +25,6 @@ import com.google.devtools.moe.client.Utils;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.project.EditorConfig;
 import com.google.devtools.moe.client.project.ProjectContext;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
@@ -70,7 +69,7 @@ public class ShellEditor implements Editor {
   public Codebase edit(Codebase input, ProjectContext context, Map<String, String> options) {
     File tempDir = filesystem.getTemporaryDirectory("shell_run_");
     try {
-      Utils.copyDirectory(input.getPath(), tempDir);
+      Utils.copyDirectory(input.path(), tempDir);
     } catch (IOException | CommandRunner.CommandException e) {
       throw new MoeProblem(e.getMessage());
     }
@@ -79,7 +78,7 @@ public class ShellEditor implements Editor {
     } catch (CommandRunner.CommandException e) {
       throw new MoeProblem(e.getMessage());
     }
-    return new Codebase(filesystem, tempDir, input.getProjectSpace(), input.getExpression());
+    return Codebase.create(tempDir, input.projectSpace(), input.expression());
   }
 
   public static ShellEditor makeShellEditor(String editorName, EditorConfig config) {

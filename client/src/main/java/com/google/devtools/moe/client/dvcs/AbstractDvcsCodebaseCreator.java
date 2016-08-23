@@ -31,7 +31,6 @@ import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.parser.Term;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
-
 import java.io.File;
 import java.util.Map;
 
@@ -105,8 +104,7 @@ public abstract class AbstractDvcsCodebaseCreator implements CodebaseCreator {
         Utils.nonMatchingPredicateFromRes(headClone.getConfig().getIgnoreFilePatterns());
     Utils.filterFiles(archiveLocation, nonIgnoredFilePred);
 
-    return new Codebase(
-        filesystem,
+    return Codebase.create(
         archiveLocation,
         projectSpace,
         new RepositoryExpression(new Term(headClone.getRepositoryName(), options)));

@@ -19,7 +19,6 @@ package com.google.devtools.moe.client.testing;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
-import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.Utils;
 import com.google.devtools.moe.client.codebase.Codebase;
@@ -27,7 +26,6 @@ import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.codebase.CodebaseCreator;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.parser.Term;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
@@ -40,11 +38,7 @@ public class FileCodebaseCreator implements CodebaseCreator {
   private static final String PATH_OPTION = "path";
   private static final String PROJECT_SPACE_OPTION = "projectspace";
 
-  private final FileSystem filesystem;
-
-  public FileCodebaseCreator(FileSystem filesystem) {
-    this.filesystem = filesystem;
-  }
+  public FileCodebaseCreator() {}
 
   @Override
   public Codebase create(Map<String, String> options) throws CodebaseCreationError {
@@ -63,7 +57,7 @@ public class FileCodebaseCreator implements CodebaseCreator {
     String projectSpace =
         options.containsKey(PROJECT_SPACE_OPTION) ? options.get(PROJECT_SPACE_OPTION) : "public";
     RepositoryExpression expression = new RepositoryExpression(new Term("file", options));
-    return new Codebase(filesystem, codebasePath, projectSpace, expression);
+    return Codebase.create(codebasePath, projectSpace, expression);
   }
 
   /**

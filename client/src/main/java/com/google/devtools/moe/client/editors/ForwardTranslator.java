@@ -20,7 +20,6 @@ import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.project.ProjectContext;
-
 import java.util.List;
 import java.util.Map;
 
@@ -44,7 +43,7 @@ public class ForwardTranslator implements Translator {
       Ui.Task editTask = Injector.INSTANCE.ui().pushTask("edit", "Translation editor: " + s.name);
       // Pass the translation options to each editor.
       translated = s.editor.edit(translated, context, options);
-      Injector.INSTANCE.ui().popTaskAndPersist(editTask, translated.getPath());
+      Injector.INSTANCE.ui().popTaskAndPersist(editTask, translated.path());
     }
     return translated;
   }

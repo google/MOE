@@ -28,12 +28,10 @@ import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.writer.DraftRevision;
 import com.google.devtools.moe.client.writer.Writer;
 import com.google.devtools.moe.client.writer.WritingError;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
-
 import javax.annotation.Nullable;
 
 /**
@@ -44,6 +42,9 @@ import javax.annotation.Nullable;
  */
 // TODO(user): Make this usable for SVN as well.
 public abstract class AbstractDvcsWriter<T extends LocalWorkspace> implements Writer {
+
+  // TODO(cgruber): @Inject
+  private final FileSystem filesystem = Injector.INSTANCE.fileSystem();
 
   /**
    * The LocalClone in which this writer should make and commit changes.
@@ -72,7 +73,9 @@ public abstract class AbstractDvcsWriter<T extends LocalWorkspace> implements Wr
   private DraftRevision putCodebase(Codebase incomingChangeCodebase) {
     incomingChangeCodebase.checkProjectSpace(revClone.getConfig().getProjectSpace());
 
-    Set<String> codebaseFiles = incomingChangeCodebase.getRelativeFilenames();
+    Set<String> codebaseFiles =
+        Utils.makeFilenamesRelative(
+            filesystem.findFiles(incomingChangeCodebase.path()), incomingChangeCodebase.path());
     Set<String> writerRepoFiles =
         Utils.filterByRegEx(
             Utils.makeFilenamesRelative(
@@ -115,11 +118,10 @@ public abstract class AbstractDvcsWriter<T extends LocalWorkspace> implements Wr
 
   private void putFile(String relativeFilename, Codebase incomingChangeCodebase)
       throws CommandException {
-    FileSystem fs = Injector.INSTANCE.fileSystem();
     File src = incomingChangeCodebase.getFile(relativeFilename);
     File dest = new File(getRoot().getAbsolutePath(), relativeFilename);
-    boolean srcExists = fs.exists(src);
-    boolean destExists = fs.exists(dest);
+    boolean srcExists = filesystem.exists(src);
+    boolean destExists = filesystem.exists(dest);
 
     if (!srcExists && !destExists) {
       throw new MoeProblem(
@@ -135,8 +137,8 @@ public abstract class AbstractDvcsWriter<T extends LocalWorkspace> implements Wr
     }
 
     try {
-      fs.makeDirsForFile(dest);
-      fs.copyFile(src, dest);
+      filesystem.makeDirsForFile(dest);
+      filesystem.copyFile(src, dest);
     } catch (IOException e) {
       throw new MoeProblem(e.getMessage());
     }

@@ -29,17 +29,12 @@ import com.google.devtools.moe.client.codebase.CodebaseCreator;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.testing.TestingModule;
-
 import dagger.Provides;
-
+import java.io.File;
+import javax.inject.Singleton;
 import junit.framework.TestCase;
-
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
-
-import java.io.File;
-
-import javax.inject.Singleton;
 
 public class SvnCodebaseCreatorTest extends TestCase {
   private final IMocksControl control = EasyMock.createControl();
@@ -106,8 +101,8 @@ public class SvnCodebaseCreatorTest extends TestCase {
     CodebaseCreator cc =
         new SvnCodebaseCreator(fileSystem, "testing", mockConfig, revisionHistory, util);
     Codebase r = cc.create(ImmutableMap.of("revision", "46"));
-    assertEquals("/dummy/path/45", r.getPath().getAbsolutePath());
-    assertEquals("internal", r.getProjectSpace());
+    assertEquals("/dummy/path/45", r.path().getAbsolutePath());
+    assertEquals("internal", r.projectSpace());
     control.verify();
   }
 }

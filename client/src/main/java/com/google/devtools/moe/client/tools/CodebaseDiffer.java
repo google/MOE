@@ -17,20 +17,22 @@ package com.google.devtools.moe.client.tools;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import com.google.devtools.moe.client.FileSystem;
+import com.google.devtools.moe.client.Utils;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.tools.FileDifference.FileDiffer;
-
 import java.util.Set;
-
 import javax.inject.Inject;
 
 /** Performs a difference analysis using an underlying {@code FileDiffer}. */
 public class CodebaseDiffer {
   private final FileDiffer differ;
+  private final FileSystem filesystem;
 
   @Inject
-  public CodebaseDiffer(FileDiffer differ) {
+  public CodebaseDiffer(FileDiffer differ, FileSystem filesystem) {
     this.differ = differ;
+    this.filesystem = filesystem;
   }
 
   /**
@@ -38,7 +40,9 @@ public class CodebaseDiffer {
    */
   public CodebaseDifference diffCodebases(Codebase codebase1, Codebase codebase2) {
     Set<String> filenames =
-        Sets.union(codebase1.getRelativeFilenames(), codebase2.getRelativeFilenames());
+        Sets.union(
+            Utils.makeFilenamesRelative(filesystem.findFiles(codebase1.path()), codebase1.path()),
+            Utils.makeFilenamesRelative(filesystem.findFiles(codebase2.path()), codebase2.path()));
 
     ImmutableSet.Builder<FileDifference> fileDiffs = ImmutableSet.builder();
 

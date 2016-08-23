@@ -24,20 +24,16 @@ import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.codebase.Codebase;
+import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.testing.TestingModule;
 import com.google.gson.JsonObject;
-
 import dagger.Provides;
-
-import junit.framework.TestCase;
-
-import org.easymock.EasyMock;
-import org.easymock.IMocksControl;
-
 import java.io.File;
 import java.util.Map;
-
 import javax.inject.Singleton;
+import junit.framework.TestCase;
+import org.easymock.EasyMock;
+import org.easymock.IMocksControl;
 
 public class RenamingEditorTest extends TestCase {
   private final IMocksControl control = EasyMock.createControl();
@@ -142,11 +138,7 @@ public class RenamingEditorTest extends TestCase {
   public void testEdit() throws Exception {
     File codebaseFile = new File("/codebase/");
     Codebase codebase =
-        new Codebase(
-            fileSystem,
-            codebaseFile,
-            "internal",
-            null /* CodebaseExpression is not needed here. */);
+        Codebase.create(codebaseFile, "internal", new RepositoryExpression("ignored"));
 
     File oldSubFile = new File("/codebase/moe.txt");
     File renameRun = new File("/rename_run_foo");

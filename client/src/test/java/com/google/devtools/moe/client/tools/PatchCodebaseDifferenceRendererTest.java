@@ -19,15 +19,13 @@ package com.google.devtools.moe.client.tools;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
-
-import junit.framework.TestCase;
-
 import java.io.File;
+import junit.framework.TestCase;
 
 public class PatchCodebaseDifferenceRendererTest extends TestCase {
 
   private static Codebase makeCodebase(String name) throws Exception {
-    return new Codebase(null, new File("/" + name), "public", new RepositoryExpression(name));
+    return Codebase.create(new File("/" + name), "public", new RepositoryExpression(name));
   }
 
   public void testRender() throws Exception {

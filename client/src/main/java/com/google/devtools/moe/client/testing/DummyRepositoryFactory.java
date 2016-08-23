@@ -17,26 +17,19 @@
 package com.google.devtools.moe.client.testing;
 
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.codebase.CodebaseCreator;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
 import com.google.devtools.moe.client.writer.WriterCreator;
-
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 /**
  * Creates a simple {@link RepositoryType} for testing.
  */
 public class DummyRepositoryFactory implements RepositoryType.Factory {
-  private final FileSystem filesystem;
-
   @Inject
-  public DummyRepositoryFactory(@Nullable FileSystem filesystem) {
-    this.filesystem = filesystem;
-  }
+  public DummyRepositoryFactory() {}
 
   @Override
   public String type() {
@@ -61,8 +54,7 @@ public class DummyRepositoryFactory implements RepositoryType.Factory {
         commits == null
             ? DummyRevisionHistory.builder().name(repositoryName).build()
             : DummyRevisionHistory.builder().name(repositoryName).addAll(commits).build();
-    CodebaseCreator codebaseCreator =
-        new DummyCodebaseCreator(filesystem, repositoryName, projectSpace);
+    CodebaseCreator codebaseCreator = new DummyCodebaseCreator(repositoryName, projectSpace);
     WriterCreator writerCreator = new DummyWriterCreator(repositoryName);
     return RepositoryType.create(repositoryName, revisionHistory, codebaseCreator, writerCreator);
   }

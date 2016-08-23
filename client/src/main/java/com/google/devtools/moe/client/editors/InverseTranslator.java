@@ -26,7 +26,6 @@ import com.google.devtools.moe.client.parser.Expression;
 import com.google.devtools.moe.client.parser.Parser;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
 import com.google.devtools.moe.client.project.ProjectContext;
-
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
@@ -139,7 +138,7 @@ public class InverseTranslator implements Translator {
               .getInverseEditor()
               .inverseEdit(inverseTranslated, refFrom, refTo, context, options);
 
-      Injector.INSTANCE.ui().popTaskAndPersist(task, inverseTranslated.getPath());
+      Injector.INSTANCE.ui().popTaskAndPersist(task, inverseTranslated.path());
       refFrom = forwardTranslationStack.pop();
       refTo = forwardTranslationStack.peek();
     }
@@ -161,13 +160,13 @@ public class InverseTranslator implements Translator {
                   "Pushing to forward-translation stack: " + options.get("referenceToCodebase"));
       refTo = Parser.parseExpression(options.get("referenceToCodebase")).createCodebase(context);
       forwardTransStack.push(refTo);
-      Injector.INSTANCE.ui().popTaskAndPersist(task, refTo.getPath());
+      Injector.INSTANCE.ui().popTaskAndPersist(task, refTo.path());
     } catch (ParseError e) {
       throw new CodebaseCreationError("Couldn't parse in translation: " + e);
     }
 
     // This Expression is used only for informative output.
-    Expression forwardEditExp = refTo.getExpression();
+    Expression forwardEditExp = refTo.expression();
     for (TranslatorStep forwardStep : forwardSteps) {
       forwardEditExp = forwardEditExp.editWith(forwardStep.name, ImmutableMap.<String, String>of());
       Task task =
@@ -176,7 +175,7 @@ public class InverseTranslator implements Translator {
               .pushTask("edit", "Pushing to forward-translation stack: " + forwardEditExp);
       refTo = forwardStep.editor.edit(refTo, context, options).copyWithExpression(forwardEditExp);
       forwardTransStack.push(refTo);
-      Injector.INSTANCE.ui().popTaskAndPersist(task, refTo.getPath());
+      Injector.INSTANCE.ui().popTaskAndPersist(task, refTo.path());
     }
 
     return forwardTransStack;

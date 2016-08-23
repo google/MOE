@@ -25,10 +25,10 @@ import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
+import com.google.devtools.moe.client.Utils;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.parser.Term;
 import com.google.devtools.moe.client.tools.FileDifference.FileDiffer;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Set;
@@ -83,7 +83,10 @@ public class CodebaseMerger {
   private final FileSystem filesystem;
   private final CommandRunner cmd;
   private final FileDiffer differ;
-  private final Codebase originalCodebase, destinationCodebase, modifiedCodebase, mergedCodebase;
+  private final Codebase originalCodebase;
+  private final Codebase destinationCodebase;
+  private final Codebase modifiedCodebase;
+  private final Codebase mergedCodebase;
   private final Set<String> mergedFiles, failedToMergeFiles;
 
   public CodebaseMerger(
@@ -105,7 +108,7 @@ public class CodebaseMerger {
     File mergedDir = filesystem.getTemporaryDirectory("merged_codebase_");
     RepositoryExpression mergedExpression =
         new RepositoryExpression(new Term("merged", ImmutableMap.<String, String>of()));
-    this.mergedCodebase = new Codebase(filesystem, mergedDir, "merged", mergedExpression);
+    this.mergedCodebase = Codebase.create(mergedDir, "merged", mergedExpression);
 
     mergedFiles = Sets.newHashSet();
     failedToMergeFiles = Sets.newHashSet();
@@ -128,7 +131,10 @@ public class CodebaseMerger {
   public Codebase merge() {
     Set<String> filesToMerge =
         Sets.union(
-            destinationCodebase.getRelativeFilenames(), modifiedCodebase.getRelativeFilenames());
+            Utils.makeFilenamesRelative(
+                filesystem.findFiles(destinationCodebase.path()), destinationCodebase.path()),
+            Utils.makeFilenamesRelative(
+                filesystem.findFiles(modifiedCodebase.path()), modifiedCodebase.path()));
     for (String filename : filesToMerge) {
       this.generateMergedFile(filename);
     }
@@ -140,7 +146,7 @@ public class CodebaseMerger {
    * Print the results of a merge to the UI.
    */
   public void report() {
-    ui.message("Merged codebase generated at: %s", mergedCodebase.getPath().getAbsolutePath());
+    ui.message("Merged codebase generated at: %s", mergedCodebase.path().getAbsolutePath());
     if (failedToMergeFiles.isEmpty()) {
       ui.message(
           "%d files merged successfully. No merge conflicts.",
@@ -240,7 +246,7 @@ public class CodebaseMerger {
           "merge",
           ImmutableList.of(
               mergedFile.getAbsolutePath(), origFile.getAbsolutePath(), modFile.getAbsolutePath()),
-          this.mergedCodebase.getPath().getAbsolutePath());
+          this.mergedCodebase.path().getAbsolutePath());
       // Return status was 0 and the merge was successful. Note it.
       mergedFiles.add(mergedFile.getAbsolutePath());
     } catch (CommandException e) {

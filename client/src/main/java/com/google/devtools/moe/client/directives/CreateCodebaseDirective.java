@@ -29,14 +29,11 @@ import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.parser.Parser;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
 import com.google.devtools.moe.client.project.ProjectContext;
-
 import dagger.Provides;
 import dagger.multibindings.IntoMap;
 import dagger.multibindings.StringKey;
-
-import org.kohsuke.args4j.Option;
-
 import javax.inject.Inject;
+import org.kohsuke.args4j.Option;
 
 /**
  * Print the head revision of a repository.
@@ -74,7 +71,7 @@ public class CreateCodebaseDirective extends Directive {
     } catch (CodebaseCreationError e) {
       throw new MoeProblem(e, "Error creating codebase");
     }
-    ui.message("Codebase \"%s\" created at %s", c, c.getPath());
+    ui.message("Codebase \"%s\" created at %s", c, c.path());
 
     try {
       maybeWriteTar(c);
@@ -82,7 +79,7 @@ public class CreateCodebaseDirective extends Directive {
       throw new MoeProblem(e, "Error creating codebase tarfile");
     }
 
-    ui.popTaskAndPersist(createCodebaseTask, c.getPath());
+    ui.popTaskAndPersist(createCodebaseTask, c.path());
     return 0;
   }
 
@@ -99,7 +96,7 @@ public class CreateCodebaseDirective extends Directive {
     cmd.runCommand(
         "tar",
         ImmutableList.of("--mtime=1980-01-01", "--owner=0", "--group=0", "-c", "-f", tarfile, "."),
-        codebase.getPath().getAbsolutePath());
+        codebase.path().getAbsolutePath());
 
     ui.message("tar of codebase \"%s\" created at %s", codebase, tarfile);
   }

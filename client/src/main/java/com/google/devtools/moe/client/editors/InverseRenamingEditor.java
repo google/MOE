@@ -25,10 +25,10 @@ import com.google.common.collect.Maps;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
+import com.google.devtools.moe.client.Utils;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.project.EditorConfig;
 import com.google.devtools.moe.client.project.ProjectContext;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
@@ -88,18 +88,19 @@ public class InverseRenamingEditor implements InverseEditor {
       Map<String, String> options) {
     File tempDir = filesystem.getTemporaryDirectory("inverse_rename_run_");
     inverseRenameAndCopy(input, tempDir, referenceTo);
-    return new Codebase(
-        filesystem, tempDir, referenceTo.getProjectSpace(), referenceTo.getExpression());
+    return Codebase.create(tempDir, referenceTo.projectSpace(), referenceTo.expression());
   }
 
   private void inverseRenameAndCopy(Codebase input, File destination, Codebase reference) {
-    Set<String> renamedFilenames = input.getRelativeFilenames();
+    Set<String> renamedFilenames =
+        Utils.makeFilenamesRelative(filesystem.findFiles(input.path()), input.path());
     Map<String, String> renamedToReferenceMap =
-        makeRenamedToReferenceMap(reference.getRelativeFilenames());
+        makeRenamedToReferenceMap(
+            Utils.makeFilenamesRelative(filesystem.findFiles(reference.path()), reference.path()));
 
     for (String renamedFilename : renamedFilenames) {
       String inverseRenamedFilename = inverseRename(renamedFilename, renamedToReferenceMap);
-      copyFile(renamedFilename, inverseRenamedFilename, input.getPath(), destination);
+      copyFile(renamedFilename, inverseRenamedFilename, input.path(), destination);
     }
   }
 

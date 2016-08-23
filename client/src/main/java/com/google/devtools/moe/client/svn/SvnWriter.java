@@ -22,6 +22,7 @@ import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
+import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.Utils;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.project.RepositoryConfig;
@@ -30,18 +31,21 @@ import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.writer.DraftRevision;
 import com.google.devtools.moe.client.writer.Writer;
 import com.google.devtools.moe.client.writer.WritingError;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
-
 import javax.annotation.Nullable;
 
 /**
  * {@link Writer} for svn.
  */
 public class SvnWriter implements Writer {
+
+  // TODO(cgruber) @Inject
+  private final FileSystem filesystem = Injector.INSTANCE.fileSystem();
+  // TODO(cgruber) @Inject
+  private final Ui ui = Injector.INSTANCE.ui();
 
   private final RepositoryConfig config;
   private final Revision revision;
@@ -81,11 +85,11 @@ public class SvnWriter implements Writer {
             .add("(^|.*/)\\.svn(/.*|$)")
             .build();
 
-    Set<String> codebaseFiles = c.getRelativeFilenames();
+    Set<String> codebaseFiles =
+        Utils.makeFilenamesRelative(filesystem.findFiles(c.path()), c.path());
     Set<String> writerFiles =
         Utils.filterByRegEx(
-            Utils.makeFilenamesRelative(
-                Injector.INSTANCE.fileSystem().findFiles(rootDirectory), rootDirectory),
+            Utils.makeFilenamesRelative(filesystem.findFiles(rootDirectory), rootDirectory),
             ignoreFilePatterns);
     Set<String> union = Sets.union(codebaseFiles, writerFiles);
 
@@ -109,10 +113,8 @@ public class SvnWriter implements Writer {
               rm.description(), rm.author());
       Utils.makeShellScript(script, rootDirectory.getAbsolutePath() + "/svn_commit.sh");
 
-      Injector.INSTANCE
-          .ui()
-          .message(
-              "To submit, run: cd %s && ./svn_commit.sh && cd -", rootDirectory.getAbsolutePath());
+      ui.message(
+          "To submit, run: cd %s && ./svn_commit.sh && cd -", rootDirectory.getAbsolutePath());
     }
     return dr;
   }
@@ -125,14 +127,13 @@ public class SvnWriter implements Writer {
    */
   void putFile(String relativePath, Codebase codebase) {
     try {
-      FileSystem fs = Injector.INSTANCE.fileSystem();
       File dest = new File(rootDirectory.getAbsolutePath(), relativePath);
       File src = codebase.getFile(relativePath);
-      boolean srcExists = fs.exists(src);
-      boolean destExists = fs.exists(dest);
+      boolean srcExists = filesystem.exists(src);
+      boolean destExists = filesystem.exists(dest);
 
-      boolean srcExecutable = fs.isExecutable(src);
-      boolean destExecutable = fs.isExecutable(dest);
+      boolean srcExecutable = filesystem.isExecutable(src);
+      boolean destExecutable = filesystem.isExecutable(dest);
 
       if (!srcExists && !destExists) {
         throw new MoeProblem(
@@ -146,8 +147,8 @@ public class SvnWriter implements Writer {
       }
 
       try {
-        fs.makeDirsForFile(dest);
-        fs.copyFile(src, dest);
+        filesystem.makeDirsForFile(dest);
+        filesystem.copyFile(src, dest);
       } catch (IOException e) {
         throw new MoeProblem(e.getMessage());
       }
@@ -165,7 +166,7 @@ public class SvnWriter implements Writer {
         } catch (CommandRunner.CommandException e) {
           // If the mime type setting fails, it's not really a big deal.
           // Just log it and keep going.
-          Injector.INSTANCE.ui().message("Error setting mime-type for %s", relativePath);
+          ui.message("Error setting mime-type for %s", relativePath);
         }
       }
 

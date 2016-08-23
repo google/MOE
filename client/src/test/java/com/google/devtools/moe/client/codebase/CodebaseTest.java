@@ -20,10 +20,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.parser.Term;
-
-import junit.framework.TestCase;
-
 import java.io.File;
+import junit.framework.TestCase;
 
 /**
  * Tests for {@link Codebase}
@@ -32,16 +30,14 @@ public class CodebaseTest extends TestCase {
 
   public void testCheckProjectSpace() throws Exception {
     Codebase c =
-        new Codebase(
-            null,
+        Codebase.create(
             new File("/foo"),
             "internal",
             new RepositoryExpression(new Term("foo", ImmutableMap.<String, String>of())));
     c.checkProjectSpace("internal");
     try {
       c =
-          new Codebase(
-              null,
+          Codebase.create(
               new File("/foo"),
               "internal",
               new RepositoryExpression(new Term("foo", ImmutableMap.<String, String>of())));

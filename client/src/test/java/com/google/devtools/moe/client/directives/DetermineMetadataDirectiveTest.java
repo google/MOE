@@ -31,12 +31,9 @@ import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
 import com.google.devtools.moe.client.writer.DraftRevision;
-
-import junit.framework.TestCase;
-
-import org.joda.time.DateTime;
-
 import java.io.ByteArrayOutputStream;
+import junit.framework.TestCase;
+import org.joda.time.DateTime;
 
 public class DetermineMetadataDirectiveTest extends TestCase {
   private static final ImmutableSet<MetadataScrubber> NO_SCRUBBERS = ImmutableSet.of();
@@ -44,7 +41,7 @@ public class DetermineMetadataDirectiveTest extends TestCase {
   private final Ui ui = new Ui(stream, /* fileSystem */ null);
   private final SystemCommandRunner cmd = new SystemCommandRunner();
   private final Repositories repositories =
-      new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(null)));
+      new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory()));
   private final InMemoryProjectContextFactory contextFactory =
       new InMemoryProjectContextFactory(null, cmd, null, ui, repositories);
 

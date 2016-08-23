@@ -24,20 +24,16 @@ import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.codebase.Codebase;
+import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.testing.TestingModule;
-
 import dagger.Provides;
-
-import junit.framework.TestCase;
-
-import org.easymock.EasyMock;
-import org.easymock.IMocksControl;
-
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
-
 import javax.inject.Singleton;
+import junit.framework.TestCase;
+import org.easymock.EasyMock;
+import org.easymock.IMocksControl;
 
 public class PatchingEditorTest extends TestCase {
   private final IMocksControl control = EasyMock.createControl();
@@ -74,7 +70,8 @@ public class PatchingEditorTest extends TestCase {
   public void testNoSuchPatchFile() throws Exception {
     File patcherRun = new File("/patcher_run_foo");
     File codebaseFile = new File("/codebase");
-    Codebase codebase = new Codebase(fileSystem, codebaseFile, "internal", null);
+    Codebase codebase =
+        Codebase.create(codebaseFile, "internal", new RepositoryExpression("ignored"));
     Map<String, String> options = new HashMap<>();
     options.put("file", "notFile");
 
@@ -99,11 +96,7 @@ public class PatchingEditorTest extends TestCase {
     File codebaseFile = new File("/codebase");
 
     Codebase codebase =
-        new Codebase(
-            fileSystem,
-            codebaseFile,
-            "internal",
-            null /* CodebaseExpression is not needed here. */);
+        Codebase.create(codebaseFile, "internal", new RepositoryExpression("ignored"));
 
     Map<String, String> options = new HashMap<>();
     options.put("file", "/patchfile");

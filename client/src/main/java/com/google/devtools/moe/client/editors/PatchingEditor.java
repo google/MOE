@@ -27,7 +27,6 @@ import com.google.devtools.moe.client.Utils;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.project.EditorConfig;
 import com.google.devtools.moe.client.project.ProjectContext;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
@@ -69,7 +68,7 @@ public class PatchingEditor implements Editor {
         throw new MoeProblem("cannot read file %s", patchFilePath);
       }
       try {
-        Utils.copyDirectory(input.getPath(), tempDir);
+        Utils.copyDirectory(input.path(), tempDir);
       } catch (IOException | CommandRunner.CommandException e) {
         throw new MoeProblem(e.getMessage());
       }
@@ -81,7 +80,7 @@ public class PatchingEditor implements Editor {
       } catch (CommandRunner.CommandException e) {
         throw new MoeProblem(e.getMessage());
       }
-      return new Codebase(filesystem, tempDir, input.getProjectSpace(), input.getExpression());
+      return Codebase.create(tempDir, input.projectSpace(), input.expression());
     }
   }
 

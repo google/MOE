@@ -28,7 +28,6 @@ import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.parser.Term;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.Revision;
-
 import java.io.File;
 import java.util.Map;
 
@@ -80,10 +79,7 @@ public class SvnCodebaseCreator implements CodebaseCreator {
         Utils.nonMatchingPredicateFromRes(config.getIgnoreFilePatterns());
     Utils.filterFiles(exportPath, nonIgnoredFilePred);
 
-    return new Codebase(
-        filesystem,
-        exportPath,
-        config.getProjectSpace(),
-        new RepositoryExpression(new Term(name, options)));
+    return Codebase.create(
+        exportPath, config.getProjectSpace(), new RepositoryExpression(new Term(name, options)));
   }
 }

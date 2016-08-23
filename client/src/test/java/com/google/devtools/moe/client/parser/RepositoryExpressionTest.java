@@ -55,7 +55,7 @@ public class RepositoryExpressionTest extends TestCase {
   }
 
   public void testMakeWriter_DummyRepository() throws Exception {
-    final RepositoryType.Factory repositoryFactory = new DummyRepositoryFactory(null);
+    final RepositoryType.Factory repositoryFactory = new DummyRepositoryFactory();
     ProjectContext context =
         new NoopProjectContext() {
           @Override

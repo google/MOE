@@ -17,13 +17,11 @@
 package com.google.devtools.moe.client.testing;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.codebase.CodebaseCreator;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.parser.Term;
-
 import java.io.File;
 import java.util.Map;
 
@@ -31,12 +29,10 @@ import java.util.Map;
  * CodebaseCreator backed by a dummy repository
  */
 public class DummyCodebaseCreator implements CodebaseCreator {
-  private final FileSystem filesystem;
   private final String name;
   private final String projectSpace;
 
-  public DummyCodebaseCreator(FileSystem filesystem, String repositoryName, String projectSpace) {
-    this.filesystem = filesystem;
+  public DummyCodebaseCreator(String repositoryName, String projectSpace) {
     this.name = repositoryName;
     this.projectSpace = projectSpace;
   }
@@ -48,8 +44,7 @@ public class DummyCodebaseCreator implements CodebaseCreator {
       revId = "1";
     }
 
-    return new Codebase(
-        filesystem,
+    return Codebase.create(
         new File("/dummy/codebase/" + name + "/" + revId),
         projectSpace,
         new RepositoryExpression(new Term(name, ImmutableMap.<String, String>of())));

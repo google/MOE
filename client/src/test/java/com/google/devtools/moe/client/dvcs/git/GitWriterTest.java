@@ -31,17 +31,12 @@ import com.google.devtools.moe.client.parser.Term;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.testing.TestingModule;
 import com.google.devtools.moe.client.writer.DraftRevision;
-
 import dagger.Provides;
-
+import java.io.File;
+import javax.inject.Singleton;
 import junit.framework.TestCase;
-
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
-
-import java.io.File;
-
-import javax.inject.Singleton;
 
 /**
  * Test GitWriter by expect()ing file system calls and git commands to add/remove files.
@@ -55,7 +50,7 @@ public class GitWriterTest extends TestCase {
   private final String projectSpace = "public";
   private final RepositoryExpression cExp =
       new RepositoryExpression(new Term(projectSpace, ImmutableMap.<String, String>of()));
-  private final Codebase codebase = new Codebase(mockFs, codebaseRoot, projectSpace, cExp);
+  private final Codebase codebase = Codebase.create(codebaseRoot, projectSpace, cExp);
   private final GitClonedRepository mockRevClone = control.createMock(GitClonedRepository.class);
   private final RepositoryConfig mockRepoConfig = control.createMock(RepositoryConfig.class);
 

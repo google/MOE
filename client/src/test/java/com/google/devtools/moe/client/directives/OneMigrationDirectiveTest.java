@@ -31,10 +31,8 @@ import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
 import com.google.devtools.moe.client.writer.DraftRevision;
-
-import junit.framework.TestCase;
-
 import java.io.ByteArrayOutputStream;
+import junit.framework.TestCase;
 
 public class OneMigrationDirectiveTest extends TestCase {
   private static final ImmutableSet<MetadataScrubber> NO_SCRUBBERS = ImmutableSet.of();
@@ -48,7 +46,7 @@ public class OneMigrationDirectiveTest extends TestCase {
     Injector.INSTANCE = new Injector(null, cmd, ui);
     super.setUp();
     Repositories repositories =
-        new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory(null)));
+        new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory()));
     InMemoryProjectContextFactory contextFactory =
         new InMemoryProjectContextFactory(null, cmd, null, ui, repositories);
     contextFactory.projectConfigs.put(

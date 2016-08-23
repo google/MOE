@@ -27,16 +27,13 @@ import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.testing.FileCodebaseCreator;
-
-import junit.framework.TestCase;
-
-import org.easymock.EasyMock;
-import org.easymock.IMocksControl;
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import junit.framework.TestCase;
+import org.easymock.EasyMock;
+import org.easymock.IMocksControl;
 
 /**
  * Tests for the FileCodebaseCreator class.
@@ -69,7 +66,7 @@ public class FileCodebaseCreatorTest extends TestCase {
    * @throws CodebaseCreationError
    */
   public void testValidationCreate() throws Exception {
-    FileCodebaseCreator cc = new FileCodebaseCreator(mockfs);
+    FileCodebaseCreator cc = new FileCodebaseCreator();
 
     // Validate parameters.
     try {
@@ -95,10 +92,10 @@ public class FileCodebaseCreatorTest extends TestCase {
     expectDirCopy(fileFolder, new File("/tmp/copy"));
 
     control.replay();
-    FileCodebaseCreator cc = new FileCodebaseCreator(mockfs);
+    FileCodebaseCreator cc = new FileCodebaseCreator();
     Codebase codebase = cc.create(ImmutableMap.<String, String>of("path", folder));
     assertNotNull(codebase);
-    assertEquals("public", codebase.getProjectSpace());
+    assertEquals("public", codebase.projectSpace());
     control.verify();
   }
 
@@ -113,13 +110,13 @@ public class FileCodebaseCreatorTest extends TestCase {
     expectDirCopy(fileFolder, new File("/tmp/copy"));
 
     control.replay();
-    FileCodebaseCreator cc = new FileCodebaseCreator(mockfs);
+    FileCodebaseCreator cc = new FileCodebaseCreator();
     Codebase codebase =
         cc.create(ImmutableMap.<String, String>of("path", folder, "projectspace", "internal"));
     control.verify();
 
     assertNotNull(codebase);
-    assertEquals("internal", codebase.getProjectSpace());
+    assertEquals("internal", codebase.projectSpace());
   }
 
   /**

@@ -27,9 +27,7 @@ import com.google.devtools.moe.client.gson.GsonModule;
 import com.google.devtools.moe.client.project.EditorConfig;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.project.ScrubberConfig;
-
 import dagger.Lazy;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
@@ -78,7 +76,7 @@ public class ScrubbingEditor implements Editor {
               "--config_data",
               (scrubberConfig == null) ? "{}" : GsonModule.provideGson().toJson(scrubberConfig),
               // TODO(cgruber): Eliminate this static gson method reference.
-              input.getPath().getAbsolutePath()),
+              input.path().getAbsolutePath()),
           executable.get().getParentFile().getPath());
     } catch (CommandRunner.CommandException | IOException e) {
       throw new MoeProblem(e, "Problem executing the scrubber: %s", e.getMessage());
@@ -89,7 +87,7 @@ public class ScrubbingEditor implements Editor {
     } catch (IOException | CommandRunner.CommandException e) {
       throw new MoeProblem(e.getMessage());
     }
-    return new Codebase(filesystem, expandedDir, input.getProjectSpace(), input.getExpression());
+    return Codebase.create(expandedDir, input.projectSpace(), input.expression());
   }
 
   public static ScrubbingEditor makeScrubbingEditor(

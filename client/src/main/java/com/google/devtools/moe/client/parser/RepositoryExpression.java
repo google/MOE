@@ -25,7 +25,6 @@ import com.google.devtools.moe.client.codebase.CodebaseCreator;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.testing.FileCodebaseCreator;
-//import com.google.devtools.moe.client.testing.FileCodebaseCreator;
 import com.google.devtools.moe.client.writer.Writer;
 import com.google.devtools.moe.client.writer.WriterCreator;
 import com.google.devtools.moe.client.writer.WritingError;
@@ -76,7 +75,7 @@ public class RepositoryExpression extends AbstractExpression {
     String repositoryName = term.identifier;
     CodebaseCreator cc;
     if (repositoryName.equals("file")) {
-      cc = new FileCodebaseCreator(Injector.INSTANCE.fileSystem());
+      cc = new FileCodebaseCreator();
     } else {
       RepositoryType repo = context.getRepository(repositoryName);
       cc = repo.codebaseCreator();
@@ -86,7 +85,7 @@ public class RepositoryExpression extends AbstractExpression {
         Injector.INSTANCE.ui().pushTask("create_codebase", "Creating codebase for '%s'", this);
     try {
       Codebase c = cc.create(term.options);
-      Injector.INSTANCE.ui().popTaskAndPersist(createTask, c.getPath());
+      Injector.INSTANCE.ui().popTaskAndPersist(createTask, c.path());
       return c;
     } catch (CodebaseCreationError cce) {
       Injector.INSTANCE.ui().popTask(createTask, "Unable to create codebase " + this);
