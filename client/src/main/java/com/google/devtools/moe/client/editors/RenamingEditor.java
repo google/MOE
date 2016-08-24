@@ -30,7 +30,6 @@ import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Utils;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.project.EditorConfig;
-import com.google.devtools.moe.client.project.EditorType;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -92,8 +91,9 @@ public class RenamingEditor implements Editor, InverseEditor {
   @Override
   public InverseEditor validateInversion() throws InvalidProject {
     if (useRegex) {
-      throw new InvalidProject(
-          "Editor type %s is not reversable if use_regex=true", EditorType.renamer);
+      // TODO(cgruber): Work out how to soft-land this change.
+      // throw new InvalidProject(
+      //     "Editor type %s is not reversable if use_regex=true", EditorType.renamer);
     }
     return this;
   }
