@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-package com.google.devtools.moe.client.editors;
+package com.google.devtools.moe.client.translation.pipeline;
 
-import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.project.ProjectContext;
@@ -24,14 +23,16 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A Translator that translates a Codebase from one project space to another by calling its
- * constituent Editors in turn in translate().
+ * A TranslationPipeline that translates a Codebase from one project space to another by
+ * calling its constituent Editors in turn in translate().
  */
-public class ForwardTranslator implements Translator {
+public class ForwardTranslationPipeline implements TranslationPipeline {
 
-  private final List<TranslatorStep> steps;
+  private final Ui ui;
+  private final List<TranslationStep> steps;
 
-  public ForwardTranslator(List<TranslatorStep> steps) {
+  public ForwardTranslationPipeline(Ui ui, List<TranslationStep> steps) {
+    this.ui = ui;
     this.steps = steps;
   }
 
@@ -39,11 +40,11 @@ public class ForwardTranslator implements Translator {
   public Codebase translate(
       Codebase toTranslate, Map<String, String> options, ProjectContext context) {
     Codebase translated = toTranslate;
-    for (TranslatorStep s : steps) {
-      Ui.Task editTask = Injector.INSTANCE.ui().pushTask("edit", "Translation editor: " + s.name);
+    for (TranslationStep s : steps) {
+      Ui.Task editTask = ui.pushTask("edit", "Translation editor: " + s.name);
       // Pass the translation options to each editor.
       translated = s.editor.edit(translated, options);
-      Injector.INSTANCE.ui().popTaskAndPersist(editTask, translated.path());
+      ui.popTaskAndPersist(editTask, translated.path());
     }
     return translated;
   }

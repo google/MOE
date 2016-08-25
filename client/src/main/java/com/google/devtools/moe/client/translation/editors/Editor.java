@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package com.google.devtools.moe.client.editors;
+package com.google.devtools.moe.client.translation.editors;
 
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.project.EditorConfig;
 import java.util.Map;
 
 /**
- * An Editor takes one Codebase and returns an edited Codebase.
+ * Takes one Codebase and returns an altered Codebase.
  */
 public interface Editor {
 
@@ -46,5 +46,18 @@ public interface Editor {
    */
   public interface Factory {
     Editor newEditor(String name, EditorConfig config);
+  }
+
+  /**
+   * Enum of all known editor implementations.
+   *
+   * All values are valid JSON editor types.
+   */
+  public enum Type {
+    identity,
+    scrubber,
+    patcher,
+    shell,
+    renamer;
   }
 }

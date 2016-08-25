@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package com.google.devtools.moe.client.editors;
+package com.google.devtools.moe.client.translation.pipeline;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.Ui.Task;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
@@ -76,13 +76,15 @@ import java.util.Map;
  * the input being merged in is called the "reference to-codebase". In these diamonds,
  * the ref. from-codebase is the top, and the ref. to-codebase is the left.
  */
-public class InverseTranslator implements Translator {
+public class InverseTranslationPipeline implements TranslationPipeline {
 
-  private final List<TranslatorStep> forwardSteps;
-  private final List<InverseTranslatorStep> inverseSteps;
+  private final Ui ui;
+  private final List<TranslationStep> forwardSteps;
+  private final List<InverseTranslationStep> inverseSteps;
 
-  public InverseTranslator(
-      List<TranslatorStep> forwardSteps, List<InverseTranslatorStep> inverseSteps) {
+  public InverseTranslationPipeline(
+      Ui ui, List<TranslationStep> forwardSteps, List<InverseTranslationStep> inverseSteps) {
+    this.ui = ui;
     Preconditions.checkArgument(!inverseSteps.isEmpty());
     Preconditions.checkArgument(inverseSteps.size() == forwardSteps.size());
     this.forwardSteps = forwardSteps;
@@ -122,21 +124,19 @@ public class InverseTranslator implements Translator {
     Codebase refTo = forwardTranslationStack.peek();
     Codebase inverseTranslated = toTranslate;
 
-    for (InverseTranslatorStep inverseStep : inverseSteps) {
+    for (InverseTranslationStep inverseStep : inverseSteps) {
       Task task =
-          Injector.INSTANCE
-              .ui()
-              .pushTask(
-                  "inverseEdit",
-                  "Inverse-translating step %s by merging codebase %s onto %s",
-                  inverseStep.getName(),
-                  refTo,
-                  refFrom);
+          ui.pushTask(
+              "inverseEdit",
+              "Inverse-translating step %s by merging codebase %s onto %s",
+              inverseStep.name(),
+              refTo,
+              refFrom);
 
       inverseTranslated =
           inverseStep.getInverseEditor().inverseEdit(inverseTranslated, refFrom, refTo, options);
 
-      Injector.INSTANCE.ui().popTaskAndPersist(task, inverseTranslated.path());
+      ui.popTaskAndPersist(task, inverseTranslated.path());
       refFrom = forwardTranslationStack.pop();
       refTo = forwardTranslationStack.peek();
     }
@@ -146,34 +146,30 @@ public class InverseTranslator implements Translator {
 
   private Deque<Codebase> makeForwardTranslationStack(
       Map<String, String> options, ProjectContext context) throws CodebaseCreationError {
-    Deque<Codebase> forwardTransStack = new ArrayDeque<Codebase>(forwardSteps.size() + 1);
+    Deque<Codebase> forwardTransStack = new ArrayDeque<>(forwardSteps.size() + 1);
 
     Codebase refTo;
     try {
       Task task =
-          Injector.INSTANCE
-              .ui()
-              .pushTask(
-                  "refTo",
-                  "Pushing to forward-translation stack: " + options.get("referenceToCodebase"));
+          ui.pushTask(
+              "refTo",
+              "Pushing to forward-translation stack: " + options.get("referenceToCodebase"));
       refTo = Parser.parseExpression(options.get("referenceToCodebase")).createCodebase(context);
       forwardTransStack.push(refTo);
-      Injector.INSTANCE.ui().popTaskAndPersist(task, refTo.path());
+      ui.popTaskAndPersist(task, refTo.path());
     } catch (ParseError e) {
       throw new CodebaseCreationError("Couldn't parse in translation: " + e);
     }
 
     // This Expression is used only for informative output.
     Expression forwardEditExp = refTo.expression();
-    for (TranslatorStep forwardStep : forwardSteps) {
+    for (TranslationStep forwardStep : forwardSteps) {
       forwardEditExp = forwardEditExp.editWith(forwardStep.name, ImmutableMap.<String, String>of());
       Task task =
-          Injector.INSTANCE
-              .ui()
-              .pushTask("edit", "Pushing to forward-translation stack: " + forwardEditExp);
+          ui.pushTask("edit", "Pushing to forward-translation stack: " + forwardEditExp);
       refTo = forwardStep.editor.edit(refTo, options).copyWithExpression(forwardEditExp);
       forwardTransStack.push(refTo);
-      Injector.INSTANCE.ui().popTaskAndPersist(task, refTo.path());
+      ui.popTaskAndPersist(task, refTo.path());
     }
 
     return forwardTransStack;

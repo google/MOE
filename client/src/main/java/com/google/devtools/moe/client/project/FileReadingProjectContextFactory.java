@@ -20,8 +20,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.io.Files;
 import com.google.devtools.moe.client.Ui;
-import com.google.devtools.moe.client.editors.Editors;
 import com.google.devtools.moe.client.repositories.Repositories;
+import com.google.devtools.moe.client.translation.editors.Editors;
 import java.io.File;
 import java.io.IOException;
 import javax.inject.Inject;

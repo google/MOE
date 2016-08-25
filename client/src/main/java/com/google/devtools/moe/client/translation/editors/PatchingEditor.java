@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-package com.google.devtools.moe.client.editors;
+package com.google.devtools.moe.client.translation.editors;
+
+import static com.google.common.base.Strings.isNullOrEmpty;
 
 import com.google.auto.factory.AutoFactory;
 import com.google.auto.factory.Provided;
@@ -28,29 +30,22 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
-/**
- * An editor that will run the shell command specified in the commandString field.
- *
- * <p>Note: this command string can and probably will be a concatenation e.g. "command1 && command2
- * && command3..."
- */
+/** A PatchingEditor invokes the command patch */
 @AutoFactory(implementing = Editor.Factory.class)
-public class ShellEditor implements Editor {
+public class PatchingEditor implements Editor {
 
   private final CommandRunner cmd;
   private final FileSystem filesystem;
   private final String name;
-  private final String commandString;
 
-  ShellEditor(
+  PatchingEditor(
       @Provided CommandRunner cmd,
       @Provided FileSystem filesystem,
-      String name,
-      EditorConfig config) {
+      String editorName,
+      @SuppressWarnings("unused") EditorConfig ignored) {
     this.cmd = cmd;
     this.filesystem = filesystem;
-    this.name = name;
-    this.commandString = config.commandString();
+    name = editorName;
   }
 
   /**
@@ -58,29 +53,38 @@ public class ShellEditor implements Editor {
    */
   @Override
   public String getDescription() {
-    return "shell step " + name;
+    return name;
   }
 
   /**
-   * Runs this editor's shell commands on a copy of the input Codebase's contents and returns a new
-   * Codebase containing the edited contents.
-   *
-   * @param input the Codebase to edit
-   * @param options a map containing any command line options such as a specific revision
+   * Applies a patch to copied contents of the input Codebase, returning a new Codebase with the
+   * results of the patch.
    */
   @Override
   public Codebase edit(Codebase input, Map<String, String> options) {
-    File tempDir = filesystem.getTemporaryDirectory("shell_run_");
-    try {
-      filesystem.copyDirectory(input.path(), tempDir);
-    } catch (IOException e) {
-      throw new MoeProblem(e.getMessage());
+    File tempDir = filesystem.getTemporaryDirectory("patcher_run_");
+    String patchFilePath = options.get("file");
+    if (isNullOrEmpty(patchFilePath)) {
+      return input;
+    } else {
+      File patchFile = new File(patchFilePath);
+      if (!filesystem.isReadable(patchFile)) {
+        throw new MoeProblem("cannot read file %s", patchFilePath);
+      }
+      try {
+        filesystem.copyDirectory(input.path(), tempDir);
+      } catch (IOException e) {
+        throw new MoeProblem(e.getMessage());
+      }
+      try {
+        cmd.runCommand(
+            "patch",
+            ImmutableList.of("-p0", "--input=" + patchFilePath),
+            tempDir.getAbsolutePath());
+      } catch (CommandRunner.CommandException e) {
+        throw new MoeProblem(e.getMessage());
+      }
+      return Codebase.create(tempDir, input.projectSpace(), input.expression());
     }
-    try {
-      cmd.runCommand("bash", ImmutableList.of("-c", this.commandString), tempDir.getAbsolutePath());
-    } catch (CommandRunner.CommandException e) {
-      throw new MoeProblem(e.getMessage());
-    }
-    return Codebase.create(tempDir, input.projectSpace(), input.expression());
   }
 }

@@ -16,6 +16,7 @@
 
 package com.google.devtools.moe.client.project;
 
+import com.google.devtools.moe.client.translation.editors.Editor;
 import java.util.List;
 
 /**
@@ -49,7 +50,7 @@ public class TranslatorConfig {
   public ScrubberConfig scrubber() {
     if (getSteps() != null) {
       for (StepConfig step : getSteps()) {
-        if (step.getEditorConfig().type() == EditorType.scrubber) {
+        if (step.getEditorConfig().type() == Editor.Type.scrubber) {
           return step.getEditorConfig().scrubberConfig();
         }
       }

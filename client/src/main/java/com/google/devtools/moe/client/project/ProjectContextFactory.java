@@ -21,17 +21,17 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.devtools.moe.client.Ui;
-import com.google.devtools.moe.client.editors.Editor;
-import com.google.devtools.moe.client.editors.Editors;
-import com.google.devtools.moe.client.editors.ForwardTranslator;
-import com.google.devtools.moe.client.editors.InverseTranslator;
-import com.google.devtools.moe.client.editors.InverseTranslatorStep;
-import com.google.devtools.moe.client.editors.Translator;
-import com.google.devtools.moe.client.editors.TranslatorPath;
-import com.google.devtools.moe.client.editors.TranslatorStep;
 import com.google.devtools.moe.client.migrations.MigrationConfig;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.repositories.RepositoryType;
+import com.google.devtools.moe.client.translation.editors.Editor;
+import com.google.devtools.moe.client.translation.editors.Editors;
+import com.google.devtools.moe.client.translation.pipeline.ForwardTranslationPipeline;
+import com.google.devtools.moe.client.translation.pipeline.InverseTranslationPipeline;
+import com.google.devtools.moe.client.translation.pipeline.InverseTranslationStep;
+import com.google.devtools.moe.client.translation.pipeline.TranslationPath;
+import com.google.devtools.moe.client.translation.pipeline.TranslationPipeline;
+import com.google.devtools.moe.client.translation.pipeline.TranslationStep;
 import java.util.List;
 import java.util.Map;
 
@@ -96,14 +96,14 @@ public abstract class ProjectContextFactory {
     return builder.build();
   }
 
-  private ImmutableMap<TranslatorPath, Translator> buildTranslators(ProjectConfig config)
+  private ImmutableMap<TranslationPath, TranslationPipeline> buildTranslators(ProjectConfig config)
       throws InvalidProject {
-    ImmutableMap.Builder<TranslatorPath, Translator> builder = ImmutableMap.builder();
+    ImmutableMap.Builder<TranslationPath, TranslationPipeline> builder = ImmutableMap.builder();
     for (TranslatorConfig translatorConfig : config.translators()) {
-      Translator t = makeTranslatorFromConfig(translatorConfig, config);
+      TranslationPipeline t = makeTranslatorFromConfig(translatorConfig, config);
 
-      TranslatorPath tPath =
-          new TranslatorPath(
+      TranslationPath tPath =
+          TranslationPath.create(
               translatorConfig.getFromProjectSpace(), translatorConfig.getToProjectSpace());
       builder.put(tPath, t);
     }
@@ -120,35 +120,36 @@ public abstract class ProjectContextFactory {
 
 
 
-  Translator makeTranslatorFromConfig(TranslatorConfig transConfig, ProjectConfig projConfig)
+  TranslationPipeline makeTranslatorFromConfig(TranslatorConfig transConfig, ProjectConfig projConfig)
       throws InvalidProject {
     if (transConfig.isInverse()) {
       TranslatorConfig otherTrans = findInverseTranslatorConfig(transConfig, projConfig);
-      return new InverseTranslator(
+      return new InverseTranslationPipeline(
+          ui,
           makeStepsFromConfigs(otherTrans.getSteps()),
           makeInverseStepsFromConfigs(otherTrans.getSteps()));
     } else {
-      return new ForwardTranslator(makeStepsFromConfigs(transConfig.getSteps()));
+      return new ForwardTranslationPipeline(ui, makeStepsFromConfigs(transConfig.getSteps()));
     }
   }
 
-  private List<TranslatorStep> makeStepsFromConfigs(List<StepConfig> stepConfigs)
+  private List<TranslationStep> makeStepsFromConfigs(List<StepConfig> stepConfigs)
       throws InvalidProject {
-    ImmutableList.Builder<TranslatorStep> steps = ImmutableList.builder();
+    ImmutableList.Builder<TranslationStep> steps = ImmutableList.builder();
     for (StepConfig sc : stepConfigs) {
       steps.add(
-          new TranslatorStep(
+          new TranslationStep(
               sc.getName(), editors.makeEditorFromConfig(sc.getName(), sc.getEditorConfig())));
     }
     return steps.build();
   }
 
-  private List<InverseTranslatorStep> makeInverseStepsFromConfigs(List<StepConfig> stepConfigs)
+  private List<InverseTranslationStep> makeInverseStepsFromConfigs(List<StepConfig> stepConfigs)
       throws InvalidProject {
-    ImmutableList.Builder<InverseTranslatorStep> inverseSteps = ImmutableList.builder();
+    ImmutableList.Builder<InverseTranslationStep> inverseSteps = ImmutableList.builder();
     for (StepConfig sc : Lists.reverse(stepConfigs)) {
       inverseSteps.add(
-          new InverseTranslatorStep(
+          new InverseTranslationStep(
               "inverse_" + sc.getName(),
               editors.makeInverseEditorFromConfig(
                   "inverse_" + sc.getName(), sc.getEditorConfig())));

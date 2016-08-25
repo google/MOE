@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package com.google.devtools.moe.client.editors;
+package com.google.devtools.moe.client.translation.editors;
 
-import static com.google.devtools.moe.client.project.EditorType.renamer;
+import static com.google.devtools.moe.client.translation.editors.Editor.Type.renamer;
 import static org.easymock.EasyMock.expect;
 
 import com.google.common.collect.ImmutableMap;

@@ -14,18 +14,24 @@
  * limitations under the License.
  */
 
-package com.google.devtools.moe.client.editors;
+package com.google.devtools.moe.client.translation.pipeline;
+
+import com.google.auto.value.AutoValue;
 
 /**
- * One step in translating from one project space to another.
+ * The Path a TranslationPipeline should take.
  */
-public class TranslatorStep {
+@AutoValue
+public abstract class TranslationPath {
+  public abstract String fromProjectSpace();
+  public abstract String toProjectSpace();
 
-  public final String name;
-  public final Editor editor;
+  public static TranslationPath create(String fromProjectSpace, String toProjectSpace) {
+    return new AutoValue_TranslationPath(fromProjectSpace, toProjectSpace);
+  }
 
-  public TranslatorStep(String name, Editor editor) {
-    this.name = name;
-    this.editor = editor;
+  @Override
+  public String toString() {
+    return String.format("%s>%s", fromProjectSpace(), toProjectSpace());
   }
 }

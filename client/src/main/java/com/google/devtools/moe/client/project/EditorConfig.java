@@ -18,6 +18,7 @@ package com.google.devtools.moe.client.project;
 
 import com.google.auto.value.AutoValue;
 import com.google.devtools.moe.client.gson.AutoValueGsonAdapter;
+import com.google.devtools.moe.client.translation.editors.Editor;
 import com.google.gson.JsonObject;
 import com.google.gson.annotations.JsonAdapter;
 
@@ -27,7 +28,7 @@ import com.google.gson.annotations.JsonAdapter;
 @AutoValue
 @JsonAdapter(AutoValueGsonAdapter.class)
 public abstract class EditorConfig {
-  public abstract EditorType type();
+  public abstract Editor.Type type();
 
   public abstract ScrubberConfig scrubberConfig();
 
@@ -37,12 +38,13 @@ public abstract class EditorConfig {
 
   public abstract boolean useRegex();
 
+  // TODO(cgruber): Push validation around the whole structure.
   void validate() throws InvalidProject {
     InvalidProject.assertNotNull(type(), "Missing type in editor");
   }
 
   public static EditorConfig create(
-      EditorType type,
+      Editor.Type type,
       ScrubberConfig scrubberConfig,
       String commandString,
       JsonObject mappings,

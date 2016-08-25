@@ -26,19 +26,20 @@ import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.NullFileSystemModule;
 import com.google.devtools.moe.client.SystemCommandRunner;
+import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.codebase.CodebaseCreator;
-import com.google.devtools.moe.client.editors.Editor;
-import com.google.devtools.moe.client.editors.ForwardTranslator;
-import com.google.devtools.moe.client.editors.Translator;
-import com.google.devtools.moe.client.editors.TranslatorPath;
-import com.google.devtools.moe.client.editors.TranslatorStep;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.project.ProjectContext.NoopProjectContext;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
 import com.google.devtools.moe.client.testing.TestingModule;
+import com.google.devtools.moe.client.translation.editors.Editor;
+import com.google.devtools.moe.client.translation.pipeline.ForwardTranslationPipeline;
+import com.google.devtools.moe.client.translation.pipeline.TranslationPath;
+import com.google.devtools.moe.client.translation.pipeline.TranslationPipeline;
+import com.google.devtools.moe.client.translation.pipeline.TranslationStep;
 import com.google.devtools.moe.client.writer.WriterCreator;
 import java.io.File;
 import java.util.Map;
@@ -50,6 +51,7 @@ import org.easymock.IMocksControl;
 
 public class ExpressionTest extends TestCase {
   private static final Map<String, String> EMPTY_MAP = ImmutableMap.of();
+  private Ui ui;
 
   // TODO(cgruber): Rework these when statics aren't inherent in the design.
   @dagger.Component(
@@ -63,6 +65,7 @@ public class ExpressionTest extends TestCase {
   protected void setUp() throws Exception {
     super.setUp();
     Injector.INSTANCE = DaggerExpressionTest_Component.create().context();
+    this.ui = Injector.INSTANCE.ui();
   }
 
   public void testNoSuchCreator() throws Exception {
@@ -132,13 +135,14 @@ public class ExpressionTest extends TestCase {
 
   public void testNoSuchTranslator() throws Exception {
     try {
-      final TranslatorPath tPath = new TranslatorPath("foo", "bar");
-      final Translator t =
-          new ForwardTranslator(ImmutableList.<TranslatorStep>of(new TranslatorStep("quux", null)));
+      final TranslationPath tPath = TranslationPath.create("foo", "bar");
+      final TranslationPipeline t =
+          new ForwardTranslationPipeline(
+              ui, ImmutableList.<TranslationStep>of(new TranslationStep("quux", null)));
       ProjectContext context =
           new NoopProjectContext() {
             @Override
-            public ImmutableMap<TranslatorPath, Translator> translators() {
+            public ImmutableMap<TranslationPath, TranslationPipeline> translators() {
               return ImmutableMap.of(tPath, t);
             }
           };
@@ -176,10 +180,10 @@ public class ExpressionTest extends TestCase {
     File secondDir = new File("/second");
     File finalDir = new File("/final");
 
-    final TranslatorPath tPath = new TranslatorPath("foo", "public");
-    final Translator t =
-        new ForwardTranslator(
-            ImmutableList.<TranslatorStep>of(new TranslatorStep("quux", translatorEditor)));
+    final TranslationPath tPath = TranslationPath.create("foo", "public");
+    final TranslationPipeline t =
+        new ForwardTranslationPipeline(
+            ui, ImmutableList.<TranslationStep>of(new TranslationStep("quux", translatorEditor)));
 
     ProjectContext context =
         new NoopProjectContext() {
@@ -189,7 +193,7 @@ public class ExpressionTest extends TestCase {
           }
 
           @Override
-          public ImmutableMap<TranslatorPath, Translator> translators() {
+          public ImmutableMap<TranslationPath, TranslationPipeline> translators() {
             return ImmutableMap.of(tPath, t);
           }
 

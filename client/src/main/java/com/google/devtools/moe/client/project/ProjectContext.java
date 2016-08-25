@@ -20,11 +20,11 @@ import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.devtools.moe.client.MoeProblem;
-import com.google.devtools.moe.client.editors.Editor;
-import com.google.devtools.moe.client.editors.Translator;
-import com.google.devtools.moe.client.editors.TranslatorPath;
 import com.google.devtools.moe.client.migrations.MigrationConfig;
 import com.google.devtools.moe.client.repositories.RepositoryType;
+import com.google.devtools.moe.client.translation.editors.Editor;
+import com.google.devtools.moe.client.translation.pipeline.TranslationPath;
+import com.google.devtools.moe.client.translation.pipeline.TranslationPipeline;
 import java.util.Map;
 
 /**
@@ -39,7 +39,7 @@ public abstract class ProjectContext {
 
   public abstract Map<String, Editor> editors();
 
-  public abstract Map<TranslatorPath, Translator> translators();
+  public abstract Map<TranslationPath, TranslationPipeline> translators();
 
   public abstract Map<String, MigrationConfig> migrationConfigs();
 
@@ -77,7 +77,7 @@ public abstract class ProjectContext {
     }
 
     @Override
-    public ImmutableMap<TranslatorPath, Translator> translators() {
+    public ImmutableMap<TranslationPath, TranslationPipeline> translators() {
       return ImmutableMap.of();
     }
 

@@ -20,11 +20,11 @@ import static com.google.devtools.moe.client.project.ProjectConfig.parse;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.devtools.moe.client.Ui;
-import com.google.devtools.moe.client.editors.Editors;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.ProjectConfig;
 import com.google.devtools.moe.client.project.ProjectContextFactory;
 import com.google.devtools.moe.client.repositories.Repositories;
+import com.google.devtools.moe.client.translation.editors.Editors;
 import dagger.Binds;
 import java.util.HashMap;
 import java.util.Map;

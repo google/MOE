@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.devtools.moe.client.editors;
+package com.google.devtools.moe.client.translation.editors;
 
 import com.google.auto.factory.AutoFactory;
 import com.google.devtools.moe.client.codebase.Codebase;

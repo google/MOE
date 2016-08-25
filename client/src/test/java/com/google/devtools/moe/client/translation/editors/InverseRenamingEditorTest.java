@@ -14,29 +14,24 @@
  * limitations under the License.
  */
 
-package com.google.devtools.moe.client.editors;
+package com.google.devtools.moe.client.translation.editors;
 
-import static com.google.devtools.moe.client.project.EditorType.renamer;
+import static com.google.devtools.moe.client.translation.editors.Editor.Type.renamer;
 import static org.easymock.EasyMock.expect;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.FileSystem;
-import com.google.devtools.moe.client.Injector;
-import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.gson.GsonModule;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.project.EditorConfig;
 import com.google.devtools.moe.client.project.ScrubberConfig;
-import com.google.devtools.moe.client.testing.TestingModule;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import dagger.Provides;
 import java.io.File;
 import java.io.IOException;
-import javax.inject.Singleton;
 import junit.framework.TestCase;
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
@@ -47,28 +42,6 @@ public class InverseRenamingEditorTest extends TestCase {
   private final FileSystem mockFs = control.createMock(FileSystem.class);
   private final Gson gson = GsonModule.provideGson();
   private final ScrubberConfig scrubberConfig = gson.fromJson("{}", ScrubberConfig.class);
-
-  // TODO(cgruber): Rework these when statics aren't inherent in the design.
-  @dagger.Component(modules = {TestingModule.class, SystemCommandRunner.Module.class, Module.class})
-  @Singleton
-  interface Component {
-    Injector context(); // TODO (b/19676630) Remove when bug is fixed.
-  }
-
-  @dagger.Module
-  class Module {
-    @Provides
-    public FileSystem filesystem() {
-      return mockFs;
-    }
-  }
-
-  @Override
-  protected void setUp() throws Exception {
-    super.setUp();
-    Injector.INSTANCE =
-        DaggerInverseRenamingEditorTest_Component.builder().module(new Module()).build().context();
-  }
 
   public void testEdit() throws Exception {
     JsonObject mappings =

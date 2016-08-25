@@ -32,9 +32,6 @@ import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.database.RepositoryEquivalence;
 import com.google.devtools.moe.client.database.RepositoryEquivalenceMatcher.Result;
-import com.google.devtools.moe.client.editors.Editor;
-import com.google.devtools.moe.client.editors.Translator;
-import com.google.devtools.moe.client.editors.TranslatorPath;
 import com.google.devtools.moe.client.migrations.Migration;
 import com.google.devtools.moe.client.migrations.MigrationConfig;
 import com.google.devtools.moe.client.migrations.Migrator;
@@ -49,6 +46,9 @@ import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
+import com.google.devtools.moe.client.translation.editors.Editor;
+import com.google.devtools.moe.client.translation.pipeline.TranslationPath;
+import com.google.devtools.moe.client.translation.pipeline.TranslationPipeline;
 import com.google.devtools.moe.client.writer.DraftRevision;
 import com.google.devtools.moe.client.writer.Writer;
 import com.google.devtools.moe.client.writer.WritingError;
@@ -262,7 +262,7 @@ public class MigrateBranchDirective extends Directive {
           }
 
           @Override
-          public Map<TranslatorPath, Translator> translators() {
+          public Map<TranslationPath, TranslationPipeline> translators() {
             return context.translators();
           }
 

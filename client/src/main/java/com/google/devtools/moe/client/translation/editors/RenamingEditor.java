@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.devtools.moe.client.editors;
+package com.google.devtools.moe.client.translation.editors;
 
 import com.google.auto.factory.AutoFactory;
 import com.google.auto.factory.Provided;
@@ -35,7 +35,6 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -50,7 +49,8 @@ public class RenamingEditor implements Editor, InverseEditor {
   private static final CharMatcher FILE_SEP_CHAR_MATCHER = CharMatcher.is(File.separatorChar);
   private static final Joiner FILE_SEP_JOINER = Joiner.on(File.separator);
   private static final Splitter FILE_SEP_SPLITTER = Splitter.on(File.separator);
-  private static final Type MAP_TYPE = new TypeToken<Map<String, String>>() {}.getType();
+  private static final java.lang.reflect.Type MAP_TYPE =
+      new TypeToken<Map<String, String>>() {}.getType();
 
   private final FileSystem filesystem;
   private final String editorName;

@@ -21,11 +21,12 @@ import com.google.common.base.Joiner;
 import com.google.devtools.moe.client.database.RepositoryEquivalence;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.repositories.Revision;
-
+import com.google.devtools.moe.client.translation.pipeline.TranslationPipeline;
 import java.util.List;
 
 /**
- * A Migration represents a change to be ported from one {@link RepositoryType} to another.
+ * A Migration represents a change to be ported from one {@link RepositoryType} to another
+ * via a {@link TranslationPipeline}.
  */
 @AutoValue
 public abstract class Migration {

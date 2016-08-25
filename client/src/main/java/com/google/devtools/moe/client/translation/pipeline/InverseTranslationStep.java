@@ -13,22 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.devtools.moe.client.editors;
+package com.google.devtools.moe.client.translation.pipeline;
+
+import com.google.devtools.moe.client.translation.editors.InverseEditor;
 
 /**
  * One step in inverse-translating from one project space to another.
  */
-public class InverseTranslatorStep {
+public class InverseTranslationStep {
 
   private final String name;
   private final InverseEditor inverseEditor;
 
-  public InverseTranslatorStep(String name, InverseEditor inverseEditor) {
+  public InverseTranslationStep(String name, InverseEditor inverseEditor) {
     this.name = name;
     this.inverseEditor = inverseEditor;
   }
 
-  public String getName() {
+  public String name() {
     return name;
   }
 

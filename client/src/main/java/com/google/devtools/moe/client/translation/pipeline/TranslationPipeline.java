@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package com.google.devtools.moe.client.editors;
+package com.google.devtools.moe.client.translation.pipeline;
 
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.project.ProjectContext;
-
+import com.google.devtools.moe.client.translation.editors.Editor;
 import java.util.Map;
 
 /**
@@ -27,7 +27,7 @@ import java.util.Map;
  * {@link Editor} interface, but Translators are used in a particular context, i.e. the migration
  * of one repository's changes into another repository.
  */
-public interface Translator {
+public interface TranslationPipeline {
 
   /**
    * Translates the given Codebase, and returns the result.

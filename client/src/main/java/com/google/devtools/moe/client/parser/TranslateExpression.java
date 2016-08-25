@@ -21,13 +21,13 @@ import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
-import com.google.devtools.moe.client.editors.Translator;
-import com.google.devtools.moe.client.editors.TranslatorPath;
 import com.google.devtools.moe.client.project.ProjectContext;
+import com.google.devtools.moe.client.translation.pipeline.TranslationPath;
+import com.google.devtools.moe.client.translation.pipeline.TranslationPipeline;
 
 /**
  * An expression encapsulating the transformation of the given Expression's Codebase via the
- * application of a {@link Translator}. For example,
+ * application of a {@link TranslationPipeline}. For example,
  * new RepositoryExpression("myRepo").translateTo("public")
  * returns a TranslateExpression for "myRepo>public".
  */
@@ -46,8 +46,9 @@ public class TranslateExpression extends AbstractExpression {
   public Codebase createCodebase(ProjectContext context) throws CodebaseCreationError {
     Codebase codebaseToTranslate = exToTranslate.createCodebase(context);
     String toProjectSpace = translateOp.term.identifier;
-    TranslatorPath path = new TranslatorPath(codebaseToTranslate.projectSpace(), toProjectSpace);
-    Translator translator = context.translators().get(path);
+    TranslationPath path =
+        TranslationPath.create(codebaseToTranslate.projectSpace(), toProjectSpace);
+    TranslationPipeline translator = context.translators().get(path);
     if (translator == null) {
       throw new CodebaseCreationError(
           "Could not find translator from project space \"%s\" to \"%s\".\n"

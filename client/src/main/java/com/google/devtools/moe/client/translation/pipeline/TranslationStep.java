@@ -14,17 +14,20 @@
  * limitations under the License.
  */
 
-package com.google.devtools.moe.client.project;
+package com.google.devtools.moe.client.translation.pipeline;
+
+import com.google.devtools.moe.client.translation.editors.Editor;
 
 /**
- * Enum of all possible editors.
- *
- * All values are valid JSON editor types.
+ * One step in translating from one project space to another.
  */
-public enum EditorType {
-  identity,
-  scrubber,
-  patcher,
-  shell,
-  renamer;
+public class TranslationStep {
+
+  public final String name;
+  public final Editor editor;
+
+  public TranslationStep(String name, Editor editor) {
+    this.name = name;
+    this.editor = editor;
+  }
 }

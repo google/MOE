@@ -21,8 +21,8 @@ import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
-import com.google.devtools.moe.client.editors.Editor;
 import com.google.devtools.moe.client.project.ProjectContext;
+import com.google.devtools.moe.client.translation.editors.Editor;
 
 /**
  * An expression encapsulating the transformation of the given Expression's Codebase via the
