@@ -18,6 +18,7 @@ package com.google.devtools.moe.client.directives;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
@@ -35,7 +36,7 @@ import java.io.ByteArrayOutputStream;
 import junit.framework.TestCase;
 
 public class OneMigrationDirectiveTest extends TestCase {
-  private static final ImmutableSet<MetadataScrubber> NO_SCRUBBERS = ImmutableSet.of();
+  private static final ImmutableMap<Integer, MetadataScrubber> NO_SCRUBBERS = ImmutableMap.of();
   private final ByteArrayOutputStream stream = new ByteArrayOutputStream();
   private final Ui ui = new Ui(stream, /* fileSystem */ null);
   private final SystemCommandRunner cmd = new SystemCommandRunner();

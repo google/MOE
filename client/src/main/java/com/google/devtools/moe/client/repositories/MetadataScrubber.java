@@ -17,13 +17,11 @@ package com.google.devtools.moe.client.repositories;
 
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.LinkedListMultimap;
-
 import dagger.Provides;
-import dagger.multibindings.IntoSet;
-
+import dagger.multibindings.IntKey;
+import dagger.multibindings.IntoMap;
 import java.util.List;
 import java.util.Map.Entry;
-
 import javax.annotation.Nullable;
 
 /**
@@ -111,25 +109,29 @@ public abstract class MetadataScrubber {
   @dagger.Module
   public static class Module {
     @Provides
-    @IntoSet
+    @IntoMap
+    @IntKey(1000)
     static MetadataScrubber usernameScrubber(MetadataUsernameScrubber impl) {
       return impl;
     }
 
     @Provides
-    @IntoSet
+    @IntoMap
+    @IntKey(1001)
     static MetadataScrubber publicSectionScrubber(PublicSectionMetadataScrubber impl) {
       return impl;
     }
 
     @Provides
-    @IntoSet
+    @IntoMap
+    @IntKey(2000)
     static MetadataScrubber descScrubber(DescriptionMetadataScrubber impl) {
       return impl;
     }
 
     @Provides
-    @IntoSet
+    @IntoMap
+    @IntKey(3000)
     static MetadataScrubber originalAuthorScrubber(OriginalAuthorMetadataScrubber impl) {
       return impl;
     }

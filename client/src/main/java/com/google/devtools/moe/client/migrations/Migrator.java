@@ -38,10 +38,9 @@ import com.google.devtools.moe.client.repositories.RevisionHistory.SearchType;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.writer.DraftRevision;
 import com.google.devtools.moe.client.writer.Writer;
-
 import java.util.List;
-import java.util.Set;
-
+import java.util.Map;
+import java.util.TreeMap;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
@@ -51,17 +50,17 @@ import javax.inject.Inject;
 public class Migrator {
   private final Db db;
   private final DraftRevision.Factory revisionFactory;
-  private final Set<MetadataScrubber> metadataScrubbers;
+  private final Map<Integer, MetadataScrubber> metadataScrubbers;
   private final Ui ui;
 
   @Inject
   public Migrator(
       DraftRevision.Factory revisionFactory,
-      Set<MetadataScrubber> metadataScrubbers,
+      Map<Integer, MetadataScrubber> metadataScrubbers,
       Ui ui,
       Db db) {
     this.revisionFactory = revisionFactory;
-    this.metadataScrubbers = metadataScrubbers;
+    this.metadataScrubbers = new TreeMap<>(metadataScrubbers);
     this.ui = ui;
     this.db = db;
   }
@@ -194,7 +193,7 @@ public class Migrator {
 
     for (Revision rev : revs) {
       RevisionMetadata rm = revisionHistory.getMetadata(rev);
-      for (MetadataScrubber scrubber : metadataScrubbers) {
+      for (MetadataScrubber scrubber : metadataScrubbers.values()) {
         try {
           rm = scrubber.scrub(rm, sc);
         } catch (RuntimeException e) {
