@@ -74,21 +74,21 @@ import org.kohsuke.args4j.Option;
  */
 public class MigrateBranchDirective extends Directive {
   @Option(name = "--db", required = false, usage = "Location of MOE database")
-  private final String dbLocation = "";
+  private String dbLocation = "";
 
   // TODO(cgruber) determine this from implicit signals.
   @Option(name = "--from_repository", required = true, usage = "The label of the source repository")
-  private final String registeredFromRepository = "";
+  private String registeredFromRepository = "";
 
   @Option(name = "--branch", required = true, usage = "the symbolic name of the imported branch")
-  private final String branchLabel = "";
+  private String branchLabel = "";
 
   @Option(
     name = "--override_repository_url",
     required = false,
     usage = "the repository url to use in the case that the branch is in a fork of the repository"
   )
-  private final String overrideUrl = "";
+  private String overrideUrl = "";
 
   private final ProjectConfig config;
   private final ProjectContext context;
