@@ -26,9 +26,7 @@ import com.google.devtools.moe.client.Lifetimes;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.RepositoryType;
-
 import java.io.File;
-
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -68,28 +66,22 @@ public class HgRepositoryFactory implements RepositoryType.Factory {
     }
 
     Supplier<HgClonedRepository> freshSupplier =
-        new Supplier<HgClonedRepository>() {
-          @Override
-          public HgClonedRepository get() {
-            HgClonedRepository tipClone =
-                new HgClonedRepository(cmd, filesystem, hgBinary, name, config);
-            tipClone.cloneLocallyAtHead(Lifetimes.currentTask());
-            return tipClone;
-          }
+        () -> {
+          HgClonedRepository tipClone =
+              new HgClonedRepository(cmd, filesystem, hgBinary, name, config);
+          tipClone.cloneLocallyAtHead(Lifetimes.currentTask());
+          return tipClone;
         };
 
     // RevisionHistory and CodebaseCreator don't modify their clones, so they can use a shared,
     // memoized supplier.
     Supplier<HgClonedRepository> memoizedSupplier =
         Suppliers.memoize(
-            new Supplier<HgClonedRepository>() {
-              @Override
-              public HgClonedRepository get() {
-                HgClonedRepository tipClone =
-                    new HgClonedRepository(cmd, filesystem, hgBinary, name, config);
-                tipClone.cloneLocallyAtHead(Lifetimes.moeExecution());
-                return tipClone;
-              }
+            () -> {
+              HgClonedRepository tipClone =
+                  new HgClonedRepository(cmd, filesystem, hgBinary, name, config);
+              tipClone.cloneLocallyAtHead(Lifetimes.moeExecution());
+              return tipClone;
             });
 
     HgRevisionHistory rh = new HgRevisionHistory(cmd, hgBinary, memoizedSupplier);

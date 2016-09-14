@@ -16,6 +16,8 @@
 
 package com.google.devtools.moe.client;
 
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
+
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -38,7 +40,7 @@ public class Utils {
    * Returns a Set that excludes strings matching any of excludeRes.
    */
   public static Set<String> filterByRegEx(Set<String> c, List<String> excludeRes) {
-    return ImmutableSet.copyOf(Sets.filter(c, nonMatchingPredicateFromRes(excludeRes)));
+    return c.stream().filter(nonMatchingPredicateFromRes(excludeRes)).collect(toImmutableSet());
   }
 
   /** @return a Predicate that's true iff a CharSequence doesn't match any of the given regexes */
@@ -80,18 +82,15 @@ public class Utils {
     final URI baseUri = baseDir.toURI();
     Utils.doToFiles(
         baseDir,
-        new Function<File, Void>() {
-          @Override
-          public Void apply(File file) {
-            if (!positiveFilter.apply(baseUri.relativize(file.toURI()).getPath())) {
-              try {
-                Injector.INSTANCE.fileSystem().deleteRecursively(file);
-              } catch (IOException e) {
-                throw new MoeProblem("Error deleting file: " + file);
-              }
+        file -> {
+          if (!positiveFilter.apply(baseUri.relativize(file.toURI()).getPath())) {
+            try {
+              Injector.INSTANCE.fileSystem().deleteRecursively(file);
+            } catch (IOException e) {
+              throw new MoeProblem("Error deleting file: " + file);
             }
-            return null;
           }
+          return null;
         });
   }
 

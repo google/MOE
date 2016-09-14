@@ -16,12 +16,11 @@
 
 package com.google.devtools.moe.client.directives;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
+
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -281,15 +280,12 @@ public class MigrateBranchDirective extends Directive {
       String overrideUrl, final String fromRepository, final String originalFromRepository) {
 
     List<MigrationConfig> configs =
-        FluentIterable.from(context.migrationConfigs().values())
-            .filter(
-                new Predicate<MigrationConfig>() {
-                  @Override
-                  public boolean apply(MigrationConfig input) {
-                    return input.getFromRepository().equals(originalFromRepository);
-                  }
-                })
-            .toList();
+        context
+            .migrationConfigs()
+            .values()
+            .stream()
+            .filter(input -> input.getFromRepository().equals(originalFromRepository))
+            .collect(toImmutableList());
     switch (configs.size()) {
       case 0:
         throw new MoeUserProblem() {
@@ -415,15 +411,10 @@ public class MigrateBranchDirective extends Directive {
     }
     ui.popTask(migrationBranchTask, "");
 
-    return FluentIterable.from(commitsNotInParentBranch)
-        .transform(
-            new Function<String, Revision>() {
-              @Override
-              public Revision apply(String revId) {
-                return Revision.create(revId, repositoryName);
-              }
-            })
-        .toList()
+    return commitsNotInParentBranch
+        .stream()
+        .map(revId -> Revision.create(revId, repositoryName))
+        .collect(toImmutableList())
         .reverse();
   }
 

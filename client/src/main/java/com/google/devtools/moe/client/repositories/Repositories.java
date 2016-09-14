@@ -16,8 +16,8 @@
 
 package com.google.devtools.moe.client.repositories;
 
-import com.google.common.base.Function;
-import com.google.common.collect.FluentIterable;
+import static com.google.common.collect.ImmutableMap.toImmutableMap;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.moe.client.dvcs.git.GitRepositoryFactory;
 import com.google.devtools.moe.client.dvcs.hg.HgRepositoryFactory;
@@ -25,12 +25,9 @@ import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.noop.NoopRepositoryFactory;
 import com.google.devtools.moe.client.svn.SvnRepositoryFactory;
-
 import dagger.Binds;
 import dagger.multibindings.IntoSet;
-
 import java.util.Set;
-
 import javax.inject.Inject;
 
 /**
@@ -47,14 +44,7 @@ public class Repositories implements RepositoryType.Factory {
     // A Set of services is expected, and indexed by this class, so that a more dynamic set
     // of Repositories can be dynamically detected, as opposed to using a static map binder
     this.serviceFactories =
-        FluentIterable.from(services)
-            .uniqueIndex(
-                new Function<RepositoryType.Factory, String>() {
-                  @Override
-                  public String apply(RepositoryType.Factory input) {
-                    return input.type();
-                  }
-                });
+        services.stream().collect(toImmutableMap(RepositoryType.Factory::type, value -> value));
   }
 
   @Override

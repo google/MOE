@@ -21,18 +21,15 @@ import static com.google.devtools.moe.client.Ui.MOE_TERMINATION_TASK_NAME;
 import static java.util.logging.Level.SEVERE;
 import static java.util.logging.Level.WARNING;
 
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.directives.Directive;
 import com.google.devtools.moe.client.directives.Directives;
 import com.google.devtools.moe.client.options.OptionsParser;
 import com.google.devtools.moe.client.project.InvalidProject;
-
 import java.io.IOException;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
+import java.util.stream.Stream;
 import javax.inject.Inject;
 
 /**
@@ -104,8 +101,7 @@ public abstract class AbstractMoeExecutable<T extends AbstractMoeExecutable<T>> 
    * Executes {@link #run(String...)} after applying toString() to each of the arguments.
    */
   public final int run(Object... objArgs) {
-    ImmutableList<Object> args = ImmutableList.copyOf(objArgs); // Guava doesn't have from(Obj[])
-    return run(FluentIterable.from(args).transform(toStringFunction()).toArray(String.class));
+    return run(Stream.of(objArgs).map(toStringFunction()).toArray(String[]::new));
   }
 
   /**

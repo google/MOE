@@ -27,9 +27,7 @@ import com.google.devtools.moe.client.Lifetimes;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.RepositoryType;
-
 import java.util.List;
-
 import javax.inject.Inject;
 
 /**
@@ -66,27 +64,20 @@ public class GitRepositoryFactory implements RepositoryType.Factory {
     }
 
     Supplier<GitClonedRepository> freshSupplier =
-        new Supplier<GitClonedRepository>() {
-          @Override
-          public GitClonedRepository get() {
-            GitClonedRepository headClone = new GitClonedRepository(cmd, filesystem, name, config);
-            headClone.cloneLocallyAtHead(Lifetimes.currentTask());
-            return headClone;
-          }
+        () -> {
+          GitClonedRepository headClone = new GitClonedRepository(cmd, filesystem, name, config);
+          headClone.cloneLocallyAtHead(Lifetimes.currentTask());
+          return headClone;
         };
 
     // RevisionHistory and CodebaseCreator don't modify their clones, so they can use a shared,
     // memoized supplier.
     Supplier<GitClonedRepository> memoizedSupplier =
         Suppliers.memoize(
-            new Supplier<GitClonedRepository>() {
-              @Override
-              public GitClonedRepository get() {
-                GitClonedRepository tipClone =
-                    new GitClonedRepository(cmd, filesystem, name, config);
-                tipClone.cloneLocallyAtHead(Lifetimes.moeExecution());
-                return tipClone;
-              }
+            () -> {
+              GitClonedRepository tipClone = new GitClonedRepository(cmd, filesystem, name, config);
+              tipClone.cloneLocallyAtHead(Lifetimes.moeExecution());
+              return tipClone;
             });
 
     GitRevisionHistory rh = new GitRevisionHistory(memoizedSupplier);

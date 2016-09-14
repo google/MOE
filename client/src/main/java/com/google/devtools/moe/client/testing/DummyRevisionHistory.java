@@ -15,10 +15,10 @@
  */
 package com.google.devtools.moe.client.testing;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
+
 import com.google.auto.value.AutoValue;
-import com.google.common.base.Function;
 import com.google.common.base.Strings;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -28,36 +28,35 @@ import com.google.devtools.moe.client.repositories.RevisionGraph;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
 import com.google.devtools.moe.client.repositories.RevisionMatcher;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
-
-import org.joda.time.DateTime;
-
 import java.util.HashMap;
+import org.joda.time.DateTime;
 
 /**
  * A fake implementation of {@link RevisionHistory} for testing.
  *
  * <p>Constructors take an optional number of "canned" commits in order to simulate a real
- * repository.  If there are no commits given, the history will either behave as an empty
- * repository and return nulls for method calls that search for commits or metadata, or (if
- * created in legacy mode) will return some default commit information, to support legacy tests.
+ * repository. If there are no commits given, the history will either behave as an empty repository
+ * and return nulls for method calls that search for commits or metadata, or (if created in legacy
+ * mode) will return some default commit information, to support legacy tests.
  *
- * <p>Example usage (simulating a monotonically increasing repository):<pre> {@code
+ * <p>Example usage (simulating a monotonically increasing repository):
  *
- *     DummyCommit c1 = DummyCommit.create("1", "foo@email.com", "description 1", aDateTime);
- *     DummyCommit c2 = DummyCommit.create("2", "foo@email.com", "description 2", aDateTime, c1);
- *     DummyCommit c3 = DummyCommit.create("3", "foo@email.com", "description 3", aDateTime, c2);
- *     RevisionHistory history =
- *         DummyRevisionHistory.builder()
- *             .name("myrepo")
- *             .permissive(false) // strict
- *             .add(c1, c2, c3)
- *             .build();
+ * <pre>{@code
+ * DummyCommit c1 = DummyCommit.create("1", "foo@email.com", "description 1", aDateTime);
+ * DummyCommit c2 = DummyCommit.create("2", "foo@email.com", "description 2", aDateTime, c1);
+ * DummyCommit c3 = DummyCommit.create("3", "foo@email.com", "description 3", aDateTime, c2);
+ * RevisionHistory history =
+ *     DummyRevisionHistory.builder()
+ *         .name("myrepo")
+ *         .permissive(false) // strict
+ *         .add(c1, c2, c3)
+ *         .build();
  * }</pre>
  *
- * <p>The above creates a revision history with three commits in series. Commits can be arranged
- * in linear chains or directed graphs representing branch/merge lines. Revision numbers can be
- * any string, but will typically be a numeric string representing monotonically increasing
- * version numbers, or commit hash ids.
+ * <p>The above creates a revision history with three commits in series. Commits can be arranged in
+ * linear chains or directed graphs representing branch/merge lines. Revision numbers can be any
+ * string, but will typically be a numeric string representing monotonically increasing version
+ * numbers, or commit hash ids.
  */
 @AutoValue
 public abstract class DummyRevisionHistory implements RevisionHistory {
@@ -107,15 +106,11 @@ public abstract class DummyRevisionHistory implements RevisionHistory {
     DummyCommit commit = indexedCommits().get(revision.revId());
     if (commit != null) {
       ImmutableList<Revision> parents =
-          FluentIterable.from(commit.parents())
-              .transform(
-                  new Function<DummyCommit, Revision>() {
-                    @Override
-                    public Revision apply(DummyCommit input) {
-                      return Revision.create(input.id(), name());
-                    }
-                  })
-              .toList();
+          commit
+              .parents()
+              .stream()
+              .map(input -> Revision.create(input.id(), name()))
+              .collect(toImmutableList());
       return RevisionMetadata.builder()
           .id(commit.id())
           .author(commit.author())
