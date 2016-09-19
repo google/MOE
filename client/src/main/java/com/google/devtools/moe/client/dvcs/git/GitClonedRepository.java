@@ -31,6 +31,7 @@ import com.google.devtools.moe.client.project.RepositoryConfig;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 
 /**
  * Git implementation of {@link LocalWorkspace}, i.e. a 'git clone' to local disk.
@@ -99,6 +100,21 @@ public class GitClonedRepository implements LocalWorkspace {
     return localCloneTempDir;
   }
 
+  private void initLocal(File cloneTempDir) throws CommandException, IOException {
+    GitRepositoryFactory.runGitCommand(
+        ImmutableList.of("init", cloneTempDir.getAbsolutePath()), "");
+    GitRepositoryFactory.runGitCommand(
+        ImmutableList.of("remote", "add", "origin", repositoryUrl), cloneTempDir.getAbsolutePath());
+    if (!repositoryConfig.getCheckoutPaths().isEmpty()) {
+      GitRepositoryFactory.runGitCommand(
+          ImmutableList.of("config", "core.sparseCheckout", "true"),
+          cloneTempDir.getAbsolutePath());
+      filesystem.write(
+          String.join("\n", repositoryConfig.getCheckoutPaths()) + "\n",
+          Paths.get(cloneTempDir.getAbsolutePath(), ".git", "info", "sparse-checkout").toFile());
+    }
+  }
+
   @Override
   public void cloneLocallyAtHead(Lifetime cloneLifetime) {
     Preconditions.checkState(!clonedLocally);
@@ -110,16 +126,22 @@ public class GitClonedRepository implements LocalWorkspace {
     localCloneTempDir = filesystem.getTemporaryDirectory(tempDirName, cloneLifetime);
 
     try {
-      ImmutableList.Builder<String> cloneArgs = ImmutableList.<String>builder();
-      cloneArgs.add("clone", repositoryUrl, localCloneTempDir.getAbsolutePath());
-      if (branchName.isPresent()) {
-        cloneArgs.add("--branch", branchName.get());
+      initLocal(localCloneTempDir);
+      ImmutableList.Builder<String> pullArgs = ImmutableList.builder();
+      pullArgs.add("pull");
+      if (repositoryConfig.shallowCheckout()) {
+        pullArgs.add("--depth=1");
       }
-      GitRepositoryFactory.runGitCommand(cloneArgs.build(), "" /*workingDirectory*/);
+      pullArgs.add("origin", branchName.or("master"));
+      GitRepositoryFactory.runGitCommand(pullArgs.build(), localCloneTempDir.getAbsolutePath());
       clonedLocally = true;
       this.revId = "HEAD";
     } catch (CommandException e) {
-      throw new MoeProblem("Could not clone from git repo at " + repositoryUrl + ": " + e.stderr);
+      throw new MoeProblem(
+          e, "Could not clone from git repo at " + repositoryUrl + ": " + e.stderr);
+    } catch (IOException e) {
+      throw new MoeProblem(
+          e, "Could not clone from git repo at " + repositoryUrl + ": " + e.getMessage());
     }
   }
 
@@ -133,11 +155,16 @@ public class GitClonedRepository implements LocalWorkspace {
       // Otherwise, no update/checkout is necessary since we are already at the desired revId,
       // branch head.
       if (!headHash.equals(revId)) {
+        if (repositoryConfig.shallowCheckout()) {
+          // Unshallow the repository to enable checking out given revId.
+          runGitCommand("fetch", "--unshallow");
+        }
         runGitCommand("checkout", revId, "-b", MOE_MIGRATIONS_BRANCH_PREFIX + revId);
       }
       this.revId = revId;
     } catch (CommandException e) {
-      throw new MoeProblem("Could not update git repo at " + localCloneTempDir + ": " + e.stderr);
+      throw new MoeProblem(
+          e, "Could not update git repo at " + localCloneTempDir + ": " + e.stderr);
     }
   }
 
@@ -150,44 +177,52 @@ public class GitClonedRepository implements LocalWorkspace {
     File archiveLocation =
         filesystem.getTemporaryDirectory(
             String.format("git_archive_%s_%s_", repositoryName, revId), Lifetimes.currentTask());
-    // Using this just to get a filename.
-    String tarballPath =
-        filesystem
-            .getTemporaryDirectory(
-                String.format("git_tarball_%s_%s.tar.", repositoryName, revId),
-                Lifetimes.currentTask())
-            .getAbsolutePath();
     try {
-
-      // Git doesn't support archiving to a directory: it only supports
-      // archiving to a tar.  The fastest way to do this would be to pipe the
-      // output directly into tar, however, there's no option for that using
-      // the classes we have. (michaelpb)
-      runGitCommand("archive", "--format=tar", "--output=" + tarballPath, revId);
-
-      // Make the directory to untar into
       filesystem.makeDirs(archiveLocation);
+      if (repositoryConfig.getCheckoutPaths().isEmpty()) {
+        // Using this just to get a filename.
+        String tarballPath =
+            filesystem
+                .getTemporaryDirectory(
+                    String.format("git_tarball_%s_%s.tar.", repositoryName, revId),
+                    Lifetimes.currentTask())
+                .getAbsolutePath();
 
-      // Untar the tarball we just made
-      cmd.runCommand(
-          "tar",
-          ImmutableList.<String>of("xf", tarballPath, "-C", archiveLocation.getAbsolutePath()),
-          "");
+        // Git doesn't support archiving to a directory: it only supports
+        // archiving to a tar.  The fastest way to do this would be to pipe the
+        // output directly into tar, however, there's no option for that using
+        // the classes we have. (michaelpb)
+        runGitCommand("archive", "--format=tar", "--output=" + tarballPath, revId);
 
+        // Untar the tarball we just made
+        cmd.runCommand(
+            "tar",
+            ImmutableList.of("xf", tarballPath, "-C", archiveLocation.getAbsolutePath()),
+            "");
+      } else {
+        initLocal(archiveLocation);
+        ImmutableList.Builder<String> pullArgs = ImmutableList.builder();
+        pullArgs.add("pull");
+        if (repositoryConfig.shallowCheckout()) {
+          pullArgs.add("--depth=1");
+        }
+        pullArgs.add("origin", revId);
+        GitRepositoryFactory.runGitCommand(pullArgs.build(), archiveLocation.getAbsolutePath());
+        GitRepositoryFactory.runGitCommand(
+            ImmutableList.of("checkout", revId), archiveLocation.getAbsolutePath());
+        // Remove git tracking.
+        filesystem.deleteRecursively(Paths.get(archiveLocation.getAbsolutePath(), ".git").toFile());
+      }
     } catch (CommandException e) {
-      throw new MoeProblem(
+      throw new MoeProblem(e,
           "Could not archive git clone at "
-              + localCloneTempDir.getAbsolutePath()
-              + ": "
-              + e.stderr);
+              + localCloneTempDir.getAbsolutePath());
     } catch (IOException e) {
-      throw new MoeProblem(
+      throw new MoeProblem(e,
           "IOException archiving clone at "
               + localCloneTempDir.getAbsolutePath()
               + " to revision "
-              + revId
-              + ": "
-              + e);
+              + revId);
     }
     return archiveLocation;
   }

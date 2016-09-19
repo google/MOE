@@ -87,7 +87,7 @@ public abstract class AbstractDvcsCodebaseCreator extends CodebaseCreator {
         rev = revisionHistory.findHighestRevision(options.get("revision"));
       } catch (MoeProblem e) {
         String message = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
-        throw new CodebaseCreationError(message);
+        throw new CodebaseCreationError(e, message);
       }
       headClone = headCloneSupplier.get();
       archiveLocation = headClone.archiveAtRevision(rev.revId());

@@ -24,4 +24,8 @@ public class CodebaseCreationError extends Exception {
   public CodebaseCreationError(String message, Object... args) {
     super(String.format(message, args));
   }
+
+  public CodebaseCreationError(Throwable cause, String message, Object... args) {
+    super(String.format(message, args), cause);
+  }
 }

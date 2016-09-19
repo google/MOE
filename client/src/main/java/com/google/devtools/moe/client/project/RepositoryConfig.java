@@ -28,6 +28,8 @@ import java.util.List;
 /**
  * Configuration for a MOE Repository.
  */
+// TODO: Add a validation step for configs such that each repo type can pre-validate if options used
+// are supported.
 public class RepositoryConfig {
   private String type;
   private String url;
@@ -73,6 +75,12 @@ public class RepositoryConfig {
 
   @SerializedName("branch")
   private String branch = null;
+
+  @SerializedName("checkout_paths")
+  private List<String> checkoutPaths = ImmutableList.of();
+
+  @SerializedName("shallow_checkout")
+  private boolean shallowCheckout = false;
 
   private RepositoryConfig() {} // Constructed by gson
 
@@ -129,6 +137,22 @@ public class RepositoryConfig {
    */
   public Optional<String> getBranch() {
     return Optional.fromNullable(branch);
+  }
+
+  /**
+   * Returns a list of subdirectories to checkout. If empty, then the whole repository will be
+   * checked out.
+   */
+  public List<String> getCheckoutPaths() {
+    return checkoutPaths;
+  }
+
+  /**
+   * Returns true if the repository is configured to perform shallow checkout i.e. checking out only
+   * at the revision point of interest.
+   */
+  public boolean shallowCheckout() {
+    return shallowCheckout;
   }
 
   /**
