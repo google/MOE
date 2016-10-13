@@ -16,9 +16,10 @@
 package com.google.devtools.moe.client.github;
 
 import com.google.auto.value.AutoValue;
-import com.google.devtools.moe.client.gson.AutoValueGsonAdapter;
-import com.google.gson.annotations.JsonAdapter;
+import com.google.gson.Gson;
+import com.google.gson.TypeAdapter;
 import com.google.gson.annotations.SerializedName;
+import javax.annotation.Nullable;
 
 /**
  * Gson-ready value types representing the needed subset of Github's restful API.
@@ -27,16 +28,17 @@ public final class GithubAPI {
 
   /** Represents the metadata from a pull-request on github.com. */
   @AutoValue
-  @JsonAdapter(AutoValueGsonAdapter.class)
   public abstract static class PullRequest {
     public abstract long number();
 
     public abstract String url();
 
+    @SerializedName("html_url") // TODO(cushon): remove pending rharter/auto-value-gson#18
     public abstract String htmlUrl();
 
     public abstract String title();
 
+    @Nullable
     public abstract Repo repo();
 
     public abstract Commit head();
@@ -47,13 +49,16 @@ public final class GithubAPI {
 
     public abstract boolean merged();
 
+    @SerializedName("mergeable_state") // TODO(cushon): remove pending rharter/auto-value-gson#18
     public abstract MergeableState mergeableState();
 
+    public static TypeAdapter<PullRequest> typeAdapter(Gson gson) {
+      return new AutoValue_GithubAPI_PullRequest.GsonTypeAdapter(gson);
+    }
   }
 
   /** Represents the metadata from a commit on github.com. */
   @AutoValue
-  @JsonAdapter(AutoValueGsonAdapter.class)
   public abstract static class Commit {
     public abstract long id();
 
@@ -68,11 +73,14 @@ public final class GithubAPI {
     public abstract String ref();
 
     public abstract String sha();
+
+    public static TypeAdapter<Commit> typeAdapter(Gson gson) {
+      return new AutoValue_GithubAPI_Commit.GsonTypeAdapter(gson);
+    }
   }
 
   /** Represents the metadata for a repository as hosted on github.com. */
   @AutoValue
-  @JsonAdapter(AutoValueGsonAdapter.class)
   public abstract static class Repo {
     public abstract long id();
 
@@ -80,16 +88,24 @@ public final class GithubAPI {
 
     public abstract User owner();
 
+    @SerializedName("clone_url") // TODO(cushon): remove pending rharter/auto-value-gson#18
     public abstract String cloneUrl();
+
+    public static TypeAdapter<Repo> typeAdapter(Gson gson) {
+      return new AutoValue_GithubAPI_Repo.GsonTypeAdapter(gson);
+    }
   }
 
   /** Represents the metadata for a user on github.com. */
   @AutoValue
-  @JsonAdapter(AutoValueGsonAdapter.class)
   public abstract static class User {
     public abstract long id();
 
     public abstract String login();
+
+    public static TypeAdapter<User> typeAdapter(Gson gson) {
+      return new AutoValue_GithubAPI_User.GsonTypeAdapter(gson);
+    }
   }
 
   /**

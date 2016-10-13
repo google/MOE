@@ -16,18 +16,13 @@
 
 package com.google.devtools.moe.client.database;
 
-import static com.google.devtools.moe.client.gson.GsonUtil.getPropertyOrLegacy;
 
 import com.google.auto.value.AutoValue;
-import com.google.devtools.moe.client.gson.AutoValueGsonAdapter;
 import com.google.devtools.moe.client.repositories.Revision;
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParseException;
-import com.google.gson.annotations.JsonAdapter;
+import com.google.gson.Gson;
+import com.google.gson.TypeAdapter;
+import com.google.gson.annotations.SerializedName;
 
-import java.lang.reflect.Type;
 
 /**
  * A {@code SubmittedMigration} holds information about a completed migration.
@@ -36,12 +31,19 @@ import java.lang.reflect.Type;
  * direction associated with its Revisions.
  */
 @AutoValue
-@JsonAdapter(AutoValueGsonAdapter.class)
 public abstract class SubmittedMigration {
   /** The {@link Revision} that represents the source of this migrated commit */
+  @SerializedName(
+    value = "from_revision",
+    alternate = {"fromRevision"}
+  )
   public abstract Revision fromRevision();
 
   /** The {@link Revision} that represents the destination of this migrated commit */
+  @SerializedName(
+    value = "to_revision",
+    alternate = {"toRevision"}
+  )
   public abstract Revision toRevision();
 
   @Override
@@ -66,21 +68,7 @@ public abstract class SubmittedMigration {
     return builder().fromRevision(fromRevision).toRevision(toRevision).build();
   }
 
-  /**
-   * Since legacy {@link Revision} sections in the MOE Db use camelCase field names,
-   * {@link Revision} must be deserialized in a way that honors the legacy name.
-   */
-  public static final class Deserializer implements JsonDeserializer<SubmittedMigration> {
-    @Override
-    public SubmittedMigration deserialize(
-        JsonElement json, Type typeOfT, JsonDeserializationContext context)
-        throws JsonParseException {
-      Builder builder = SubmittedMigration.builder();
-      builder.fromRevision(
-          getPropertyOrLegacy(context, Revision.class, json, "from_revision", "fromRevision"));
-      builder.toRevision(
-          getPropertyOrLegacy(context, Revision.class, json, "to_revision", "toRevision"));
-      return builder.build();
-    }
+  public static TypeAdapter<SubmittedMigration> typeAdapter(Gson gson) {
+    return new AutoValue_SubmittedMigration.GsonTypeAdapter(gson);
   }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 Google, Inc.
+ * Copyright (c) 2015 Google, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.google.devtools.moe.client.gson;
 
-import com.google.common.base.Joiner;
+import com.google.gson.TypeAdapterFactory;
+import com.ryanharter.auto.value.gson.GsonTypeAdapterFactory;
 
-public final class JsonTestUtils {
-  public static String json(String... lines) {
-    return Joiner.on('\n').join(lines).replace('\'', '"');
+@GsonTypeAdapterFactory
+public abstract class MoeTypeAdapterFactory implements TypeAdapterFactory {
+  public static TypeAdapterFactory create() {
+    return new AutoValueGson_MoeTypeAdapterFactory();
   }
 }

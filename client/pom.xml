@@ -53,6 +53,11 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
+      <groupId>com.ryanharter.auto.value</groupId>
+      <artifactId>auto-value-gson</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
       <groupId>com.google.code.findbugs</groupId>
       <artifactId>jsr305</artifactId>
       <optional>true</optional>

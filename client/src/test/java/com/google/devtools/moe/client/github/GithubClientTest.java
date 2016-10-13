@@ -17,16 +17,15 @@ package com.google.devtools.moe.client.github;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.google.devtools.moe.client.gson.MoeTypeAdapterFactory;
 import com.google.common.io.Resources;
 import com.google.devtools.moe.client.github.GithubAPI.IssueState;
 import com.google.devtools.moe.client.github.GithubAPI.PullRequest;
 import com.google.devtools.moe.client.github.GithubClient.OkHttpClientWrapper;
-import com.google.gson.Gson;
-
-import junit.framework.TestCase;
-
+import com.google.gson.GsonBuilder;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import junit.framework.TestCase;
 
 public class GithubClientTest extends TestCase {
   private static final String PULL_REQUEST_URL = "http://github.com/google/MOE/pull/14";
@@ -51,7 +50,10 @@ public class GithubClientTest extends TestCase {
             return pullRequestJson;
           }
         };
-    GithubClient clientToTest = new GithubClient(new Gson(), wrapper);
+    GithubClient clientToTest =
+        new GithubClient(
+            new GsonBuilder().registerTypeAdapterFactory(MoeTypeAdapterFactory.create()).create(),
+            wrapper);
 
     PullRequest pullRequest = clientToTest.getPullRequest(PULL_REQUEST_URL);
 

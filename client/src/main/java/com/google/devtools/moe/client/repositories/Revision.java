@@ -16,36 +16,35 @@
 
 package com.google.devtools.moe.client.repositories;
 
-import static com.google.devtools.moe.client.gson.GsonUtil.getPropertyOrLegacy;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.MoeProblem;
-import com.google.devtools.moe.client.gson.AutoValueGsonAdapter;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.project.ProjectContext;
-import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParseException;
-import com.google.gson.annotations.JsonAdapter;
-
-import java.lang.reflect.Type;
+import com.google.gson.TypeAdapter;
+import com.google.gson.annotations.SerializedName;
 import java.util.List;
 
 /**
  * A Revision in a source control system.
  */
 @AutoValue
-@JsonAdapter(AutoValueGsonAdapter.class)
 public abstract class Revision {
   /** The label for the configured repository from which this revision originates. */
+  @SerializedName(
+    value = "repository_name",
+    alternate = {"repositoryName"}
+  )
   public abstract String repositoryName();
 
   /** The unique ID assigned to this revision by the underlying revision control system. */
+  @SerializedName(
+    value = "rev_id",
+    alternate = {"revId"}
+  )
   public abstract String revId();
 
   public static Builder builder() {
@@ -98,23 +97,7 @@ public abstract class Revision {
     return revBuilder.build();
   }
 
-  /**
-   * Since legacy {@link Revision} sections in the MOE Db use camelCase field names,
-   * {@link Revision} can't use the standard {@link AutoValueGsonAdapter} which uses whatever
-   * the field name strategy of the {@link Gson} object.  {@link Gson} in MOE has been built to
-   * use {@link FieldNamingPolicy#LOWER_CASE_WITH_UNDERSCORES}. This change results in
-   * {@link Revision} json looking like:
-   * <pre><code>{repository_name=name, rev_id="blah"}</code></pre>
-   */
-  public static final class Deserializer implements JsonDeserializer<Revision> {
-    @Override
-    public Revision deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
-        throws JsonParseException {
-      Builder builder = Revision.builder();
-      builder.revId(getPropertyOrLegacy(context, String.class, json, "rev_id", "revId"));
-      builder.repositoryName(
-          getPropertyOrLegacy(context, String.class, json, "repository_name", "repositoryName"));
-      return builder.build();
-    }
+  public static TypeAdapter<Revision> typeAdapter(Gson gson) {
+    return new AutoValue_Revision.GsonTypeAdapter(gson);
   }
 }

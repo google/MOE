@@ -17,25 +17,33 @@
 package com.google.devtools.moe.client.project;
 
 import com.google.auto.value.AutoValue;
-import com.google.devtools.moe.client.gson.AutoValueGsonAdapter;
 import com.google.devtools.moe.client.translation.editors.Editor;
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.google.gson.annotations.JsonAdapter;
+import com.google.gson.TypeAdapter;
+import com.google.gson.annotations.SerializedName;
+import javax.annotation.Nullable;
 
 /**
  * Configuration for a MOE Editor.
  */
 @AutoValue
-@JsonAdapter(AutoValueGsonAdapter.class)
 public abstract class EditorConfig {
+  @Nullable
   public abstract Editor.Type type();
 
+  @Nullable
+  @SerializedName("scrubber_config") // TODO(cushon): remove pending rharter/auto-value-gson#18
   public abstract ScrubberConfig scrubberConfig();
 
+  @Nullable
+  @SerializedName("command_string") // TODO(cushon): remove pending rharter/auto-value-gson#18
   public abstract String commandString();
 
+  @Nullable
   public abstract JsonObject mappings();
 
+  @SerializedName("use_regex") // TODO(cushon): remove pending rharter/auto-value-gson#18
   public abstract boolean useRegex();
 
   // TODO(cgruber): Push validation around the whole structure.
@@ -50,5 +58,9 @@ public abstract class EditorConfig {
       JsonObject mappings,
       boolean useRegex) {
     return new AutoValue_EditorConfig(type, scrubberConfig, commandString, mappings, useRegex);
+  }
+
+  public static TypeAdapter<EditorConfig> typeAdapter(Gson gson) {
+    return new AutoValue_EditorConfig.GsonTypeAdapter(gson);
   }
 }

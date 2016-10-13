@@ -16,6 +16,7 @@
     <dagger.version>2.5</dagger.version>
     <auto.value.version>1.3-rc2</auto.value.version>
     <auto.factory.version>1.0-beta3</auto.factory.version>
+    <auto.value.gson.version>0.4.2</auto.value.gson.version>
     <jsr305.version>3.0.1</jsr305.version>
     <args4j.version>2.32</args4j.version>
     <junit.version>4.12</junit.version>
@@ -71,6 +72,12 @@
         <groupId>com.google.auto.factory</groupId>
         <artifactId>auto-factory</artifactId>
         <version>${auto.factory.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>com.ryanharter.auto.value</groupId>
+        <artifactId>auto-value-gson</artifactId>
+        <version>${auto.value.gson.version}</version>
         <scope>provided</scope>
       </dependency>
       <dependency>

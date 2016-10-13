@@ -22,7 +22,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.devtools.moe.client.MoeProblem;
-import com.google.devtools.moe.client.gson.AutoValueGsonAdapter;
 import com.google.devtools.moe.client.gson.GsonModule;
 import com.google.devtools.moe.client.gson.JsonStructureChecker;
 import com.google.devtools.moe.client.migrations.MigrationConfig;
@@ -30,23 +29,22 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
-import com.google.gson.annotations.JsonAdapter;
+import com.google.gson.TypeAdapter;
+import com.google.gson.annotations.SerializedName;
 import com.google.gson.stream.JsonReader;
 import com.google.json.JsonSanitizer;
-
 import java.io.StringReader;
 import java.util.Map;
-
 import javax.annotation.Nullable;
 
 /**
  * Configuration for a MOE Project
  */
 @AutoValue
-@JsonAdapter(AutoValueGsonAdapter.class)
 public abstract class ProjectConfig {
 
   /** The name of this project */
+  @Nullable
   public abstract String name();
 
   /**
@@ -55,10 +53,11 @@ public abstract class ProjectConfig {
    * <p>While this should be a URI, implementers may choose to honor "/foo" as "file:///foo" or
    * "foo" as a relative file to support legacy clients.
    *
-   * <p>This can be overridden by the {@code --db} command-line flag, and can be null, in which
-   * case any code-path that requires a database will require that it be set on the command-line.
+   * <p>This can be overridden by the {@code --db} command-line flag, and can be null, in which case
+   * any code-path that requires a database will require that it be set on the command-line.
    */
   @Nullable
+  @SerializedName("database_uri") // TODO(cushon): remove pending rharter/auto-value-gson#18
   public abstract String databaseUri();
 
   /** The set of configured editors for this project */
@@ -176,7 +175,7 @@ public abstract class ProjectConfig {
           config = gson.fromJson(configText, ProjectConfig.class);
         }
       } catch (JsonParseException e) {
-        throw new InvalidProject("Could not parse MOE config: " + e.getMessage());
+        throw new InvalidProject(e, "Could not parse MOE config: " + e.getMessage());
       }
     }
 
@@ -187,4 +186,7 @@ public abstract class ProjectConfig {
     return config;
   }
 
+  public static TypeAdapter<ProjectConfig> typeAdapter(Gson gson) {
+    return new AutoValue_ProjectConfig.GsonTypeAdapter(gson);
+  }
 }

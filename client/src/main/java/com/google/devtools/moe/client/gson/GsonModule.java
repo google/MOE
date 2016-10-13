@@ -19,12 +19,9 @@ import static com.google.gson.FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES;
 
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.database.RepositoryEquivalence;
-import com.google.devtools.moe.client.database.SubmittedMigration;
-import com.google.devtools.moe.client.repositories.Revision;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
-
 import dagger.Module;
 import dagger.Provides;
 
@@ -37,9 +34,7 @@ public final class GsonModule {
       new GsonBuilder()
           .setPrettyPrinting()
           .setFieldNamingPolicy(LOWER_CASE_WITH_UNDERSCORES)
-          .registerTypeHierarchyAdapter(Revision.class, new Revision.Deserializer())
-          .registerTypeHierarchyAdapter(
-              SubmittedMigration.class, new SubmittedMigration.Deserializer())
+          .registerTypeAdapterFactory(MoeTypeAdapterFactory.create())
           .registerTypeHierarchyAdapter(ImmutableList.class, new ImmutableListDeserializer())
           .registerTypeHierarchyAdapter(
               RepositoryEquivalence.class, new RepositoryEquivalence.Serializer())
