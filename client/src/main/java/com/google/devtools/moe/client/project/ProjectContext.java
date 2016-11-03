@@ -86,4 +86,14 @@ public abstract class ProjectContext {
       return ImmutableMap.of();
     }
   }
+
+  static ProjectContext create(
+      ProjectConfig config,
+      Map<String, RepositoryType> repositories,
+      Map<String, Editor> editors,
+      Map<TranslationPath, TranslationPipeline> translators,
+      Map<String, MigrationConfig> migrationConfigs) {
+    return new AutoValue_ProjectContext(
+        config, repositories, editors, translators, migrationConfigs);
+  }
 }

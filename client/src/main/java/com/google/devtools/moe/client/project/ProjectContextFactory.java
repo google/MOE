@@ -61,7 +61,7 @@ public abstract class ProjectContextFactory {
    */
   public final ProjectContext create(String configFilename) throws InvalidProject {
     ProjectConfig config = loadConfiguration(configFilename);
-    return new AutoValue_ProjectContext(
+    return ProjectContext.create(
         config,
         buildRepositories(config),
         buildEditors(config),
