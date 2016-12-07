@@ -16,7 +16,6 @@
 
 package com.google.devtools.moe.client;
 
-import static com.google.common.base.Functions.toStringFunction;
 import static com.google.devtools.moe.client.Ui.MOE_TERMINATION_TASK_NAME;
 import static java.util.logging.Level.SEVERE;
 import static java.util.logging.Level.WARNING;
@@ -101,7 +100,7 @@ public abstract class AbstractMoeExecutable<T extends AbstractMoeExecutable<T>> 
    * Executes {@link #run(String...)} after applying toString() to each of the arguments.
    */
   public final int run(Object... objArgs) {
-    return run(Stream.of(objArgs).map(toStringFunction()).toArray(String[]::new));
+    return run(Stream.of(objArgs).map(o -> o.toString()).toArray(String[]::new));
   }
 
   /**
