@@ -17,6 +17,7 @@ package com.google.devtools.moe.client.repositories;
 
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.ListMultimap;
 import dagger.Provides;
 import dagger.multibindings.IntKey;
 import dagger.multibindings.IntoMap;
@@ -87,7 +88,7 @@ public abstract class MetadataScrubber {
     String newId = rm.id();
     String newAuthor = rm.author();
     String newDescription = rm.description();
-    LinkedListMultimap<String, String> newFields = LinkedListMultimap.create(rm.fields());
+    ListMultimap<String, String> newFields = LinkedListMultimap.create(rm.fields());
     for (String word : words) {
       String regex = (wordAlone) ? ("(?i)(\\b)" + word + "(\\b)") : ("(?i)" + word);
       newId = newId.replaceAll(regex, replacement);
