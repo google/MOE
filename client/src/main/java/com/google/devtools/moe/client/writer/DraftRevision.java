@@ -65,7 +65,7 @@ public interface DraftRevision {
         ui.popTask(t, "");
         return r;
       } catch (WritingError e) {
-        throw new MoeProblem(e, "Error creating draft revision to codebase");
+        throw new MoeProblem(e, "Error creating draft revision to codebase: %s", e.getMessage());
       }
     }
   }
