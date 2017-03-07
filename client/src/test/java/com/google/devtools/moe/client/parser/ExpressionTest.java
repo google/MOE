@@ -42,7 +42,6 @@ import com.google.devtools.moe.client.translation.pipeline.TranslationPipeline;
 import com.google.devtools.moe.client.translation.pipeline.TranslationStep;
 import com.google.devtools.moe.client.writer.WriterCreator;
 import java.io.File;
-import java.util.Map;
 import javax.annotation.Nullable;
 import javax.inject.Singleton;
 import junit.framework.TestCase;
@@ -50,7 +49,7 @@ import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
 
 public class ExpressionTest extends TestCase {
-  private static final Map<String, String> EMPTY_MAP = ImmutableMap.of();
+  private static final ImmutableMap<String, String> EMPTY_MAP = ImmutableMap.of();
   private Ui ui;
 
   // TODO(cgruber): Rework these when statics aren't inherent in the design.

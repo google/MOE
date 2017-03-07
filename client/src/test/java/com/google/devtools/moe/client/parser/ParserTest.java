@@ -19,15 +19,13 @@ import static com.google.devtools.moe.client.parser.Parser.tokenize;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
-
-import junit.framework.TestCase;
-
 import java.util.List;
 import java.util.Map;
+import junit.framework.TestCase;
 
 public class ParserTest extends TestCase {
 
-  private static final Map<String, String> EMPTY_MAP = ImmutableMap.<String, String>of();
+  private static final ImmutableMap<String, String> EMPTY_MAP = ImmutableMap.<String, String>of();
 
   void assertOptionFail(String s) {
     try {
