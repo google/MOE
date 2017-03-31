@@ -121,7 +121,6 @@ public class OneMigrationDirective extends Directive {
         migrator.processMetadata(repositoryType.revisionHistory(), revs, null, revs.get(0));
     ScrubberConfig scrubber =
         config.findScrubberConfig(fromRepoEx.getRepositoryName(), toRepoEx.getRepositoryName());
-    metadata = migrator.possiblyScrubAuthors(metadata, scrubber);
     DraftRevision draftRevision =
         revisionFactory.create(
             sourceCodebase, destination, migrator.possiblyScrubAuthors(metadata, scrubber));
