@@ -25,7 +25,7 @@ public class ProjectConfigTest extends TestCase {
   public void testValidConfig() throws Exception {
     ProjectConfig p =
         ProjectConfig.parse("{\"name\": \"foo\", \"repositories\": {\"public\": {}}}");
-    assertEquals(p.name(), "foo");
+    assertEquals("foo", p.name());
   }
 
   public void testInvalidConfig() throws Exception {

@@ -35,22 +35,17 @@ import com.google.devtools.moe.client.repositories.RevisionHistory.SearchType;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.testing.DummyDb;
 import com.google.devtools.moe.client.testing.TestingModule;
-
 import dagger.Provides;
-
+import java.util.List;
+import javax.inject.Singleton;
+import javax.xml.parsers.DocumentBuilderFactory;
 import junit.framework.TestCase;
-
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-
-import java.util.List;
-
-import javax.inject.Singleton;
-import javax.xml.parsers.DocumentBuilderFactory;
 
 public class SvnRevisionHistoryTest extends TestCase {
   // Svn actually follows the spec!
@@ -129,10 +124,10 @@ public class SvnRevisionHistoryTest extends TestCase {
     SvnRevisionHistory history =
         new SvnRevisionHistory("internal_svn", "http://foo/svn/trunk/", util);
     Revision result = history.findHighestRevision("");
-    assertEquals(result.revId(), "3");
+    assertEquals("3", result.revId());
 
     result = history.findHighestRevision("2");
-    assertEquals(result.revId(), "2");
+    assertEquals("2", result.revId());
     control.verify();
   }
 
