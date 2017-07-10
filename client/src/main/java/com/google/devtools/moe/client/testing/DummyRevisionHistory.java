@@ -97,11 +97,10 @@ public abstract class DummyRevisionHistory implements RevisionHistory {
   public RevisionMetadata getMetadata(Revision revision) throws MoeProblem {
     if (!name().equals(revision.repositoryName())) {
       throw new MoeProblem(
-          String.format(
               "Could not get metadata: Revision %s is in repository %s instead of %s",
               revision.revId(),
               revision.repositoryName(),
-              name()));
+              name());
     }
     DummyCommit commit = indexedCommits().get(revision.revId());
     if (commit != null) {

@@ -20,15 +20,12 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-
 import dagger.Binds;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.logging.Logger;
-
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -112,9 +109,9 @@ public class SystemCommandRunner implements CommandRunner {
       stdoutData = stdoutSink.getData();
       stderrData = stderrSink.getData();
     } catch (IOException e) {
-      throw new MoeProblem("Cannot run process: %s: %s", cmdArgs, e.getMessage());
+      throw new MoeProblem(e, "Cannot run process: %s: %s", cmdArgs, e.getMessage());
     } catch (InterruptedException e) {
-      throw new MoeProblem("Interrupted while running process: %s", cmdArgs);
+      throw new MoeProblem(e, "Interrupted while running process: %s", cmdArgs);
     }
     if (returnStatus == 0) {
       return new CommandOutput(stdoutData, stderrData);

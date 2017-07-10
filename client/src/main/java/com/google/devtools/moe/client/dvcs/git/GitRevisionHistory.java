@@ -27,12 +27,10 @@ import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.repositories.AbstractRevisionHistory;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
-
+import java.util.List;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
-
-import java.util.List;
 
 /**
  * A Git implementation of {@link AbstractRevisionHistory}.
@@ -69,7 +67,7 @@ public class GitRevisionHistory extends AbstractRevisionHistory {
     try {
       hashID = headClone.runGitCommand("log", "--max-count=1", "--format=%H", revId).trim();
     } catch (CommandException e) {
-      throw new MoeProblem("Failed git log run: %d %s %s", e.returnStatus, e.stdout, e.stderr);
+      throw new MoeProblem(e, "Failed git log run: %d %s %s", e.returnStatus, e.stdout, e.stderr);
     }
     return Revision.create(hashID, headClone.getRepositoryName());
   }

@@ -256,6 +256,7 @@ public class CodebaseMerger {
         failedToMergeFiles.add(mergedFile.getAbsolutePath());
       } else {
         throw new MoeProblem(
+            e,
             "Merge returned with unexpected status %d when trying to run \"merge -p %s %s %s\"",
             e.returnStatus,
             destFile.getAbsolutePath(),

@@ -27,16 +27,13 @@ import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.repositories.AbstractRevisionHistory;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
-
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
-
 import java.io.File;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import javax.annotation.Nullable;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 
 /**
  * An Hg implementation of {@link AbstractRevisionHistory}.
@@ -87,7 +84,8 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
               ImmutableList.copyOf(args),
               tipClone.getLocalTempDir().getAbsolutePath());
     } catch (CommandException e) {
-      throw new MoeProblem("Failed hg run: %s %d %s %s", args, e.returnStatus, e.stdout, e.stderr);
+      throw new MoeProblem(
+          e, "Failed hg run: %s %d %s %s", args, e.returnStatus, e.stdout, e.stderr);
     }
 
     return Revision.create(changesetID, tipClone.getRepositoryName());
@@ -129,7 +127,8 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
               tipClone.getLocalTempDir().getAbsolutePath());
 
     } catch (CommandException e) {
-      throw new MoeProblem("Failed hg run: %s %d %s %s", args, e.returnStatus, e.stdout, e.stderr);
+      throw new MoeProblem(
+          e, "Failed hg run: %s %d %s %s", args, e.returnStatus, e.stdout, e.stderr);
     }
 
     return parseMetadata(log);
@@ -197,7 +196,7 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
               tipClone.getLocalTempDir().getAbsolutePath());
     } catch (CommandException e) {
       throw new MoeProblem(
-          "Failed hg run: %s %d %s %s", e.args, e.returnStatus, e.stdout, e.stderr);
+          e, "Failed hg run: %s %d %s %s", e.args, e.returnStatus, e.stdout, e.stderr);
     }
 
     ImmutableList.Builder<Revision> result = ImmutableList.<Revision>builder();

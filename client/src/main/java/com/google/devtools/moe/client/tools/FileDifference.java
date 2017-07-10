@@ -156,7 +156,7 @@ public abstract class FileDifference {
       } catch (CommandRunner.CommandException e) {
         if (e.returnStatus != DIFF_ERROR_CODE_FILES_DIFFERENT
             && e.returnStatus != DIFF_ERROR_CODE_FILES_BINARY) {
-          throw new MoeProblem("diff returned unknown status: %d", e.returnStatus);
+          throw new MoeProblem(e, "diff returned unknown status: %d", e.returnStatus);
         }
         contentDiff = e.stdout;
       }
