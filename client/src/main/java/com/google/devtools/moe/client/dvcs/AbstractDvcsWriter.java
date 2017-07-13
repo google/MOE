@@ -140,7 +140,7 @@ public abstract class AbstractDvcsWriter<T extends LocalWorkspace> implements Wr
       filesystem.makeDirsForFile(dest);
       filesystem.copyFile(src, dest);
     } catch (IOException e) {
-      throw new MoeProblem(e.getMessage());
+      throw new MoeProblem(e, "%s", e.getMessage());
     }
 
     if (destExists) {

@@ -110,10 +110,8 @@ public class InverseTranslationPipeline implements TranslationPipeline {
             Parser.parseExpression(options.get("referenceFromCodebase")).createCodebase(context);
       } catch (ParseError e) {
         throw new CodebaseCreationError(
-            "Couldn't parse referenceFromCodebase '"
-                + options.get("referenceFromCodebase")
-                + "': "
-                + e);
+            "Couldn't parse referenceFromCodebase '%s': %s",
+            options.get("referenceFromCodebase"), e);
       }
       // Discard the "default" reference from-codebase, i.e. the top of the forward-trans stack.
       forwardTranslationStack.pop();
@@ -158,7 +156,7 @@ public class InverseTranslationPipeline implements TranslationPipeline {
       forwardTransStack.push(refTo);
       ui.popTaskAndPersist(task, refTo.path());
     } catch (ParseError e) {
-      throw new CodebaseCreationError("Couldn't parse in translation: " + e);
+      throw new CodebaseCreationError(e, "Couldn't parse in translation: %s", e);
     }
 
     // This Expression is used only for informative output.

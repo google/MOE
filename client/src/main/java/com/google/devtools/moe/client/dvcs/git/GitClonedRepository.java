@@ -28,7 +28,6 @@ import com.google.devtools.moe.client.Lifetimes;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.codebase.LocalWorkspace;
 import com.google.devtools.moe.client.project.RepositoryConfig;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -137,11 +136,10 @@ public class GitClonedRepository implements LocalWorkspace {
       clonedLocally = true;
       this.revId = "HEAD";
     } catch (CommandException e) {
-      throw new MoeProblem(
-          e, "Could not clone from git repo at " + repositoryUrl + ": " + e.stderr);
+      throw new MoeProblem(e, "Could not clone from git repo at %s: %s", repositoryUrl, e.stderr);
     } catch (IOException e) {
       throw new MoeProblem(
-          e, "Could not clone from git repo at " + repositoryUrl + ": " + e.getMessage());
+          e, "Could not clone from git repo at %s: %s", repositoryUrl, e.getMessage());
     }
   }
 
@@ -163,8 +161,7 @@ public class GitClonedRepository implements LocalWorkspace {
       }
       this.revId = revId;
     } catch (CommandException e) {
-      throw new MoeProblem(
-          e, "Could not update git repo at " + localCloneTempDir + ": " + e.stderr);
+      throw new MoeProblem(e, "Could not update git repo at %s: %s", localCloneTempDir, e.stderr);
     }
   }
 
@@ -214,15 +211,14 @@ public class GitClonedRepository implements LocalWorkspace {
         filesystem.deleteRecursively(Paths.get(archiveLocation.getAbsolutePath(), ".git").toFile());
       }
     } catch (CommandException e) {
-      throw new MoeProblem(e,
-          "Could not archive git clone at "
-              + localCloneTempDir.getAbsolutePath());
+      throw new MoeProblem(
+          e, "Could not archive git clone at %s", localCloneTempDir.getAbsolutePath());
     } catch (IOException e) {
-      throw new MoeProblem(e,
-          "IOException archiving clone at "
-              + localCloneTempDir.getAbsolutePath()
-              + " to revision "
-              + revId);
+      throw new MoeProblem(
+          e,
+          "IOException archiving clone at %s to revision %s",
+          localCloneTempDir.getAbsolutePath(),
+          revId);
     }
     return archiveLocation;
   }

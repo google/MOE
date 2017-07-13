@@ -47,7 +47,7 @@ public class EditExpression extends AbstractExpression {
     String editorName = editOp.term.identifier;
     Editor editor = context.editors().get(editorName);
     if (editor == null) {
-      throw new CodebaseCreationError("no editor " + editorName);
+      throw new CodebaseCreationError("no editor %s", editorName);
     }
 
     Ui.Task editTask =

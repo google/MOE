@@ -16,6 +16,9 @@
 
 package com.google.devtools.moe.client;
 
+import com.google.errorprone.annotations.FormatMethod;
+import com.google.errorprone.annotations.FormatString;
+
 /**
  * A problem that we do not expect to routinely happen. They should end execution of MOE and require
  * intervention by moe-team.
@@ -27,12 +30,14 @@ public class MoeProblem extends RuntimeException {
   private final Object[] args;
 
   // TODO(cgruber): Check not null and ensure no one is calling it that way.
-  public MoeProblem(String explanationFmt, Object... args) {
+  @FormatMethod
+  public MoeProblem(@FormatString String explanationFmt, Object... args) {
     this.explanationFmt = explanationFmt;
     this.args = args;
   }
 
-  public MoeProblem(Throwable cause, String explanationFmt, Object... args) {
+  @FormatMethod
+  public MoeProblem(Throwable cause, @FormatString String explanationFmt, Object... args) {
     super(cause); // TODO(cgruber) do we need to lazily format? Could we not just format at constr?
     this.explanationFmt = explanationFmt;
     this.args = args;

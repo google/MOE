@@ -52,10 +52,8 @@ public abstract class ProjectContext {
   public RepositoryType getRepository(String repositoryName) {
     if (!repositories().containsKey(repositoryName)) {
       throw new MoeProblem(
-          "No such repository '"
-              + repositoryName
-              + "' in the config. Found: "
-              + ImmutableSortedSet.copyOf(repositories().keySet()));
+          "No such repository '%s' in the config. Found: %s",
+          repositoryName, ImmutableSortedSet.copyOf(repositories().keySet()));
     }
     return repositories().get(repositoryName);
   }

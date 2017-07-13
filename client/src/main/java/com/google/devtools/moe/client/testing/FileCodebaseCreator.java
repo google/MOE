@@ -100,18 +100,17 @@ public class FileCodebaseCreator extends CodebaseCreator {
       }
     } catch (CommandException exception) {
       throw new CodebaseCreationError(
-          String.format("Could not extract archive: '%s' %s", sourceFile, exception.getMessage()));
+          "Could not extract archive: '%s' %s", sourceFile, exception.getMessage());
     } catch (IOException exception) {
       throw new CodebaseCreationError(
-          String.format("Could not extract archive '%s': %s", sourceFile, exception.getMessage()));
+          "Could not extract archive '%s': %s", sourceFile, exception.getMessage());
     }
 
     // If we did not return a codebase-path by now, we have no way of handling it.
     throw new CodebaseCreationError(
-        String.format(
-            "The '%s'-option of a FileCodebaseCreator must specify either a directory "
-                + "or a .tar/.tar.gz-archive",
-            PATH_OPTION));
+        "The '%s'-option of a FileCodebaseCreator must specify either a directory "
+            + "or a .tar/.tar.gz-archive",
+        PATH_OPTION);
   }
 
   /**

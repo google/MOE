@@ -109,10 +109,8 @@ public abstract class ProjectConfig {
   public RepositoryConfig getRepositoryConfig(String repositoryName) {
     if (!repositories().containsKey(repositoryName)) {
       throw new MoeProblem(
-          "No such repository '"
-              + repositoryName
-              + "' in the config. Found: "
-              + ImmutableSortedSet.copyOf(repositories().keySet()));
+          "No such repository '%s' in the config. Found: %s",
+          repositoryName, ImmutableSortedSet.copyOf(repositories().keySet()));
     }
     return repositories().get(repositoryName);
   }

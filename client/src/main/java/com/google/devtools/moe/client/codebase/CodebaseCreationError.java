@@ -16,16 +16,21 @@
 
 package com.google.devtools.moe.client.codebase;
 
+import com.google.errorprone.annotations.FormatMethod;
+import com.google.errorprone.annotations.FormatString;
+
 /**
  * An error occurred while creating a Codebase.
  */
 public class CodebaseCreationError extends Exception {
 
-  public CodebaseCreationError(String message, Object... args) {
+  @FormatMethod
+  public CodebaseCreationError(@FormatString String message, Object... args) {
     super(String.format(message, args));
   }
 
-  public CodebaseCreationError(Throwable cause, String message, Object... args) {
+  @FormatMethod
+  public CodebaseCreationError(Throwable cause, @FormatString String message, Object... args) {
     super(String.format(message, args), cause);
   }
 }
