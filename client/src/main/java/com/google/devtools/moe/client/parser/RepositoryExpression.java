@@ -92,8 +92,9 @@ public class RepositoryExpression extends AbstractExpression {
       Injector.INSTANCE.ui().popTaskAndPersist(createTask, c.path());
       return c;
     } catch (CodebaseCreationError cce) {
+      Injector.INSTANCE.ui().message("%s", cce);
       Injector.INSTANCE.ui().popTask(createTask, "Unable to create codebase " + this);
-      return null;
+      throw cce;
     }
   }
 

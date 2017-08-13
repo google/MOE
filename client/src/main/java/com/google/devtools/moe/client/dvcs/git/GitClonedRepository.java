@@ -104,6 +104,8 @@ public class GitClonedRepository implements LocalWorkspace {
         ImmutableList.of("init", cloneTempDir.getAbsolutePath()), "");
     GitRepositoryFactory.runGitCommand(
         ImmutableList.of("remote", "add", "origin", repositoryUrl), cloneTempDir.getAbsolutePath());
+    GitRepositoryFactory.runGitCommand(
+        ImmutableList.of("fetch", "--tags"), cloneTempDir.getAbsolutePath());
     if (!repositoryConfig.getCheckoutPaths().isEmpty()) {
       GitRepositoryFactory.runGitCommand(
           ImmutableList.of("config", "core.sparseCheckout", "true"),

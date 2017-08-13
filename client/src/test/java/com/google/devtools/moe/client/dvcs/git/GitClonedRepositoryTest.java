@@ -104,6 +104,9 @@ public class GitClonedRepositoryTest extends TestCase {
         "git", ImmutableList.of("remote", "add", "origin", repositoryURL), localCloneTempDir))
         .andReturn("git add remote ok (mock output)");
 
+    expect(cmd.runCommand("git", ImmutableList.of("fetch", "--tags"), localCloneTempDir))
+        .andReturn("git fetch --tags (mock output)");
+
     if (!testSparse.isEmpty()) {
       expect(cmd.runCommand(
           "git", ImmutableList.of("config", "core.sparseCheckout", "true"), localCloneTempDir))

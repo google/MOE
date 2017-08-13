@@ -41,19 +41,15 @@ import com.google.devtools.moe.client.repositories.RevisionHistory.SearchType;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.testing.DummyDb;
 import com.google.devtools.moe.client.testing.TestingModule;
-
+import java.util.List;
+import java.util.Set;
+import javax.inject.Singleton;
 import junit.framework.TestCase;
-
 import org.easymock.EasyMock;
 import org.easymock.IExpectationSetters;
 import org.easymock.IMocksControl;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-
-import java.util.List;
-import java.util.Set;
-
-import javax.inject.Singleton;
 
 /**
  * Unit tests for GitRevisionHistory.
@@ -87,7 +83,7 @@ public class GitRevisionHistoryTest extends TestCase {
     Injector.INSTANCE = DaggerGitRevisionHistoryTest_Component.create().context();
   }
 
-  private GitClonedRepository mockClonedRepo(String repoName) {
+  private GitClonedRepository mockClonedRepo(String repoName) throws CommandException {
     GitClonedRepository mockRepo = control.createMock(GitClonedRepository.class);
 
     RepositoryConfig repositoryConfig = control.createMock(RepositoryConfig.class);
@@ -107,7 +103,8 @@ public class GitRevisionHistoryTest extends TestCase {
 
   private IExpectationSetters<String> expectLogCommand(
       GitClonedRepository mockRepo, String logFormat, String revName) throws CommandException {
-    return expect(mockRepo.runGitCommand("log", "--max-count=1", "--format=" + logFormat, revName));
+    return expect(
+        mockRepo.runGitCommand("log", "--max-count=1", "--format=" + logFormat, revName, "--"));
   }
 
   public void testFindHighestRevision() throws Exception {
@@ -171,7 +168,7 @@ public class GitRevisionHistoryTest extends TestCase {
     control.verify();
   }
 
-  public void testParseMetadata_multiLine() {
+  public void testParseMetadata_multiLine() throws CommandException {
     GitRevisionHistory rh =
         new GitRevisionHistory(Suppliers.ofInstance(mockClonedRepo(repositoryName)));
 
