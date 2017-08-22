@@ -129,6 +129,9 @@ public final class GithubAPI {
     /** Clean for merging but invalid (failing build, or some other readiness check */
     @SerializedName("unstable")
     UNSTABLE,
+    /** Unmergable, since the merge base is 'dirty' */
+    @SerializedName("dirty")
+    DIRTY,
     /** Github hasn't computed mergeability, but this request has kicked off a job.  Retry. */
     @SerializedName("unknown")
     UNKNOWN,
