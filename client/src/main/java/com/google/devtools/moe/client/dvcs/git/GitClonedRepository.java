@@ -100,16 +100,17 @@ public class GitClonedRepository implements LocalWorkspace {
   }
 
   private void initLocal(File cloneTempDir) throws CommandException, IOException {
-    GitRepositoryFactory.runGitCommand(
-        ImmutableList.of("init", cloneTempDir.getAbsolutePath()), "");
-    GitRepositoryFactory.runGitCommand(
-        ImmutableList.of("remote", "add", "origin", repositoryUrl), cloneTempDir.getAbsolutePath());
-    GitRepositoryFactory.runGitCommand(
-        ImmutableList.of("fetch", "--tags"), cloneTempDir.getAbsolutePath());
+    cmd.runCommand("", "git", ImmutableList.of("init", cloneTempDir.getAbsolutePath()));
+    cmd.runCommand(
+        cloneTempDir.getAbsolutePath(),
+        "git",
+        ImmutableList.of("remote", "add", "origin", repositoryUrl));
+    cmd.runCommand(cloneTempDir.getAbsolutePath(), "git", ImmutableList.of("fetch", "--tags"));
     if (!repositoryConfig.getCheckoutPaths().isEmpty()) {
-      GitRepositoryFactory.runGitCommand(
-          ImmutableList.of("config", "core.sparseCheckout", "true"),
-          cloneTempDir.getAbsolutePath());
+      cmd.runCommand(
+          cloneTempDir.getAbsolutePath(),
+          "git",
+          ImmutableList.of("config", "core.sparseCheckout", "true"));
       filesystem.write(
           String.join("\n", repositoryConfig.getCheckoutPaths()) + "\n",
           Paths.get(cloneTempDir.getAbsolutePath(), ".git", "info", "sparse-checkout").toFile());
@@ -134,7 +135,7 @@ public class GitClonedRepository implements LocalWorkspace {
         pullArgs.add("--depth=1");
       }
       pullArgs.add("origin", branchName.or("master"));
-      GitRepositoryFactory.runGitCommand(pullArgs.build(), localCloneTempDir.getAbsolutePath());
+      cmd.runCommand(localCloneTempDir.getAbsolutePath(), "git", pullArgs.build());
       clonedLocally = true;
       this.revId = "HEAD";
     } catch (CommandException e) {
@@ -206,9 +207,9 @@ public class GitClonedRepository implements LocalWorkspace {
           pullArgs.add("--depth=1");
         }
         pullArgs.add("origin", revId);
-        GitRepositoryFactory.runGitCommand(pullArgs.build(), archiveLocation.getAbsolutePath());
-        GitRepositoryFactory.runGitCommand(
-            ImmutableList.of("checkout", revId), archiveLocation.getAbsolutePath());
+        cmd.runCommand(archiveLocation.getAbsolutePath(), "git", pullArgs.build());
+        cmd.runCommand(
+            archiveLocation.getAbsolutePath(), "git", ImmutableList.of("checkout", revId));
         // Remove git tracking.
         filesystem.deleteRecursively(Paths.get(archiveLocation.getAbsolutePath(), ".git").toFile());
       }
