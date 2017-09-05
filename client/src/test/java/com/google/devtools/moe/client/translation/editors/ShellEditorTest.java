@@ -55,7 +55,7 @@ public class ShellEditorTest extends TestCase {
     argsList.add("-c");
     argsList.add("touch test.txt");
 
-    expect(cmd.runCommand("bash", argsList, "/shell_run_foo")).andReturn("");
+    expect(cmd.runCommand("/shell_run_foo", "bash", argsList)).andReturn("");
 
     control.replay();
 

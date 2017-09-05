@@ -22,9 +22,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.MoeProblem;
-
 import java.io.File;
-
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
@@ -149,10 +147,10 @@ public abstract class FileDifference {
 
       try {
         cmd.runCommand(
+            "",
             "diff",
             // -N treats absent files as empty.
-            ImmutableList.of("-N", "-u", file1.getAbsolutePath(), file2.getAbsolutePath()),
-            "");
+            ImmutableList.of("-N", "-u", file1.getAbsolutePath(), file2.getAbsolutePath()));
       } catch (CommandRunner.CommandException e) {
         if (e.returnStatus != DIFF_ERROR_CODE_FILES_DIFFERENT
             && e.returnStatus != DIFF_ERROR_CODE_FILES_BINARY) {

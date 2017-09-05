@@ -60,6 +60,7 @@ public class ScrubbingEditorTest extends TestCase {
     expect(fileSystem.getTemporaryDirectory("scrubber_run_")).andReturn(scrubberRun);
     expect(
             cmd.runCommand(
+                "/scrubber_extraction_foo",
                 // Matches the ./scrubber.par used in ScrubbingEditor.java
                 "/scrubber_extraction_foo/scrubber.par",
                 ImmutableList.of(
@@ -82,17 +83,16 @@ public class ScrubbingEditorTest extends TestCase {
                             "  \"scrub_java_testsize_annotations\": false,",
                             "  \"scrub_proto_comments\": false",
                             "}"),
-                    "/codebase"),
-                "/scrubber_extraction_foo"))
+                    "/codebase")))
         .andReturn("");
 
     expect(fileSystem.getTemporaryDirectory("expanded_tar_")).andReturn(expandedDir);
     fileSystem.makeDirs(expandedDir);
     expect(
             cmd.runCommand(
+                "/expanded_tar_foo",
                 "tar",
-                ImmutableList.of("-xf", "/scrubber_run_foo/scrubbed.tar"),
-                "/expanded_tar_foo"))
+                ImmutableList.of("-xf", "/scrubber_run_foo/scrubbed.tar")))
         .andReturn("");
     control.replay();
 

@@ -91,6 +91,7 @@ public class SvnRevisionHistoryTest extends TestCase {
     try {
       expect(
               cmd.runCommand(
+                  "",
                   "svn",
                   ImmutableList.of(
                       "--no-auth-cache",
@@ -100,11 +101,11 @@ public class SvnRevisionHistoryTest extends TestCase {
                       "1",
                       "-r",
                       "HEAD:1",
-                      "http://foo/svn/trunk/"),
-                  ""))
+                      "http://foo/svn/trunk/")))
           .andReturn("<log><logentry revision=\"3\" /></log>");
       expect(
               cmd.runCommand(
+                  "",
                   "svn",
                   ImmutableList.of(
                       "--no-auth-cache",
@@ -114,8 +115,7 @@ public class SvnRevisionHistoryTest extends TestCase {
                       "1",
                       "-r",
                       "2:1",
-                      "http://foo/svn/trunk/"),
-                  ""))
+                      "http://foo/svn/trunk/")))
           .andReturn("<log><logentry revision=\"2\" /></log>");
     } catch (CommandException e) {
       throw new RuntimeException(e);
@@ -161,6 +161,7 @@ public class SvnRevisionHistoryTest extends TestCase {
     try {
       expect(
               cmd.runCommand(
+                  "",
                   "svn",
                   ImmutableList.of(
                       "--no-auth-cache",
@@ -170,8 +171,7 @@ public class SvnRevisionHistoryTest extends TestCase {
                       "2",
                       "-r",
                       "3:1",
-                      "http://foo/svn/trunk/"),
-                  ""))
+                      "http://foo/svn/trunk/")))
           .andReturn(
               "<log><logentry revision=\"3\">"
                   + "<author>uid@google.com</author>"
@@ -260,6 +260,7 @@ public class SvnRevisionHistoryTest extends TestCase {
     try {
       expect(
               cmd.runCommand(
+                  "",
                   "svn",
                   ImmutableList.of(
                       "--no-auth-cache",
@@ -269,8 +270,7 @@ public class SvnRevisionHistoryTest extends TestCase {
                       "1",
                       "-r",
                       "HEAD:1",
-                      "http://foo/svn/trunk/"),
-                  ""))
+                      "http://foo/svn/trunk/")))
           .andReturn(
               "<log><logentry revision=\"3\">"
                   + "<author>uid@google.com</author>"
@@ -286,6 +286,7 @@ public class SvnRevisionHistoryTest extends TestCase {
     try {
       expect(
               cmd.runCommand(
+                  "",
                   "svn",
                   ImmutableList.of(
                       "--no-auth-cache",
@@ -295,8 +296,7 @@ public class SvnRevisionHistoryTest extends TestCase {
                       "2",
                       "-r",
                       "3:1",
-                      "http://foo/svn/trunk/"),
-                  ""))
+                      "http://foo/svn/trunk/")))
           .andReturn(
               "<log><logentry revision=\"3\">"
                   + "<author>uid@google.com</author>"
@@ -318,6 +318,7 @@ public class SvnRevisionHistoryTest extends TestCase {
     try {
       expect(
               cmd.runCommand(
+                  "",
                   "svn",
                   ImmutableList.of(
                       "--no-auth-cache",
@@ -327,8 +328,7 @@ public class SvnRevisionHistoryTest extends TestCase {
                       "2",
                       "-r",
                       "2:1",
-                      "http://foo/svn/trunk/"),
-                  ""))
+                      "http://foo/svn/trunk/")))
           .andReturn(
               "<log><logentry revision=\"2\">"
                   + "<author>uid@google.com</author>"
@@ -395,6 +395,7 @@ public class SvnRevisionHistoryTest extends TestCase {
   public void testFindLastEquivalence() throws Exception {
     expect(
             cmd.runCommand(
+                "",
                 "svn",
                 ImmutableList.of(
                     "--no-auth-cache",
@@ -404,8 +405,7 @@ public class SvnRevisionHistoryTest extends TestCase {
                     "2",
                     "-r",
                     "4:1",
-                    "http://foo/svn/trunk/"),
-                ""))
+                    "http://foo/svn/trunk/")))
         .andReturn(
             "<log><logentry revision=\"4\">"
                 + "<author>uid@google.com</author>"
@@ -422,6 +422,7 @@ public class SvnRevisionHistoryTest extends TestCase {
 
     expect(
             cmd.runCommand(
+                "",
                 "svn",
                 ImmutableList.of(
                     "--no-auth-cache",
@@ -431,8 +432,7 @@ public class SvnRevisionHistoryTest extends TestCase {
                     "2",
                     "-r",
                     "3:1",
-                    "http://foo/svn/trunk/"),
-                ""))
+                    "http://foo/svn/trunk/")))
         .andReturn(
             "<log><logentry revision=\"3\">"
                 + "<author>uid@google.com</author>"
@@ -508,6 +508,7 @@ public class SvnRevisionHistoryTest extends TestCase {
   public void testFindLastEquivalenceNull() throws Exception {
     expect(
             cmd.runCommand(
+                "",
                 "svn",
                 ImmutableList.of(
                     "--no-auth-cache",
@@ -517,8 +518,7 @@ public class SvnRevisionHistoryTest extends TestCase {
                     "2",
                     "-r",
                     "2:1",
-                    "http://foo/svn/trunk/"),
-                ""))
+                    "http://foo/svn/trunk/")))
         .andReturn(
             "<log><logentry revision=\"2\">"
                 + "<author>uid@google.com</author>"
@@ -535,6 +535,7 @@ public class SvnRevisionHistoryTest extends TestCase {
 
     expect(
             cmd.runCommand(
+                "",
                 "svn",
                 ImmutableList.of(
                     "--no-auth-cache",
@@ -544,8 +545,7 @@ public class SvnRevisionHistoryTest extends TestCase {
                     "2",
                     "-r",
                     "1:1",
-                    "http://foo/svn/trunk/"),
-                ""))
+                    "http://foo/svn/trunk/")))
         .andReturn(
             "<log><logentry revision=\"1\">"
                 + "<author>uid@google.com</author>"

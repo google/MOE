@@ -97,19 +97,25 @@ public class GitClonedRepositoryTest extends TestCase {
             + (testBranch.equals("master") ? "" : testBranch + "_")),
         EasyMock.anyObject())).andReturn(new File(localCloneTempDir));
 
-    expect(cmd.runCommand("git", ImmutableList.of("init", localCloneTempDir), ""))
+    expect(cmd.runCommand("", "git", ImmutableList.of("init", localCloneTempDir)))
         .andReturn("git init ok (mock output)");
 
-    expect(cmd.runCommand(
-        "git", ImmutableList.of("remote", "add", "origin", repositoryURL), localCloneTempDir))
+    expect(
+            cmd.runCommand(
+                localCloneTempDir,
+                "git",
+                ImmutableList.of("remote", "add", "origin", repositoryURL)))
         .andReturn("git add remote ok (mock output)");
 
-    expect(cmd.runCommand("git", ImmutableList.of("fetch", "--tags"), localCloneTempDir))
+    expect(cmd.runCommand(localCloneTempDir, "git", ImmutableList.of("fetch", "--tags")))
         .andReturn("git fetch --tags (mock output)");
 
     if (!testSparse.isEmpty()) {
-      expect(cmd.runCommand(
-          "git", ImmutableList.of("config", "core.sparseCheckout", "true"), localCloneTempDir))
+      expect(
+              cmd.runCommand(
+                  localCloneTempDir,
+                  "git",
+                  ImmutableList.of("config", "core.sparseCheckout", "true")))
           .andReturn("git config ok (mock output)");
       mockFS.write(
           String.join("\n", testSparse) + "\n",
@@ -118,12 +124,16 @@ public class GitClonedRepositoryTest extends TestCase {
     }
 
     if (testIsShallow) {
-      expect(cmd.runCommand(
-          "git", ImmutableList.of("pull", "--depth=1", "origin", testBranch), localCloneTempDir))
+      expect(
+              cmd.runCommand(
+                  localCloneTempDir,
+                  "git",
+                  ImmutableList.of("pull", "--depth=1", "origin", testBranch)))
           .andReturn("git pull ok (mock output)");
     } else {
-      expect(cmd.runCommand(
-          "git", ImmutableList.of("pull", "origin", testBranch), localCloneTempDir))
+      expect(
+              cmd.runCommand(
+                  localCloneTempDir, "git", ImmutableList.of("pull", "origin", testBranch)))
           .andReturn("git pull ok (mock output)");
     }
   }
@@ -176,18 +186,19 @@ public class GitClonedRepositoryTest extends TestCase {
 
     expectCloneLocally();
 
-    expect(cmd.runCommand("git", ImmutableList.of("rev-parse", "HEAD"), localCloneTempDir))
+    expect(cmd.runCommand(localCloneTempDir, "git", ImmutableList.of("rev-parse", "HEAD")))
         .andReturn(headRevId);
 
     // Updating to revision other than head, so create a branch.
-    expect(cmd.runCommand(
-        "git",
-        ImmutableList.of(
-            "checkout",
-            updateRevId,
-            "-b",
-            GitClonedRepository.MOE_MIGRATIONS_BRANCH_PREFIX + updateRevId),
-        localCloneTempDir))
+    expect(
+            cmd.runCommand(
+                localCloneTempDir,
+                "git",
+                ImmutableList.of(
+                    "checkout",
+                    updateRevId,
+                    "-b",
+                    GitClonedRepository.MOE_MIGRATIONS_BRANCH_PREFIX + updateRevId)))
         .andReturn(headRevId);
 
     control.replay();
@@ -206,23 +217,23 @@ public class GitClonedRepositoryTest extends TestCase {
 
     expectCloneLocally();
 
-    expect(cmd.runCommand("git", ImmutableList.of("rev-parse", "HEAD"), localCloneTempDir))
+    expect(cmd.runCommand(localCloneTempDir, "git", ImmutableList.of("rev-parse", "HEAD")))
         .andReturn(headRevId);
 
     // Unshallow the repository first.
-    expect(cmd.runCommand(
-        "git", ImmutableList.of("fetch", "--unshallow"), localCloneTempDir))
+    expect(cmd.runCommand(localCloneTempDir, "git", ImmutableList.of("fetch", "--unshallow")))
         .andReturn("git fetch unshallow ok (mock output)");
 
     // Updating to revision other than head, so create a branch.
-    expect(cmd.runCommand(
-        "git",
-        ImmutableList.of(
-            "checkout",
-            updateRevId,
-            "-b",
-            GitClonedRepository.MOE_MIGRATIONS_BRANCH_PREFIX + updateRevId),
-        localCloneTempDir))
+    expect(
+            cmd.runCommand(
+                localCloneTempDir,
+                "git",
+                ImmutableList.of(
+                    "checkout",
+                    updateRevId,
+                    "-b",
+                    GitClonedRepository.MOE_MIGRATIONS_BRANCH_PREFIX + updateRevId)))
         .andReturn(headRevId);
 
     control.replay();
@@ -240,7 +251,7 @@ public class GitClonedRepositoryTest extends TestCase {
 
     expectCloneLocally();
 
-    expect(cmd.runCommand("git", ImmutableList.of("rev-parse", "HEAD"), localCloneTempDir))
+    expect(cmd.runCommand(localCloneTempDir, "git", ImmutableList.of("rev-parse", "HEAD")))
         .andReturn(headRevId);
 
     // No branch creation expected.

@@ -244,10 +244,10 @@ public class CodebaseMerger {
       // Merges the changes that lead from origFile to modFile into mergedFile (which is a copy
       // of destFile). After, mergedFile will have the combined changes of modFile and destFile.
       cmd.runCommand(
+          this.mergedCodebase.path().getAbsolutePath(),
           "merge",
           ImmutableList.of(
-              mergedFile.getAbsolutePath(), origFile.getAbsolutePath(), modFile.getAbsolutePath()),
-          this.mergedCodebase.path().getAbsolutePath());
+              mergedFile.getAbsolutePath(), origFile.getAbsolutePath(), modFile.getAbsolutePath()));
       // Return status was 0 and the merge was successful. Note it.
       mergedFiles.add(mergedFile.getAbsolutePath());
     } catch (CommandException e) {

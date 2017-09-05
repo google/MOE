@@ -27,17 +27,12 @@ import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.Lifetimes;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.testing.TestingModule;
-
 import dagger.Provides;
-
+import java.io.File;
+import javax.inject.Singleton;
 import junit.framework.TestCase;
-
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
-
-import java.io.File;
-
-import javax.inject.Singleton;
 
 public class HgClonedRepositoryTest extends TestCase {
   private final IMocksControl control = EasyMock.createControl();
@@ -85,12 +80,13 @@ public class HgClonedRepositoryTest extends TestCase {
 
     expect(
             cmd.runCommand(
+                null,
                 "hg",
                 ImmutableList.<String>of(
-                    "clone", repositoryURL, localCloneTempDir, "--rev=" + "mybranch"),
-                /*workingDirectory*/ null))
+                    "clone", repositoryURL, localCloneTempDir, "--rev=" + "mybranch")
+                /*workingDirectory*/ ))
         .andReturn("hg clone ok (mock output)");
-    expect(cmd.runCommand("hg", ImmutableList.of("branch"), localCloneTempDir))
+    expect(cmd.runCommand(localCloneTempDir, "hg", ImmutableList.of("branch")))
         .andReturn("mybranch");
 
     // Run test

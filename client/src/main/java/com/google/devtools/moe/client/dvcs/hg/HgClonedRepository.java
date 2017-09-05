@@ -173,8 +173,8 @@ public class HgClonedRepository implements LocalWorkspace {
    */
   String runHgCommand(File workingDirectory, List<String> args) throws CommandException {
     return cmd.runCommand(
+        workingDirectory == null ? null : workingDirectory.getAbsolutePath(),
         hgBinary.getPath(),
-        ImmutableList.copyOf(args),
-        workingDirectory == null ? null : workingDirectory.getAbsolutePath());
+        ImmutableList.copyOf(args));
   }
 }

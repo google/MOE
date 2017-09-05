@@ -94,9 +94,9 @@ public class CreateCodebaseDirective extends Directive {
     }
 
     cmd.runCommand(
+        codebase.path().getAbsolutePath(),
         "tar",
-        ImmutableList.of("--mtime=1980-01-01", "--owner=0", "--group=0", "-c", "-f", tarfile, "."),
-        codebase.path().getAbsolutePath());
+        ImmutableList.of("--mtime=1980-01-01", "--owner=0", "--group=0", "-c", "-f", tarfile, "."));
 
     ui.message("tar of codebase \"%s\" created at %s", codebase, tarfile);
   }

@@ -195,9 +195,9 @@ public class GitClonedRepository implements LocalWorkspace {
 
         // Untar the tarball we just made
         cmd.runCommand(
+            "",
             "tar",
-            ImmutableList.of("xf", tarballPath, "-C", archiveLocation.getAbsolutePath()),
-            "");
+            ImmutableList.of("xf", tarballPath, "-C", archiveLocation.getAbsolutePath()));
       } else {
         initLocal(archiveLocation);
         ImmutableList.Builder<String> pullArgs = ImmutableList.builder();
@@ -232,9 +232,6 @@ public class GitClonedRepository implements LocalWorkspace {
    * @return a string containing the STDOUT result
    */
   String runGitCommand(String... args) throws CommandException {
-    return cmd.runCommand(
-        "git",
-        ImmutableList.copyOf(args),
-        getLocalTempDir().getAbsolutePath() /*workingDirectory*/);
+    return cmd.runCommand(getLocalTempDir().getAbsolutePath(), "git", ImmutableList.copyOf(args));
   }
 }

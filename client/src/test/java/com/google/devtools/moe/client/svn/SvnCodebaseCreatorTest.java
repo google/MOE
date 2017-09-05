@@ -83,6 +83,7 @@ public class SvnCodebaseCreatorTest extends TestCase {
         .andReturn(new File("/dummy/path/45"));
     expect(
             cmd.runCommand(
+                "",
                 "svn",
                 ImmutableList.of(
                     "--no-auth-cache",
@@ -90,8 +91,7 @@ public class SvnCodebaseCreatorTest extends TestCase {
                     "http://foo/svn/trunk/",
                     "-r",
                     "45",
-                    "/dummy/path/45"),
-                ""))
+                    "/dummy/path/45")))
         .andReturn("");
     // Short-circuit Utils.filterFiles for ignore_files_re.
     expect(Injector.INSTANCE.fileSystem().findFiles(new File("/dummy/path/45")))

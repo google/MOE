@@ -163,8 +163,8 @@ public class FileCodebaseCreatorTest extends TestCase {
     expect(
             mockcmd.runCommand(
                 EasyMock.<String>anyObject(),
-                EasyMock.<List<String>>anyObject(),
-                EasyMock.<String>anyObject()))
+                EasyMock.<String>anyObject(),
+                EasyMock.<List<String>>anyObject()))
         .andReturn(null);
     EasyMock.replay(mockcmd);
 
@@ -191,8 +191,8 @@ public class FileCodebaseCreatorTest extends TestCase {
     expect(
             mockcmd.runCommand(
                 EasyMock.<String>anyObject(),
-                EasyMock.<List<String>>anyObject(),
-                EasyMock.<String>anyObject()))
+                EasyMock.<String>anyObject(),
+                EasyMock.<List<String>>anyObject()))
         .andReturn(null);
     control.replay();
     // Run the .expandToDirectory method.

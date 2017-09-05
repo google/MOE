@@ -73,27 +73,25 @@ public interface CommandRunner {
   /**
    * Runs a command.
    *
-   * @param cmd  the binary to invoke. If not a path, it will be resolved.
-   * @param args  the arguments to pass to the binary
-   * @param workingDirectory  the directory to run in
-   *
+   * @param workingDirectory the directory to run in
+   * @param command the binary to invoke. If not a path, it will be resolved.
+   * @param args the arguments to pass to the binary
    * @returns the output of the command
    * @throws CommandException
-   *
-   * TODO(dbentley): make it easier to do error-handling
    */
-  String runCommand(String cmd, List<String> args, String workingDirectory) throws CommandException;
+  // TODO(dbentley): make it easier to do error-handling
+  String runCommand(String workingDirectory, String command, List<String> args)
+      throws CommandException;
 
   /**
    * Runs a command.
    *
-   * @param cmd  the binary to invoke. If not a path, it will be resolved.
-   * @param args  the arguments to pass to the binary
-   * @param workingDirectory  the directory to run in
-   *
+   * @param workingDirectory the directory to run in
+   * @param command the binary to invoke. If not a path, it will be resolved.
+   * @param args the arguments to pass to the binary
    * @returns a {@link CommandOutput} with the full results of the command
    * @throws CommandException
    */
-  CommandOutput runCommandWithFullOutput(String cmd, List<String> args, String workingDirectory)
+  CommandOutput runCommandWithFullOutput(String workingDirectory, String command, List<String> args)
       throws CommandException;
 }

@@ -39,20 +39,15 @@ import com.google.devtools.moe.client.repositories.RevisionHistory.SearchType;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.testing.DummyDb;
 import com.google.devtools.moe.client.testing.TestingModule;
-
 import dagger.Provides;
-
+import java.io.File;
+import java.util.List;
+import javax.inject.Singleton;
 import junit.framework.TestCase;
-
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-
-import java.io.File;
-import java.util.List;
-
-import javax.inject.Singleton;
 
 public class HgRevisionHistoryTest extends TestCase {
   private static final String HG_COMMIT_DATE = "2012-07-09 06:00 -0700";
@@ -106,10 +101,9 @@ public class HgRevisionHistoryTest extends TestCase {
 
     expect(
             cmd.runCommand(
+                CLONE_TEMP_DIR,
                 "hg",
-                ImmutableList.<String>of(
-                    "log", "--branch=mybranch", "--limit=1", "--template={node}"),
-                CLONE_TEMP_DIR /*workingDirectory*/))
+                ImmutableList.of("log", "--branch=mybranch", "--limit=1", "--template={node}")))
         .andReturn("mockChangesetID");
 
     control.replay();
@@ -128,18 +122,18 @@ public class HgRevisionHistoryTest extends TestCase {
 
     expect(
             cmd.runCommand(
+                CLONE_TEMP_DIR,
                 "hg",
-                ImmutableList.<String>of(
+                ImmutableList.of(
                     "log",
                     "--branch=mybranch",
                     "--limit=1",
                     "--template={node}",
-                    "--rev=bogusChangeset"),
-                CLONE_TEMP_DIR /*workingDirectory*/))
+                    "--rev=bogusChangeset")))
         .andThrow(
             new CommandException(
                 "hg",
-                ImmutableList.<String>of("mock args"),
+                ImmutableList.of("mock args"),
                 "mock stdout",
                 "mock stderr: unknown revision",
                 255 /* Hg error code for unknown rev */));
@@ -163,16 +157,16 @@ public class HgRevisionHistoryTest extends TestCase {
 
     expect(
             cmd.runCommand(
+                CLONE_TEMP_DIR,
                 "hg",
-                ImmutableList.<String>of(
+                ImmutableList.of(
                     "log",
                     "--rev=2",
                     "--limit=1",
                     "--template={node|escape} < {author|escape} < "
                         + "{date|isodate|escape} < {desc|escape} < "
                         + "{parents|stringify|escape}",
-                    "--debug"),
-                CLONE_TEMP_DIR /*workingDirectory*/))
+                    "--debug")))
         .andReturn(
             "2 < uid@google.com < " + HG_COMMIT_DATE + " < description < 1:parent1 2:parent2");
 
@@ -198,16 +192,16 @@ public class HgRevisionHistoryTest extends TestCase {
 
     expect(
             cmd.runCommand(
+                CLONE_TEMP_DIR,
                 "hg",
-                ImmutableList.<String>of(
+                ImmutableList.of(
                     "log",
                     "--rev=2",
                     "--limit=1",
                     "--template={node|escape} < {author|escape} < "
                         + "{date|isodate|escape} < {desc|escape} < "
                         + "{parents|stringify|escape}",
-                    "--debug"),
-                CLONE_TEMP_DIR /*workingDirectory*/))
+                    "--debug")))
         .andReturn(
             "2 < u&lt;id@google.com < " + HG_COMMIT_DATE + " < &gt;description&amp;amp < 1:parent");
 
@@ -247,9 +241,9 @@ public class HgRevisionHistoryTest extends TestCase {
 
     expect(
             cmd.runCommand(
+                CLONE_TEMP_DIR,
                 "hg",
-                ImmutableList.<String>of("heads", "mybranch", "--template={node} {branch}\n"),
-                CLONE_TEMP_DIR /*workingDirectory*/))
+                ImmutableList.of("heads", "mybranch", "--template={node} {branch}\n")))
         .andReturn("mockChangesetID1 branch1\nmockChangesetID2 branch2\nmockChangesetID3 unused");
 
     control.replay();
@@ -270,38 +264,38 @@ public class HgRevisionHistoryTest extends TestCase {
 
     expect(
             cmd.runCommand(
+                CLONE_TEMP_DIR,
                 "hg",
-                ImmutableList.<String>of("heads", "mybranch", "--template={node} {branch}\n"),
-                CLONE_TEMP_DIR /*workingDirectory*/))
+                ImmutableList.of("heads", "mybranch", "--template={node} {branch}\n")))
         .andReturn("mockChangesetID default\n");
 
     expect(
             cmd.runCommand(
+                CLONE_TEMP_DIR,
                 "hg",
-                ImmutableList.<String>of(
+                ImmutableList.of(
                     "log",
                     "--rev=mockChangesetID",
                     "--limit=1",
                     "--template={node|escape} < {author|escape} < "
                         + "{date|isodate|escape} < {desc|escape} < "
                         + "{parents|stringify|escape}",
-                    "--debug"),
-                CLONE_TEMP_DIR /*workingDirectory*/))
+                    "--debug")))
         .andReturn(
             "mockChangesetID < uid@google.com < " + HG_COMMIT_DATE + " < description < 1:parent");
 
     expect(
             cmd.runCommand(
+                CLONE_TEMP_DIR,
                 "hg",
-                ImmutableList.<String>of(
+                ImmutableList.of(
                     "log",
                     "--rev=parent",
                     "--limit=1",
                     "--template={node|escape} < {author|escape} < "
                         + "{date|isodate|escape} < {desc|escape} < "
                         + "{parents|stringify|escape}",
-                    "--debug"),
-                CLONE_TEMP_DIR /*workingDirectory*/))
+                    "--debug")))
         .andReturn("parent < uid@google.com < " + HG_COMMIT_DATE + " < description < ");
 
     control.replay();
@@ -363,13 +357,14 @@ public class HgRevisionHistoryTest extends TestCase {
 
     expect(
             cmd.runCommand(
+                CLONE_TEMP_DIR,
                 "hg",
-                ImmutableList.<String>of("heads", "mybranch", "--template={node} {branch}\n"),
-                CLONE_TEMP_DIR /*workingDirectory*/))
+                ImmutableList.of("heads", "mybranch", "--template={node} {branch}\n")))
         .andReturn("4 default\n");
 
     expect(
             cmd.runCommand(
+                CLONE_TEMP_DIR,
                 "hg",
                 ImmutableList.of(
                     "log",
@@ -377,12 +372,12 @@ public class HgRevisionHistoryTest extends TestCase {
                     "--limit=1",
                     "--template={node|escape} < {author|escape} < {date|isodate|escape} < "
                         + "{desc|escape} < {parents|stringify|escape}",
-                    "--debug"),
-                CLONE_TEMP_DIR /*workingDirectory*/))
+                    "--debug")))
         .andReturn("4 < author < " + HG_COMMIT_DATE + " < description < par1:3a par2:3b");
 
     expect(
             cmd.runCommand(
+                CLONE_TEMP_DIR,
                 "hg",
                 ImmutableList.of(
                     "log",
@@ -390,12 +385,12 @@ public class HgRevisionHistoryTest extends TestCase {
                     "--limit=1",
                     "--template={node|escape} < {author|escape} < {date|isodate|escape} < "
                         + "{desc|escape} < {parents|stringify|escape}",
-                    "--debug"),
-                CLONE_TEMP_DIR /*workingDirectory*/))
+                    "--debug")))
         .andReturn("3a < author < " + HG_COMMIT_DATE + " < description < par1:2 -1:0");
 
     expect(
             cmd.runCommand(
+                CLONE_TEMP_DIR,
                 "hg",
                 ImmutableList.of(
                     "log",
@@ -403,8 +398,7 @@ public class HgRevisionHistoryTest extends TestCase {
                     "--limit=1",
                     "--template={node|escape} < {author|escape} < {date|isodate|escape} < "
                         + "{desc|escape} < {parents|stringify|escape}",
-                    "--debug"),
-                CLONE_TEMP_DIR /*workingDirectory*/))
+                    "--debug")))
         .andReturn("3b < author < " + HG_COMMIT_DATE + " < description < par1:2 -1:0");
 
     control.replay();
@@ -475,6 +469,7 @@ public class HgRevisionHistoryTest extends TestCase {
 
     expect(
             cmd.runCommand(
+                CLONE_TEMP_DIR,
                 "hg",
                 ImmutableList.of(
                     "log",
@@ -482,12 +477,12 @@ public class HgRevisionHistoryTest extends TestCase {
                     "--limit=1",
                     "--template={node|escape} < {author|escape} < {date|isodate|escape} < "
                         + "{desc|escape} < {parents|stringify|escape}",
-                    "--debug"),
-                CLONE_TEMP_DIR /*workingDirectory*/))
+                    "--debug")))
         .andReturn("4 < author < " + HG_COMMIT_DATE + " < description < par1:3a par2:3b");
 
     expect(
             cmd.runCommand(
+                CLONE_TEMP_DIR,
                 "hg",
                 ImmutableList.of(
                     "log",
@@ -495,12 +490,12 @@ public class HgRevisionHistoryTest extends TestCase {
                     "--limit=1",
                     "--template={node|escape} < {author|escape} < {date|isodate|escape} < "
                         + "{desc|escape} < {parents|stringify|escape}",
-                    "--debug"),
-                CLONE_TEMP_DIR /*workingDirectory*/))
+                    "--debug")))
         .andReturn("3a < author < " + HG_COMMIT_DATE + " < description < par1:2 -1:0");
 
     expect(
             cmd.runCommand(
+                CLONE_TEMP_DIR,
                 "hg",
                 ImmutableList.of(
                     "log",
@@ -508,12 +503,12 @@ public class HgRevisionHistoryTest extends TestCase {
                     "--limit=1",
                     "--template={node|escape} < {author|escape} < {date|isodate|escape} < "
                         + "{desc|escape} < {parents|stringify|escape}",
-                    "--debug"),
-                CLONE_TEMP_DIR /*workingDirectory*/))
+                    "--debug")))
         .andReturn("3b < author < " + HG_COMMIT_DATE + " < description < par1:2 -1:0");
 
     expect(
             cmd.runCommand(
+                CLONE_TEMP_DIR,
                 "hg",
                 ImmutableList.of(
                     "log",
@@ -521,8 +516,7 @@ public class HgRevisionHistoryTest extends TestCase {
                     "--limit=1",
                     "--template={node|escape} < {author|escape} < {date|isodate|escape} < "
                         + "{desc|escape} < {parents|stringify|escape}",
-                    "--debug"),
-                CLONE_TEMP_DIR /*workingDirectory*/))
+                    "--debug")))
         .andReturn("2 < author < " + HG_COMMIT_DATE + " < description < -1:0 -1:0");
 
     control.replay();

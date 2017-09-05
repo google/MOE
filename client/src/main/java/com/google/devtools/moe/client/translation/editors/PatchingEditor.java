@@ -78,9 +78,9 @@ public class PatchingEditor implements Editor {
       }
       try {
         cmd.runCommand(
+            tempDir.getAbsolutePath(),
             "patch",
-            ImmutableList.of("-p0", "--input=" + patchFilePath),
-            tempDir.getAbsolutePath());
+            ImmutableList.of("-p0", "--input=" + patchFilePath));
       } catch (CommandRunner.CommandException e) {
         throw new MoeProblem("%s", e.getMessage());
       }

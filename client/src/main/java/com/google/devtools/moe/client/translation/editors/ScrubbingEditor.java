@@ -91,6 +91,7 @@ public class ScrubbingEditor implements Editor, InverseEditor {
     File outputTar = new File(tempDir, "scrubbed.tar");
     try {
       cmd.runCommand(
+          executable.get().getParentFile().getPath(),
           executable.get().getCanonicalPath(),
           ImmutableList.of(
               "--temp_dir",
@@ -101,8 +102,7 @@ public class ScrubbingEditor implements Editor, InverseEditor {
               "--config_data",
               (scrubberConfig == null) ? "{}" : GsonModule.provideGson().toJson(scrubberConfig),
               // TODO(cgruber): Eliminate this static gson method reference.
-              input.path().getAbsolutePath()),
-          executable.get().getParentFile().getPath());
+              input.path().getAbsolutePath()));
     } catch (CommandRunner.CommandException | IOException e) {
       throw new MoeProblem(e, "Problem executing the scrubber: %s", e.getMessage());
     }

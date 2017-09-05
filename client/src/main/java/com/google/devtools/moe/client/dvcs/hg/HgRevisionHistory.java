@@ -80,9 +80,9 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
     try {
       changesetID =
           runner.runCommand(
+              tipClone.getLocalTempDir().getAbsolutePath(),
               hgBinary.getPath(),
-              ImmutableList.copyOf(args),
-              tipClone.getLocalTempDir().getAbsolutePath());
+              ImmutableList.copyOf(args));
     } catch (CommandException e) {
       throw new MoeProblem(
           e, "Failed hg run: %s %d %s %s", args, e.returnStatus, e.stdout, e.stderr);
@@ -122,9 +122,9 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
     try {
       log =
           runner.runCommand(
+              tipClone.getLocalTempDir().getAbsolutePath(),
               hgBinary.getPath(),
-              ImmutableList.copyOf(args),
-              tipClone.getLocalTempDir().getAbsolutePath());
+              ImmutableList.copyOf(args));
 
     } catch (CommandException e) {
       throw new MoeProblem(
@@ -190,10 +190,10 @@ public class HgRevisionHistory extends AbstractRevisionHistory {
     try {
       heads =
           runner.runCommand(
+              tipClone.getLocalTempDir().getAbsolutePath(),
               hgBinary.getPath(),
               // Format output as "changesetID branch".
-              ImmutableList.of("heads", tipClone.getBranch(), "--template={node} {branch}\n"),
-              tipClone.getLocalTempDir().getAbsolutePath());
+              ImmutableList.of("heads", tipClone.getBranch(), "--template={node} {branch}\n"));
     } catch (CommandException e) {
       throw new MoeProblem(
           e, "Failed hg run: %s %d %s %s", e.args, e.returnStatus, e.stdout, e.stderr);

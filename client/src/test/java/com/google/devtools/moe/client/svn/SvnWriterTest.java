@@ -86,7 +86,7 @@ public class SvnWriterTest extends TestCase {
           throws CommandException {
     ImmutableList.Builder<String> withAuthArgs = new ImmutableList.Builder<>();
     withAuthArgs.add("--no-auth-cache").addAll(args);
-    expect(cmd.runCommand("svn", withAuthArgs.build(), workingDirectory)).andReturn(result);
+    expect(cmd.runCommand(workingDirectory, "svn", withAuthArgs.build())).andReturn(result);
   }
 
   private File f(String filename) {

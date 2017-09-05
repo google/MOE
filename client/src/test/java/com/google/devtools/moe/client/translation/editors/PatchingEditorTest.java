@@ -24,7 +24,6 @@ import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
-import com.google.devtools.moe.client.translation.editors.PatchingEditor;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
@@ -77,7 +76,7 @@ public class PatchingEditorTest extends TestCase {
 
     expect(
             cmd.runCommand(
-                "patch", ImmutableList.of("-p0", "--input=/patchfile"), "/patcher_run_foo"))
+                "/patcher_run_foo", "patch", ImmutableList.of("-p0", "--input=/patchfile")))
         .andReturn("");
 
     control.replay();

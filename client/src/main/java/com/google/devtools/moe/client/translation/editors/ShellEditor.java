@@ -77,7 +77,7 @@ public class ShellEditor implements Editor {
       throw new MoeProblem(e, "Failed to copy directory %s to %s", input.path(), tempDir);
     }
     try {
-      cmd.runCommand("bash", ImmutableList.of("-c", this.commandString), tempDir.getAbsolutePath());
+      cmd.runCommand(tempDir.getAbsolutePath(), "bash", ImmutableList.of("-c", this.commandString));
     } catch (CommandRunner.CommandException e) {
       throw new MoeProblem("Command failed: %s", e.getMessage());
     }

@@ -25,17 +25,12 @@ import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.testing.TestingModule;
 import com.google.devtools.moe.client.tools.FileDifference.Comparison;
 import com.google.devtools.moe.client.tools.FileDifference.ConcreteFileDiffer;
-
 import dagger.Provides;
-
+import java.io.File;
+import javax.inject.Singleton;
 import junit.framework.TestCase;
-
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
-
-import java.io.File;
-
-import javax.inject.Singleton;
 
 public class FileDifferenceTest extends TestCase {
 
@@ -79,7 +74,7 @@ public class FileDifferenceTest extends TestCase {
     expect(fileSystem.exists(file2)).andReturn(false);
     expect(fileSystem.isExecutable(file1)).andReturn(false);
     expect(fileSystem.isExecutable(file2)).andReturn(false);
-    expect(cmd.runCommand("diff", ImmutableList.of("-N", "-u", "/1/foo", "/2/foo"), ""))
+    expect(cmd.runCommand("", "diff", ImmutableList.of("-N", "-u", "/1/foo", "/2/foo")))
         .andThrow(
             new CommandRunner.CommandException(
                 "diff", ImmutableList.of("-N", "-u", "/1/foo", "/2/foo"), "foo", "", 1));
@@ -100,7 +95,7 @@ public class FileDifferenceTest extends TestCase {
     expect(fileSystem.exists(file2)).andReturn(true);
     expect(fileSystem.isExecutable(file1)).andReturn(false);
     expect(fileSystem.isExecutable(file2)).andReturn(false);
-    expect(cmd.runCommand("diff", ImmutableList.of("-N", "-u", "/1/foo", "/2/foo"), ""))
+    expect(cmd.runCommand("", "diff", ImmutableList.of("-N", "-u", "/1/foo", "/2/foo")))
         .andThrow(
             new CommandRunner.CommandException(
                 "diff", ImmutableList.of("-N", "-u", "/1/foo", "/2/foo"), "foo", "", 1));
@@ -121,7 +116,7 @@ public class FileDifferenceTest extends TestCase {
     expect(fileSystem.exists(file2)).andReturn(true);
     expect(fileSystem.isExecutable(file1)).andReturn(true);
     expect(fileSystem.isExecutable(file2)).andReturn(false);
-    expect(cmd.runCommand("diff", ImmutableList.of("-N", "-u", "/1/foo", "/2/foo"), ""))
+    expect(cmd.runCommand("", "diff", ImmutableList.of("-N", "-u", "/1/foo", "/2/foo")))
         .andReturn("");
 
     control.replay();
@@ -140,8 +135,8 @@ public class FileDifferenceTest extends TestCase {
     expect(fileSystem.exists(file2)).andReturn(true);
     expect(fileSystem.isExecutable(file1)).andReturn(false);
     expect(fileSystem.isExecutable(file2)).andReturn(true);
-    expect(
-        cmd.runCommand("diff", ImmutableList.of("-N", "-u", "/1/foo", "/2/foo"), "")).andReturn("");
+    expect(cmd.runCommand("", "diff", ImmutableList.of("-N", "-u", "/1/foo", "/2/foo")))
+        .andReturn("");
 
     control.replay();
     FileDifference d = differ.diffFiles("foo", file1, file2);
@@ -159,7 +154,7 @@ public class FileDifferenceTest extends TestCase {
     expect(fileSystem.exists(file2)).andReturn(true);
     expect(fileSystem.isExecutable(file1)).andReturn(true);
     expect(fileSystem.isExecutable(file2)).andReturn(true);
-    expect(cmd.runCommand("diff", ImmutableList.of("-N", "-u", "/1/foo", "/2/foo"), ""))
+    expect(cmd.runCommand("", "diff", ImmutableList.of("-N", "-u", "/1/foo", "/2/foo")))
         .andThrow(
             new CommandRunner.CommandException(
                 "diff", ImmutableList.of("-N", "-u", "/1/foo", "/2/foo"), "foo", "", 1));
@@ -180,7 +175,7 @@ public class FileDifferenceTest extends TestCase {
     expect(fileSystem.exists(file2)).andReturn(true);
     expect(fileSystem.isExecutable(file1)).andReturn(true);
     expect(fileSystem.isExecutable(file2)).andReturn(false);
-    expect(cmd.runCommand("diff", ImmutableList.of("-N", "-u", "/1/foo", "/2/foo"), ""))
+    expect(cmd.runCommand("", "diff", ImmutableList.of("-N", "-u", "/1/foo", "/2/foo")))
         .andThrow(
             new CommandRunner.CommandException(
                 "diff", ImmutableList.of("-N", "-u", "/1/foo", "/2/foo"), "foo", "", 1));
@@ -201,7 +196,7 @@ public class FileDifferenceTest extends TestCase {
     expect(fileSystem.exists(file2)).andReturn(true);
     expect(fileSystem.isExecutable(file1)).andReturn(false);
     expect(fileSystem.isExecutable(file2)).andReturn(false);
-    expect(cmd.runCommand("diff", ImmutableList.of("-N", "-u", "/1/foo", "/2/foo"), ""))
+    expect(cmd.runCommand("", "diff", ImmutableList.of("-N", "-u", "/1/foo", "/2/foo")))
         .andReturn("");
 
     control.replay();

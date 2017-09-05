@@ -36,8 +36,9 @@ public class TarUtilsTest extends TestCase {
     fileSystem.makeDirs(new File("/dummy/path/45.expanded"));
     expect(fileSystem.getTemporaryDirectory("expanded_tar_"))
         .andReturn(new File("/dummy/path/45.expanded"));
-    expect(cmd.runCommand(
-            "tar", ImmutableList.of("-xf", "/dummy/path/45.tar"), "/dummy/path/45.expanded"))
+    expect(
+            cmd.runCommand(
+                "/dummy/path/45.expanded", "tar", ImmutableList.of("-xf", "/dummy/path/45.tar")))
         .andReturn("");
     control.replay();
     File expanded = tarUtils.expandTar(new File("/dummy/path/45.tar"));

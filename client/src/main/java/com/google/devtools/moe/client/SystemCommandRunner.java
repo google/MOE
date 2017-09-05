@@ -44,9 +44,9 @@ public class SystemCommandRunner implements CommandRunner {
 
   @Override
   public CommandOutput runCommandWithFullOutput(
-      String cmd, List<String> args, String workingDirectory) throws CommandException {
+      String workingDirectory, String command, List<String> args) throws CommandException {
     ImmutableList<String> cmdArgs =
-        new ImmutableList.Builder<String>().add(cmd).addAll(args).build();
+        new ImmutableList.Builder<String>().add(command).addAll(args).build();
 
     logger.fine(workingDirectory + " $ " + Joiner.on(" ").join(cmdArgs));
 
@@ -119,13 +119,13 @@ public class SystemCommandRunner implements CommandRunner {
     if (returnStatus == 0) {
       return new CommandOutput(stdoutData, stderrData);
     }
-    throw new CommandException(cmd, args, stdoutData, stderrData, returnStatus);
+    throw new CommandException(command, args, stdoutData, stderrData, returnStatus);
   }
 
   @Override
-  public String runCommand(String cmd, List<String> args, String workingDirectory)
+  public String runCommand(String workingDirectory, String command, List<String> args)
       throws CommandException {
-    return runCommandWithFullOutput(cmd, args, workingDirectory).getStdout();
+    return runCommandWithFullOutput(workingDirectory, command, args).getStdout();
   }
 
   private static class Sink {

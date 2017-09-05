@@ -27,17 +27,12 @@ import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.testing.TestingModule;
-
 import dagger.Provides;
-
+import java.io.File;
+import javax.inject.Singleton;
 import junit.framework.TestCase;
-
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
-
-import java.io.File;
-
-import javax.inject.Singleton;
 
 public class SvnWriterCreatorTest extends TestCase {
   private final IMocksControl control = EasyMock.createControl();
@@ -85,10 +80,15 @@ public class SvnWriterCreatorTest extends TestCase {
     expect(revisionHistory.findHighestRevision("45")).andReturn(result);
     expect(
             cmd.runCommand(
+                "",
                 "svn",
                 ImmutableList.of(
-                    "--no-auth-cache", "co", "-r", "45", "http://foo/svn/trunk/", "/dummy/path/45"),
-                ""))
+                    "--no-auth-cache",
+                    "co",
+                    "-r",
+                    "45",
+                    "http://foo/svn/trunk/",
+                    "/dummy/path/45")))
         .andReturn("");
 
     control.replay();

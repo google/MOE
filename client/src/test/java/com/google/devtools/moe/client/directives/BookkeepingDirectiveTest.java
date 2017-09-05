@@ -89,11 +89,11 @@ public class BookkeepingDirectiveTest extends TestCase {
             "-u",
             "/dummy/codebase/int/migrated_from/file",
             "/dummy/codebase/pub/migrated_to/file");
-    expect(cmd.runCommand("diff", args, "")).andReturn("unused");
+    expect(cmd.runCommand("", "diff", args)).andReturn("unused");
 
     // updateHeadEquivalence
     args = ImmutableList.of("-N", "-u", "/dummy/codebase/int/1/file", "/dummy/codebase/pub/1/file");
-    expect(cmd.runCommand("diff", args, "")).andReturn("unused");
+    expect(cmd.runCommand("", "diff", args)).andReturn("unused");
   }
 
   /**
@@ -131,10 +131,11 @@ public class BookkeepingDirectiveTest extends TestCase {
     d.dbLocation = DB_FILE.getAbsolutePath();
 
     expect(
-        cmd.runCommand(
-            "diff",
-            ImmutableList.of(
-                "-N", "-u", "/dummy/codebase/int/1/file", "/dummy/codebase/pub/1/file"), ""))
+            cmd.runCommand(
+                "",
+                "diff",
+                ImmutableList.of(
+                    "-N", "-u", "/dummy/codebase/int/1/file", "/dummy/codebase/pub/1/file")))
         .andReturn("unused");
 
     control.replay();
