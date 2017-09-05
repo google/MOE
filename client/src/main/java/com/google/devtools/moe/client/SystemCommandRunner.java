@@ -16,6 +16,8 @@
 
 package com.google.devtools.moe.client;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -54,7 +56,8 @@ public class SystemCommandRunner implements CommandRunner {
     }
     Process p;
     int returnStatus;
-    String stdoutData, stderrData;
+    String stdoutData;
+    String stderrData;
     try {
       p = pb.start();
       p.getOutputStream().close();
@@ -157,7 +160,7 @@ public class SystemCommandRunner implements CommandRunner {
       for (Byte b : bytes) {
         byteArray[i++] = b;
       }
-      return new String(byteArray);
+      return new String(byteArray, UTF_8);
     }
   }
 
