@@ -27,14 +27,11 @@ import com.google.devtools.moe.client.parser.Parser;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.tools.FileDifference.FileDiffer;
-
 import dagger.Provides;
 import dagger.multibindings.IntoMap;
 import dagger.multibindings.StringKey;
-
-import org.kohsuke.args4j.Option;
-
 import javax.inject.Inject;
+import org.kohsuke.args4j.Option;
 
 /**
  * Merge three codebases into one.
@@ -80,8 +77,8 @@ public class MergeCodebasesDirective extends Directive {
   @Override
   protected int performDirectiveBehavior() {
     Codebase originalCodebase;
-    Codebase destinationCodebase;
     Codebase modifiedCodebase;
+    Codebase destinationCodebase;
     try {
       originalCodebase = Parser.parseExpression(originalExpression).createCodebase(context);
       modifiedCodebase = Parser.parseExpression(modifiedExpression).createCodebase(context);
@@ -92,7 +89,7 @@ public class MergeCodebasesDirective extends Directive {
       throw new MoeProblem(e, "Error creating codebase");
     }
     new CodebaseMerger(
-            ui, filesystem, cmd, differ, originalCodebase, destinationCodebase, modifiedCodebase)
+            ui, filesystem, cmd, differ, originalCodebase, modifiedCodebase, destinationCodebase)
         .merge();
     return 0;
   }
