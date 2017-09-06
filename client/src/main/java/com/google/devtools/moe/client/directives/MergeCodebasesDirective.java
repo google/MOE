@@ -79,7 +79,9 @@ public class MergeCodebasesDirective extends Directive {
 
   @Override
   protected int performDirectiveBehavior() {
-    Codebase originalCodebase, destinationCodebase, modifiedCodebase;
+    Codebase originalCodebase;
+    Codebase destinationCodebase;
+    Codebase modifiedCodebase;
     try {
       originalCodebase = Parser.parseExpression(originalExpression).createCodebase(context);
       modifiedCodebase = Parser.parseExpression(modifiedExpression).createCodebase(context);

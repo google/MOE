@@ -61,7 +61,8 @@ public class DiffCodebasesDirective extends Directive {
 
   @Override
   protected int performDirectiveBehavior() {
-    Codebase codebase1, codebase2;
+    Codebase codebase1;
+    Codebase codebase2;
     try {
       codebase1 = Parser.parseExpression(codebase1Spec).createCodebase(context);
       codebase2 = Parser.parseExpression(codebase2Spec).createCodebase(context);
