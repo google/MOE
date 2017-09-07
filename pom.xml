@@ -8,21 +8,22 @@
     <module>client</module>
   </modules>
   <properties>
-    <joda.time.version>2.8.1</joda.time.version>
-    <guava.version>21.0-SNAPSHOT</guava.version>
-    <gson.version>2.7</gson.version>
+    <joda.time.version>2.9.9</joda.time.version>
+    <guava.version>23.0</guava.version>
+    <gson.version>2.8.1</gson.version>
     <okhttp.version>2.5.0</okhttp.version>
     <json.sanitizer.version>1.1</json.sanitizer.version>
-    <dagger.version>2.5</dagger.version>
-    <auto.value.version>1.4-rc1</auto.value.version>
-    <auto.factory.version>1.0-SNAPSHOT</auto.factory.version>
+    <dagger.version>2.11</dagger.version>
+    <auto.value.version>1.5</auto.value.version>
+    <auto.factory.version>1.0-beta5</auto.factory.version>
     <auto.value.gson.version>0.4.4</auto.value.gson.version>
-    <jsr305.version>3.0.1</jsr305.version>
+    <jsr305.version>3.0.2</jsr305.version>
     <args4j.version>2.32</args4j.version>
-    <junit.version>4.12</junit.version>
-    <truth.version>0.28</truth.version>
+    <junit.version>4.13-SNAPSHOT</junit.version>
+    <truth.version>0.35</truth.version>
     <easymock.version>3.1</easymock.version>
     <mockito.version>1.9.5</mockito.version>
+    <errorprone.version>2.1.1</errorprone.version>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -78,6 +79,12 @@
         <groupId>com.ryanharter.auto.value</groupId>
         <artifactId>auto-value-gson</artifactId>
         <version>${auto.value.gson.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>com.google.errorprone</groupId>
+        <artifactId>error_prone_annotations</artifactId>
+        <version>${errorprone.version}</version>
         <scope>provided</scope>
       </dependency>
       <dependency>
