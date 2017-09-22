@@ -38,11 +38,11 @@ documentation update, which is forthcoming.
 ### Building MOE
 
 1. Install Apache Maven 3.1 if you don't already have it
-   2. Checkout the Java-MOE source `git clone git@github.com:google/MOE.git`
-   3.  In the top-level directory that contains the build.xml file, run:
+2. Checkout the Java-MOE source `git clone git@github.com:google/MOE.git`
+3.  In the top-level directory that contains the build.xml file, run:
      - `mvn install`
      - `util/make-binary.sh`
-   4. The moe client binary should be created at `client/target/moe`
+4. The moe client binary should be created at `client/target/moe`
 
 
 ### Running MOE
