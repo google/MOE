@@ -27,6 +27,7 @@ import com.google.devtools.moe.client.dvcs.AbstractDvcsWriter;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 
 import java.util.List;
+import org.joda.time.format.ISODateTimeFormat;
 
 /**
  * Git implementation of {@link AbstractDvcsWriter}. Writes migrated commits to a
@@ -66,7 +67,9 @@ public class GitWriter extends AbstractDvcsWriter<GitClonedRepository> {
   protected void commitChanges(RevisionMetadata rm) throws CommandException {
     List<String> args =
         Lists.newArrayList(
-            "commit", "--all", "--message", rm.description(), "--date", rm.date().toString());
+            "commit", "--all",
+            "--message", rm.description(),
+            "--date", ISODateTimeFormat.dateTimeNoMillis().print(rm.date()));
     if (rm.author() != null) {
       args.add("--author");
       args.add(rm.author());
