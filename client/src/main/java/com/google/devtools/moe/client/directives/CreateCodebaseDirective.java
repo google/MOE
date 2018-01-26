@@ -26,6 +26,7 @@ import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.Ui.Task;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
+import com.google.devtools.moe.client.parser.ExpressionEngine;
 import com.google.devtools.moe.client.parser.Parser;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
 import com.google.devtools.moe.client.project.ProjectContext;
@@ -52,12 +53,15 @@ public class CreateCodebaseDirective extends Directive {
   private final ProjectContext context;
   private final CommandRunner cmd;
   private final Ui ui;
+  private final ExpressionEngine expressionEngine;
 
   @Inject
-  CreateCodebaseDirective(ProjectContext context, CommandRunner cmd, Ui ui) {
+  CreateCodebaseDirective(
+      ProjectContext context, CommandRunner cmd, Ui ui, ExpressionEngine expressionEngine) {
     this.context = context;
     this.cmd = cmd;
     this.ui = ui;
+    this.expressionEngine = expressionEngine;
   }
 
   @Override
@@ -65,10 +69,8 @@ public class CreateCodebaseDirective extends Directive {
     Task createCodebaseTask = ui.pushTask("create_codebase", "Creating codebase %s", codebase);
     Codebase c;
     try {
-      c = Parser.parseExpression(codebase).createCodebase(context);
-    } catch (ParseError e) {
-      throw new MoeProblem(e, "Error creating codebase");
-    } catch (CodebaseCreationError e) {
+      c = expressionEngine.createCodebase(Parser.parseExpression(codebase), context);
+    } catch (ParseError | CodebaseCreationError e) {
       throw new MoeProblem(e, "Error creating codebase");
     }
     ui.message("Codebase \"%s\" created at %s", c, c.path());

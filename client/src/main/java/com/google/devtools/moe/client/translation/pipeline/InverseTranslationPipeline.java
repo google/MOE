@@ -23,6 +23,7 @@ import com.google.devtools.moe.client.Ui.Task;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.parser.Expression;
+import com.google.devtools.moe.client.parser.ExpressionEngine;
 import com.google.devtools.moe.client.parser.Parser;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
 import com.google.devtools.moe.client.project.ProjectContext;
@@ -79,12 +80,17 @@ import java.util.Map;
 public class InverseTranslationPipeline implements TranslationPipeline {
 
   private final Ui ui;
+  private final ExpressionEngine expressionEngine;
   private final List<TranslationStep> forwardSteps;
   private final List<InverseTranslationStep> inverseSteps;
 
   public InverseTranslationPipeline(
-      Ui ui, List<TranslationStep> forwardSteps, List<InverseTranslationStep> inverseSteps) {
+      Ui ui,
+      ExpressionEngine expressionEngine,
+      List<TranslationStep> forwardSteps,
+      List<InverseTranslationStep> inverseSteps) {
     this.ui = ui;
+    this.expressionEngine = expressionEngine;
     Preconditions.checkArgument(!inverseSteps.isEmpty());
     Preconditions.checkArgument(inverseSteps.size() == forwardSteps.size());
     this.forwardSteps = forwardSteps;
@@ -96,18 +102,18 @@ public class InverseTranslationPipeline implements TranslationPipeline {
       Codebase toTranslate, Map<String, String> options, ProjectContext context)
       throws CodebaseCreationError {
     Preconditions.checkNotNull(
-        options.get("referenceToCodebase"),
-        "Inverse translation requires key 'referenceToCodebase'.");
+        options.get("referenceTargetCodebase"),
+        "Inverse translation requires key 'referenceTargetCodebase'.");
 
     Deque<Codebase> forwardTranslationStack = makeForwardTranslationStack(options, context);
 
-    Codebase refFrom;
+    Codebase referenceFromCodebase;
     // For the first reference from-codebase, use the 'referenceFromCodebase' option if given,
     // otherwise use the top of the forward-translation stack.
     if (options.get("referenceFromCodebase") != null) {
       try {
-        refFrom =
-            Parser.parseExpression(options.get("referenceFromCodebase")).createCodebase(context);
+        Expression expression = Parser.parseExpression(options.get("referenceFromCodebase"));
+        referenceFromCodebase = expressionEngine.createCodebase(expression, context);
       } catch (ParseError e) {
         throw new CodebaseCreationError(
             "Couldn't parse referenceFromCodebase '%s': %s",
@@ -116,10 +122,10 @@ public class InverseTranslationPipeline implements TranslationPipeline {
       // Discard the "default" reference from-codebase, i.e. the top of the forward-trans stack.
       forwardTranslationStack.pop();
     } else {
-      refFrom = forwardTranslationStack.pop();
+      referenceFromCodebase = forwardTranslationStack.pop();
     }
 
-    Codebase refTo = forwardTranslationStack.peek();
+    Codebase referenceTargetCodebase = forwardTranslationStack.peek();
     Codebase inverseTranslated = toTranslate;
 
     for (InverseTranslationStep inverseStep : inverseSteps) {
@@ -128,15 +134,18 @@ public class InverseTranslationPipeline implements TranslationPipeline {
               "inverseEdit",
               "Inverse-translating step %s by merging codebase %s onto %s",
               inverseStep.name(),
-              refTo,
-              refFrom);
+              referenceTargetCodebase,
+              referenceFromCodebase);
 
       inverseTranslated =
-          inverseStep.getInverseEditor().inverseEdit(inverseTranslated, refFrom, refTo, options);
+          inverseStep
+              .getInverseEditor()
+              .inverseEdit(
+                  inverseTranslated, referenceFromCodebase, referenceTargetCodebase, options);
 
       ui.popTaskAndPersist(task, inverseTranslated.path());
-      refFrom = forwardTranslationStack.pop();
-      refTo = forwardTranslationStack.peek();
+      referenceFromCodebase = forwardTranslationStack.pop();
+      referenceTargetCodebase = forwardTranslationStack.peek();
     }
 
     return inverseTranslated;
@@ -151,8 +160,9 @@ public class InverseTranslationPipeline implements TranslationPipeline {
       Task task =
           ui.pushTask(
               "refTo",
-              "Pushing to forward-translation stack: " + options.get("referenceToCodebase"));
-      refTo = Parser.parseExpression(options.get("referenceToCodebase")).createCodebase(context);
+              "Pushing to forward-translation stack: " + options.get("referenceTargetCodebase"));
+      Expression expression = Parser.parseExpression(options.get("referenceTargetCodebase"));
+      refTo = expressionEngine.createCodebase(expression, context);
       forwardTransStack.push(refTo);
       ui.popTaskAndPersist(task, refTo.path());
     } catch (ParseError e) {

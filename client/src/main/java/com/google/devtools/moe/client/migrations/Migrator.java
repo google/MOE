@@ -74,8 +74,6 @@ public class Migrator {
    * @param migration the Migration representing the migration to perform
    * @param repositoryType the RepositoryType of the from repository.
    * @param destination the Writer to put the changes from the Migration into
-   * @param referenceToCodebase the reference to-codebase Expression used in case this Migration
-   *     is an inverse translation
    *
    * @return  a DraftRevision on success, or null on failure
    */
@@ -86,8 +84,7 @@ public class Migrator {
       Revision mostRecentFromRev,
       MetadataScrubberConfig metadataScrubberConfig,
       ScrubberConfig scrubberConfig,
-      Writer destination,
-      Expression referenceToCodebase) {
+      Writer destination) {
 
     RevisionHistory revisionHistory = repositoryType.revisionHistory();
     RevisionMetadata metadata =

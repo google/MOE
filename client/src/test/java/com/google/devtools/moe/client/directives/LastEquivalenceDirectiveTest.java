@@ -36,7 +36,7 @@ public class LastEquivalenceDirectiveTest extends TestCase {
   private final Repositories repositories =
       new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory()));
   private final InMemoryProjectContextFactory contextFactory =
-      new InMemoryProjectContextFactory(ui, repositories);
+      new InMemoryProjectContextFactory(null, ui, repositories);
   private final Db db = new DummyDb(true, ui);
 
   public void testPerform() throws Exception {

@@ -34,7 +34,7 @@ public class HighestRevisionDirectiveTest extends TestCase {
   private final Repositories repositories =
       new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory()));
   private final InMemoryProjectContextFactory contextFactory =
-      new InMemoryProjectContextFactory(ui, repositories);
+      new InMemoryProjectContextFactory(null, ui, repositories);
 
   public void testWithoutRevision() throws Exception {
     contextFactory.projectConfigs.put(

@@ -21,6 +21,7 @@ import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.NullFileSystemModule;
 import com.google.devtools.moe.client.SystemCommandRunner;
+import com.google.devtools.moe.client.parser.RepositoryExpression.WriterFactory;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.project.ProjectContext.NoopProjectContext;
 import com.google.devtools.moe.client.repositories.RepositoryType;
@@ -39,15 +40,19 @@ public class RepositoryExpressionTest extends TestCase {
     Injector context(); // TODO (b/19676630) Remove when bug is fixed.
   }
 
+  private WriterFactory writerFactory;
+
   @Override
   protected void setUp() throws Exception {
     super.setUp();
     Injector.INSTANCE = DaggerExpressionTest_Component.create().context();
+    writerFactory = new WriterFactory(Injector.INSTANCE.ui());
   }
 
   public void testMakeWriter_NonexistentRepository() throws Exception {
     try {
-      new RepositoryExpression("internal").createWriter(new NoopProjectContext());
+      RepositoryExpression expression = new RepositoryExpression("internal");
+      writerFactory.createWriter(expression, new NoopProjectContext());
       fail();
     } catch (MoeProblem expected) {
       assertEquals("No such repository 'internal' in the config. Found: []", expected.getMessage());
@@ -63,6 +68,7 @@ public class RepositoryExpressionTest extends TestCase {
             return ImmutableMap.of("internal", repositoryFactory.create("internal", null));
           }
         };
-    new RepositoryExpression("internal").createWriter(context);
+    RepositoryExpression expression = new RepositoryExpression("internal");
+    writerFactory.createWriter(expression, context);
   }
 }

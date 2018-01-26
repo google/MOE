@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.migrations.MigrationConfig;
+import com.google.devtools.moe.client.parser.ExpressionEngine;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.translation.editors.Editor;
@@ -41,12 +42,16 @@ import java.util.Map;
 // TODO(cgruber): Move most of the create logic to ProjectConfig, since they're basically accessors
 public abstract class ProjectContextFactory {
 
-  protected final Ui ui;
+  private final ExpressionEngine expressionEngine;
   private final Repositories repositories;
   private final Editors editors;
 
-  public ProjectContextFactory(Ui ui, Repositories repositories, Editors editors) {
+  protected final Ui ui;
+
+  public ProjectContextFactory(
+      ExpressionEngine expressionEngine, Ui ui, Repositories repositories, Editors editors) {
     // TODO(cgruber):push nullability back from this point.
+    this.expressionEngine = expressionEngine;
     this.repositories = Preconditions.checkNotNull(repositories);
     this.ui = ui;
     this.editors = editors;
@@ -118,14 +123,13 @@ public abstract class ProjectContextFactory {
     return builder.build();
   }
 
-
-
   TranslationPipeline makeTranslatorFromConfig(TranslatorConfig transConfig, ProjectConfig projConfig)
       throws InvalidProject {
     if (transConfig.isInverse()) {
       TranslatorConfig otherTrans = findInverseTranslatorConfig(transConfig, projConfig);
       return new InverseTranslationPipeline(
           ui,
+          expressionEngine,
           makeStepsFromConfigs(otherTrans.getSteps()),
           makeInverseStepsFromConfigs(otherTrans.getSteps()));
     } else {

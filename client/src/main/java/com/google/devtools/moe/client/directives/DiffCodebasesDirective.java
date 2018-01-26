@@ -20,20 +20,18 @@ import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
+import com.google.devtools.moe.client.parser.ExpressionEngine;
 import com.google.devtools.moe.client.parser.Parser;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.tools.CodebaseDiffer;
 import com.google.devtools.moe.client.tools.CodebaseDifference;
 import com.google.devtools.moe.client.tools.PatchCodebaseDifferenceRenderer;
-
 import dagger.Provides;
 import dagger.multibindings.IntoMap;
 import dagger.multibindings.StringKey;
-
-import org.kohsuke.args4j.Option;
-
 import javax.inject.Inject;
+import org.kohsuke.args4j.Option;
 
 /**
  * Print the diff of two Codebases.
@@ -51,12 +49,15 @@ public class DiffCodebasesDirective extends Directive {
   private final ProjectContext context;
   private final CodebaseDiffer differ;
   private final Ui ui;
+  private final ExpressionEngine expressionEngine;
 
   @Inject
-  DiffCodebasesDirective(ProjectContext context, CodebaseDiffer differ, Ui ui) {
+  DiffCodebasesDirective(
+      ProjectContext context, CodebaseDiffer differ, Ui ui, ExpressionEngine expressionEngine) {
     this.context = context;
     this.differ = differ;
     this.ui = ui;
+    this.expressionEngine = expressionEngine;
   }
 
   @Override
@@ -64,8 +65,8 @@ public class DiffCodebasesDirective extends Directive {
     Codebase codebase1;
     Codebase codebase2;
     try {
-      codebase1 = Parser.parseExpression(codebase1Spec).createCodebase(context);
-      codebase2 = Parser.parseExpression(codebase2Spec).createCodebase(context);
+      codebase1 = expressionEngine.createCodebase(Parser.parseExpression(codebase1Spec), context);
+      codebase2 = expressionEngine.createCodebase(Parser.parseExpression(codebase2Spec), context);
     } catch (ParseError e) {
       throw new MoeProblem(e, "Error parsing codebase expression");
     } catch (CodebaseCreationError e) {

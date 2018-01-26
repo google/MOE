@@ -21,6 +21,7 @@ import com.google.devtools.moe.client.directives.Directives;
 import com.google.devtools.moe.client.gson.GsonModule;
 import com.google.devtools.moe.client.options.OptionsModule;
 import com.google.devtools.moe.client.options.OptionsModule.Argument;
+import com.google.devtools.moe.client.parser.ExpressionModule;
 import com.google.devtools.moe.client.project.FileReadingProjectContextFactory;
 import com.google.devtools.moe.client.project.ProjectConfig;
 import com.google.devtools.moe.client.project.ProjectContext;
@@ -43,15 +44,16 @@ import javax.inject.Singleton;
 /** Module to register bindings for MOE. */
 @Module(
   includes = {
-    MoeModule.ExecutableModule.class,
-    Repositories.Defaults.class,
-    Editors.Defaults.class,
-    OptionsModule.class,
     Directives.Module.class,
+    Editors.Defaults.class,
+    ExpressionModule.class,
     FileDb.Module.class,
     GsonModule.class,
+    MetadataScrubber.Module.class,
+    MoeModule.ExecutableModule.class,
+    OptionsModule.class,
+    Repositories.Defaults.class,
     UiModule.class,
-    MetadataScrubber.Module.class
   }
 )
 public class MoeModule {

@@ -23,14 +23,17 @@ import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.SystemCommandRunner;
+import com.google.devtools.moe.client.SystemFileSystem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.migrations.Migrator;
+import com.google.devtools.moe.client.parser.ExpressionEngine;
+import com.google.devtools.moe.client.parser.RepositoryExpression.WriterFactory;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.MetadataScrubber;
 import com.google.devtools.moe.client.repositories.Repositories;
-import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
+import com.google.devtools.moe.client.testing.TestingUtils;
 import com.google.devtools.moe.client.writer.DraftRevision;
 import java.io.ByteArrayOutputStream;
 import junit.framework.TestCase;
@@ -40,16 +43,18 @@ public class OneMigrationDirectiveTest extends TestCase {
   private final ByteArrayOutputStream stream = new ByteArrayOutputStream();
   private final Ui ui = new Ui(stream, /* fileSystem */ null);
   private final SystemCommandRunner cmd = new SystemCommandRunner();
+  private final ExpressionEngine expressionEngine =
+      TestingUtils.expressionEngineWithRepo(ui, new SystemFileSystem(), cmd);
+  private final WriterFactory writerFactory = new WriterFactory(ui);
   private ProjectContext context;
 
   @Override
   public void setUp() throws Exception {
     Injector.INSTANCE = new Injector(null, cmd, ui);
     super.setUp();
-    Repositories repositories =
-        new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory()));
+    Repositories repositories = new Repositories(ImmutableSet.of(new DummyRepositoryFactory()));
     InMemoryProjectContextFactory contextFactory =
-        new InMemoryProjectContextFactory(ui, repositories);
+        new InMemoryProjectContextFactory(null, ui, repositories);
     contextFactory.projectConfigs.put(
         "moe_config.txt",
         "{\"name\":\"foo\",\"repositories\":{"
@@ -68,7 +73,9 @@ public class OneMigrationDirectiveTest extends TestCase {
             context,
             ui,
             new DraftRevision.Factory(ui),
-            new Migrator(new DraftRevision.Factory(ui), NO_SCRUBBERS, ui, null));
+            new Migrator(new DraftRevision.Factory(ui), NO_SCRUBBERS, ui, null),
+            writerFactory,
+            expressionEngine);
     d.fromRepository = "int(revision=1000)";
     d.toRepository = "pub(revision=2)";
     assertThat(d.perform()).isEqualTo(0);
@@ -82,7 +89,9 @@ public class OneMigrationDirectiveTest extends TestCase {
             context,
             ui,
             new DraftRevision.Factory(ui),
-            new Migrator(new DraftRevision.Factory(ui), NO_SCRUBBERS, ui, null));
+            new Migrator(new DraftRevision.Factory(ui), NO_SCRUBBERS, ui, null),
+            writerFactory,
+            expressionEngine);
     d.fromRepository = "x(revision=1000)";
     d.toRepository = "pub(revision=2)";
     try {
@@ -101,7 +110,9 @@ public class OneMigrationDirectiveTest extends TestCase {
             context,
             ui,
             new DraftRevision.Factory(ui),
-            new Migrator(new DraftRevision.Factory(ui), NO_SCRUBBERS, ui, null));
+            new Migrator(new DraftRevision.Factory(ui), NO_SCRUBBERS, ui, null),
+            writerFactory,
+            expressionEngine);
     d.fromRepository = "int(revision=1000)";
     d.toRepository = "x(revision=2)";
     try {

@@ -17,13 +17,14 @@
 package com.google.devtools.moe.client.parser;
 
 import com.google.common.base.Preconditions;
-import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.translation.pipeline.TranslationPath;
 import com.google.devtools.moe.client.translation.pipeline.TranslationPipeline;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
 /**
  * An expression encapsulating the transformation of the given Expression's Codebase via the
@@ -42,49 +43,13 @@ public class TranslateExpression extends AbstractExpression {
     this.translateOp = translateOp;
   }
 
-  @Override
-  public Codebase createCodebase(ProjectContext context) throws CodebaseCreationError {
-    Codebase codebaseToTranslate = exToTranslate.createCodebase(context);
-    String toProjectSpace = translateOp.term.identifier;
-    TranslationPath path =
-        TranslationPath.create(codebaseToTranslate.projectSpace(), toProjectSpace);
-    TranslationPipeline translator = context.translators().get(path);
-    if (translator == null) {
-      throw new CodebaseCreationError(
-          "Could not find translator from project space \"%s\" to \"%s\".\n"
-              + "Translators only available for %s",
-          codebaseToTranslate.projectSpace(), toProjectSpace, context.translators().keySet());
-    }
-
-    Ui.Task translateTask =
-        Injector.INSTANCE
-            .ui()
-            .pushTask(
-                "translate",
-                "Translating %s from project space \"%s\" to \"%s\"",
-                codebaseToTranslate.path(),
-                codebaseToTranslate.projectSpace(),
-                toProjectSpace);
-
-    Codebase translatedCodebase =
-        translator.translate(codebaseToTranslate, translateOp.term.options, context);
-
-    // Don't mark the translated codebase for persistence if it wasn't allocated by the Translator.
-    if (translatedCodebase.equals(codebaseToTranslate)) {
-      Injector.INSTANCE.ui().popTask(translateTask, translatedCodebase.path() + " (unmodified)");
-    } else {
-      Injector.INSTANCE.ui().popTaskAndPersist(translateTask, translatedCodebase.path());
-    }
-    return translatedCodebase.copyWithExpression(this).copyWithProjectSpace(toProjectSpace);
-  }
-
   /**
    * Returns a new TranslateExpression performing this translation with the given reference
-   * to-codebase. This is used by inverse translation, for example when inspecting changes such
-   * as renamings in the reference to-codebase for the purpose of inverting those renamings.
+   * to-codebase. This is used by inverse translation, for example when inspecting changes such as
+   * renamings in the reference to-codebase for the purpose of inverting those renamings.
    */
-  public TranslateExpression withReferenceToCodebase(Expression referenceToCodebase) {
-    return withOption("referenceToCodebase", referenceToCodebase.toString());
+  public TranslateExpression withReferenceTargetCodebase(Expression referenceTargetCodebase) {
+    return withOption("referenceTargetCodebase", referenceTargetCodebase.toString());
   }
 
   /**
@@ -105,5 +70,55 @@ public class TranslateExpression extends AbstractExpression {
   @Override
   public String toString() {
     return exToTranslate.toString() + translateOp.toString();
+  }
+
+  @Singleton
+  public static class TranslatedCodebaseProcessor
+      implements CodebaseProcessor<TranslateExpression> {
+    private final Ui ui;
+    private final ExpressionEngine expressionEngine;
+
+    @Inject
+    public TranslatedCodebaseProcessor(Ui ui, ExpressionEngine expressionEngine) {
+      this.ui = ui;
+      this.expressionEngine = expressionEngine;
+    }
+
+    @Override
+    public Codebase createCodebase(TranslateExpression expression, ProjectContext context)
+        throws CodebaseCreationError {
+      Codebase codebaseToTranslate =
+          expressionEngine.createCodebase(expression.exToTranslate, context);
+      String toProjectSpace = expression.translateOp.term.identifier;
+      TranslationPath path =
+          TranslationPath.create(codebaseToTranslate.projectSpace(), toProjectSpace);
+      TranslationPipeline translator = context.translators().get(path);
+      if (translator == null) {
+        throw new CodebaseCreationError(
+            "Could not find translator from project space \"%s\" to \"%s\".\n"
+                + "Translators only available for %s",
+            codebaseToTranslate.projectSpace(), toProjectSpace, context.translators().keySet());
+      }
+
+      Ui.Task translateTask =
+          ui.pushTask(
+              "translate",
+              "Translating %s from project space \"%s\" to \"%s\"",
+              codebaseToTranslate.path(),
+              codebaseToTranslate.projectSpace(),
+              toProjectSpace);
+
+      Codebase translatedCodebase =
+          translator.translate(codebaseToTranslate, expression.translateOp.term.options, context);
+
+      // Don't mark the translated codebase for persistence if it wasn't allocated by the
+      // Translator.
+      if (translatedCodebase.equals(codebaseToTranslate)) {
+        ui.popTask(translateTask, translatedCodebase.path() + " (unmodified)");
+      } else {
+        ui.popTaskAndPersist(translateTask, translatedCodebase.path());
+      }
+      return translatedCodebase.copyWithExpression(expression).copyWithProjectSpace(toProjectSpace);
+    }
   }
 }

@@ -31,11 +31,14 @@ import com.google.devtools.moe.client.tools.TarUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
 /**
  * Creates a codebase based upon a local existing directory. Primarily used for testing purposes.
  * Works with single files and directories.
  */
+@Singleton
 public class FileCodebaseCreator extends CodebaseCreator {
   private static final String PATH_OPTION = "path";
   private static final String PROJECT_SPACE_OPTION = "projectspace";
@@ -43,7 +46,8 @@ public class FileCodebaseCreator extends CodebaseCreator {
   private final FileSystem filesystem;
   private final TarUtils tarUtils;
 
-  public FileCodebaseCreator(FileSystem filesystem, TarUtils tarUtils) {
+  @Inject
+  FileCodebaseCreator(FileSystem filesystem, TarUtils tarUtils) {
     this.filesystem = filesystem;
     this.tarUtils = tarUtils;
   }

@@ -21,20 +21,20 @@ import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.Ui.Task;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
+import com.google.devtools.moe.client.parser.ExpressionEngine;
 import com.google.devtools.moe.client.parser.Parser;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
+import com.google.devtools.moe.client.parser.RepositoryExpression;
+import com.google.devtools.moe.client.parser.RepositoryExpression.WriterFactory;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.writer.DraftRevision;
 import com.google.devtools.moe.client.writer.Writer;
 import com.google.devtools.moe.client.writer.WritingError;
-
 import dagger.Provides;
 import dagger.multibindings.IntoMap;
 import dagger.multibindings.StringKey;
-
-import org.kohsuke.args4j.Option;
-
 import javax.inject.Inject;
+import org.kohsuke.args4j.Option;
 
 /**
  * Create a Change in a source control system using command line flags.
@@ -48,12 +48,21 @@ public class ChangeDirective extends Directive {
 
   private final ProjectContext context;
   private final Ui ui;
+  private final ExpressionEngine expressionEngine;
+  private final WriterFactory writerFactory;
   private final DraftRevision.Factory revisionFactory;
 
   @Inject
-  ChangeDirective(ProjectContext context, Ui ui, DraftRevision.Factory revisionFactory) {
+  ChangeDirective(
+      ProjectContext context,
+      Ui ui,
+      ExpressionEngine expressionEngine,
+      WriterFactory writerFactory,
+      DraftRevision.Factory revisionFactory) {
     this.context = context;
     this.ui = ui;
+    this.expressionEngine = expressionEngine;
+    this.writerFactory = writerFactory;
     this.revisionFactory = revisionFactory;
   }
 
@@ -68,7 +77,7 @@ public class ChangeDirective extends Directive {
 
     Codebase c;
     try {
-      c = Parser.parseExpression(codebase).createCodebase(context);
+      c = expressionEngine.createCodebase(Parser.parseExpression(codebase), context);
     } catch (ParseError e) {
       throw new MoeProblem(e, "Error parsing codebase");
     } catch (CodebaseCreationError e) {
@@ -77,7 +86,8 @@ public class ChangeDirective extends Directive {
 
     Writer writer;
     try {
-      writer = Parser.parseRepositoryExpression(destination).createWriter(context);
+      RepositoryExpression destinationExpression = Parser.parseRepositoryExpression(destination);
+      writer = writerFactory.createWriter(destinationExpression, context);
     } catch (ParseError e) {
       throw new MoeProblem(e, "Error parsing change destination");
     } catch (WritingError e) {

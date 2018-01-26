@@ -26,6 +26,7 @@ import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.migrations.MigrationConfig;
 import com.google.devtools.moe.client.parser.Expression;
+import com.google.devtools.moe.client.parser.ExpressionEngine;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.project.TranslatorConfig;
@@ -34,12 +35,10 @@ import com.google.devtools.moe.client.repositories.RevisionHistory;
 import com.google.devtools.moe.client.repositories.RevisionHistory.SearchType;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.tools.CodebaseDiffer;
-
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
-
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
@@ -56,13 +55,20 @@ public class Bookkeeper {
   private final CodebaseDiffer differ;
   private final Db db;
   private final Ui ui;
+  private final ExpressionEngine expressionEngine;
 
   @Inject
-  public Bookkeeper(ProjectContext context, CodebaseDiffer differ, Db db, Ui ui) {
+  public Bookkeeper(
+      ProjectContext context,
+      CodebaseDiffer differ,
+      Db db,
+      Ui ui,
+      ExpressionEngine expressionEngine) {
     this.context = context;
     this.differ = differ;
     this.db = db;
     this.ui = ui;
+    this.expressionEngine = expressionEngine;
   }
 
   private Revision head(String repositoryName) {
@@ -121,7 +127,7 @@ public class Bookkeeper {
       expression = expression.translateTo(translateSpace);
     }
     try {
-      return expression.createCodebase(context);
+      return expressionEngine.createCodebase(expression, context);
     } catch (CodebaseCreationError e) {
       // Don't error out, since we're only bookkeeping.
       ui.message("WARNING: Could not create codebase: %s,", expression);

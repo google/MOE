@@ -17,17 +17,15 @@
 package com.google.devtools.moe.client.directives;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.devtools.moe.client.directives.MigrateBranchDirective.findRevisionsToMigrate;
 
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.testing.DummyRevisionHistory;
-
-import junit.framework.TestCase;
-
-import org.joda.time.DateTime;
-
 import java.io.ByteArrayOutputStream;
 import java.util.List;
+import junit.framework.TestCase;
+import org.joda.time.DateTime;
 
 public class MigrateBranchDirectiveTest extends TestCase {
   private static final String AUTHOR = "foo@foo.com";
@@ -57,8 +55,7 @@ public class MigrateBranchDirectiveTest extends TestCase {
             .add("7", AUTHOR, "rev 7", new DateTime(73600000L), "6", "3") // merge
             .add("8", AUTHOR, "rev 8", new DateTime(83600000L), "7")
             .build();
-    MigrateBranchDirective directive = new MigrateBranchDirective(null, null, null, ui, null);
-    List<Revision> revisions = directive.findDescendantRevisions(branch, parentBranch);
+    List<Revision> revisions = findRevisionsToMigrate(ui, branch, parentBranch);
 
     assertThat(revisions)
         .containsExactly(

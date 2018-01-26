@@ -15,6 +15,7 @@
  */
 package com.google.devtools.moe.client.tools;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
@@ -22,13 +23,16 @@ import com.google.devtools.moe.client.FileSystem;
 import java.io.File;
 import java.io.IOException;
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 /** Utilities to allow code to manipulate {@code .tar} files. */
+@Singleton
 public final class TarUtils {
   private final FileSystem filesystem;
   private final CommandRunner cmd;
 
   @Inject
+  @VisibleForTesting
   public TarUtils(FileSystem filesystem, CommandRunner cmd) {
     this.filesystem = filesystem;
     this.cmd = cmd;

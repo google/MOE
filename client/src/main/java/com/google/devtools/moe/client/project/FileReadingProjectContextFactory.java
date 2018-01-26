@@ -20,6 +20,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.io.Files;
 import com.google.devtools.moe.client.Ui;
+import com.google.devtools.moe.client.parser.ExpressionEngine;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.translation.editors.Editors;
 import java.io.File;
@@ -32,8 +33,9 @@ import javax.inject.Inject;
 public class FileReadingProjectContextFactory extends ProjectContextFactory {
 
   @Inject
-  public FileReadingProjectContextFactory(Ui ui, Repositories repositories, Editors editors) {
-    super(ui, repositories, editors);
+  public FileReadingProjectContextFactory(
+      ExpressionEngine expressionEngine, Ui ui, Repositories repositories, Editors editors) {
+    super(expressionEngine, ui, repositories, editors);
   }
 
   @Override

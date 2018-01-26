@@ -33,6 +33,7 @@ import com.google.devtools.moe.client.database.FileDb;
 import com.google.devtools.moe.client.database.RepositoryEquivalence;
 import com.google.devtools.moe.client.database.SubmittedMigration;
 import com.google.devtools.moe.client.gson.GsonModule;
+import com.google.devtools.moe.client.parser.ExpressionEngine;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.repositories.RepositoryType;
@@ -40,6 +41,7 @@ import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
 import com.google.devtools.moe.client.testing.InMemoryFileSystem;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
+import com.google.devtools.moe.client.testing.TestingUtils;
 import com.google.devtools.moe.client.tools.CodebaseDiffer;
 import com.google.devtools.moe.client.tools.FileDifference.ConcreteFileDiffer;
 import com.google.devtools.moe.client.tools.FileDifference.FileDiffer;
@@ -61,7 +63,6 @@ import org.easymock.IMocksControl;
 public class BookkeepingDirectiveTest extends TestCase {
   private static final File DB_FILE = new File("/path/to/db");
   private final ByteArrayOutputStream stream = new ByteArrayOutputStream();
-  private final Ui ui = new Ui(stream, /* fileSystem */ null);
   private final IMocksControl control = EasyMock.createControl();
   private final CommandRunner cmd = control.createMock(CommandRunner.class);
   private final DbStorage storage = new DbStorage();
@@ -119,15 +120,17 @@ public class BookkeepingDirectiveTest extends TestCase {
     Repositories repositories =
         new Repositories(
             ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory()));
+    Ui ui = new Ui(stream, filesystem);
+    ExpressionEngine expressionEngine = TestingUtils.expressionEngineWithRepo(ui, filesystem, cmd);
     InMemoryProjectContextFactory contextFactory =
-        init(new InMemoryProjectContextFactory(ui, repositories));
+        init(new InMemoryProjectContextFactory(expressionEngine, ui, repositories));
     ProjectContext context = contextFactory.create("moe_config.txt");
     Injector.INSTANCE = new Injector(filesystem, cmd, ui);
     Db db =
         new FileDb(
             DB_FILE.getPath(), storage, new FileDb.Writer(GsonModule.provideGson(), filesystem));
     BookkeepingDirective d =
-        new BookkeepingDirective(new Bookkeeper(context, codebaseDiffer, db, ui));
+        new BookkeepingDirective(new Bookkeeper(context, codebaseDiffer, db, ui, expressionEngine));
     d.dbLocation = DB_FILE.getAbsolutePath();
 
     expect(
@@ -167,15 +170,17 @@ public class BookkeepingDirectiveTest extends TestCase {
     Repositories repositories =
         new Repositories(
             ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory()));
+    Ui ui = new Ui(stream, filesystem);
+    ExpressionEngine expressionEngine = TestingUtils.expressionEngineWithRepo(ui, filesystem, cmd);
     InMemoryProjectContextFactory contextFactory =
-        init(new InMemoryProjectContextFactory(ui, repositories));
+        init(new InMemoryProjectContextFactory(expressionEngine, ui, repositories));
     ProjectContext context = contextFactory.create("moe_config.txt");
     Injector.INSTANCE = new Injector(filesystem, cmd, ui);
     Db db =
         new FileDb(
             DB_FILE.getPath(), storage, new FileDb.Writer(GsonModule.provideGson(), filesystem));
     BookkeepingDirective d =
-        new BookkeepingDirective(new Bookkeeper(context, codebaseDiffer, db, ui));
+        new BookkeepingDirective(new Bookkeeper(context, codebaseDiffer, db, ui, expressionEngine));
     d.dbLocation = DB_FILE.getAbsolutePath();
 
     expectDiffs();
@@ -210,15 +215,17 @@ public class BookkeepingDirectiveTest extends TestCase {
     Repositories repositories =
         new Repositories(
             ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory()));
+    Ui ui = new Ui(stream, filesystem);
+    ExpressionEngine expressionEngine = TestingUtils.expressionEngineWithRepo(ui, filesystem, cmd);
     InMemoryProjectContextFactory contextFactory =
-        init(new InMemoryProjectContextFactory(ui, repositories));
+        init(new InMemoryProjectContextFactory(expressionEngine, ui, repositories));
     ProjectContext context = contextFactory.create("moe_config.txt");
     Injector.INSTANCE = new Injector(filesystem, cmd, ui);
     Db db =
         new FileDb(
             DB_FILE.getPath(), storage, new FileDb.Writer(GsonModule.provideGson(), filesystem));
     BookkeepingDirective d =
-        new BookkeepingDirective(new Bookkeeper(context, codebaseDiffer, db, ui));
+        new BookkeepingDirective(new Bookkeeper(context, codebaseDiffer, db, ui, expressionEngine));
     d.dbLocation = DB_FILE.getAbsolutePath();
 
     expectDiffs();

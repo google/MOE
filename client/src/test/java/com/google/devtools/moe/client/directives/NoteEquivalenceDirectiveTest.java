@@ -43,7 +43,7 @@ public class NoteEquivalenceDirectiveTest extends TestCase {
   private final Repositories repositories =
       new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory()));
   private final InMemoryProjectContextFactory contextFactory =
-      new InMemoryProjectContextFactory(ui, repositories);
+      new InMemoryProjectContextFactory(null, ui, repositories);
   private final IMocksControl control = EasyMock.createControl();
   private final FileDb.Writer dbWriter = control.createMock(FileDb.Writer.class);
   private final DbStorage dbStorage = new DbStorage();

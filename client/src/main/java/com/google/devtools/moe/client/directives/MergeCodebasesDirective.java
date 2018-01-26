@@ -16,6 +16,8 @@
 
 package com.google.devtools.moe.client.directives;
 
+import static com.google.devtools.moe.client.parser.Parser.parseExpression;
+
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.MoeProblem;
@@ -23,7 +25,7 @@ import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.codebase.CodebaseMerger;
-import com.google.devtools.moe.client.parser.Parser;
+import com.google.devtools.moe.client.parser.ExpressionEngine;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.tools.FileDifference.FileDiffer;
@@ -63,15 +65,22 @@ public class MergeCodebasesDirective extends Directive {
   private final Ui ui;
   private final FileSystem filesystem;
   private final CommandRunner cmd;
+  private final ExpressionEngine expressionEngine;
 
   @Inject
   MergeCodebasesDirective(
-      ProjectContext context, FileDiffer differ, Ui ui, FileSystem filesystem, CommandRunner cmd) {
+      ProjectContext context,
+      FileDiffer differ,
+      Ui ui,
+      FileSystem filesystem,
+      CommandRunner cmd,
+      ExpressionEngine expressionEngine) {
     this.context = context;
     this.differ = differ;
     this.ui = ui;
     this.filesystem = filesystem;
     this.cmd = cmd;
+    this.expressionEngine = expressionEngine;
   }
 
   @Override
@@ -80,9 +89,12 @@ public class MergeCodebasesDirective extends Directive {
     Codebase modifiedCodebase;
     Codebase destinationCodebase;
     try {
-      originalCodebase = Parser.parseExpression(originalExpression).createCodebase(context);
-      modifiedCodebase = Parser.parseExpression(modifiedExpression).createCodebase(context);
-      destinationCodebase = Parser.parseExpression(destinationExpression).createCodebase(context);
+      originalCodebase =
+          expressionEngine.createCodebase(parseExpression(originalExpression), context);
+      modifiedCodebase =
+          expressionEngine.createCodebase(parseExpression(modifiedExpression), context);
+      destinationCodebase =
+          expressionEngine.createCodebase(parseExpression(destinationExpression), context);
     } catch (ParseError e) {
       throw new MoeProblem(e, "Error parsing");
     } catch (CodebaseCreationError e) {

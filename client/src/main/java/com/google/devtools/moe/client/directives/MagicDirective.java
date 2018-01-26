@@ -30,7 +30,9 @@ import com.google.devtools.moe.client.migrations.Migration;
 import com.google.devtools.moe.client.migrations.MigrationConfig;
 import com.google.devtools.moe.client.migrations.Migrator;
 import com.google.devtools.moe.client.parser.Expression;
+import com.google.devtools.moe.client.parser.ExpressionEngine;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
+import com.google.devtools.moe.client.parser.RepositoryExpression.WriterFactory;
 import com.google.devtools.moe.client.project.ProjectConfig;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.project.ScrubberConfig;
@@ -79,6 +81,8 @@ public class MagicDirective extends Directive {
   private final Ui ui;
   private final Migrator migrator;
   private final Bookkeeper bookkeeper;
+  private final WriterFactory writerFactory;
+  private final ExpressionEngine expressionEngine;
 
   @Inject
   MagicDirective(
@@ -86,12 +90,16 @@ public class MagicDirective extends Directive {
       ProjectContext context,
       Ui ui,
       Bookkeeper bookkeeper,
-      Migrator migrator) {
+      Migrator migrator,
+      WriterFactory writerFactory,
+      ExpressionEngine expressionEngine) {
     this.context = context;
     this.config = config;
     this.ui = ui;
     this.bookkeeper = bookkeeper;
     this.migrator = migrator;
+    this.writerFactory = writerFactory;
+    this.expressionEngine = expressionEngine;
   }
 
   @Override
@@ -119,32 +127,37 @@ public class MagicDirective extends Directive {
         continue;
       }
 
-      RepositoryType fromRepo = context.getRepository(migrationConfig.getFromRepository());
+      RepositoryType fromRepositoryType =
+          context.getRepository(migrationConfig.getFromRepository());
       List<Migration> migrations =
-          migrator.findMigrationsFromEquivalency(fromRepo, migrationConfig);
+          migrator.findMigrationsFromEquivalency(fromRepositoryType, migrationConfig);
 
       if (migrations.isEmpty()) {
         ui.message("No pending revisions to migrate for %s", migrationName);
         continue;
       }
 
-      RepositoryEquivalence lastEq = migrations.get(0).sinceEquivalence();
-      // toRe represents toRepo at the revision of last equivalence with fromRepo.
-      RepositoryExpression toRe = new RepositoryExpression(migrationConfig.getToRepository());
-      if (lastEq != null) {
-        toRe =
-            toRe.atRevision(
-                lastEq.getRevisionForRepository(migrationConfig.getToRepository()).revId());
+      RepositoryEquivalence lastRecordedEquivalence = migrations.get(0).sinceEquivalence();
+      RepositoryExpression targetRepositoryPointOfEquivalency =
+          new RepositoryExpression(migrationConfig.getToRepository());
+      if (lastRecordedEquivalence != null) {
+        targetRepositoryPointOfEquivalency =
+            targetRepositoryPointOfEquivalency.atRevision(
+                lastRecordedEquivalence
+                    .getRevisionForRepository(migrationConfig.getToRepository())
+                    .revId());
       }
 
-      Writer toWriter;
+      Writer targetCodebaseWriter;
       try {
-        toWriter = toRe.createWriter(context);
+        targetCodebaseWriter =
+            writerFactory.createWriter(targetRepositoryPointOfEquivalency, context);
       } catch (WritingError e) {
-        throw new MoeProblem("Couldn't create local repo %s: %s", toRe, e);
+        throw new MoeProblem(
+            "Couldn't create local repo %s: %s", targetRepositoryPointOfEquivalency, e);
       }
 
-      DraftRevision dr = null;
+      DraftRevision draftRevision = null;
       int currentlyPerformedMigration = 1; // To display to users.
       for (Migration migration : migrations) {
 
@@ -170,9 +183,9 @@ public class MagicDirective extends Directive {
 
         // For each migration, the reference to-codebase for inverse translation is the Writer,
         // since it contains the latest changes (i.e. previous migrations) to the to-repository.
-        Expression referenceToCodebase =
+        Expression referenceTargetCodebase =
             new RepositoryExpression(migrationConfig.getToRepository())
-                .withOption("localroot", toWriter.getRoot().getAbsolutePath());
+                .withOption("localroot", targetCodebaseWriter.getRoot().getAbsolutePath());
 
         Ui.Task oneMigrationTask =
             ui.pushTask(
@@ -186,14 +199,14 @@ public class MagicDirective extends Directive {
             migration.fromRevisions().get(migration.fromRevisions().size() - 1);
         Codebase fromCodebase;
         try {
-          String toProjectSpace =
+          String targetProjectSpace =
               config.getRepositoryConfig(migration.toRepository()).getProjectSpace();
-          fromCodebase =
+          Expression fromExpression =
               new RepositoryExpression(migration.fromRepository())
                   .atRevision(mostRecentFromRev.revId())
-                  .translateTo(toProjectSpace)
-                  .withReferenceToCodebase(referenceToCodebase)
-                  .createCodebase(context);
+                  .translateTo(targetProjectSpace)
+                  .withReferenceTargetCodebase(referenceTargetCodebase);
+          fromCodebase = expressionEngine.createCodebase(fromExpression, context);
 
         } catch (CodebaseCreationError e) {
           throw new MoeProblem("%s", e.getMessage());
@@ -202,7 +215,7 @@ public class MagicDirective extends Directive {
         RepositoryType fromRepoType = context.getRepository(migrationConfig.getFromRepository());
         ScrubberConfig scrubber =
             config.findScrubberConfig(migration.fromRepository(), migration.toRepository());
-        dr =
+        draftRevision =
             migrator.migrate(
                 migration,
                 fromRepoType,
@@ -210,8 +223,7 @@ public class MagicDirective extends Directive {
                 mostRecentFromRev,
                 migrationConfig.getMetadataScrubberConfig(),
                 scrubber,
-                toWriter,
-                referenceToCodebase);
+                targetCodebaseWriter);
 
         ui.popTask(oneMigrationTask, "");
       }
@@ -219,9 +231,10 @@ public class MagicDirective extends Directive {
       // TODO(user): Add properly formatted one-DraftRevison-per-Migration message for svn.
       migrationsMadeBuilder.add(
           String.format(
-              "%s in repository %s", dr.getLocation(), migrationConfig.getToRepository()));
-      toWriter.printPushMessage();
-      ui.popTaskAndPersist(migrationTask, toWriter.getRoot());
+              "%s in repository %s",
+              draftRevision.getLocation(), migrationConfig.getToRepository()));
+      targetCodebaseWriter.printPushMessage();
+      ui.popTaskAndPersist(migrationTask, targetCodebaseWriter.getRoot());
     }
 
     List<String> migrationsMade = migrationsMadeBuilder.build();

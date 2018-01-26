@@ -35,7 +35,9 @@ import com.google.devtools.moe.client.migrations.Migration;
 import com.google.devtools.moe.client.migrations.MigrationConfig;
 import com.google.devtools.moe.client.migrations.Migrator;
 import com.google.devtools.moe.client.parser.Expression;
+import com.google.devtools.moe.client.parser.ExpressionEngine;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
+import com.google.devtools.moe.client.parser.RepositoryExpression.WriterFactory;
 import com.google.devtools.moe.client.project.ProjectConfig;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.project.RepositoryConfig;
@@ -94,6 +96,8 @@ public class MigrateBranchDirective extends Directive {
   private final Repositories repositories;
   private final Ui ui;
   private final Migrator migrator;
+  private final WriterFactory writerFactory;
+  private final ExpressionEngine expressionEngine;
 
   File resultDirectory;
 
@@ -103,12 +107,16 @@ public class MigrateBranchDirective extends Directive {
       ProjectContext context,
       Repositories repositories,
       Ui ui,
-      Migrator migrator) {
+      Migrator migrator,
+      WriterFactory writerFactory,
+      ExpressionEngine expressionEngine) {
     this.config = config;
     this.context = context;
     this.repositories = repositories;
     this.ui = ui;
     this.migrator = migrator;
+    this.writerFactory = writerFactory;
+    this.expressionEngine = expressionEngine;
   }
 
   @Override
@@ -171,7 +179,7 @@ public class MigrateBranchDirective extends Directive {
     RepositoryExpression toRepoExp = new RepositoryExpression(migrationConfig.getToRepository());
     Writer toWriter;
     try {
-      toWriter = toRepoExp.createWriter(context);
+      toWriter = writerFactory.createWriter(toRepoExp, context);
     } catch (WritingError e) {
       throw new MoeProblem(e, "Couldn't create local repo %s: %s", toRepoExp, e.getMessage());
     }
@@ -180,7 +188,7 @@ public class MigrateBranchDirective extends Directive {
     for (Migration migration : migrations) {
       // For each migration, the reference to-codebase for inverse translation is the Writer,
       // since it contains the latest changes (i.e. previous migrations) to the to-repository.
-      Expression referenceToCodebase =
+      Expression referenceTargetCodebase =
           new RepositoryExpression(migrationConfig.getToRepository())
               .withOption("localroot", toWriter.getRoot().getAbsolutePath());
 
@@ -196,15 +204,16 @@ public class MigrateBranchDirective extends Directive {
       try {
         String toProjectSpace =
             config.getRepositoryConfig(migration.toRepository()).getProjectSpace();
-
-        fromCodebase =
+        Expression fromExpression =
             new RepositoryExpression(migration.fromRepository())
                 .atRevision(mostRecentFromRev.revId())
                 .translateTo(toProjectSpace)
-                .withReferenceToCodebase(referenceToCodebase)
-                .createCodebase(
-                    contextWithForkedRepository(
-                        context, migrationConfig.getFromRepository(), fromRepoType));
+                .withReferenceTargetCodebase(referenceTargetCodebase);
+        fromCodebase =
+            expressionEngine.createCodebase(
+                fromExpression,
+                contextWithForkedRepository(
+                    context, migrationConfig.getFromRepository(), fromRepoType));
 
       } catch (CodebaseCreationError e) {
         throw new MoeProblem("%s", e.getMessage());
@@ -220,8 +229,7 @@ public class MigrateBranchDirective extends Directive {
               mostRecentFromRev,
               migrationConfig.getMetadataScrubberConfig(),
               scrubber,
-              toWriter,
-              referenceToCodebase);
+              toWriter);
 
       resultDirectory = toWriter.getRoot();
       ui.popTaskAndPersist(performMigration, toWriter.getRoot()); // preserve toWriter
@@ -319,7 +327,7 @@ public class MigrateBranchDirective extends Directive {
       RevisionHistory fromRevisions,
       boolean batchChanges) {
     Ui.Task determineMigrationsTask = ui.pushTask("determind migrations", "Determine migrations");
-    List<Revision> toMigrate = findDescendantRevisions(fromRevisions, baseRevisions);
+    List<Revision> toMigrate = findRevisionsToMigrate(ui, fromRevisions, baseRevisions);
     ui.popTask(determineMigrationsTask, "");
 
     Result equivMatch = migrator.matchEquivalences(baseRevisions, toRepoName);
@@ -369,13 +377,15 @@ public class MigrateBranchDirective extends Directive {
    * there is a window.
    */
   @VisibleForTesting
-  List<Revision> findDescendantRevisions(RevisionHistory branch, RevisionHistory parentBranch) {
+  static List<Revision> findRevisionsToMigrate(
+      Ui ui, RevisionHistory branch, RevisionHistory parentBranch) {
     Set<String> commitsInParentBranch = new LinkedHashSet<>();
     final String repositoryName = branch.findHighestRevision(null).repositoryName();
     Revision head = parentBranch.findHighestRevision(null);
     String parentRepositoryName = head.repositoryName();
 
-    Ui.Task ancestorTask = ui.pushTask("scan_ancestor_branch", "Gathering ancestor revisions");
+    Ui.Task ancestorTask =
+        ui.pushTask("scan_ancestor_branch", "Gathering revisions to consider migrating");
     Deque<Revision> revisionsToProcess = new ArrayDeque<>();
     revisionsToProcess.add(head);
     int count = 0;
@@ -395,9 +405,11 @@ public class MigrateBranchDirective extends Directive {
     ui.popTask(ancestorTask, "Scanned revisions: " + count);
 
     Ui.Task migrationBranchTask = ui.pushTask("scan_target_branch", "Finding mergeable commits");
-    LinkedHashSet<String> commitsNotInParentBranch = new LinkedHashSet<>();
+    LinkedHashSet<String> commitsNotInDestinationBranch = new LinkedHashSet<>();
     revisionsToProcess = new ArrayDeque<>();
-    revisionsToProcess.add(branch.findHighestRevision(null));
+    revisionsToProcess.add(branch.findHighestRevision(null)); // most recent.
+
+    // Walk up the branch history until we get to a commit that is already in common.
     while (!revisionsToProcess.isEmpty()) {
       Revision revision = revisionsToProcess.remove();
       RevisionMetadata metadata = branch.getMetadata(revision);
@@ -405,13 +417,13 @@ public class MigrateBranchDirective extends Directive {
         throw new MoeProblem("Revision %s did not appear in branch history as expected", revision);
       }
       if (!commitsInParentBranch.contains(revision.revId())) {
-        commitsNotInParentBranch.add(revision.revId());
+        commitsNotInDestinationBranch.add(revision.revId());
         revisionsToProcess.addAll(metadata.parents());
       }
     }
     ui.popTask(migrationBranchTask, "");
 
-    return commitsNotInParentBranch
+    return commitsNotInDestinationBranch
         .stream()
         .map(revId -> Revision.create(revId, repositoryName))
         .collect(toImmutableList())

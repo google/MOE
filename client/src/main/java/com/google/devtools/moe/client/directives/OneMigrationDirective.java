@@ -21,9 +21,12 @@ import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.migrations.Migrator;
+import com.google.devtools.moe.client.parser.Expression;
+import com.google.devtools.moe.client.parser.ExpressionEngine;
 import com.google.devtools.moe.client.parser.Parser;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
+import com.google.devtools.moe.client.parser.RepositoryExpression.WriterFactory;
 import com.google.devtools.moe.client.project.ProjectConfig;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.project.RepositoryConfig;
@@ -34,16 +37,12 @@ import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.writer.DraftRevision;
 import com.google.devtools.moe.client.writer.Writer;
 import com.google.devtools.moe.client.writer.WritingError;
-
 import dagger.Provides;
 import dagger.multibindings.IntoMap;
 import dagger.multibindings.StringKey;
-
-import org.kohsuke.args4j.Option;
-
 import java.util.List;
-
 import javax.inject.Inject;
+import org.kohsuke.args4j.Option;
 
 /**
  * Perform a single migration using command line flags.
@@ -71,6 +70,8 @@ public class OneMigrationDirective extends Directive {
   private final Ui ui;
   private final DraftRevision.Factory revisionFactory;
   private final Migrator migrator;
+  private final WriterFactory writerFactory;
+  private final ExpressionEngine expressionEngine;
 
   @Inject
   OneMigrationDirective(
@@ -78,12 +79,16 @@ public class OneMigrationDirective extends Directive {
       ProjectContext context,
       Ui ui,
       DraftRevision.Factory revisionFactory,
-      Migrator migrator) {
+      Migrator migrator,
+      WriterFactory writerFactory,
+      ExpressionEngine expressionEngine) {
     this.config = config;
     this.context = context;
     this.ui = ui;
     this.revisionFactory = revisionFactory;
     this.migrator = migrator;
+    this.writerFactory = writerFactory;
+    this.expressionEngine = expressionEngine;
   }
 
   @Override
@@ -96,18 +101,18 @@ public class OneMigrationDirective extends Directive {
 
     Codebase sourceCodebase;
     try {
-      sourceCodebase =
+      Expression sourceExpression =
           new RepositoryExpression(fromRepoEx.getRepositoryName())
               .atRevision(revs.get(0).revId())
-              .translateTo(toProjectSpace)
-              .createCodebase(context);
+              .translateTo(toProjectSpace);
+      sourceCodebase = expressionEngine.createCodebase(sourceExpression, context);
     } catch (CodebaseCreationError e) {
       throw new MoeProblem(e, "Error creating codebase");
     }
 
     Writer destination;
     try {
-      destination = toRepoEx.createWriter(context);
+      destination = writerFactory.createWriter(toRepoEx, context);
     } catch (WritingError e) {
       throw new MoeProblem(e, "Error writing to repo");
     }

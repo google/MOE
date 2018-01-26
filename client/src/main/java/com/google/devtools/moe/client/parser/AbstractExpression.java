@@ -17,17 +17,25 @@
 package com.google.devtools.moe.client.parser;
 
 import com.google.common.collect.ImmutableMap;
-
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * A skeletal implementation of the {@link Expression} interface.
+ *
+ * <pre>{@code
+ * Minimalism
+ * Abstract Expressionism
+ * Postmodernism
+ * Is it?"
+ *     - Living Color, "Type" from the album "Time's Up"
+ * }</pre>
  */
 // TODO(cgruber) @Autovalue or at least fix hashcode and equals.
-public abstract class AbstractExpression implements Expression {
+public abstract class AbstractExpression extends Expression {
 
   @Override
-  public EditExpression editWith(Operation editOp) {
+  EditExpression editWith(Operation editOp) {
     return new EditExpression(this, editOp);
   }
 
@@ -46,7 +54,7 @@ public abstract class AbstractExpression implements Expression {
   }
 
   @Override
-  public TranslateExpression translateTo(Operation translateOp) {
+  TranslateExpression translateTo(Operation translateOp) {
     return new TranslateExpression(this, translateOp);
   }
 
@@ -55,7 +63,9 @@ public abstract class AbstractExpression implements Expression {
 
   @Override
   public boolean equals(Object other) {
-    return this.getClass().equals(other.getClass()) && this.toString().equals(other.toString());
+    return other != null
+        && Objects.equals(this.getClass(), other.getClass())
+        && Objects.equals(this.toString(), other.toString());
   }
 
   @Override

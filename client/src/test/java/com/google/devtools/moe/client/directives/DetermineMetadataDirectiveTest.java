@@ -42,7 +42,7 @@ public class DetermineMetadataDirectiveTest extends TestCase {
   private final Repositories repositories =
       new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory()));
   private final InMemoryProjectContextFactory contextFactory =
-      new InMemoryProjectContextFactory(ui, repositories);
+      new InMemoryProjectContextFactory(null, ui, repositories);
 
   /**
    *  When two or more revisions are given, the metadata fields are concatenated.

@@ -21,12 +21,16 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.SystemCommandRunner;
+import com.google.devtools.moe.client.SystemFileSystem;
 import com.google.devtools.moe.client.Ui;
+import com.google.devtools.moe.client.parser.ExpressionEngine;
+import com.google.devtools.moe.client.parser.RepositoryExpression.WriterFactory;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
 import com.google.devtools.moe.client.testing.InMemoryProjectContextFactory;
+import com.google.devtools.moe.client.testing.TestingUtils;
 import com.google.devtools.moe.client.writer.DraftRevision;
 import java.io.ByteArrayOutputStream;
 import junit.framework.TestCase;
@@ -36,12 +40,15 @@ import junit.framework.TestCase;
  */
 public class ChangeDirectiveTest extends TestCase {
   private final ByteArrayOutputStream stream = new ByteArrayOutputStream();
-  private final Ui ui = new Ui(stream, /* fileSystem */ null);
+  private final Ui ui = new Ui(stream, null);
   private final SystemCommandRunner cmd = new SystemCommandRunner();
   private final Repositories repositories =
       new Repositories(ImmutableSet.<RepositoryType.Factory>of(new DummyRepositoryFactory()));
+  private final WriterFactory wf = new WriterFactory(ui);
+  private final ExpressionEngine expressionEngine =
+      TestingUtils.expressionEngineWithRepo(ui, new SystemFileSystem(), cmd);
   private final InMemoryProjectContextFactory contextFactory =
-      new InMemoryProjectContextFactory(ui, repositories);
+      new InMemoryProjectContextFactory(expressionEngine, ui, repositories);
 
   public void testChange() throws Exception {
     Injector.INSTANCE = new Injector(null, cmd, ui);
@@ -49,7 +56,8 @@ public class ChangeDirectiveTest extends TestCase {
         "moe_config.txt",
         "{\"name\": \"foo\", \"repositories\": {\"internal\": {\"type\": \"dummy\"}}}");
     ProjectContext context = contextFactory.create("moe_config.txt");
-    ChangeDirective d = new ChangeDirective(context, ui, new DraftRevision.Factory(ui));
+    ChangeDirective d =
+        new ChangeDirective(context, ui, expressionEngine, wf, new DraftRevision.Factory(ui));
     d.codebase = "internal";
     d.destination = "internal";
     assertEquals(0, d.perform());
