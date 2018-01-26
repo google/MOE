@@ -234,7 +234,7 @@ public class MigrateBranchDirective extends Directive {
       resultDirectory = toWriter.getRoot();
       ui.popTaskAndPersist(performMigration, toWriter.getRoot()); // preserve toWriter
     }
-    toWriter.printPushMessage();
+    toWriter.printPushMessage(ui);
     ui.popTaskAndPersist(migrationTask, toWriter.getRoot());
     ui.message(
         "Created Draft workspace:\n%s in repository '%s'",

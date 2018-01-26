@@ -20,12 +20,10 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
-import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.dvcs.AbstractDvcsWriter;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
-
 import java.util.List;
 import org.joda.time.format.ISODateTimeFormat;
 
@@ -89,7 +87,7 @@ public class GitWriter extends AbstractDvcsWriter<GitClonedRepository> {
   }
 
   @Override
-  public void printPushMessage() {
+  public void printPushMessage(Ui ui) {
     String originalBranchName = revClone.getConfig().getBranch().or("master");
     String moeBranchName;
     try {
@@ -98,7 +96,6 @@ public class GitWriter extends AbstractDvcsWriter<GitClonedRepository> {
       throw new MoeProblem("'git' command error: %s", e);
     }
 
-    Ui ui = Injector.INSTANCE.ui();
     ui.message("=====");
     ui.message("MOE changes have been committed to a clone at " + getRoot());
     if (moeBranchName.startsWith(GitClonedRepository.MOE_MIGRATIONS_BRANCH_PREFIX)) {

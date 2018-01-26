@@ -16,11 +16,10 @@
 
 package com.google.devtools.moe.client.writer;
 
+import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
-
 import java.io.File;
-
 import javax.annotation.Nullable;
 
 /**
@@ -45,8 +44,6 @@ public interface Writer {
    */
   File getRoot();
 
-  /**
-   * Print out (to Ui) instructions for pushing any changes in this Writer to the remote source.
-   */
-  void printPushMessage();
+  /** Print out (to Ui) instructions for pushing any changes in this Writer to the remote source. */
+  void printPushMessage(Ui ui);
 }

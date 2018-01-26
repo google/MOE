@@ -233,7 +233,7 @@ public class MagicDirective extends Directive {
           String.format(
               "%s in repository %s",
               draftRevision.getLocation(), migrationConfig.getToRepository()));
-      targetCodebaseWriter.printPushMessage();
+      targetCodebaseWriter.printPushMessage(ui);
       ui.popTaskAndPersist(migrationTask, targetCodebaseWriter.getRoot());
     }
 

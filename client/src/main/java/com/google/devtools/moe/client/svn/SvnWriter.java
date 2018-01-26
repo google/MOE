@@ -202,7 +202,7 @@ public class SvnWriter implements Writer {
   }
 
   @Override
-  public void printPushMessage() {
+  public void printPushMessage(Ui ui) {
     // TODO(user): Figure out workflow for MOE migrations/local commits in svn.
   }
 }

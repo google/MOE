@@ -16,12 +16,12 @@
 
 package com.google.devtools.moe.client.testing;
 
+import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.writer.DraftRevision;
 import com.google.devtools.moe.client.writer.Writer;
 import com.google.devtools.moe.client.writer.WritingError;
-
 import java.io.File;
 
 /**
@@ -46,7 +46,7 @@ public class DummyWriter implements Writer {
   }
 
   @Override
-  public void printPushMessage() {
+  public void printPushMessage(Ui ui) {
     // No op.
   }
 }
