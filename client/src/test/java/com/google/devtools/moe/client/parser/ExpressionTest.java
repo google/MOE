@@ -18,7 +18,7 @@ package com.google.devtools.moe.client.parser;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.easymock.EasyMock.expect;
-import static org.junit.Assert.expectThrows;
+import static org.junit.Assert.assertThrows;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -81,7 +81,7 @@ public class ExpressionTest extends TestCase {
     RepositoryCodebaseProcessor repositoryCodebaseProcessor =
         new RepositoryCodebaseProcessor(ui, () -> null);
     MoeProblem err =
-        expectThrows(
+        assertThrows(
             MoeProblem.class,
             () ->
                 repositoryCodebaseProcessor.createCodebase(
@@ -139,7 +139,7 @@ public class ExpressionTest extends TestCase {
     control.replay();
 
     CodebaseCreationError error =
-        expectThrows(
+        assertThrows(
             CodebaseCreationError.class, () -> processor.createCodebase(editExpression, context));
     assertThat(error).hasMessageThat().contains("no editor noSuchEditor");
   }
@@ -170,7 +170,7 @@ public class ExpressionTest extends TestCase {
 
     control.replay();
     CodebaseCreationError error =
-        expectThrows(
+        assertThrows(
             CodebaseCreationError.class,
             () -> processor.createCodebase(translateExpression, context));
 
