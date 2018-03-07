@@ -16,12 +16,12 @@
 package com.google.devtools.moe.client;
 
 import com.google.devtools.moe.client.Ui.UiModule;
+import com.google.devtools.moe.client.codebase.ExpressionModule;
 import com.google.devtools.moe.client.database.FileDb;
 import com.google.devtools.moe.client.directives.Directives;
 import com.google.devtools.moe.client.gson.GsonModule;
 import com.google.devtools.moe.client.options.OptionsModule;
 import com.google.devtools.moe.client.options.OptionsModule.Argument;
-import com.google.devtools.moe.client.parser.ExpressionModule;
 import com.google.devtools.moe.client.project.FileReadingProjectContextFactory;
 import com.google.devtools.moe.client.project.ProjectConfig;
 import com.google.devtools.moe.client.project.ProjectContext;

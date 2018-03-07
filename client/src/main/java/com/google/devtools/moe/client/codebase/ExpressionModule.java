@@ -1,8 +1,8 @@
-package com.google.devtools.moe.client.parser;
+package com.google.devtools.moe.client.codebase;
 
-import com.google.devtools.moe.client.parser.EditExpression.EditedCodebaseProcessor;
-import com.google.devtools.moe.client.parser.RepositoryExpression.RepositoryCodebaseProcessor;
-import com.google.devtools.moe.client.parser.TranslateExpression.TranslatedCodebaseProcessor;
+import com.google.devtools.moe.client.codebase.EditExpression.EditedCodebaseProcessor;
+import com.google.devtools.moe.client.codebase.RepositoryExpression.RepositoryCodebaseProcessor;
+import com.google.devtools.moe.client.codebase.TranslateExpression.TranslatedCodebaseProcessor;
 import dagger.Binds;
 import dagger.Module;
 import dagger.multibindings.ClassKey;

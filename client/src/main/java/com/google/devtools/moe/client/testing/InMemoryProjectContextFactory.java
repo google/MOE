@@ -20,7 +20,7 @@ import static com.google.devtools.moe.client.project.ProjectConfig.parse;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.devtools.moe.client.Ui;
-import com.google.devtools.moe.client.parser.ExpressionEngine;
+import com.google.devtools.moe.client.codebase.ExpressionEngine;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.ProjectConfig;
 import com.google.devtools.moe.client.project.ProjectContextFactory;

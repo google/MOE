@@ -26,7 +26,6 @@ import com.google.devtools.moe.client.database.Db;
 import com.google.devtools.moe.client.database.RepositoryEquivalence;
 import com.google.devtools.moe.client.database.RepositoryEquivalenceMatcher;
 import com.google.devtools.moe.client.database.RepositoryEquivalenceMatcher.Result;
-import com.google.devtools.moe.client.parser.Expression;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.ScrubberConfig;
 import com.google.devtools.moe.client.repositories.MetadataScrubber;

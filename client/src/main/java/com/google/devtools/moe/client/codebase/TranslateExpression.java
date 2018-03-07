@@ -14,12 +14,10 @@
  * limitations under the License.
  */
 
-package com.google.devtools.moe.client.parser;
+package com.google.devtools.moe.client.codebase;
 
 import com.google.common.base.Preconditions;
 import com.google.devtools.moe.client.Ui;
-import com.google.devtools.moe.client.codebase.Codebase;
-import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.translation.pipeline.TranslationPath;
 import com.google.devtools.moe.client.translation.pipeline.TranslationPipeline;

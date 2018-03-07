@@ -19,27 +19,23 @@ package com.google.devtools.moe.client.directives;
 import com.google.common.base.Joiner;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
+import com.google.devtools.moe.client.codebase.Parser;
+import com.google.devtools.moe.client.codebase.Parser.ParseError;
+import com.google.devtools.moe.client.codebase.RepositoryExpression;
 import com.google.devtools.moe.client.database.Db;
 import com.google.devtools.moe.client.database.RepositoryEquivalence;
 import com.google.devtools.moe.client.database.RepositoryEquivalenceMatcher;
-import com.google.devtools.moe.client.parser.Parser;
-import com.google.devtools.moe.client.parser.Parser.ParseError;
-import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
 import com.google.devtools.moe.client.repositories.RevisionHistory.SearchType;
-
 import dagger.Provides;
 import dagger.multibindings.IntoMap;
 import dagger.multibindings.StringKey;
-
-import org.kohsuke.args4j.Option;
-
 import java.util.List;
-
 import javax.inject.Inject;
+import org.kohsuke.args4j.Option;
 
 /**
  * Get the last Equivalence between two repositories.

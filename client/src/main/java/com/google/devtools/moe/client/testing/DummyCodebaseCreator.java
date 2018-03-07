@@ -20,8 +20,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.codebase.CodebaseCreator;
-import com.google.devtools.moe.client.parser.RepositoryExpression;
-import com.google.devtools.moe.client.parser.Term;
+import com.google.devtools.moe.client.codebase.RepositoryExpression;
+import com.google.devtools.moe.client.codebase.Term;
 import java.io.File;
 import java.util.Map;
 

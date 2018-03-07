@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.devtools.moe.client.parser;
+package com.google.devtools.moe.client.codebase;
 
 /**
  * An Operation in the MOE Expression Language is an operator followed by a term.

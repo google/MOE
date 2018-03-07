@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-package com.google.devtools.moe.client.parser;
+package com.google.devtools.moe.client.codebase;
 
-import com.google.devtools.moe.client.codebase.Codebase;
-import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.project.ProjectContext;
 
 /**

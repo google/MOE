@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-package com.google.devtools.moe.client.parser;
+package com.google.devtools.moe.client.codebase;
 
 import com.google.common.collect.ImmutableMap;
-
 import junit.framework.TestCase;
 
 public class TermTest extends TestCase {

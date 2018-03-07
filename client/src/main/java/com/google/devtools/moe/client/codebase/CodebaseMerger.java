@@ -28,8 +28,6 @@ import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
-import com.google.devtools.moe.client.parser.RepositoryExpression;
-import com.google.devtools.moe.client.parser.Term;
 import com.google.devtools.moe.client.tools.FileDifference.FileDiffer;
 import java.io.File;
 import java.io.IOException;

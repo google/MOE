@@ -18,24 +18,20 @@ package com.google.devtools.moe.client.directives;
 
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
+import com.google.devtools.moe.client.codebase.Parser;
+import com.google.devtools.moe.client.codebase.Parser.ParseError;
+import com.google.devtools.moe.client.codebase.RepositoryExpression;
 import com.google.devtools.moe.client.database.Db;
-import com.google.devtools.moe.client.parser.Parser;
-import com.google.devtools.moe.client.parser.Parser.ParseError;
-import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.Revision;
-
 import dagger.Provides;
 import dagger.multibindings.IntoMap;
 import dagger.multibindings.StringKey;
-
-import org.kohsuke.args4j.Option;
-
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-
 import javax.inject.Inject;
+import org.kohsuke.args4j.Option;
 
 /**
  * Finds revisions in a repository that are equivalent to a given revision.

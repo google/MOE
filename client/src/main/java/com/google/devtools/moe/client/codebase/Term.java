@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-package com.google.devtools.moe.client.parser;
+package com.google.devtools.moe.client.codebase;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.util.Collections;
 import java.util.Map;
 

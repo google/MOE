@@ -14,20 +14,19 @@
  * limitations under the License.
  */
 
-package com.google.devtools.moe.client.parser;
+package com.google.devtools.moe.client.codebase;
 
-import com.google.devtools.moe.client.codebase.Codebase;
-import com.google.devtools.moe.client.project.ProjectContext;
 import java.util.Map;
 
 /**
  * An interface for objects describing a {@link Codebase}. A Codebase is described lazily by editing
  * or translating a given expression. Then {@link
- * ExpressionEngine#createCodebase(Expression,ProjectContext)} is called to create the materialized
- * {@link Codebase} from the {@link Expression}, in a given {@link ProjectContext}. Different
- * Expression types will have an associated {@link CodebaseProcessor} which may offer different
- * alterations from the base {@link RepositoryExpression}. Expressions should be immutable, and all
- * implementations of the transformations should return new Expressions.
+ * ExpressionEngine#createCodebase(Expression,com.google.devtools.moe.client.project.ProjectContext)}
+ * is called to create the materialized {@link Codebase} from the {@link Expression}, in a given
+ * {@link com.google.devtools.moe.client.project.ProjectContext}. Different Expression types will
+ * have an associated {@link CodebaseProcessor} which may offer different alterations from the base
+ * {@link RepositoryExpression}. Expressions should be immutable, and all implementations of the
+ * transformations should return new Expressions.
  */
 public abstract class Expression {
   /**

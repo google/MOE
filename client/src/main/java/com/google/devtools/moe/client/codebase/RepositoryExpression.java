@@ -14,14 +14,11 @@
  * limitations under the License.
  */
 
-package com.google.devtools.moe.client.parser;
+package com.google.devtools.moe.client.codebase;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.moe.client.Ui;
-import com.google.devtools.moe.client.codebase.Codebase;
-import com.google.devtools.moe.client.codebase.CodebaseCreationError;
-import com.google.devtools.moe.client.codebase.CodebaseCreator;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.testing.FileCodebaseCreator;

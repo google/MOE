@@ -18,7 +18,7 @@ package com.google.devtools.moe.client.tools;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.codebase.Codebase;
-import com.google.devtools.moe.client.parser.RepositoryExpression;
+import com.google.devtools.moe.client.codebase.RepositoryExpression;
 import java.io.File;
 import junit.framework.TestCase;
 

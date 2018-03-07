@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.devtools.moe.client.parser;
+package com.google.devtools.moe.client.codebase;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.easymock.EasyMock.expect;
@@ -30,12 +30,9 @@ import com.google.devtools.moe.client.NullFileSystemModule;
 import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.SystemFileSystem;
 import com.google.devtools.moe.client.Ui;
-import com.google.devtools.moe.client.codebase.Codebase;
-import com.google.devtools.moe.client.codebase.CodebaseCreationError;
-import com.google.devtools.moe.client.codebase.CodebaseCreator;
-import com.google.devtools.moe.client.parser.EditExpression.EditedCodebaseProcessor;
-import com.google.devtools.moe.client.parser.RepositoryExpression.RepositoryCodebaseProcessor;
-import com.google.devtools.moe.client.parser.TranslateExpression.TranslatedCodebaseProcessor;
+import com.google.devtools.moe.client.codebase.EditExpression.EditedCodebaseProcessor;
+import com.google.devtools.moe.client.codebase.RepositoryExpression.RepositoryCodebaseProcessor;
+import com.google.devtools.moe.client.codebase.TranslateExpression.TranslatedCodebaseProcessor;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.project.ProjectContext.NoopProjectContext;
 import com.google.devtools.moe.client.repositories.RepositoryType;
@@ -55,7 +52,7 @@ import junit.framework.TestCase;
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
 
-public class ExpressionTest extends TestCase {
+public class ExpressionProcessingTest extends TestCase {
   private static final ImmutableMap<String, String> EMPTY_MAP = ImmutableMap.of();
   private final IMocksControl control = EasyMock.createControl();
   private final Codebase mockRepoCodebase = control.createMock(Codebase.class);
@@ -72,7 +69,7 @@ public class ExpressionTest extends TestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    Injector.INSTANCE = DaggerExpressionTest_Component.create().context();
+    Injector.INSTANCE = DaggerExpressionProcessingTest_Component.create().context();
     this.ui = Injector.INSTANCE.ui();
   }
 
@@ -92,7 +89,7 @@ public class ExpressionTest extends TestCase {
   public void testFileCodebaseCreator() throws Exception {
     final FileSystem mockFs = control.createMock(FileSystem.class);
     Injector.INSTANCE =
-        DaggerExpressionTest_Component.builder()
+        DaggerExpressionProcessingTest_Component.builder()
             .nullFileSystemModule(
                 new NullFileSystemModule() {
                   @Override

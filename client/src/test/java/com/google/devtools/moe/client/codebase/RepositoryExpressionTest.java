@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package com.google.devtools.moe.client.parser;
+package com.google.devtools.moe.client.codebase;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.NullFileSystemModule;
 import com.google.devtools.moe.client.SystemCommandRunner;
-import com.google.devtools.moe.client.parser.RepositoryExpression.WriterFactory;
+import com.google.devtools.moe.client.codebase.RepositoryExpression.WriterFactory;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.project.ProjectContext.NoopProjectContext;
 import com.google.devtools.moe.client.repositories.RepositoryType;
@@ -45,7 +45,7 @@ public class RepositoryExpressionTest extends TestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    Injector.INSTANCE = DaggerExpressionTest_Component.create().context();
+    Injector.INSTANCE = DaggerExpressionProcessingTest_Component.create().context();
     writerFactory = new WriterFactory(Injector.INSTANCE.ui());
   }
 
