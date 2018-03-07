@@ -84,7 +84,7 @@ public class Parser {
     List<Operation> operations = Parser.parseOperationList(t);
     Expression ex = new RepositoryExpression(creator);
     for (Operation op : operations) {
-      switch (op.operator) {
+      switch (op.operator()) {
         case EDIT:
           ex = ex.editWith(op);
           break;
@@ -92,7 +92,7 @@ public class Parser {
           ex = ex.translateTo(op);
           break;
         default:
-          throw new ParseError("Unexpected operator: " + op.operator);
+          throw new ParseError("Unexpected operator: " + op.operator());
       }
     }
     return ex;
@@ -258,7 +258,7 @@ public class Parser {
     while (!Parser.isInputExhausted(input)) {
       Operator operator = parseOperator(input);
       Term t = Parser.parseTerm(input);
-      operations.add(new Operation(operator, t));
+      operations.add(Operation.create(operator, t));
     }
     return operations.build();
   }

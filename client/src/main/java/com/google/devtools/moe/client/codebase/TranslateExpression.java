@@ -36,7 +36,7 @@ public class TranslateExpression extends AbstractExpression {
   private final Operation translateOp;
 
   TranslateExpression(Expression exToTranslate, Operation translateOp) {
-    Preconditions.checkArgument(translateOp.operator == Operator.TRANSLATE);
+    Preconditions.checkArgument(translateOp.operator().equals(Operator.TRANSLATE));
     this.exToTranslate = exToTranslate;
     this.translateOp = translateOp;
   }
@@ -62,7 +62,7 @@ public class TranslateExpression extends AbstractExpression {
   private TranslateExpression withOption(String key, String value) {
     return new TranslateExpression(
         exToTranslate,
-        new Operation(translateOp.operator, translateOp.term.withOption(key, value)));
+        Operation.create(translateOp.operator(), translateOp.term().withOption(key, value)));
   }
 
   @Override
@@ -87,7 +87,7 @@ public class TranslateExpression extends AbstractExpression {
         throws CodebaseCreationError {
       Codebase codebaseToTranslate =
           expressionEngine.createCodebase(expression.exToTranslate, context);
-      String toProjectSpace = expression.translateOp.term.identifier;
+      String toProjectSpace = expression.translateOp.term().identifier;
       TranslationPath path =
           TranslationPath.create(codebaseToTranslate.projectSpace(), toProjectSpace);
       TranslationPipeline translator = context.translators().get(path);
@@ -107,7 +107,7 @@ public class TranslateExpression extends AbstractExpression {
               toProjectSpace);
 
       Codebase translatedCodebase =
-          translator.translate(codebaseToTranslate, expression.translateOp.term.options, context);
+          translator.translate(codebaseToTranslate, expression.translateOp.term().options, context);
 
       // Don't mark the translated codebase for persistence if it wasn't allocated by the
       // Translator.

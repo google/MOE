@@ -16,32 +16,26 @@
 
 package com.google.devtools.moe.client.codebase;
 
+import com.google.auto.value.AutoValue;
+
 /**
  * An Operation in the MOE Expression Language is an operator followed by a term.
  *
- * <P>E.g., |patch(file="/path/to/path.txt") or >public
+ * <p>E.g., |patch(file="/path/to/path.txt") or >public
  */
-// TODO(cgruber): Convert this to an autovalue or at least fix the hashcode/equals issue.
-public class Operation {
+@AutoValue
+public abstract class Operation {
 
-  public final Operator operator;
-  public final Term term;
+  public abstract Operator operator();
 
-  public Operation(Operator operator, Term term) {
-    this.operator = operator;
-    this.term = term;
-  }
+  public abstract Term term();
 
   @Override
   public String toString() {
-    return operator.toString() + term.toString();
+    return "" + operator() + term();
   }
 
-  @Override
-  public boolean equals(Object o) {
-    if (!(o instanceof Operation)) {
-      return false;
-    }
-    return toString().equals(o.toString());
+  static Operation create(Operator operator, Term term) {
+    return new AutoValue_Operation(operator, term);
   }
 }

@@ -132,7 +132,7 @@ public class ExpressionProcessingTest extends TestCase {
     EditedCodebaseProcessor processor = new EditedCodebaseProcessor(ui, expressionEngine);
     EditExpression editExpression =
         new EditExpression(
-            repoExpression, new Operation(Operator.EDIT, new Term("noSuchEditor", EMPTY_MAP)));
+            repoExpression, Operation.create(Operator.EDIT, new Term("noSuchEditor", EMPTY_MAP)));
     control.replay();
 
     CodebaseCreationError error =
@@ -163,7 +163,8 @@ public class ExpressionProcessingTest extends TestCase {
 
     TranslateExpression translateExpression =
         new TranslateExpression(
-            repositoryExpression, new Operation(Operator.TRANSLATE, new Term("public", EMPTY_MAP)));
+            repositoryExpression,
+            Operation.create(Operator.TRANSLATE, new Term("public", EMPTY_MAP)));
 
     control.replay();
     CodebaseCreationError error =

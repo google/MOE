@@ -197,8 +197,8 @@ public class ParserTest extends TestCase {
     List<Operation> terms = Parser.parseOperationList(tokenize(input));
     StringBuilder r = new StringBuilder();
     for (Operation op : terms) {
-      r.append(op.operator);
-      r.append(op.term);
+      r.append(op.operator());
+      r.append(op.term());
     }
     assertEquals(expected, r.toString());
   }

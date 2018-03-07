@@ -42,14 +42,14 @@ public abstract class AbstractExpression extends Expression {
   @Override
   public EditExpression editWith(String editorName, Map<String, String> editorOptions) {
     Term term = new Term(editorName, editorOptions);
-    Operation op = new Operation(Operator.EDIT, term);
+    Operation op = Operation.create(Operator.EDIT, term);
     return editWith(op);
   }
 
   @Override
   public TranslateExpression translateTo(String projectSpace) {
     Term term = new Term(projectSpace, ImmutableMap.<String, String>of());
-    Operation op = new Operation(Operator.TRANSLATE, term);
+    Operation op = Operation.create(Operator.TRANSLATE, term);
     return translateTo(op);
   }
 

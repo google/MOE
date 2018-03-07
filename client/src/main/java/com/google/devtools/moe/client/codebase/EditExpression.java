@@ -43,7 +43,7 @@ public class EditExpression extends AbstractExpression {
   private final Operation editOp;
 
   EditExpression(Expression exToEdit, Operation editOp) {
-    Preconditions.checkArgument(editOp.operator == Operator.EDIT);
+    Preconditions.checkArgument(editOp.operator().equals(Operator.EDIT));
     this.exToEdit = exToEdit;
     this.editOp = editOp;
   }
@@ -68,7 +68,7 @@ public class EditExpression extends AbstractExpression {
     public Codebase createCodebase(EditExpression expression, ProjectContext context)
         throws CodebaseCreationError {
       Codebase codebaseToEdit = expressionEngine.createCodebase(expression.exToEdit, context);
-      String editorName = expression.editOp.term.identifier;
+      String editorName = expression.editOp.term().identifier;
       Editor editor = context.editors().get(editorName);
       if (editor == null) {
         throw new CodebaseCreationError("no editor %s", editorName);
@@ -78,7 +78,7 @@ public class EditExpression extends AbstractExpression {
           ui.pushTask(
               "edit", "Editing %s with editor %s", codebaseToEdit.path(), editor.getDescription());
 
-      Codebase editedCodebase = editor.edit(codebaseToEdit, expression.editOp.term.options);
+      Codebase editedCodebase = editor.edit(codebaseToEdit, expression.editOp.term().options);
 
       ui.popTaskAndPersist(editTask, editedCodebase.path());
       return editedCodebase.copyWithExpression(expression);
