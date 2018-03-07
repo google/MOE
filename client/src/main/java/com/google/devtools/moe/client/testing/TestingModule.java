@@ -16,17 +16,15 @@
 package com.google.devtools.moe.client.testing;
 
 import com.google.devtools.moe.client.Ui.UiModule;
-import com.google.devtools.moe.client.options.OptionsModule.Flag;
 import com.google.devtools.moe.client.project.ProjectContextFactory;
+import com.google.devtools.moe.client.qualifiers.Flag;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.tools.FileDifference.ConcreteFileDiffer;
 import com.google.devtools.moe.client.tools.FileDifference.FileDiffer;
-
 import dagger.Binds;
 import dagger.Module;
 import dagger.Provides;
 import dagger.multibindings.IntoSet;
-
 import javax.inject.Singleton;
 
 /** A simple Dagger module to provide some nearly-universally-used in-memory test fakes. */

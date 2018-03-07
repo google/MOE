@@ -18,6 +18,8 @@ package com.google.devtools.moe.client.options;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.directives.Directives.SelectedDirective;
+import com.google.devtools.moe.client.qualifiers.Argument;
+import com.google.devtools.moe.client.qualifiers.Flag;
 import dagger.Provides;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,7 +30,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
-import javax.inject.Qualifier;
 import javax.inject.Singleton;
 
 /** Dagger module to seed command-line arguments into the graph */
@@ -155,21 +156,4 @@ public class OptionsModule {
     return ImmutableSet.copyOf(preprocessedArgs).contains("--trace");
   }
 
-  /**
-   * A JSR-330 {@link Qualifier} annotation to distinguish injected argument values from other
-   * injected {@link String} values.
-   */
-  @Qualifier
-  public @interface Argument {
-    String value();
-  }
-
-  /**
-   * A JSR-330 {@link Qualifier} annotation to distinguish injected flag values from other
-   * injected {@link String} values.
-   */
-  @Qualifier
-  public @interface Flag {
-    String value();
-  }
 }

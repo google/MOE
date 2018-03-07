@@ -22,13 +22,8 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.devtools.moe.client.FileSystem.Lifetime;
-import com.google.devtools.moe.client.options.OptionsModule.Flag;
-
+import com.google.devtools.moe.client.qualifiers.Flag;
 import dagger.Provides;
-
-import org.joda.time.DateTime;
-import org.joda.time.Duration;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -36,10 +31,11 @@ import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayDeque;
 import java.util.Deque;
-
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import org.joda.time.DateTime;
+import org.joda.time.Duration;
 
 /**
  * Represents the command-line user interface for MOE.
