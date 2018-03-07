@@ -44,11 +44,10 @@ public abstract class AbstractDvcsCodebaseCreator extends CodebaseCreator {
   protected final FileSystem filesystem;
 
   /**
-   * @param headCloneSupplier  a Supplier of the LocalClone that's archived to create a codebase
-   *                           (the Supplier should be memoized since its LocalClone is only read
-   *                           and archived)
-   * @param revisionHistory    a RevisionHistory for parsing revision IDs at creation
-   * @param projectSpace       the project space of created Codebases
+   * @param headCloneSupplier a Supplier of the LocalClone that's archived to create a codebase (the
+   *     Supplier should be memoized since its LocalClone is only read and archived)
+   * @param revisionHistory a RevisionHistory for parsing revision IDs at creation
+   * @param projectSpace the project space of created Codebases
    */
   // TODO(user): Find a better semantics for when a Supplier provides a new clone every time,
   // or just one clone via memoization, so that the meaning of headCloneSupplier.get() is clearer.

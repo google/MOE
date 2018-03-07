@@ -17,28 +17,39 @@
 package com.google.devtools.moe.client.codebase;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.easymock.EasyMock.expect;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.CommandRunner;
+import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.Ui;
+import com.google.devtools.moe.client.codebase.CodebaseMerger.MergeResult;
+import com.google.devtools.moe.client.tools.FileDifference;
 import com.google.devtools.moe.client.tools.FileDifference.ConcreteFileDiffer;
 import com.google.devtools.moe.client.tools.FileDifference.FileDiffer;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.List;
-import junit.framework.TestCase;
-import org.easymock.EasyMock;
-import org.easymock.IMocksControl;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+import org.mockito.Mockito;
 
 /**
  * Unit tests for the CodebaseMerger class.
  *
  * <p>Here is a diagram illustrating a merge situation. The test cases below will refer to this
  * diagram when explaining what type of case they are testing.
+ *
  * <pre>
  *                                                   _____
  *                                                  |     |
@@ -56,57 +67,59 @@ import org.easymock.IMocksControl;
  *                    internalrepo                 publicrepo
  * </pre>
  */
-public class CodebaseMergerTest extends TestCase {
-  private final IMocksControl control = EasyMock.createControl();
-  private final FileSystem fileSystem = control.createMock(FileSystem.class);
+@RunWith(JUnit4.class)
+public class CodebaseMergerTest {
+  private final FileSystem fileSystem = mock(FileSystem.class);
   private final ByteArrayOutputStream stream = new ByteArrayOutputStream();
   private final Ui ui = new Ui(stream, /* fileSystem */ null);
-  private final CommandRunner cmd = control.createMock(CommandRunner.class);
+  private final CommandRunner cmd = mock(CommandRunner.class);
   private final FileDiffer fileDiffer = new ConcreteFileDiffer(cmd, fileSystem);
 
-  private final Codebase orig = control.createMock(Codebase.class);
-  private final Codebase dest = control.createMock(Codebase.class);
-  private final Codebase mod = control.createMock(Codebase.class);
+  private final Codebase orig = mock(Codebase.class);
+  private final Codebase dest = mock(Codebase.class);
+  private final Codebase merged = mock(Codebase.class);
+  private final Codebase mod = mock(Codebase.class);
+
+  private final File mergedCodebaseLocation = new File("merged_codebase_7");
+  private final File origFile = new File("orig/foo");
+  private final File destFile = new File("dest/foo");
+  private final File modFile = new File("mod/foo");
+
+  private final MergeResult.Builder resultBuilder = MergeResult.builder().setMergedCodebase(merged);
+
+  @Before
+  public void setUp() {
+    when(merged.path()).thenReturn(mergedCodebaseLocation);
+    when(merged.getFile("foo")).thenReturn(new File(mergedCodebaseLocation, "foo"));
+    when(fileSystem.getTemporaryDirectory("merged_codebase_")).thenReturn(mergedCodebaseLocation);
+
+    when(orig.getFile("foo")).thenReturn(origFile);
+    when(dest.getFile("foo")).thenReturn(destFile);
+    when(mod.getFile("foo")).thenReturn(modFile);
+
+    when(fileSystem.isExecutable(origFile)).thenReturn(false);
+    when(fileSystem.isExecutable(modFile)).thenReturn(false);
+  }
 
   /**
-   * Test generateMergedFile(...) in the case where the file exists in orig and mod but not dest.
-   * In this case, the file is unchanged in orig and mod, so the file is not placed in the
-   * merged codebase.
+   * Test generateMergedFile(...) in the case where the file exists in orig and mod but not dest. In
+   * this case, the file is unchanged in orig and mod, so the file is not placed in the merged
+   * codebase.
    */
+  @Test
   public void testGenerateMergedFileDestDelete() throws Exception {
-    File mergedCodebaseLocation = new File("merged_codebase_7");
-    expect(fileSystem.getTemporaryDirectory("merged_codebase_")).andReturn(mergedCodebaseLocation);
+    when(fileSystem.exists(origFile)).thenReturn(true);
+    when(fileSystem.exists(destFile)).thenReturn(false);
+    when(fileSystem.exists(modFile)).thenReturn(true);
 
-    File origFile = new File("orig/foo");
-    expect(orig.getFile("foo")).andReturn(origFile);
-    expect(fileSystem.exists(origFile)).andReturn(true).anyTimes();
+    CodebaseMerger merger = new CodebaseMerger(ui, fileSystem, cmd, fileDiffer);
+    merger.generateMergedFile(orig, mod, dest, resultBuilder, "foo");
 
-    File destFile = new File("dest/foo");
-    expect(dest.getFile("foo")).andReturn(destFile);
-    expect(fileSystem.exists(destFile)).andReturn(false);
-    destFile = new File("/dev/null");
-
-    File modFile = new File("mod/foo");
-    expect(mod.getFile("foo")).andReturn(modFile);
-    expect(fileSystem.exists(modFile)).andReturn(true).anyTimes();
-
-    expect(fileSystem.isExecutable(origFile)).andReturn(false);
-    expect(fileSystem.isExecutable(modFile)).andReturn(false);
-
-    expect(
-            cmd.runCommand(
-                "",
-                "diff",
-                ImmutableList.of(
-                    "-N", "-u", origFile.getAbsolutePath(), modFile.getAbsolutePath())))
-        .andReturn(null);
-
-    control.replay();
-
-    CodebaseMerger merger = new CodebaseMerger(ui, fileSystem, cmd, fileDiffer, orig, mod, dest);
-    merger.generateMergedFile("foo");
-
-    control.verify();
+    verify(cmd)
+        .runCommand(
+            "",
+            "diff",
+            ImmutableList.of("-N", "-u", origFile.getAbsolutePath(), modFile.getAbsolutePath()));
   }
 
   /**
@@ -114,337 +127,228 @@ public class CodebaseMergerTest extends TestCase {
    * The orig version and the dest version of the file differ. This should be treated as a conflict
    * for the user to resolve.
    */
+  @Test
   public void testGenerateMergedFileModDeleteConflict() throws Exception {
-    File mergedCodebaseLocation = new File("merged_codebase_7");
-    expect(fileSystem.getTemporaryDirectory("merged_codebase_")).andReturn(mergedCodebaseLocation);
+    FileDiffer differ = mock(FileDiffer.class);
+    FileDifference difference = mock(FileDifference.class);
+    when(differ.diffFiles(anyString(), any(), any())).thenReturn(difference);
+    when(difference.isDifferent()).thenReturn(true);
+    resultBuilder.setMergedCodebase(merged);
+    when(fileSystem.exists(origFile)).thenReturn(true);
+    when(fileSystem.exists(destFile)).thenReturn(true);
+    when(fileSystem.exists(modFile)).thenReturn(false);
 
-    File origFile = new File("orig/foo");
-    expect(orig.getFile("foo")).andReturn(origFile);
-    expect(fileSystem.exists(origFile)).andReturn(true);
+    // Simulate merging on an empty file, since /dev/null got copied over the file in this flow.
+    when(cmd.runCommand(anyString(), eq("merge"), Mockito.anyListOf(String.class)))
+        .thenThrow(new CommandException("merge", ImmutableList.of(), "", "", 1));
 
-    File destFile = new File("dest/foo");
-    expect(dest.getFile("foo")).andReturn(destFile);
-    expect(fileSystem.exists(destFile)).andReturn(true);
+    CodebaseMerger merger = new CodebaseMerger(ui, fileSystem, cmd, differ);
+    merger.generateMergedFile(orig, mod, dest, resultBuilder, "foo");
 
-    File modFile = new File("mod/foo");
-    expect(mod.getFile("foo")).andReturn(modFile);
-    expect(fileSystem.exists(modFile)).andReturn(false);
-
-    // Expect no copy operations or anything. Deletion of the original file (i.e. non-existence of
-    // modFile) should result in not copying destFile to the merged codebase, i.e. deleting it.
-
-    control.replay();
-
-    CodebaseMerger merger = new CodebaseMerger(ui, fileSystem, cmd, null, orig, mod, dest);
-    merger.generateMergedFile("foo");
-
-    control.verify();
-
-    assertThat(merger.getFailedToMergeFiles()).isEmpty();
-    assertThat(merger.getMergedFiles()).isEmpty();
+    // Expect no changes to the failed/merged files, and merge in /dev/null forcing a user conflict.
+    assertThat(resultBuilder.failedFilesBuilder().build()).isEmpty();
+    assertThat(resultBuilder.mergedFilesBuilder().build()).isEmpty();
   }
 
   /**
-   * Test generateMergedFile(...) in the case when the file exists only in mod.
-   * In this case, the file should simply be copied to the merged codebase.
+   * Test generateMergedFile(...) in the case when the file exists only in mod. In this case, the
+   * file should simply be copied to the merged codebase.
    */
+  @Test
   public void testGenerateMergedFileAddFile() throws Exception {
-    File mergedCodebaseLocation = new File("merged_codebase_7");
-    expect(fileSystem.getTemporaryDirectory("merged_codebase_")).andReturn(mergedCodebaseLocation);
-
-    File origFile = new File("orig/foo");
-    expect(orig.getFile("foo")).andReturn(origFile);
-    expect(fileSystem.exists(origFile)).andReturn(false);
-
-    File destFile = new File("dest/foo");
-    expect(dest.getFile("foo")).andReturn(destFile);
-    expect(fileSystem.exists(destFile)).andReturn(false);
-
-    File modFile = new File("mod/foo");
-    expect(mod.getFile("foo")).andReturn(modFile);
-    expect(fileSystem.exists(modFile)).andReturn(true);
-
     File mergedFile = new File("merged_codebase_7/foo");
-    fileSystem.makeDirsForFile(mergedFile);
-    fileSystem.copyFile(modFile, mergedFile);
+    FileDiffer differ = mock(FileDiffer.class);
+    FileDifference difference = mock(FileDifference.class);
+    when(differ.diffFiles(anyString(), any(), any())).thenReturn(difference);
+    when(difference.isDifferent()).thenReturn(true);
+    when(fileSystem.exists(origFile)).thenReturn(false);
+    when(fileSystem.exists(destFile)).thenReturn(false);
+    when(fileSystem.exists(modFile)).thenReturn(true);
 
-    control.replay();
+    CodebaseMerger merger = new CodebaseMerger(ui, fileSystem, cmd, differ);
+    merger.generateMergedFile(orig, mod, dest, resultBuilder, "foo");
 
-    CodebaseMerger merger = new CodebaseMerger(ui, fileSystem, cmd, null, orig, mod, dest);
-    merger.generateMergedFile("foo");
+    assertThat(resultBuilder.mergedFilesBuilder().build()).isEmpty();
+    assertThat(resultBuilder.failedFilesBuilder().build()).isEmpty();
 
-    control.verify();
-
-    assertThat(merger.getMergedFiles()).isEmpty();
-    assertThat(merger.getFailedToMergeFiles()).isEmpty();
+    verify(fileSystem).makeDirsForFile(mergedFile);
+    verify(fileSystem).copyFile(modFile, mergedFile);
   }
 
   /**
    * Test generateMergedFile(...) in the most ideal case where the file exists in all three
    * codebases and there is no conflict.
    */
+  @Test
   public void testGenerateMergedFileClean() throws Exception {
-    File mergedCodebaseLocation = new File("merged_codebase_7");
-    expect(fileSystem.getTemporaryDirectory("merged_codebase_")).andReturn(mergedCodebaseLocation);
-
-    File origFile = new File("orig/foo");
-    expect(orig.getFile("foo")).andReturn(origFile);
-    expect(fileSystem.exists(origFile)).andReturn(true);
-
-    File destFile = new File("dest/foo");
-    expect(dest.getFile("foo")).andReturn(destFile);
-    expect(fileSystem.exists(destFile)).andReturn(true);
-
-    File modFile = new File("mod/foo");
-    expect(mod.getFile("foo")).andReturn(modFile);
-    expect(fileSystem.exists(modFile)).andReturn(true);
-
     File mergedFile = new File("merged_codebase_7/foo");
-    fileSystem.makeDirsForFile(mergedFile);
-    fileSystem.copyFile(destFile, mergedFile);
+
+    when(fileSystem.exists(origFile)).thenReturn(true);
+    when(fileSystem.exists(destFile)).thenReturn(true);
+    when(fileSystem.exists(modFile)).thenReturn(true);
 
     List<String> mergeArgs =
         ImmutableList.of(
             mergedFile.getAbsolutePath(), origFile.getAbsolutePath(), modFile.getAbsolutePath());
 
-    expect(cmd.runCommand(mergedCodebaseLocation.getAbsolutePath(), "merge", mergeArgs))
-        .andReturn("");
+    when(cmd.runCommand(mergedCodebaseLocation.getAbsolutePath(), "merge", mergeArgs))
+        .thenReturn("");
 
-    control.replay();
+    CodebaseMerger merger = new CodebaseMerger(ui, fileSystem, cmd, null);
+    merger.generateMergedFile(orig, mod, dest, resultBuilder, "foo");
 
-    CodebaseMerger merger = new CodebaseMerger(ui, fileSystem, cmd, null, orig, mod, dest);
-    merger.generateMergedFile("foo");
+    assertThat(resultBuilder.failedFilesBuilder().build()).isEmpty();
+    assertThat(resultBuilder.mergedFilesBuilder().build())
+        .containsExactly(mergedFile.getAbsolutePath());
 
-    control.verify();
-
-    assertThat(merger.getFailedToMergeFiles()).isEmpty();
-    assertThat(merger.getMergedFiles()).contains(mergedFile.getAbsolutePath());
+    verify(fileSystem).makeDirsForFile(mergedFile);
+    verify(fileSystem).copyFile(destFile, mergedFile);
+    verify(cmd).runCommand(mergedCodebaseLocation.getAbsolutePath(), "merge", mergeArgs);
   }
 
   /**
-   * Test generateMergedFile(...) in the case where the file exists in all three codebases but
-   * there is a conflict when merging.
+   * Test generateMergedFile(...) in the case where the file exists in all three codebases but there
+   * is a conflict when merging.
    */
+  @Test
   public void testGenerateMergedFileConflict() throws Exception {
-    File mergedCodebaseLocation = new File("merged_codebase_7");
-    expect(fileSystem.getTemporaryDirectory("merged_codebase_")).andReturn(mergedCodebaseLocation);
-
-    File origFile = new File("orig/foo");
-    expect(orig.getFile("foo")).andReturn(origFile);
-    expect(fileSystem.exists(origFile)).andReturn(true);
-
-    File destFile = new File("dest/foo");
-    expect(dest.getFile("foo")).andReturn(destFile);
-    expect(fileSystem.exists(destFile)).andReturn(true);
-
-    File modFile = new File("mod/foo");
-    expect(mod.getFile("foo")).andReturn(modFile);
-    expect(fileSystem.exists(modFile)).andReturn(true);
-
     File mergedFile = new File("merged_codebase_7/foo");
-    fileSystem.makeDirsForFile(mergedFile);
-    fileSystem.copyFile(destFile, mergedFile);
+    when(fileSystem.exists(origFile)).thenReturn(true);
+    when(fileSystem.exists(destFile)).thenReturn(true);
+    when(fileSystem.exists(modFile)).thenReturn(true);
 
     List<String> mergeArgs =
         ImmutableList.of(
             mergedFile.getAbsolutePath(), origFile.getAbsolutePath(), modFile.getAbsolutePath());
 
-    expect(cmd.runCommand(mergedCodebaseLocation.getAbsolutePath(), "merge", mergeArgs))
-        .andThrow(new CommandRunner.CommandException("merge", mergeArgs, "", "", 1));
+    when(cmd.runCommand(mergedCodebaseLocation.getAbsolutePath(), "merge", mergeArgs))
+        .thenThrow(new CommandRunner.CommandException("merge", mergeArgs, "", "", 1));
 
-    control.replay();
+    CodebaseMerger merger = new CodebaseMerger(ui, fileSystem, cmd, null);
+    merger.generateMergedFile(orig, mod, dest, resultBuilder, "foo");
 
-    CodebaseMerger merger = new CodebaseMerger(ui, fileSystem, cmd, null, orig, mod, dest);
-    merger.generateMergedFile("foo");
-
-    control.verify();
-
-    assertThat(merger.getMergedFiles()).isEmpty();
-    assertThat(merger.getFailedToMergeFiles()).contains(mergedFile.getAbsolutePath());
+    assertThat(resultBuilder.mergedFilesBuilder().build()).isEmpty();
+    assertThat(resultBuilder.failedFilesBuilder().build()).contains(mergedFile.getAbsolutePath());
+    verify(fileSystem).makeDirsForFile(mergedFile);
+    verify(fileSystem).copyFile(destFile, mergedFile);
+    verify(cmd).runCommand(mergedCodebaseLocation.getAbsolutePath(), "merge", mergeArgs);
   }
 
   /**
    * Test generateMergedFile(...) in the case where the file only exists in dest. The file should
    * appear in the merged codebase unchanged.
    */
+  @Test
   public void testGenerateMergedFileDestOnly() throws Exception {
-    File mergedCodebaseLocation = new File("merged_codebase_7");
-    expect(fileSystem.getTemporaryDirectory("merged_codebase_")).andReturn(mergedCodebaseLocation);
+    when(fileSystem.exists(origFile)).thenReturn(false);
+    when(fileSystem.exists(destFile)).thenReturn(true);
+    when(fileSystem.exists(modFile)).thenReturn(false);
 
-    File origFile = new File("orig/foo");
-    expect(orig.getFile("foo")).andReturn(origFile);
-    expect(fileSystem.exists(origFile)).andReturn(false);
+    CodebaseMerger merger = new CodebaseMerger(ui, fileSystem, cmd, null);
+    merger.generateMergedFile(orig, mod, dest, resultBuilder, "foo");
 
-    File destFile = new File("dest/foo");
-    expect(dest.getFile("foo")).andReturn(destFile);
-    expect(fileSystem.exists(destFile)).andReturn(true);
-
-    File modFile = new File("mod/foo");
-    expect(mod.getFile("foo")).andReturn(modFile);
-    expect(fileSystem.exists(modFile)).andReturn(false);
-
-    File mergedFile = new File("merged_codebase_7/foo");
-    fileSystem.makeDirsForFile(mergedFile);
-    fileSystem.copyFile(destFile, mergedFile);
-
-    control.replay();
-
-    CodebaseMerger merger = new CodebaseMerger(ui, fileSystem, cmd, null, orig, mod, dest);
-    merger.generateMergedFile("foo");
-
-    control.verify();
-
-    assertThat(merger.getFailedToMergeFiles()).isEmpty();
-    assertThat(merger.getMergedFiles()).isEmpty();
+    assertThat(resultBuilder.failedFilesBuilder().build()).isEmpty();
+    assertThat(resultBuilder.mergedFilesBuilder().build()).isEmpty();
   }
 
   /**
-   * Test generateMergedFile(...) in the case where the file exists in mod and dest but not orig.
-   * In this case, the mod version and dest version are the same so there should be no conflict.
-   * The file should remain unchanged in the merged codebase.
+   * Test generateMergedFile(...) in the case where the file exists in mod and dest but not orig. In
+   * this case, the mod version and dest version are the same so there should be no conflict. The
+   * file should remain unchanged in the merged codebase.
    */
+  @Test
   public void testGenerateMergedFileNoOrig() throws Exception {
-    File mergedCodebaseLocation = new File("merged_codebase_7");
-    expect(fileSystem.getTemporaryDirectory("merged_codebase_")).andReturn(mergedCodebaseLocation);
-
-    File origFile = new File("orig/foo");
-    expect(orig.getFile("foo")).andReturn(origFile);
-    expect(fileSystem.exists(origFile)).andReturn(false);
-    origFile = new File("/dev/null");
-
-    File destFile = new File("dest/foo");
-    expect(dest.getFile("foo")).andReturn(destFile);
-    expect(fileSystem.exists(destFile)).andReturn(true);
-
-    File modFile = new File("mod/foo");
-    expect(mod.getFile("foo")).andReturn(modFile);
-    expect(fileSystem.exists(modFile)).andReturn(true);
-
     File mergedFile = new File("merged_codebase_7/foo");
-    fileSystem.makeDirsForFile(mergedFile);
-    fileSystem.copyFile(destFile, mergedFile);
+    when(fileSystem.exists(origFile)).thenReturn(false);
+    when(fileSystem.exists(destFile)).thenReturn(true);
+    when(fileSystem.exists(modFile)).thenReturn(true);
 
     List<String> mergeArgs =
-        ImmutableList.of(
-            mergedFile.getAbsolutePath(), origFile.getAbsolutePath(), modFile.getAbsolutePath());
+        ImmutableList.of(mergedFile.getAbsolutePath(), "/dev/null", modFile.getAbsolutePath());
 
-    expect(cmd.runCommand(mergedCodebaseLocation.getAbsolutePath(), "merge", mergeArgs))
-        .andReturn("");
+    when(cmd.runCommand(mergedCodebaseLocation.getAbsolutePath(), "merge", mergeArgs))
+        .thenReturn("");
 
-    control.replay();
+    CodebaseMerger merger = new CodebaseMerger(ui, fileSystem, cmd, null);
+    merger.generateMergedFile(orig, mod, dest, resultBuilder, "foo");
 
-    CodebaseMerger merger = new CodebaseMerger(ui, fileSystem, cmd, null, orig, mod, dest);
-    merger.generateMergedFile("foo");
-
-    control.verify();
-
-    assertThat(merger.getFailedToMergeFiles()).isEmpty();
-    assertTrue(merger.getMergedFiles().contains(mergedFile.getAbsolutePath()));
+    assertThat(resultBuilder.failedFilesBuilder().build()).isEmpty();
+    assertThat(resultBuilder.mergedFilesBuilder().build())
+        .containsExactly(mergedFile.getAbsolutePath());
+    verify(fileSystem).makeDirsForFile(mergedFile);
+    verify(fileSystem).copyFile(destFile, mergedFile);
+    verify(cmd).runCommand(mergedCodebaseLocation.getAbsolutePath(), "merge", mergeArgs);
   }
 
   /**
-   * Test generateMergedFile(...) in the case where the file exists in mod and dest but not orig.
-   * In this case, the mod version and dest version are different so a conflict should occur when
+   * Test generateMergedFile(...) in the case where the file exists in mod and dest but not orig. In
+   * this case, the mod version and dest version are different so a conflict should occur when
    * merging so that the user can resolved the discrepancy.
    */
+  @Test
   public void testGenerateMergedFileNoOrigConflict() throws Exception {
-    File mergedCodebaseLocation = new File("merged_codebase_7");
-    expect(fileSystem.getTemporaryDirectory("merged_codebase_")).andReturn(mergedCodebaseLocation);
-
-    File origFile = new File("orig/foo");
-    expect(orig.getFile("foo")).andReturn(origFile);
-    expect(fileSystem.exists(origFile)).andReturn(false);
-    origFile = new File("/dev/null");
-
-    File destFile = new File("dest/foo");
-    expect(dest.getFile("foo")).andReturn(destFile);
-    expect(fileSystem.exists(destFile)).andReturn(true);
-
-    File modFile = new File("mod/foo");
-    expect(mod.getFile("foo")).andReturn(modFile);
-    expect(fileSystem.exists(modFile)).andReturn(true);
-
     File mergedFile = new File("merged_codebase_7/foo");
-    fileSystem.makeDirsForFile(mergedFile);
-    fileSystem.copyFile(destFile, mergedFile);
+    when(fileSystem.exists(origFile)).thenReturn(false);
+    when(fileSystem.exists(destFile)).thenReturn(true);
+    when(fileSystem.exists(modFile)).thenReturn(true);
 
     List<String> mergeArgs =
         ImmutableList.of(
             mergedFile.getAbsolutePath(), origFile.getAbsolutePath(), modFile.getAbsolutePath());
 
-    expect(cmd.runCommand(mergedCodebaseLocation.getAbsolutePath(), "merge", mergeArgs))
-        .andThrow(new CommandRunner.CommandException("merge", mergeArgs, "", "", 1));
+    // Fail this merge command.
+    when(cmd.runCommand(anyString(), eq("merge"), Mockito.anyListOf(String.class)))
+        .thenThrow(new CommandRunner.CommandException("merge", mergeArgs, "", "", 1));
 
-    control.replay();
+    CodebaseMerger merger = new CodebaseMerger(ui, fileSystem, cmd, null);
+    merger.generateMergedFile(orig, mod, dest, resultBuilder, "foo");
 
-    CodebaseMerger merger = new CodebaseMerger(ui, fileSystem, cmd, null, orig, mod, dest);
-    merger.generateMergedFile("foo");
-
-    control.verify();
-
-    assertEquals(0, merger.getMergedFiles().size());
-    assertTrue(merger.getFailedToMergeFiles().contains(mergedFile.getAbsolutePath()));
+    // Verify that the file was copied, and that the merge command was executed.
+    verify(fileSystem).makeDirsForFile(mergedFile);
+    verify(fileSystem).copyFile(destFile, mergedFile);
+    verify(cmd).runCommand(anyString(), eq("merge"), Mockito.anyListOf(String.class));
+    assertThat(resultBuilder.mergedFilesBuilder().build()).isEmpty();
+    assertThat(resultBuilder.failedFilesBuilder().build())
+        .containsExactly(mergedFile.getAbsolutePath());
   }
 
-  /**
-   * Test for merge()
-   */
+  /** Test for merge() */
+  @Test
   public void testMerge() throws Exception {
-    Ui ui = control.createMock(Ui.class);
+    Ui ui = mock(Ui.class);
     Injector.INSTANCE = new Injector(fileSystem, cmd, ui);
 
-    File mergedCodebaseLocation = new File("merged_codebase_7");
-    expect(fileSystem.getTemporaryDirectory("merged_codebase_")).andReturn(mergedCodebaseLocation);
-
-    File origRoot = new File("orig");
-    expect(orig.path()).andReturn(origRoot).anyTimes();
-    File destRoot = new File("dest");
-    expect(dest.path()).andReturn(destRoot).anyTimes();
-    File modRoot = new File("mod");
-    expect(mod.path()).andReturn(modRoot).anyTimes();
-
-
-    // generateMergedFile(...) on foo
-    File origFile = new File("orig/foo");
-    expect(orig.getFile("foo")).andReturn(origFile);
-    expect(fileSystem.exists(origFile)).andReturn(true);
-
-    File destFile = new File("dest/foo");
-    expect(fileSystem.findFiles(destRoot)).andReturn(ImmutableSet.of(destFile));
-    expect(dest.getFile("foo")).andReturn(destFile);
-    expect(fileSystem.exists(destFile)).andReturn(true);
-
-    File modFile = new File("mod/foo");
-    expect(fileSystem.findFiles(modRoot)).andReturn(ImmutableSet.of(modFile));
-    expect(mod.getFile("foo")).andReturn(modFile);
-    expect(fileSystem.exists(modFile)).andReturn(true);
+    when(orig.path()).thenReturn(new File("orig"));
+    when(dest.path()).thenReturn(new File("dest"));
+    when(mod.path()).thenReturn(new File("mod"));
+    when(fileSystem.exists(origFile)).thenReturn(true);
+    when(fileSystem.exists(destFile)).thenReturn(true);
+    when(fileSystem.exists(modFile)).thenReturn(true);
+    when(fileSystem.findFiles(new File("dest"))).thenReturn(ImmutableSet.of(destFile));
+    when(fileSystem.findFiles(new File("mod"))).thenReturn(ImmutableSet.of(modFile));
 
     File mergedFile = new File("merged_codebase_7/foo");
-    fileSystem.makeDirsForFile(mergedFile);
-    fileSystem.copyFile(destFile, mergedFile);
 
     List<String> mergeArgs =
         ImmutableList.of(
             mergedFile.getAbsolutePath(), origFile.getAbsolutePath(), modFile.getAbsolutePath());
 
-    expect(cmd.runCommand(mergedCodebaseLocation.getAbsolutePath(), "merge", mergeArgs))
-        .andReturn("");
+    when(cmd.runCommand(mergedCodebaseLocation.getAbsolutePath(), "merge", mergeArgs))
+        .thenReturn("");
 
-    // No merging of bar, just follow deletion of origFile by not copying destFile to merged
-    // codebase.
+    CodebaseMerger merger = new CodebaseMerger(ui, fileSystem, cmd, null);
+    MergeResult result = merger.merge(orig, mod, dest);
 
-    // Expect in call to report()
-    ui.message("Merged codebase generated at: %s", mergedCodebaseLocation.getAbsolutePath());
-    ui.message("%d files merged successfully. No merge conflicts.", 1);
+    assertThat(result.mergedFiles()).contains(mergedFile.getAbsolutePath());
+    assertThat(result.failedFiles()).isEmpty();
 
-    control.replay();
+    verify(fileSystem).makeDirsForFile(mergedFile);
+    verify(fileSystem).copyFile(destFile, mergedFile);
+    verify(cmd).runCommand(mergedCodebaseLocation.getAbsolutePath(), "merge", mergeArgs);
 
-    CodebaseMerger merger = new CodebaseMerger(ui, fileSystem, cmd, null, orig, mod, dest);
-    merger.merge();
-
-    control.verify();
-
-    assertThat(merger.getMergedFiles()).contains(mergedFile.getAbsolutePath());
-    assertThat(merger.getFailedToMergeFiles()).isEmpty();
+    // verify call to report()
+    verify(ui)
+        .message("Merged codebase generated at: %s", mergedCodebaseLocation.getAbsolutePath());
+    verify(ui).message("%d files merged successfully. No merge conflicts.", 1);
   }
 }

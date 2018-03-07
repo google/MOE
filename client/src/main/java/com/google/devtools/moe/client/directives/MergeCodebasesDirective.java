@@ -18,17 +18,13 @@ package com.google.devtools.moe.client.directives;
 
 import static com.google.devtools.moe.client.parser.Parser.parseExpression;
 
-import com.google.devtools.moe.client.CommandRunner;
-import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.MoeProblem;
-import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.codebase.CodebaseMerger;
 import com.google.devtools.moe.client.parser.ExpressionEngine;
 import com.google.devtools.moe.client.parser.Parser.ParseError;
 import com.google.devtools.moe.client.project.ProjectContext;
-import com.google.devtools.moe.client.tools.FileDifference.FileDiffer;
 import dagger.Provides;
 import dagger.multibindings.IntoMap;
 import dagger.multibindings.StringKey;
@@ -61,26 +57,16 @@ public class MergeCodebasesDirective extends Directive {
   String destinationExpression = "";
 
   private final ProjectContext context;
-  private final FileDiffer differ;
-  private final Ui ui;
-  private final FileSystem filesystem;
-  private final CommandRunner cmd;
+
   private final ExpressionEngine expressionEngine;
+  private final CodebaseMerger merger;
 
   @Inject
   MergeCodebasesDirective(
-      ProjectContext context,
-      FileDiffer differ,
-      Ui ui,
-      FileSystem filesystem,
-      CommandRunner cmd,
-      ExpressionEngine expressionEngine) {
+      ProjectContext context, ExpressionEngine expressionEngine, CodebaseMerger merger) {
     this.context = context;
-    this.differ = differ;
-    this.ui = ui;
-    this.filesystem = filesystem;
-    this.cmd = cmd;
     this.expressionEngine = expressionEngine;
+    this.merger = merger;
   }
 
   @Override
@@ -100,9 +86,7 @@ public class MergeCodebasesDirective extends Directive {
     } catch (CodebaseCreationError e) {
       throw new MoeProblem(e, "Error creating codebase");
     }
-    new CodebaseMerger(
-            ui, filesystem, cmd, differ, originalCodebase, modifiedCodebase, destinationCodebase)
-        .merge();
+    merger.merge(originalCodebase, modifiedCodebase, destinationCodebase);
     return 0;
   }
 

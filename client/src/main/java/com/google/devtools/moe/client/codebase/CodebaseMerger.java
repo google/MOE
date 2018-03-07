@@ -16,6 +16,9 @@
 
 package com.google.devtools.moe.client.codebase;
 
+import static com.google.devtools.moe.client.Utils.makeFilenamesRelative;
+
+import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -25,141 +28,100 @@ import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
-import com.google.devtools.moe.client.Utils;
 import com.google.devtools.moe.client.parser.RepositoryExpression;
 import com.google.devtools.moe.client.parser.Term;
 import com.google.devtools.moe.client.tools.FileDifference.FileDiffer;
 import java.io.File;
 import java.io.IOException;
 import java.util.Set;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
 /**
  * Merges all changes that lead from {@code originalCodebase} to {@code modifiedCodebase} into
- * destinationCodebase when its {@link #merge()} method is invoked.
+ * destinationCodebase when its {@link #merge(Codebase, Codebase, Codebase)} method is invoked.
  *
  * <p>Here is a description of the UNIX merge(1) tool from its man page:
+ *
  * <pre>{@code
+ * merge [ options ] file1 file2 file3
  *
- *   merge [ options ] file1 file2 file3
- *
- *   merge incorporates all changes that lead from file2 to file3 into file1.  The result
- *   ordinarily goes into file1.  merge is useful for combining separate changes to an original.
- *   Suppose file2 is the original, and both file1 and file3 are modifications of file2.  Then
- *   merge combines both changes.
+ * merge incorporates all changes that lead from file2 to file3 into file1.  The result
+ * ordinarily goes into file1.  merge is useful for combining separate changes to an original.
+ * Suppose file2 is the original, and both file1 and file3 are modifications of file2.  Then
+ * merge combines both changes.
  *
  * }</pre>
  *
- * <p>{@link CodebaseMerger#merge()} performs this type of merge on each file in the three
- * codebases. In {@link CodebaseMerger#merge}, {@code originalCodebase} is analogous to
- * {@code file2}, {@code modifiedCodebase} is analogous to {@code file3}, and
- * {@code destinationCodebase} is analogous to {@code file1}. The output of
- * {@link CodebaseMerger#merge()} is a codebase that incorporates the changes that both
- * {@code modifiedCodebase} and {@code destinationCodebase} made on the {@code originalCodebase}.
- * The differences between {@code modifiedCodebase} and the {@code originalCodebase} are brought
- * into a copy of {@code destinationCodebase}. The result is the merged codebase.
+ * <p>{@link CodebaseMerger#merge(Codebase, Codebase, Codebase)} performs this type of merge on each
+ * file in the three codebases. In {@link CodebaseMerger#merge(Codebase, Codebase, Codebase)},
+ * {@code originalCodebase} is analogous to {@code file2}, {@code modifiedCodebase} is analogous to
+ * {@code file3}, and {@code destinationCodebase} is analogous to {@code file1}. The output of
+ * {@link CodebaseMerger#merge(Codebase, Codebase, Codebase)} is a {@link MergeResult} which
+ * contains a {@link Codebase} that incorporates the changes that both {@code modifiedCodebase} and
+ * {@code destinationCodebase} made on the {@code originalCodebase}. The differences between {@code
+ * modifiedCodebase} and the {@code originalCodebase} are brought into a copy of {@code
+ * destinationCodebase}. The result is the merged codebase.
  *
  * <p>This is useful when bringing changes to the public repository into the internal repository.
  * For example, say you run:
  *
  * <pre>{@code
- *    merge_codebases --originalCodebase "publicrepo(revision=142)"
- *                    --modifiedCodebase "publicrepo(revision=143)"
- *                    --destinationCodebase "internalrepo(revision=74)"
+ * merge_codebases --originalCodebase "publicrepo(revision=142)"
+ *                 --modifiedCodebase "publicrepo(revision=143)"
+ *                 --destinationCodebase "internalrepo(revision=74)"
  * }</pre>
  *
  * <p>Let internalrepo(revision=74) be in equivalence with publicrepo(revision=142). That is, let
- * publicrepo(revision=142) represent the same state of the code as internalrepo(revision=74)
- * minus any confidential code that may have been scrubbed during translation. That means that
- * publicrepo(revision=143) is a change to the public repository which has yet to be brought to
- * the internal repository. By running the above merge_codebases, the changes from the public
- * revision 142 to 143 will be merged into a copy of internal revision 74. The result is an
- * internal revision 75 which has the new public changes and still has the confidential code that
- * a public revision wouldn't have. Thus, internal revision 75 would be equivalent with public
- * revision 143 assuming there were no conflicts when merging.
+ * publicrepo(revision=142) represent the same state of the code as internalrepo(revision=74) minus
+ * any confidential code that may have been scrubbed during translation. That means that
+ * publicrepo(revision=143) is a change to the public repository which has yet to be brought to the
+ * internal repository. By running the above merge_codebases, the changes from the public revision
+ * 142 to 143 will be merged into a copy of internal revision 74. The result is an internal revision
+ * 75 which has the new public changes and still has the confidential code that a public revision
+ * wouldn't have. Thus, internal revision 75 would be equivalent with public revision 143 assuming
+ * there were no conflicts when merging.
  */
-// TODO(cgruber) AutoFactory or split out a MergeResult object with metadata/reporting.
+@Singleton
 public class CodebaseMerger {
   private final Ui ui;
   private final FileSystem filesystem;
   private final CommandRunner cmd;
   private final FileDiffer differ;
-  private final Codebase originalCodebase;
-  private final Codebase destinationCodebase;
-  private final Codebase modifiedCodebase;
-  private final Codebase mergedCodebase;
-  private final Set<String> mergedFiles;
-  private final Set<String> failedToMergeFiles;
 
-  public CodebaseMerger(
-      Ui ui,
-      FileSystem filesystem,
-      CommandRunner cmd,
-      FileDiffer differ,
-      Codebase originalCodebase,
-      Codebase modifiedCodebase,
-      Codebase destinationCodebase) {
+  @Inject
+  CodebaseMerger(Ui ui, FileSystem filesystem, CommandRunner cmd, FileDiffer differ) {
     this.ui = ui;
     this.filesystem = filesystem;
     this.cmd = cmd;
     this.differ = differ;
-    this.originalCodebase = originalCodebase;
-    this.modifiedCodebase = modifiedCodebase;
-    this.destinationCodebase = destinationCodebase;
-
-    File mergedDir = filesystem.getTemporaryDirectory("merged_codebase_");
-    RepositoryExpression mergedExpression =
-        new RepositoryExpression(new Term("merged", ImmutableMap.<String, String>of()));
-    this.mergedCodebase = Codebase.create(mergedDir, "merged", mergedExpression);
-
-    mergedFiles = Sets.newHashSet();
-    failedToMergeFiles = Sets.newHashSet();
-  }
-
-  public Set<String> getMergedFiles() {
-    return ImmutableSet.copyOf(mergedFiles);
-  }
-
-  public Set<String> getFailedToMergeFiles() {
-    return ImmutableSet.copyOf(failedToMergeFiles);
   }
 
   /**
    * For each file in the union of the modified and destination codebases, run
-   * generateMergedFile(...) and then report() the results.
+   * generateMergedFile(...) and then reports the results when complete.
    *
-   * @return the merged Codebase
+   * @return the merge result containing the merged {@link Codebase} plus sets of successfully and
+   *     unsuccessfully merged files.
    */
-  public Codebase merge() {
-    Set<String> filesToMerge =
-        Sets.union(
-            Utils.makeFilenamesRelative(
-                filesystem.findFiles(destinationCodebase.path()), destinationCodebase.path()),
-            Utils.makeFilenamesRelative(
-                filesystem.findFiles(modifiedCodebase.path()), modifiedCodebase.path()));
+  public MergeResult merge(Codebase original, Codebase modified, Codebase destination) {
+    MergeResult.Builder resultBuilder = MergeResult.builder();
+    File mergedDir = filesystem.getTemporaryDirectory("merged_codebase_");
+    RepositoryExpression mergedExpression =
+        new RepositoryExpression(new Term("merged", ImmutableMap.of()));
+    resultBuilder.setMergedCodebase(Codebase.create(mergedDir, "merged", mergedExpression));
+    Set<String> filesToMerge = Sets.union(findFiles(destination), findFiles(modified));
+
     for (String filename : filesToMerge) {
-      this.generateMergedFile(filename);
+      this.generateMergedFile(original, modified, destination, resultBuilder, filename);
     }
-    this.report();
-    return mergedCodebase;
+    MergeResult result = resultBuilder.build();
+    result.report(ui);
+    return result;
   }
 
-  /**
-   * Print the results of a merge to the UI.
-   */
-  public void report() {
-    ui.message("Merged codebase generated at: %s", mergedCodebase.path().getAbsolutePath());
-    if (failedToMergeFiles.isEmpty()) {
-      ui.message(
-          "%d files merged successfully. No merge conflicts.",
-          mergedFiles.size());
-    } else {
-      ui.message(
-          "%d files merged successfully.\n%d files have merge "
-              + "conflicts. Edit the following files to resolve conflicts:\n%s",
-          mergedFiles.size(),
-          failedToMergeFiles.size(),
-          failedToMergeFiles);
-    }
+  private Set<String> findFiles(Codebase codebase) {
+    return makeFilenamesRelative(filesystem.findFiles(codebase.path()), codebase.path());
   }
 
   private boolean areDifferent(String filename, File x, File y) {
@@ -167,11 +129,11 @@ public class CodebaseMerger {
   }
 
   /**
-   * Copy the destFile into the merged codebase. This is where the output of merge will be
-   * written to.
+   * Copy the destFile into the merged codebase. This is where the output of merge will be written
+   * to.
    */
-  private File copyToMergedCodebase(String filename, File destFile) {
-    File mergedFile = mergedCodebase.getFile(filename);
+  private File copyToMergedCodebase(Codebase merged, String filename, File destFile) {
+    File mergedFile = merged.getFile(filename);
     try {
       filesystem.makeDirsForFile(mergedFile);
       filesystem.copyFile(destFile, mergedFile);
@@ -192,26 +154,34 @@ public class CodebaseMerger {
    * is unchanged between those codebases, then a file in the merged codebase will NOT be created
    * and this method will return leaving the merged codebase unchanged.
    *
+   * @param original the original codebase in whose context the merge takes place
+   * @param modified the modified codebase containing some of the merge content
+   * @param destination the destination codebase containing some of the merge content
+   * @param resultBuilder the result object into which the merge results (merged file, errors)
+   *     should be inserted
    * @param filename the name of the file to merge
    */
-  public void generateMergedFile(String filename) {
-    File origFile = originalCodebase.getFile(filename);
+  void generateMergedFile(
+      Codebase original,
+      Codebase modified,
+      Codebase destination,
+      MergeResult.Builder resultBuilder,
+      String filename) {
+    File origFile = original.getFile(filename);
     boolean origExists = filesystem.exists(origFile);
 
-    File destFile = destinationCodebase.getFile(filename);
-    boolean destExists = filesystem.exists(destFile);
-
-    File modFile = modifiedCodebase.getFile(filename);
+    File modFile = modified.getFile(filename);
     boolean modExists = filesystem.exists(modFile);
+
+    File destFile = destination.getFile(filename);
+    boolean destExists = filesystem.exists(destFile);
 
     if (!destExists && !modExists) {
       // This should never be thrown since generateMergedFile(...) is only called on filesToMerge
       // from merge() which is the union of the files in the destination and modified codebases.
       throw new MoeProblem(
           "%s doesn't exist in either %s nor %s. This should not be possible.",
-          filename,
-          destinationCodebase,
-          modifiedCodebase);
+          filename, destination, modified);
 
     } else if (origExists && modExists && !destExists) {
       if (areDifferent(filename, origFile, modFile)) {
@@ -230,7 +200,7 @@ public class CodebaseMerger {
     } else if (!origExists && !(modExists && destExists)) {
       // File exists only in modified or destination codebase, so just copy it over.
       File existingFile = (modExists ? modFile : destFile);
-      copyToMergedCodebase(filename, existingFile);
+      copyToMergedCodebase(resultBuilder.mergedCodebase(), filename, existingFile);
       return;
 
     } else if (!origExists && modExists && destExists) {
@@ -238,22 +208,22 @@ public class CodebaseMerger {
       origFile = new File("/dev/null");
     }
 
-    File mergedFile = copyToMergedCodebase(filename, destFile);
+    File mergedFile = copyToMergedCodebase(resultBuilder.mergedCodebase(), filename, destFile);
 
     try {
       // Merges the changes that lead from origFile to modFile into mergedFile (which is a copy
       // of destFile). After, mergedFile will have the combined changes of modFile and destFile.
       cmd.runCommand(
-          this.mergedCodebase.path().getAbsolutePath(),
+          resultBuilder.mergedCodebase().path().getAbsolutePath(),
           "merge",
           ImmutableList.of(
               mergedFile.getAbsolutePath(), origFile.getAbsolutePath(), modFile.getAbsolutePath()));
       // Return status was 0 and the merge was successful. Note it.
-      mergedFiles.add(mergedFile.getAbsolutePath());
+      resultBuilder.mergedFilesBuilder().add(mergedFile.getAbsolutePath());
     } catch (CommandException e) {
       // If merge fails with exit status 1, then a conflict occurred. Make a note of the filepath.
       if (e.returnStatus == 1) {
-        failedToMergeFiles.add(mergedFile.getAbsolutePath());
+        resultBuilder.failedFilesBuilder().add(mergedFile.getAbsolutePath());
       } else {
         throw new MoeProblem(
             e,
@@ -263,6 +233,51 @@ public class CodebaseMerger {
             origFile.getAbsolutePath(),
             modFile.getAbsolutePath());
       }
+    }
+  }
+
+  /**
+   * The encapsulated results of a {@link CodebaseMerger#merge(Codebase,Codebase,Codebase)}
+   * operation
+   */
+  @AutoValue
+  public abstract static class MergeResult {
+    /** The merged codebase representation. */
+    public abstract Codebase mergedCodebase();
+    /** Files that moe was able to successfully merge */
+    public abstract ImmutableSet<String> mergedFiles();
+    /** Files that moe was unable to merge */
+    public abstract ImmutableSet<String> failedFiles();
+
+    /** Print the results of a merge to the UI. */
+    public void report(Ui ui) {
+      ui.message("Merged codebase generated at: %s", mergedCodebase().path().getAbsolutePath());
+      if (failedFiles().isEmpty()) {
+        ui.message("%d files merged successfully. No merge conflicts.", mergedFiles().size());
+      } else {
+        ui.message(
+            "%d files merged successfully.\n%d files have merge "
+                + "conflicts. Edit the following files to resolve conflicts:\n%s",
+            mergedFiles().size(), failedFiles().size(), failedFiles());
+      }
+    }
+
+    static Builder builder() {
+      return new AutoValue_CodebaseMerger_MergeResult.Builder();
+    }
+
+    /** A builder for {@link CodebaseMerger.MergeResult} */
+    @AutoValue.Builder
+    abstract static class Builder {
+      abstract Builder setMergedCodebase(Codebase mergedCodebase);
+
+      abstract Codebase mergedCodebase();
+
+      abstract ImmutableSet.Builder<String> failedFilesBuilder();
+
+      abstract ImmutableSet.Builder<String> mergedFilesBuilder();
+
+      abstract MergeResult build();
     }
   }
 }

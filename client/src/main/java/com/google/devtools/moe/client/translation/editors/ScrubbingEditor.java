@@ -22,14 +22,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.MoeProblem;
-import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseMerger;
 import com.google.devtools.moe.client.gson.GsonModule;
 import com.google.devtools.moe.client.project.EditorConfig;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.ScrubberConfig;
-import com.google.devtools.moe.client.tools.FileDifference.FileDiffer;
 import com.google.devtools.moe.client.tools.TarUtils;
 import dagger.Lazy;
 import java.io.File;
@@ -42,28 +40,25 @@ import javax.inject.Named;
 public class ScrubbingEditor implements Editor, InverseEditor {
   private final CommandRunner cmd;
   private final FileSystem filesystem;
-  private final Ui ui;
   private final Lazy<File> executable;
-  private final FileDiffer differ;
   private final String name;
   private final ScrubberConfig scrubberConfig;
   private final TarUtils tarUtils;
+  private final CodebaseMerger merger;
 
   ScrubbingEditor(
       @Provided CommandRunner cmd,
       @Provided FileSystem filesystem,
-      @Provided Ui ui,
       @Named("scrubber_binary") @Provided Lazy<File> executable,
-      @Provided FileDiffer differ,
       @Provided TarUtils tarUtils,
+      @Provided CodebaseMerger merger,
       String editorName,
       EditorConfig config) {
     this.cmd = cmd;
     this.filesystem = filesystem;
-    this.ui = ui;
     this.executable = executable;
-    this.differ = differ;
     this.tarUtils = tarUtils;
+    this.merger = merger;
     this.name = editorName;
     this.scrubberConfig = config.scrubberConfig();
   }
@@ -136,8 +131,6 @@ public class ScrubbingEditor implements Editor, InverseEditor {
   @Override
   public Codebase inverseEdit(
       Codebase input, Codebase referenceFrom, Codebase referenceTo, Map<String, String> options) {
-    CodebaseMerger merger =
-        new CodebaseMerger(ui, filesystem, cmd, differ, referenceFrom, input, referenceTo);
-    return merger.merge();
+    return merger.merge(referenceFrom, input, referenceTo).mergedCodebase();
   }
 }
