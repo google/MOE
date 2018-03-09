@@ -20,7 +20,6 @@ import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
-
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 

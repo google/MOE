@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.devtools.moe.client.codebase;
+package com.google.devtools.moe.client.codebase.expressions;
 
-import static com.google.devtools.moe.client.codebase.Parser.tokenize;
+import static com.google.devtools.moe.client.codebase.expressions.Parser.tokenize;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.moe.client.codebase.Parser.ParseError;
+import com.google.devtools.moe.client.codebase.expressions.Parser.ParseError;
 import java.util.List;
 import java.util.Map;
 import junit.framework.TestCase;

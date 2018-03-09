@@ -18,9 +18,9 @@ package com.google.devtools.moe.client.directives;
 
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
-import com.google.devtools.moe.client.codebase.Parser;
-import com.google.devtools.moe.client.codebase.Parser.ParseError;
-import com.google.devtools.moe.client.codebase.RepositoryExpression;
+import com.google.devtools.moe.client.codebase.expressions.Parser;
+import com.google.devtools.moe.client.codebase.expressions.Parser.ParseError;
+import com.google.devtools.moe.client.codebase.expressions.RepositoryExpression;
 import com.google.devtools.moe.client.migrations.Migrator;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.RepositoryType;

@@ -16,6 +16,7 @@
 
 package com.google.devtools.moe.client.codebase;
 
+import com.google.devtools.moe.client.codebase.expressions.Expression;
 import com.google.devtools.moe.client.project.ProjectContext;
 
 /**

@@ -16,14 +16,14 @@
 
 package com.google.devtools.moe.client.directives;
 
-import static com.google.devtools.moe.client.codebase.Parser.parseExpression;
+import static com.google.devtools.moe.client.codebase.expressions.Parser.parseExpression;
 
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.codebase.CodebaseMerger;
 import com.google.devtools.moe.client.codebase.ExpressionEngine;
-import com.google.devtools.moe.client.codebase.Parser.ParseError;
+import com.google.devtools.moe.client.codebase.expressions.Parser.ParseError;
 import com.google.devtools.moe.client.project.ProjectContext;
 import dagger.Provides;
 import dagger.multibindings.IntoMap;

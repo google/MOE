@@ -23,7 +23,7 @@ import static org.mockito.Mockito.when;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.codebase.Codebase;
-import com.google.devtools.moe.client.codebase.RepositoryExpression;
+import com.google.devtools.moe.client.codebase.expressions.RepositoryExpression;
 import com.google.devtools.moe.client.tools.FileDifference.Comparison;
 import java.io.File;
 import junit.framework.TestCase;

@@ -18,6 +18,7 @@ package com.google.devtools.moe.client.codebase;
 
 import com.google.auto.value.AutoValue;
 import com.google.devtools.moe.client.MoeProblem;
+import com.google.devtools.moe.client.codebase.expressions.Expression;
 import java.io.File;
 
 /**

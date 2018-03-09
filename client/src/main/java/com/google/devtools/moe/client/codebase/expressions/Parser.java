@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.devtools.moe.client.codebase;
+package com.google.devtools.moe.client.codebase.expressions;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;

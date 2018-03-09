@@ -25,7 +25,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.codebase.Codebase;
-import com.google.devtools.moe.client.codebase.RepositoryExpression;
+import com.google.devtools.moe.client.codebase.expressions.RepositoryExpression;
 import com.google.devtools.moe.client.gson.GsonModule;
 import com.google.devtools.moe.client.project.EditorConfig;
 import com.google.devtools.moe.client.project.ScrubberConfig;

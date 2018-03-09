@@ -24,7 +24,7 @@ import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.SystemFileSystem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.ExpressionEngine;
-import com.google.devtools.moe.client.codebase.RepositoryExpression.WriterFactory;
+import com.google.devtools.moe.client.codebase.WriterFactory;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.repositories.RepositoryType;

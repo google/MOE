@@ -30,9 +30,7 @@ import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.writer.Writer;
 import com.google.devtools.moe.client.writer.WriterCreator;
 import com.google.devtools.moe.client.writer.WritingError;
-
 import java.util.Map;
-
 import javax.inject.Inject;
 
 /**

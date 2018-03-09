@@ -17,7 +17,6 @@
 package com.google.devtools.moe.client.tools;
 
 import com.google.devtools.moe.client.codebase.Codebase;
-
 import java.util.Collections;
 import java.util.Set;
 

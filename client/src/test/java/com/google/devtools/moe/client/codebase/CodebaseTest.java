@@ -18,6 +18,8 @@ package com.google.devtools.moe.client.codebase;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.moe.client.MoeProblem;
+import com.google.devtools.moe.client.codebase.expressions.RepositoryExpression;
+import com.google.devtools.moe.client.codebase.expressions.Term;
 import java.io.File;
 import junit.framework.TestCase;
 

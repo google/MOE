@@ -14,28 +14,33 @@
  * limitations under the License.
  */
 
-package com.google.devtools.moe.client.codebase;
-
-import com.google.auto.value.AutoValue;
+package com.google.devtools.moe.client.codebase.expressions;
 
 /**
- * An Operation in the MOE Expression Language is an operator followed by a term.
- *
- * <p>E.g., |patch(file="/path/to/path.txt") or >public
+ * Operators in the MOE Codebase Expression Language.
  */
-@AutoValue
-public abstract class Operation {
+public enum Operator {
+  EDIT('|'),
+  TRANSLATE('>');
 
-  public abstract Operator operator();
+  private final char op;
 
-  public abstract Term term();
+  Operator(char op) {
+    this.op = op;
+  }
 
   @Override
   public String toString() {
-    return "" + operator() + term();
+    return String.valueOf(op);
   }
 
-  static Operation create(Operator operator, Term term) {
-    return new AutoValue_Operation(operator, term);
+  public static Operator getOperator(char c) throws IllegalArgumentException {
+    if (c == '|') {
+      return EDIT;
+    }
+    if (c == '>') {
+      return TRANSLATE;
+    }
+    throw new IllegalArgumentException("Invalid operator: " + c);
   }
 }

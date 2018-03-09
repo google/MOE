@@ -21,7 +21,7 @@ import com.google.auto.value.AutoValue;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.MoeProblem;
-import com.google.devtools.moe.client.codebase.RepositoryExpression;
+import com.google.devtools.moe.client.codebase.expressions.RepositoryExpression;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;
