@@ -53,7 +53,7 @@ public class ScrubbingEditorTest extends TestCase {
     Lazy<File> executable = EagerLazy.fromInstance(scrubberBin);
 
     Codebase codebase =
-        Codebase.create(codebaseFile, "internal", new RepositoryExpression("ignored"));
+        Codebase.create(codebaseFile, "internal", RepositoryExpression.create("ignored"));
 
     expect(fileSystem.getTemporaryDirectory("scrubber_run_")).andReturn(scrubberRun);
     expect(

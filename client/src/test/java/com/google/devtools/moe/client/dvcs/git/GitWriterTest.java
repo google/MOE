@@ -19,7 +19,6 @@ package com.google.devtools.moe.client.dvcs.git;
 import static org.easymock.EasyMock.expect;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.FileSystem;
@@ -27,7 +26,6 @@ import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.expressions.RepositoryExpression;
-import com.google.devtools.moe.client.codebase.expressions.Term;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.testing.TestingModule;
 import com.google.devtools.moe.client.writer.DraftRevision;
@@ -48,8 +46,7 @@ public class GitWriterTest extends TestCase {
   private final File codebaseRoot = new File("/codebase");
   private final File writerRoot = new File("/writer");
   private final String projectSpace = "public";
-  private final RepositoryExpression cExp =
-      new RepositoryExpression(new Term(projectSpace, ImmutableMap.<String, String>of()));
+  private final RepositoryExpression cExp = RepositoryExpression.create(projectSpace);
   private final Codebase codebase = Codebase.create(codebaseRoot, projectSpace, cExp);
   private final GitClonedRepository mockRevClone = control.createMock(GitClonedRepository.class);
   private final RepositoryConfig mockRepoConfig = control.createMock(RepositoryConfig.class);

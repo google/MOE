@@ -25,7 +25,7 @@ import junit.framework.TestCase;
 public class PatchCodebaseDifferenceRendererTest extends TestCase {
 
   private static Codebase makeCodebase(String name) throws Exception {
-    return Codebase.create(new File("/" + name), "public", new RepositoryExpression(name));
+    return Codebase.create(new File("/" + name), "public", RepositoryExpression.create(name));
   }
 
   public void testRender() throws Exception {

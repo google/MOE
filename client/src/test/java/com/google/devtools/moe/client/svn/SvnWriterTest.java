@@ -28,7 +28,6 @@ import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.expressions.RepositoryExpression;
-import com.google.devtools.moe.client.codebase.expressions.Term;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.testing.TestingModule;
@@ -95,7 +94,7 @@ public class SvnWriterTest extends TestCase {
 
   private RepositoryExpression e(
       String creatorIdentifier, ImmutableMap<String, String> creatorOptions) {
-    return new RepositoryExpression(new Term(creatorIdentifier, creatorOptions));
+    return RepositoryExpression.create(creatorIdentifier).withOptions(creatorOptions);
   }
 
   public void testPutEmptyCodebase() throws Exception {

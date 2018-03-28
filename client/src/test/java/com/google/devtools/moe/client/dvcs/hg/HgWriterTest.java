@@ -19,7 +19,6 @@ package com.google.devtools.moe.client.dvcs.hg;
 import static org.easymock.EasyMock.expect;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
@@ -27,7 +26,6 @@ import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.expressions.RepositoryExpression;
-import com.google.devtools.moe.client.codebase.expressions.Term;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.testing.TestingModule;
@@ -46,7 +44,7 @@ public class HgWriterTest extends TestCase {
   private static final File WRITER_ROOT = new File("/writer");
   private static final String PROJECT_SPACE = "public";
   private static final RepositoryExpression CODEBASE_EXPR =
-      new RepositoryExpression(new Term(PROJECT_SPACE, ImmutableMap.<String, String>of()));
+      RepositoryExpression.create(PROJECT_SPACE);
 
   private final IMocksControl control = EasyMock.createControl();
   private final FileSystem mockFs = control.createMock(FileSystem.class);

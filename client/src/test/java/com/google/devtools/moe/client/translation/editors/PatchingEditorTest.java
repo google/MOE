@@ -41,7 +41,7 @@ public class PatchingEditorTest extends TestCase {
     File patcherRun = new File("/patcher_run_foo");
     File codebaseFile = new File("/codebase");
     Codebase codebase =
-        Codebase.create(codebaseFile, "internal", new RepositoryExpression("ignored"));
+        Codebase.create(codebaseFile, "internal", RepositoryExpression.create("ignored"));
     Map<String, String> options = new HashMap<>();
     options.put("file", "notFile");
 
@@ -65,7 +65,7 @@ public class PatchingEditorTest extends TestCase {
     File codebaseFile = new File("/codebase");
 
     Codebase codebase =
-        Codebase.create(codebaseFile, "internal", new RepositoryExpression("ignored"));
+        Codebase.create(codebaseFile, "internal", RepositoryExpression.create("ignored"));
 
     Map<String, String> options = new HashMap<>();
     options.put("file", "/patchfile");
