@@ -92,7 +92,7 @@ public class SvnWriterCreatorTest extends TestCase {
         .andReturn("");
 
     control.replay();
-    SvnWriterCreator c = new SvnWriterCreator(mockConfig, revisionHistory, util);
+    SvnWriterCreator c = new SvnWriterCreator(mockConfig, revisionHistory, util, fileSystem);
     c.create(ImmutableMap.of("revision", "45"));
     control.verify();
 
