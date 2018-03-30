@@ -36,9 +36,7 @@ import junit.framework.TestCase;
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
 
-/**
- * Test GitWriter by expect()ing file system calls and git commands to add/remove files.
- */
+/** Test GitWriter by expect()ing file system calls and git commands to add/remove files. */
 public class GitWriterTest extends TestCase {
 
   private final IMocksControl control = EasyMock.createControl();
@@ -99,7 +97,7 @@ public class GitWriterTest extends TestCase {
 
     control.replay();
 
-    GitWriter w = new GitWriter(mockRevClone);
+    GitWriter w = new GitWriter(mockRevClone, mockFs);
     DraftRevision dr = w.putCodebase(codebase, null);
 
     control.verify();
@@ -123,7 +121,7 @@ public class GitWriterTest extends TestCase {
 
     control.replay();
 
-    GitWriter w = new GitWriter(mockRevClone);
+    GitWriter w = new GitWriter(mockRevClone, mockFs);
     w.putCodebase(codebase, null);
 
     control.verify();
@@ -146,7 +144,7 @@ public class GitWriterTest extends TestCase {
 
     control.replay();
 
-    GitWriter w = new GitWriter(mockRevClone);
+    GitWriter w = new GitWriter(mockRevClone, mockFs);
     w.putCodebase(codebase, null);
 
     control.verify();
@@ -166,7 +164,7 @@ public class GitWriterTest extends TestCase {
 
     control.replay();
 
-    GitWriter w = new GitWriter(mockRevClone);
+    GitWriter w = new GitWriter(mockRevClone, mockFs);
     w.putCodebase(codebase, null);
 
     control.verify();
@@ -191,7 +189,7 @@ public class GitWriterTest extends TestCase {
 
     control.replay();
 
-    GitWriter w = new GitWriter(mockRevClone);
+    GitWriter w = new GitWriter(mockRevClone, mockFs);
     DraftRevision dr = w.putCodebase(codebase, null);
 
     control.verify();

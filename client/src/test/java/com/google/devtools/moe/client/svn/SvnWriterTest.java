@@ -82,7 +82,7 @@ public class SvnWriterTest extends TestCase {
 
   private void expectSvnCommand(
       List<String> args, String workingDirectory, String result, CommandRunner cmd)
-          throws CommandException {
+      throws CommandException {
     ImmutableList.Builder<String> withAuthArgs = new ImmutableList.Builder<>();
     withAuthArgs.add("--no-auth-cache").addAll(args);
     expect(cmd.runCommand(workingDirectory, "svn", withAuthArgs.build())).andReturn(result);
@@ -104,7 +104,7 @@ public class SvnWriterTest extends TestCase {
     control.replay();
     Codebase c =
         Codebase.create(f("/codebase"), "public", e("public", ImmutableMap.<String, String>of()));
-    SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"), null);
+    SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"), null, fileSystem);
     DraftRevision r = e.putCodebase(c, null);
     control.verify();
     assertEquals("/writer", r.getLocation());
@@ -114,7 +114,7 @@ public class SvnWriterTest extends TestCase {
     Codebase c =
         Codebase.create(
             f("/codebase"), "internal", e("internal", ImmutableMap.<String, String>of()));
-    SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"), null);
+    SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"), null, fileSystem);
     try {
       e.putCodebase(c, null);
       fail();
@@ -132,7 +132,7 @@ public class SvnWriterTest extends TestCase {
     control.replay();
     Codebase c =
         Codebase.create(f("/codebase"), "public", e("public", ImmutableMap.<String, String>of()));
-    SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"), util);
+    SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"), util, fileSystem);
     e.putFile("foo", c);
     control.verify();
   }
@@ -148,7 +148,7 @@ public class SvnWriterTest extends TestCase {
     control.replay();
     Codebase c =
         Codebase.create(f("/codebase"), "public", e("public", ImmutableMap.<String, String>of()));
-    SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"), null);
+    SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"), null, fileSystem);
     e.putFile("foo", c);
     control.verify();
   }
@@ -165,7 +165,7 @@ public class SvnWriterTest extends TestCase {
     control.replay();
     Codebase c =
         Codebase.create(f("/codebase"), "public", e("public", ImmutableMap.<String, String>of()));
-    SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"), util);
+    SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"), util, fileSystem);
     e.putFile("foo", c);
     control.verify();
   }
@@ -185,7 +185,7 @@ public class SvnWriterTest extends TestCase {
 
     Codebase c =
         Codebase.create(f("/codebase"), "public", e("public", ImmutableMap.<String, String>of()));
-    SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"), util);
+    SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"), util, fileSystem);
     e.putFile("test.html", c);
     control.verify();
   }
@@ -202,7 +202,7 @@ public class SvnWriterTest extends TestCase {
     control.replay();
     Codebase c =
         Codebase.create(f("/codebase"), "public", e("public", ImmutableMap.<String, String>of()));
-    SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"), util);
+    SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"), util, fileSystem);
     e.putFile("foo", c);
     control.verify();
   }
@@ -219,7 +219,7 @@ public class SvnWriterTest extends TestCase {
     control.replay();
     Codebase c =
         Codebase.create(f("/codebase"), "public", e("public", ImmutableMap.<String, String>of()));
-    SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"), util);
+    SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"), util, fileSystem);
     e.putFile("foo", c);
     control.verify();
   }
@@ -247,7 +247,7 @@ public class SvnWriterTest extends TestCase {
             .date(new DateTime(1L))
             .description("desc")
             .build();
-    SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"), null);
+    SvnWriter e = new SvnWriter(mockConfig, null, f("/writer"), null, fileSystem);
     DraftRevision r = e.putCodebase(c, rm);
     control.verify();
     assertEquals("/writer", r.getLocation());

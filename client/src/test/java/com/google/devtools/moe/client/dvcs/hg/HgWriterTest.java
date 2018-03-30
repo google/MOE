@@ -110,7 +110,7 @@ public class HgWriterTest extends TestCase {
 
     control.replay();
 
-    HgWriter writer = new HgWriter(mockRevClone);
+    HgWriter writer = new HgWriter(mockRevClone, mockFs);
     DraftRevision draftRevision = writer.putCodebase(codebase, null);
 
     control.verify();
@@ -133,7 +133,7 @@ public class HgWriterTest extends TestCase {
 
     control.replay();
 
-    HgWriter writer = new HgWriter(mockRevClone);
+    HgWriter writer = new HgWriter(mockRevClone, mockFs);
     DraftRevision draftRevision = writer.putCodebase(codebase, null);
 
     control.verify();
@@ -156,7 +156,7 @@ public class HgWriterTest extends TestCase {
 
     control.replay();
 
-    HgWriter writer = new HgWriter(mockRevClone);
+    HgWriter writer = new HgWriter(mockRevClone, mockFs);
     DraftRevision draftRevision = writer.putCodebase(codebase, null);
 
     control.verify();
@@ -177,7 +177,7 @@ public class HgWriterTest extends TestCase {
 
     control.replay();
 
-    HgWriter writer = new HgWriter(mockRevClone);
+    HgWriter writer = new HgWriter(mockRevClone, mockFs);
     DraftRevision draftRevision = writer.putCodebase(codebase, null);
 
     control.verify();
@@ -201,7 +201,7 @@ public class HgWriterTest extends TestCase {
 
     control.replay();
 
-    HgWriter writer = new HgWriter(mockRevClone);
+    HgWriter writer = new HgWriter(mockRevClone, mockFs);
     RevisionMetadata revisionMetadata =
         RevisionMetadata.builder()
             .id("rev1")
