@@ -23,7 +23,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.Injector;
-import com.google.devtools.moe.client.NullFileSystemModule;
+import com.google.devtools.moe.client.NoopFileSystemModule;
 import com.google.devtools.moe.client.database.DbStorage;
 import com.google.devtools.moe.client.database.FileDb;
 import com.google.devtools.moe.client.database.RepositoryEquivalence;
@@ -59,7 +59,7 @@ public class SvnRevisionHistoryTest extends TestCase {
   private final SvnUtil util = new SvnUtil(cmd);
 
   // TODO(cgruber): Rework these when statics aren't inherent in the design.
-  @dagger.Component(modules = {TestingModule.class, NullFileSystemModule.class, Module.class})
+  @dagger.Component(modules = {TestingModule.class, NoopFileSystemModule.class, Module.class})
   @Singleton
   interface Component {
     Injector context(); // TODO (b/19676630) Remove when bug is fixed.

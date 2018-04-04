@@ -25,7 +25,7 @@ import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
-import com.google.devtools.moe.client.NullFileSystemModule;
+import com.google.devtools.moe.client.NoopFileSystemModule;
 import com.google.devtools.moe.client.Ui.UiModule;
 import com.google.devtools.moe.client.database.DbStorage;
 import com.google.devtools.moe.client.database.FileDb;
@@ -65,7 +65,7 @@ public class HgRevisionHistoryTest extends TestCase {
 
   // TODO(cgruber): Rework these when statics aren't inherent in the design.
   @dagger.Component(
-    modules = {TestingModule.class, NullFileSystemModule.class, Module.class, UiModule.class}
+    modules = {TestingModule.class, NoopFileSystemModule.class, Module.class, UiModule.class}
   )
   @Singleton
   interface Component {

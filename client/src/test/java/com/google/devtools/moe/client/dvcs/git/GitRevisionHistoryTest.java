@@ -27,7 +27,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
-import com.google.devtools.moe.client.NullFileSystemModule;
+import com.google.devtools.moe.client.NoopFileSystemModule;
 import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.database.DbStorage;
 import com.google.devtools.moe.client.database.FileDb;
@@ -71,7 +71,7 @@ public class GitRevisionHistoryTest extends TestCase {
 
   // TODO(cgruber): Rework these when statics aren't inherent in the design.
   @dagger.Component(
-      modules = {TestingModule.class, SystemCommandRunner.Module.class, NullFileSystemModule.class})
+      modules = {TestingModule.class, SystemCommandRunner.Module.class, NoopFileSystemModule.class})
   @Singleton
   interface Component {
     Injector context(); // TODO (b/19676630) Remove when bug is fixed.
