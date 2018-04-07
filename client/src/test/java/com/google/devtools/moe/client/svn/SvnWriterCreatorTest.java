@@ -24,11 +24,13 @@ import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
+import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.testing.TestingModule;
 import dagger.Provides;
 import java.io.File;
+import javax.inject.Inject;
 import javax.inject.Singleton;
 import junit.framework.TestCase;
 import org.easymock.EasyMock;
@@ -39,12 +41,14 @@ public class SvnWriterCreatorTest extends TestCase {
   private final FileSystem fileSystem = control.createMock(FileSystem.class);
   private final CommandRunner cmd = control.createMock(CommandRunner.class);
   private final SvnUtil util = new SvnUtil(cmd);
+  @Inject Ui ui;
 
   // TODO(cgruber): Rework these when statics aren't inherent in the design.
   @dagger.Component(modules = {TestingModule.class, Module.class})
   @Singleton
   interface Component {
     Injector context(); // TODO (b/19676630) Remove when bug is fixed.
+    void inject(SvnWriterCreatorTest instance);
   }
 
   @dagger.Module
@@ -63,8 +67,10 @@ public class SvnWriterCreatorTest extends TestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    Injector.INSTANCE =
-        DaggerSvnWriterCreatorTest_Component.builder().module(new Module()).build().context();
+    Component c = DaggerSvnWriterCreatorTest_Component.builder().module(new Module()).build();
+    c.inject(this);
+    // still need to set INSTANCE because Utils gets filesystem from it
+    Injector.INSTANCE = c.context();
   }
 
   public void testCreate() throws Exception {
@@ -92,7 +98,7 @@ public class SvnWriterCreatorTest extends TestCase {
         .andReturn("");
 
     control.replay();
-    SvnWriterCreator c = new SvnWriterCreator(mockConfig, revisionHistory, util, fileSystem);
+    SvnWriterCreator c = new SvnWriterCreator(mockConfig, revisionHistory, util, fileSystem, ui);
     c.create(ImmutableMap.of("revision", "45"));
     control.verify();
 
