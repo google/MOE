@@ -17,15 +17,13 @@
 package com.google.devtools.moe.client.repositories;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.devtools.moe.client.testing.DummyRevisionHistory.parseLegacyFields;
 
 import com.google.devtools.moe.client.Ui;
-
-import junit.framework.TestCase;
-
-import org.joda.time.DateTime;
-
 import java.io.ByteArrayOutputStream;
 import java.util.concurrent.atomic.AtomicBoolean;
+import junit.framework.TestCase;
+import org.joda.time.DateTime;
 
 /** Unit test for the {@link OriginalAuthorMetadataScrubber}. */
 public class OriginalAuthorMetadataScrubberTest extends TestCase {
@@ -54,6 +52,7 @@ public class OriginalAuthorMetadataScrubberTest extends TestCase {
                     + "ORIGINAL_AUTHOR=Blah Foo <blah@foo.com>\n"
                     + "blahblahblah")
             .build();
+    initial = parseLegacyFields(initial);
 
     RevisionMetadata expected =
         RevisionMetadata.builder()
@@ -62,6 +61,7 @@ public class OriginalAuthorMetadataScrubberTest extends TestCase {
             .date(new DateTime(1L))
             .description("random description\n\nblahblahblah")
             .build();
+    expected = parseLegacyFields(expected);
 
     RevisionMetadata actual = oams.scrub(initial, config);
     assertThat(actual.author()).isEqualTo("Blah Foo <blah@foo.com>");
@@ -80,6 +80,7 @@ public class OriginalAuthorMetadataScrubberTest extends TestCase {
                     + "ORIGINAL_AUTHOR=\"Blah Foo <blah@foo.com>\"\n"
                     + "blahblahblah")
             .build();
+    initial = parseLegacyFields(initial);
 
     RevisionMetadata actual = oams.scrub(initial, config);
     assertThat(actual).isEqualTo(initial);

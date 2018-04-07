@@ -17,11 +17,10 @@
 package com.google.devtools.moe.client.repositories;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.devtools.moe.client.testing.DummyRevisionHistory.parseLegacyFields;
 
 import com.google.common.base.Joiner;
-
 import junit.framework.TestCase;
-
 import org.joda.time.DateTime;
 
 public class PublicSectionMetadataScrubberTest extends TestCase {
@@ -95,12 +94,14 @@ public class PublicSectionMetadataScrubberTest extends TestCase {
   }
 
   private static RevisionMetadata metadata(String... description) {
-    return RevisionMetadata.builder()
-        .id("commit_number")
-        .author("author@google.com")
-        .date(new DateTime(1L))
-        .description(Joiner.on("\n").join(description))
-        .withParents(Revision.create("parentId1", "repo"), Revision.create("parentId2", "repo"))
-        .build();
+    RevisionMetadata unparsed =
+        RevisionMetadata.builder()
+            .id("commit_number")
+            .author("author@google.com")
+            .date(new DateTime(1L))
+            .description(Joiner.on("\n").join(description))
+            .withParents(Revision.create("parentId1", "repo"), Revision.create("parentId2", "repo"))
+            .build();
+    return parseLegacyFields(unparsed);
   }
 }

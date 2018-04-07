@@ -17,14 +17,16 @@
 package com.google.devtools.moe.client.repositories;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.devtools.moe.client.testing.DummyRevisionHistory.parseLegacyFields;
 
 import com.google.common.collect.ImmutableList;
-
-import junit.framework.TestCase;
-
 import org.joda.time.DateTime;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-public class RevisionMetadataTest extends TestCase {
+@RunWith(JUnit4.class)
+public class RevisionMetadataTest {
   private static final RevisionMetadata DEFAULT_TEST_METADATA =
       RevisionMetadata.builder()
           .id("id")
@@ -33,25 +35,29 @@ public class RevisionMetadataTest extends TestCase {
           .description("description")
           .build();
 
+  @Test
   public void testConcatenate_singleMetadata() {
     RevisionMetadata rm =
         DEFAULT_TEST_METADATA.toBuilder().withParents(Revision.create("revId", "repo")).build();
 
-    assertEquals(rm, RevisionMetadata.concatenate(ImmutableList.of(rm), null));
+    assertThat(RevisionMetadata.concatenate(ImmutableList.of(rm), null)).isEqualTo(rm);
   }
 
-  public void testParseFields() {
+  @Test
+  public void testLegacyParseFields() {
     RevisionMetadata rm =
         DEFAULT_TEST_METADATA
             .toBuilder()
             .description("Foo\n" + "FOO_BAR=blah\n" + "foo-bar=blah=foo")
             .build();
+    rm = parseLegacyFields(rm);
 
     assertThat(rm.fields()).containsEntry("FOO_BAR", "blah");
     assertThat(rm.fields()).containsEntry("foo-bar", "blah=foo");
     assertThat(rm.fields()).hasSize(2);
   }
 
+  @Test
   public void testConcatenate_twoMetadata() {
     RevisionMetadata rm1 =
         RevisionMetadata.builder()
@@ -78,10 +84,13 @@ public class RevisionMetadataTest extends TestCase {
             .description("description1\n\n-------------\ndescription2")
             .withParents(Revision.create("revId1", "repo"), Revision.create("revId2", "repo"))
             .build();
+    rmExpected = parseLegacyFields(rmExpected);
 
-    assertEquals(rmExpected, RevisionMetadata.concatenate(ImmutableList.of(rm1, rm2), null));
+    assertThat(RevisionMetadata.concatenate(ImmutableList.of(rm1, rm2), null))
+        .isEqualTo(rmExpected);
   }
 
+  @Test
   public void testConcatenate_withMigrationInfo() {
     RevisionMetadata rm1 =
         RevisionMetadata.builder()
@@ -114,10 +123,9 @@ public class RevisionMetadataTest extends TestCase {
                     + migrationFromRev.revId())
             .withParents(Revision.create("revId1", "repo"), Revision.create("revId2", "repo"))
             .build();
+    rmExpected = parseLegacyFields(rmExpected);
 
-    assertEquals(
-        rmExpected, RevisionMetadata.concatenate(ImmutableList.of(rm1, rm2), migrationFromRev));
+    assertThat(RevisionMetadata.concatenate(ImmutableList.of(rm1, rm2), migrationFromRev))
+        .isEqualTo(rmExpected);
   }
-
-
 }

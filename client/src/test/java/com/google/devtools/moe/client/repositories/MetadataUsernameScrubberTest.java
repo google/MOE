@@ -17,14 +17,12 @@
 package com.google.devtools.moe.client.repositories;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.devtools.moe.client.testing.DummyRevisionHistory.parseLegacyFields;
 
 import com.google.common.collect.ImmutableList;
-
-import junit.framework.TestCase;
-
-import org.joda.time.DateTime;
-
 import java.util.List;
+import junit.framework.TestCase;
+import org.joda.time.DateTime;
 
 /**
  * Unit test for the MetadataUsernameScrubber.
@@ -41,6 +39,7 @@ public class MetadataUsernameScrubberTest extends TestCase {
             .date(new DateTime(1L))
             .description("saget fixed ALL the bugs.")
             .build();
+    before = parseLegacyFields(before);
     RevisionMetadata expected =
         RevisionMetadata.builder()
             .id("100")
@@ -48,6 +47,7 @@ public class MetadataUsernameScrubberTest extends TestCase {
             .date(new DateTime(1L))
             .description("<user> fixed ALL the bugs.")
             .build();
+    expected = parseLegacyFields(expected);
     RevisionMetadata after =
         mus.scrub(
             before,
@@ -68,6 +68,7 @@ public class MetadataUsernameScrubberTest extends TestCase {
             .date(new DateTime(1L))
             .description("bob and saget fixed ALL the bugs.")
             .build();
+    before = parseLegacyFields(before);
     RevisionMetadata expected =
         RevisionMetadata.builder()
             .id("100")
@@ -75,6 +76,7 @@ public class MetadataUsernameScrubberTest extends TestCase {
             .date(new DateTime(1L))
             .description("<user> and <user> fixed ALL the bugs.")
             .build();
+    expected = parseLegacyFields(expected);
 
     RevisionMetadata after =
         mus.scrub(
@@ -96,6 +98,7 @@ public class MetadataUsernameScrubberTest extends TestCase {
             .date(new DateTime(1L))
             .description("bob and \nsaget went bobbing for apples in Sagetopolis.")
             .build();
+    before = parseLegacyFields(before);
     RevisionMetadata expected =
         RevisionMetadata.builder()
             .id("100")
@@ -103,6 +106,7 @@ public class MetadataUsernameScrubberTest extends TestCase {
             .date(new DateTime(1L))
             .description("<user> and \n<user> went bobbing for apples in Sagetopolis.")
             .build();
+    expected = parseLegacyFields(expected);
 
     RevisionMetadata after =
         mus.scrub(
