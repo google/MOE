@@ -24,6 +24,7 @@ import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.SystemCommandRunner;
+import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.expressions.RepositoryExpression;
 import com.google.devtools.moe.client.project.RepositoryConfig;
@@ -31,6 +32,7 @@ import com.google.devtools.moe.client.testing.TestingModule;
 import com.google.devtools.moe.client.writer.DraftRevision;
 import dagger.Provides;
 import java.io.File;
+import javax.inject.Inject;
 import javax.inject.Singleton;
 import junit.framework.TestCase;
 import org.easymock.EasyMock;
@@ -48,6 +50,7 @@ public class GitWriterTest extends TestCase {
   private final Codebase codebase = Codebase.create(codebaseRoot, projectSpace, cExp);
   private final GitClonedRepository mockRevClone = control.createMock(GitClonedRepository.class);
   private final RepositoryConfig mockRepoConfig = control.createMock(RepositoryConfig.class);
+  @Inject Ui ui;
 
   /* Helper methods */
 
@@ -62,6 +65,8 @@ public class GitWriterTest extends TestCase {
   @Singleton
   interface Component {
     Injector context(); // TODO (b/19676630) Remove when bug is fixed.
+
+    void inject(GitWriterTest instance);
   }
 
   @dagger.Module
@@ -75,8 +80,7 @@ public class GitWriterTest extends TestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    Injector.INSTANCE =
-        DaggerGitWriterTest_Component.builder().module(new Module()).build().context();
+    DaggerGitWriterTest_Component.builder().module(new Module()).build().inject(this);
 
     expect(mockRevClone.getLocalTempDir()).andReturn(writerRoot).anyTimes();
     expect(mockRevClone.getConfig()).andReturn(mockRepoConfig).anyTimes();
@@ -97,7 +101,7 @@ public class GitWriterTest extends TestCase {
 
     control.replay();
 
-    GitWriter w = new GitWriter(mockRevClone, mockFs);
+    GitWriter w = new GitWriter(mockRevClone, mockFs, ui);
     DraftRevision dr = w.putCodebase(codebase, null);
 
     control.verify();
@@ -121,7 +125,7 @@ public class GitWriterTest extends TestCase {
 
     control.replay();
 
-    GitWriter w = new GitWriter(mockRevClone, mockFs);
+    GitWriter w = new GitWriter(mockRevClone, mockFs, ui);
     w.putCodebase(codebase, null);
 
     control.verify();
@@ -144,7 +148,7 @@ public class GitWriterTest extends TestCase {
 
     control.replay();
 
-    GitWriter w = new GitWriter(mockRevClone, mockFs);
+    GitWriter w = new GitWriter(mockRevClone, mockFs, ui);
     w.putCodebase(codebase, null);
 
     control.verify();
@@ -164,7 +168,7 @@ public class GitWriterTest extends TestCase {
 
     control.replay();
 
-    GitWriter w = new GitWriter(mockRevClone, mockFs);
+    GitWriter w = new GitWriter(mockRevClone, mockFs, ui);
     w.putCodebase(codebase, null);
 
     control.verify();
@@ -189,7 +193,7 @@ public class GitWriterTest extends TestCase {
 
     control.replay();
 
-    GitWriter w = new GitWriter(mockRevClone, mockFs);
+    GitWriter w = new GitWriter(mockRevClone, mockFs, ui);
     DraftRevision dr = w.putCodebase(codebase, null);
 
     control.verify();

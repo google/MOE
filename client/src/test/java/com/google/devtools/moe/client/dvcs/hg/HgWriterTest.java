@@ -24,6 +24,7 @@ import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Injector;
+import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.expressions.RepositoryExpression;
 import com.google.devtools.moe.client.project.RepositoryConfig;
@@ -32,6 +33,7 @@ import com.google.devtools.moe.client.testing.TestingModule;
 import com.google.devtools.moe.client.writer.DraftRevision;
 import dagger.Provides;
 import java.io.File;
+import javax.inject.Inject;
 import javax.inject.Singleton;
 import junit.framework.TestCase;
 import org.easymock.EasyMock;
@@ -53,6 +55,8 @@ public class HgWriterTest extends TestCase {
   private final Codebase codebase = Codebase.create(CODEBASE_ROOT, PROJECT_SPACE, CODEBASE_EXPR);
   private final HgClonedRepository mockRevClone = control.createMock(HgClonedRepository.class);
 
+  @Inject Ui ui;
+
   /* Helper methods */
 
   private void expectHgCmd(String... args) throws CommandException {
@@ -67,6 +71,8 @@ public class HgWriterTest extends TestCase {
   @Singleton
   interface Component {
     Injector context(); // TODO (b/19676630) Remove when bug is fixed.
+
+    void inject(HgWriterTest instance);
   }
 
   @dagger.Module
@@ -85,8 +91,7 @@ public class HgWriterTest extends TestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    Injector.INSTANCE =
-        DaggerHgWriterTest_Component.builder().module(new Module()).build().context();
+    DaggerHgWriterTest_Component.builder().module(new Module()).build().inject(this);
 
     expect(mockRevClone.getLocalTempDir()).andReturn(WRITER_ROOT).anyTimes();
     expect(mockRevClone.getConfig()).andReturn(mockRepoConfig).anyTimes();
@@ -110,7 +115,7 @@ public class HgWriterTest extends TestCase {
 
     control.replay();
 
-    HgWriter writer = new HgWriter(mockRevClone, mockFs);
+    HgWriter writer = new HgWriter(mockRevClone, mockFs, ui);
     DraftRevision draftRevision = writer.putCodebase(codebase, null);
 
     control.verify();
@@ -133,7 +138,7 @@ public class HgWriterTest extends TestCase {
 
     control.replay();
 
-    HgWriter writer = new HgWriter(mockRevClone, mockFs);
+    HgWriter writer = new HgWriter(mockRevClone, mockFs, ui);
     DraftRevision draftRevision = writer.putCodebase(codebase, null);
 
     control.verify();
@@ -156,7 +161,7 @@ public class HgWriterTest extends TestCase {
 
     control.replay();
 
-    HgWriter writer = new HgWriter(mockRevClone, mockFs);
+    HgWriter writer = new HgWriter(mockRevClone, mockFs, ui);
     DraftRevision draftRevision = writer.putCodebase(codebase, null);
 
     control.verify();
@@ -177,7 +182,7 @@ public class HgWriterTest extends TestCase {
 
     control.replay();
 
-    HgWriter writer = new HgWriter(mockRevClone, mockFs);
+    HgWriter writer = new HgWriter(mockRevClone, mockFs, ui);
     DraftRevision draftRevision = writer.putCodebase(codebase, null);
 
     control.verify();
@@ -201,7 +206,7 @@ public class HgWriterTest extends TestCase {
 
     control.replay();
 
-    HgWriter writer = new HgWriter(mockRevClone, mockFs);
+    HgWriter writer = new HgWriter(mockRevClone, mockFs, ui);
     RevisionMetadata revisionMetadata =
         RevisionMetadata.builder()
             .id("rev1")
