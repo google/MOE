@@ -33,21 +33,14 @@ public class Injector {
   public static Injector INSTANCE;
 
   private final FileSystem fileSystem;
-  private final CommandRunner cmd;
   private final Ui ui;
 
   @Inject
   public Injector(
       FileSystem fileSystem,
-      CommandRunner cmd,
       Ui ui) {
     this.fileSystem = fileSystem;
-    this.cmd = cmd;
     this.ui = ui;
-  }
-
-  public CommandRunner cmd() {
-    return cmd;
   }
 
   public FileSystem fileSystem() {

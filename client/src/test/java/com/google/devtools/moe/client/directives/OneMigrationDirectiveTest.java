@@ -50,7 +50,7 @@ public class OneMigrationDirectiveTest extends TestCase {
 
   @Override
   public void setUp() throws Exception {
-    Injector.INSTANCE = new Injector(null, cmd, ui);
+    Injector.INSTANCE = new Injector(null, ui);
     super.setUp();
     Repositories repositories = new Repositories(ImmutableSet.of(new DummyRepositoryFactory()));
     InMemoryProjectContextFactory contextFactory =

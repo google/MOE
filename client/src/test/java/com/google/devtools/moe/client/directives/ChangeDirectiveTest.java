@@ -51,7 +51,7 @@ public class ChangeDirectiveTest extends TestCase {
       new InMemoryProjectContextFactory(expressionEngine, ui, repositories);
 
   public void testChange() throws Exception {
-    Injector.INSTANCE = new Injector(null, cmd, ui);
+    Injector.INSTANCE = new Injector(null, ui);
     contextFactory.projectConfigs.put(
         "moe_config.txt",
         "{\"name\": \"foo\", \"repositories\": {\"internal\": {\"type\": \"dummy\"}}}");

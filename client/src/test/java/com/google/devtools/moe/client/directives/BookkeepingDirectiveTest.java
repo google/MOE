@@ -125,7 +125,7 @@ public class BookkeepingDirectiveTest extends TestCase {
     InMemoryProjectContextFactory contextFactory =
         init(new InMemoryProjectContextFactory(expressionEngine, ui, repositories));
     ProjectContext context = contextFactory.create("moe_config.txt");
-    Injector.INSTANCE = new Injector(filesystem, cmd, ui);
+    Injector.INSTANCE = new Injector(filesystem, ui);
     Db db =
         new FileDb(
             DB_FILE.getPath(), storage, new FileDb.Writer(GsonModule.provideGson(), filesystem));
@@ -175,7 +175,7 @@ public class BookkeepingDirectiveTest extends TestCase {
     InMemoryProjectContextFactory contextFactory =
         init(new InMemoryProjectContextFactory(expressionEngine, ui, repositories));
     ProjectContext context = contextFactory.create("moe_config.txt");
-    Injector.INSTANCE = new Injector(filesystem, cmd, ui);
+    Injector.INSTANCE = new Injector(filesystem, ui);
     Db db =
         new FileDb(
             DB_FILE.getPath(), storage, new FileDb.Writer(GsonModule.provideGson(), filesystem));
@@ -220,7 +220,7 @@ public class BookkeepingDirectiveTest extends TestCase {
     InMemoryProjectContextFactory contextFactory =
         init(new InMemoryProjectContextFactory(expressionEngine, ui, repositories));
     ProjectContext context = contextFactory.create("moe_config.txt");
-    Injector.INSTANCE = new Injector(filesystem, cmd, ui);
+    Injector.INSTANCE = new Injector(filesystem, ui);
     Db db =
         new FileDb(
             DB_FILE.getPath(), storage, new FileDb.Writer(GsonModule.provideGson(), filesystem));

@@ -25,7 +25,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.FileSystem.Lifetime;
-import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.NoopFileSystemModule;
 import com.google.devtools.moe.client.SystemCommandRunner;
@@ -58,6 +57,7 @@ import org.easymock.IMocksControl;
 public class ExpressionProcessingTest extends TestCase {
   private final IMocksControl control = EasyMock.createControl();
   private final Codebase mockRepoCodebase = control.createMock(Codebase.class);
+  private final FileSystem mockFs = control.createMock(FileSystem.class);
 
   @Inject Ui ui;
   @Inject CommandRunner commandRunner;
@@ -67,7 +67,6 @@ public class ExpressionProcessingTest extends TestCase {
       modules = {TestingModule.class, SystemCommandRunner.Module.class, NoopFileSystemModule.class})
   @Singleton
   interface Component {
-    Injector context(); // TODO (b/19676630) Remove when bug is fixed.
     void inject(ExpressionProcessingTest instance);
   }
 
@@ -76,7 +75,6 @@ public class ExpressionProcessingTest extends TestCase {
     super.setUp();
     Component c = DaggerExpressionProcessingTest_Component.create();
     c.inject(this);
-    Injector.INSTANCE = c.context();
   }
 
   public void testNoSuchRepository() throws Exception {
@@ -93,8 +91,7 @@ public class ExpressionProcessingTest extends TestCase {
   }
 
   public void testFileCodebaseCreator() throws Exception {
-    final FileSystem mockFs = control.createMock(FileSystem.class);
-    Injector.INSTANCE =
+    Component component =
         DaggerExpressionProcessingTest_Component.builder()
             .noopFileSystemModule(
                 new NoopFileSystemModule() {
@@ -103,11 +100,10 @@ public class ExpressionProcessingTest extends TestCase {
                     return mockFs;
                   }
                 })
-            .build()
-            .context();
+            .build();
+    component.inject(this);
     ExpressionEngine expressionEngine =
-        TestingUtils.expressionEngineWithRepo(
-            Injector.INSTANCE.ui(), Injector.INSTANCE.fileSystem(), Injector.INSTANCE.cmd());
+        TestingUtils.expressionEngineWithRepo(ui, mockFs, commandRunner);
     File srcLocation = new File("/foo");
     expect(mockFs.exists(srcLocation)).andReturn(true);
     expect(mockFs.isDirectory(srcLocation)).andReturn(true);

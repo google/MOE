@@ -46,7 +46,7 @@ public class CreateCodebaseDirectiveTest extends TestCase {
 
   @Override
   public void setUp() {
-    Injector.INSTANCE = new Injector(null, cmd, ui);
+    Injector.INSTANCE = new Injector(null, ui);
   }
 
   public void testCreateCodebase() throws Exception {

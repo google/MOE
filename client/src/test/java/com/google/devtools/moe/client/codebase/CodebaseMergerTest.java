@@ -316,7 +316,7 @@ public class CodebaseMergerTest {
   @Test
   public void testMerge() throws Exception {
     Ui ui = mock(Ui.class);
-    Injector.INSTANCE = new Injector(fileSystem, cmd, ui);
+    Injector.INSTANCE = new Injector(fileSystem, ui);
 
     when(orig.path()).thenReturn(new File("orig"));
     when(dest.path()).thenReturn(new File("dest"));
