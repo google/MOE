@@ -20,21 +20,18 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
-import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.Ui.Task;
 import com.google.devtools.moe.client.testing.TestingModule;
-
-import junit.framework.TestCase;
-
 import java.io.File;
 import java.io.IOException;
-
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import junit.framework.TestCase;
 
 
 public class SystemFileSystemTest extends TestCase {
   @Inject Ui ui;
+  @Inject FileSystem fs;
 
   public void testFindFiles() throws Exception {
     FileSystem fs = new SystemFileSystem();
@@ -206,7 +203,6 @@ public class SystemFileSystemTest extends TestCase {
     Component c =  DaggerSystemFileSystemTest_Component.create();
     c.inject(this);
     Injector.INSTANCE = c.context();
-    FileSystem fs = Injector.INSTANCE.fileSystem();
 
     File taskless = fs.getTemporaryDirectory("taskless", Lifetimes.moeExecution());
     Files.touch(taskless);
@@ -247,7 +243,6 @@ public class SystemFileSystemTest extends TestCase {
     Component c =  DaggerSystemFileSystemTest_Component.create();
     c.inject(this);
     Injector.INSTANCE = c.context();
-    FileSystem fs = Injector.INSTANCE.fileSystem();
 
     Task outer = ui.pushTask("outer", "outer");
     File outer1 = touchTempDir("outer1", fs);

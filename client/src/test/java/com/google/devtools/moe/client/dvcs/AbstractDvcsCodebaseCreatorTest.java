@@ -23,19 +23,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.FileSystem;
-import com.google.devtools.moe.client.Injector;
-import com.google.devtools.moe.client.SystemCommandRunner;
-import com.google.devtools.moe.client.Ui.UiModule;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.LocalWorkspace;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
-import com.google.devtools.moe.client.testing.TestingModule;
-import dagger.Provides;
 import java.io.File;
 import java.util.Collections;
-import javax.inject.Singleton;
 import junit.framework.TestCase;
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
@@ -58,31 +52,9 @@ public class AbstractDvcsCodebaseCreatorTest extends TestCase {
         }
       };
 
-  // TODO(cgruber): Rework these when statics aren't inherent in the design.
-  @dagger.Component(
-    modules = {UiModule.class, TestingModule.class, SystemCommandRunner.Module.class, Module.class}
-  )
-  @Singleton
-  interface Component {
-    Injector context(); // TODO (b/19676630) Remove when bug is fixed.
-  }
-
-  @dagger.Module
-  class Module {
-    @Provides
-    public FileSystem fileSystem() {
-      return mockFS;
-    }
-  }
-
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    Injector.INSTANCE =
-        DaggerAbstractDvcsCodebaseCreatorTest_Component.builder()
-            .module(new Module())
-            .build()
-            .context();
 
     expect(mockRepo.getConfig()).andReturn(mockRepoConfig).anyTimes();
     expect(mockRepoConfig.getIgnoreFilePatterns()).andReturn(ImmutableList.<String>of());
@@ -92,8 +64,7 @@ public class AbstractDvcsCodebaseCreatorTest extends TestCase {
   public void testCreate_noGivenRev() throws Exception {
     String archiveTempDir = "/tmp/git_archive_mockrepo_head";
     // Short-circuit Utils.filterFilesByPredicate(ignore_files_re).
-    expect(Injector.INSTANCE.fileSystem().findFiles(new File(archiveTempDir)))
-        .andReturn(ImmutableSet.<File>of());
+    expect(mockFS.findFiles(new File(archiveTempDir))).andReturn(ImmutableSet.<File>of());
 
     expect(mockRevHistory.findHighestRevision(null))
         .andReturn(Revision.create("mock head changeset ID", MOCK_REPO_NAME));
@@ -115,8 +86,7 @@ public class AbstractDvcsCodebaseCreatorTest extends TestCase {
     String givenRev = "givenrev";
     String archiveTempDir = "/tmp/git_reclone_mockrepo_head_" + givenRev;
     // Short-circuit Utils.filterFilesByPredicate(ignore_files_re).
-    expect(Injector.INSTANCE.fileSystem().findFiles(new File(archiveTempDir)))
-        .andReturn(ImmutableSet.<File>of());
+    expect(mockFS.findFiles(new File(archiveTempDir))).andReturn(ImmutableSet.<File>of());
 
     expect(mockRevHistory.findHighestRevision(givenRev))
         .andReturn(Revision.create(givenRev, MOCK_REPO_NAME));

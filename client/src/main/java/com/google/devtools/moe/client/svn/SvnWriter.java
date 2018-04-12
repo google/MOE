@@ -113,7 +113,7 @@ public class SvnWriter implements Writer {
                   + "svn commit -m \"%s\"%n"
                   + "svn propset -r HEAD svn:author \"%s\" --revprop",
               rm.description(), rm.author());
-      Utils.makeShellScript(script, rootDirectory.getAbsolutePath() + "/svn_commit.sh");
+      Utils.makeShellScript(script, rootDirectory.getAbsolutePath() + "/svn_commit.sh", filesystem);
 
       ui.message(
           "To submit, run: cd %s && ./svn_commit.sh && cd -", rootDirectory.getAbsolutePath());

@@ -71,40 +71,42 @@ public class Utils {
   }
 
   /** Applies the given Function to all files under baseDir. */
-  public static void doToFiles(File baseDir, Function<File, Void> doFunction) {
-    for (File file : Injector.INSTANCE.fileSystem().findFiles(baseDir)) {
+  public static void doToFiles(File baseDir, Function<File, Void> doFunction, FileSystem fs) {
+    for (File file : fs.findFiles(baseDir)) {
       doFunction.apply(file);
     }
   }
 
   /** Delete files under baseDir whose paths relative to baseDir don't match the given Predicate. */
-  public static void filterFiles(File baseDir, final Predicate<CharSequence> positiveFilter) {
+  public static void filterFiles(
+      File baseDir, final Predicate<CharSequence> positiveFilter, FileSystem fs) {
     final URI baseUri = baseDir.toURI();
     Utils.doToFiles(
         baseDir,
         file -> {
           if (!positiveFilter.apply(baseUri.relativize(file.toURI()).getPath())) {
             try {
-              Injector.INSTANCE.fileSystem().deleteRecursively(file);
+              fs.deleteRecursively(file);
             } catch (IOException e) {
               throw new MoeProblem(e, "Error deleting file: %s", file);
             }
           }
           return null;
-        });
+        },
+        fs);
   }
 
   /**
    * Generates a shell script with contents content
    *
    * @param content contents of the script
-   * @param name  path for the script
+   * @param name path for the script
    */
-  public static void makeShellScript(String content, String name) {
+  public static void makeShellScript(String content, String name, FileSystem fileSystem) {
     try {
       File script = new File(name);
-      Injector.INSTANCE.fileSystem().write("#!/bin/sh -e\n" + content, script);
-      Injector.INSTANCE.fileSystem().setExecutable(script);
+      fileSystem.write("#!/bin/sh -e\n" + content, script);
+      fileSystem.setExecutable(script);
     } catch (IOException e) {
       throw new MoeProblem(e, "Could not generate shell script: %s", name);
     }

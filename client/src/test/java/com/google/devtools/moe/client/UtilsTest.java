@@ -102,7 +102,7 @@ public class UtilsTest extends TestCase {
     fileSystem.setExecutable(script);
 
     control.replay();
-    Utils.makeShellScript("message contents", "/path/to/script");
+    Utils.makeShellScript("message contents", "/path/to/script", fileSystem);
     control.verify();
   }
 }

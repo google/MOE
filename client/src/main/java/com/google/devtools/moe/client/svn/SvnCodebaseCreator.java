@@ -74,7 +74,7 @@ public class SvnCodebaseCreator extends CodebaseCreator {
     // Filter codebase by ignore_file_res.
     final Predicate<CharSequence> nonIgnoredFilePred =
         Utils.nonMatchingPredicateFromRes(config.getIgnoreFilePatterns());
-    Utils.filterFiles(exportPath, nonIgnoredFilePred);
+    Utils.filterFiles(exportPath, nonIgnoredFilePred, filesystem);
 
     return Codebase.create(
         exportPath,
