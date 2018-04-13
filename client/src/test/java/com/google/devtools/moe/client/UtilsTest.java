@@ -19,10 +19,7 @@ package com.google.devtools.moe.client;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.moe.client.testing.TestingModule;
-import dagger.Provides;
 import java.io.File;
-import javax.inject.Singleton;
 import junit.framework.TestCase;
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
@@ -31,33 +28,6 @@ public class UtilsTest extends TestCase {
 
   private final IMocksControl control = EasyMock.createControl();
   private final FileSystem fileSystem = control.createMock(FileSystem.class);
-  private final CommandRunner mockcmd = control.createMock(CommandRunner.class);
-
-  // TODO(cgruber): Rework these when statics aren't inherent in the design.
-  @dagger.Component(modules = {TestingModule.class, Module.class})
-  @Singleton
-  interface Component {
-    Injector context(); // TODO (b/19676630) Remove when bug is fixed.
-  }
-
-  @dagger.Module
-  class Module {
-    @Provides
-    public CommandRunner commandRunner() {
-      return mockcmd;
-    }
-
-    @Provides
-    public FileSystem fileSystem() {
-      return fileSystem;
-    }
-  }
-
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    Injector.INSTANCE = DaggerUtilsTest_Component.builder().module(new Module()).build().context();
-  }
 
   public void testFilterByRegEx() throws Exception {
     assertEquals(

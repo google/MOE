@@ -22,7 +22,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
-import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.project.RepositoryConfig;
@@ -47,7 +46,6 @@ public class SvnWriterCreatorTest extends TestCase {
   @dagger.Component(modules = {TestingModule.class, Module.class})
   @Singleton
   interface Component {
-    Injector context(); // TODO (b/19676630) Remove when bug is fixed.
     void inject(SvnWriterCreatorTest instance);
   }
 
@@ -69,8 +67,6 @@ public class SvnWriterCreatorTest extends TestCase {
     super.setUp();
     Component c = DaggerSvnWriterCreatorTest_Component.builder().module(new Module()).build();
     c.inject(this);
-    // still need to set INSTANCE because Utils gets filesystem from it
-    Injector.INSTANCE = c.context();
   }
 
   public void testCreate() throws Exception {

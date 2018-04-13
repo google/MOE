@@ -23,14 +23,10 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
-import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.Lifetimes;
 import com.google.devtools.moe.client.project.RepositoryConfig;
-import com.google.devtools.moe.client.testing.TestingModule;
-import dagger.Provides;
 import java.io.File;
 import java.util.List;
-import javax.inject.Singleton;
 import junit.framework.TestCase;
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
@@ -47,34 +43,6 @@ public class GitClonedRepositoryTest extends TestCase {
   private final String repositoryName = "mockrepo";
   private final String repositoryURL = "http://foo/git";
   private final String localCloneTempDir = "/tmp/git_clone_mockrepo_12345";
-
-  // TODO(cgruber): Rework these when statics aren't inherent in the design.
-  @dagger.Component(modules = {TestingModule.class, Module.class})
-  @Singleton
-  interface Component {
-    Injector context(); // TODO (b/19676630) Remove when bug is fixed.
-  }
-
-  @dagger.Module
-  class Module {
-    @Provides
-    public CommandRunner cmd() {
-      return cmd;
-    }
-
-    @Provides
-    public FileSystem mockFS() {
-      return mockFS;
-    }
-  }
-
-  @Override
-  protected void setUp() throws Exception {
-    super.setUp();
-    Injector.INSTANCE =
-        DaggerGitClonedRepositoryTest_Component.builder().module(new Module()).build().context();
-
-  }
 
   private String testBranch = "master";
   private boolean testIsShallow = false;

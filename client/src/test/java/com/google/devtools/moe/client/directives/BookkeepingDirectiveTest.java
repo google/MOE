@@ -24,7 +24,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
-import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.ExpressionEngine;
 import com.google.devtools.moe.client.database.Bookkeeper;
@@ -125,7 +124,6 @@ public class BookkeepingDirectiveTest extends TestCase {
     InMemoryProjectContextFactory contextFactory =
         init(new InMemoryProjectContextFactory(expressionEngine, ui, repositories));
     ProjectContext context = contextFactory.create("moe_config.txt");
-    Injector.INSTANCE = new Injector(filesystem, ui);
     Db db =
         new FileDb(
             DB_FILE.getPath(), storage, new FileDb.Writer(GsonModule.provideGson(), filesystem));
@@ -175,7 +173,6 @@ public class BookkeepingDirectiveTest extends TestCase {
     InMemoryProjectContextFactory contextFactory =
         init(new InMemoryProjectContextFactory(expressionEngine, ui, repositories));
     ProjectContext context = contextFactory.create("moe_config.txt");
-    Injector.INSTANCE = new Injector(filesystem, ui);
     Db db =
         new FileDb(
             DB_FILE.getPath(), storage, new FileDb.Writer(GsonModule.provideGson(), filesystem));
@@ -220,7 +217,6 @@ public class BookkeepingDirectiveTest extends TestCase {
     InMemoryProjectContextFactory contextFactory =
         init(new InMemoryProjectContextFactory(expressionEngine, ui, repositories));
     ProjectContext context = contextFactory.create("moe_config.txt");
-    Injector.INSTANCE = new Injector(filesystem, ui);
     Db db =
         new FileDb(
             DB_FILE.getPath(), storage, new FileDb.Writer(GsonModule.provideGson(), filesystem));

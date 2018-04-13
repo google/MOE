@@ -24,7 +24,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.FileSystem;
-import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
@@ -36,15 +35,14 @@ import com.google.devtools.moe.client.writer.DraftRevision;
 import dagger.Provides;
 import java.io.File;
 import java.util.List;
-import javax.inject.Singleton;
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import junit.framework.TestCase;
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
 import org.joda.time.DateTime;
 
 public class SvnWriterTest extends TestCase {
-
   private final IMocksControl control = EasyMock.createControl();
   private final FileSystem fileSystem = control.createMock(FileSystem.class);
   private final CommandRunner cmd = control.createMock(CommandRunner.class);
@@ -56,7 +54,6 @@ public class SvnWriterTest extends TestCase {
   @dagger.Component(modules = {TestingModule.class, Module.class})
   @Singleton
   interface Component {
-    Injector context(); // TODO (b/19676630) Remove when bug is fixed.
     void inject(SvnWriterTest instance);
   }
 
@@ -78,8 +75,6 @@ public class SvnWriterTest extends TestCase {
     super.setUp();
     Component c = DaggerSvnWriterTest_Component.builder().module(new Module()).build();
     c.inject(this);
-    // still need INSTANCE because Utils gets filesystem from it
-    Injector.INSTANCE = c.context();
 
     expect(mockConfig.getUrl()).andReturn("http://foo/svn/trunk/").anyTimes();
     expect(mockConfig.getProjectSpace()).andReturn("public").anyTimes();

@@ -29,7 +29,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.FileSystem;
-import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.CodebaseMerger.MergeResult;
 import com.google.devtools.moe.client.tools.FileDifference;
@@ -316,7 +315,6 @@ public class CodebaseMergerTest {
   @Test
   public void testMerge() throws Exception {
     Ui ui = mock(Ui.class);
-    Injector.INSTANCE = new Injector(fileSystem, ui);
 
     when(orig.path()).thenReturn(new File("orig"));
     when(dest.path()).thenReturn(new File("dest"));

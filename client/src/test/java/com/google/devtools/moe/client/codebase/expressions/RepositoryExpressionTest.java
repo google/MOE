@@ -17,7 +17,6 @@
 package com.google.devtools.moe.client.codebase.expressions;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.NoopFileSystemModule;
 import com.google.devtools.moe.client.SystemCommandRunner;
@@ -41,7 +40,6 @@ public class RepositoryExpressionTest extends TestCase {
       modules = {TestingModule.class, SystemCommandRunner.Module.class, NoopFileSystemModule.class})
   @Singleton
   interface Component {
-    Injector context(); // TODO (b/19676630) Remove when bug is fixed.
     void inject(RepositoryExpressionTest instance);
   }
 
@@ -52,7 +50,6 @@ public class RepositoryExpressionTest extends TestCase {
     super.setUp();
     Component c = DaggerRepositoryExpressionTest_Component.create();
     c.inject(this);
-    Injector.INSTANCE = c.context();
     writerFactory = new WriterFactory(ui);
   }
 

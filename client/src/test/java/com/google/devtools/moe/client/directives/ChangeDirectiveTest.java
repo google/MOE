@@ -19,7 +19,6 @@ package com.google.devtools.moe.client.directives;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.SystemFileSystem;
 import com.google.devtools.moe.client.Ui;
@@ -51,7 +50,6 @@ public class ChangeDirectiveTest extends TestCase {
       new InMemoryProjectContextFactory(expressionEngine, ui, repositories);
 
   public void testChange() throws Exception {
-    Injector.INSTANCE = new Injector(null, ui);
     contextFactory.projectConfigs.put(
         "moe_config.txt",
         "{\"name\": \"foo\", \"repositories\": {\"internal\": {\"type\": \"dummy\"}}}");

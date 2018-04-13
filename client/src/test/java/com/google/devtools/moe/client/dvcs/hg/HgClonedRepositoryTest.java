@@ -23,13 +23,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.FileSystem.Lifetime;
-import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.Lifetimes;
 import com.google.devtools.moe.client.project.RepositoryConfig;
-import com.google.devtools.moe.client.testing.TestingModule;
-import dagger.Provides;
 import java.io.File;
-import javax.inject.Singleton;
 import junit.framework.TestCase;
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
@@ -43,30 +39,7 @@ public class HgClonedRepositoryTest extends TestCase {
   private final String repositoryName = "mockrepo";
   private final String repositoryURL = "http://foo/hg";
 
-  // TODO(cgruber): Rework these when statics aren't inherent in the design.
-  @dagger.Component(modules = {TestingModule.class, Module.class})
-  @Singleton
-  interface Component {
-    Injector context(); // TODO (b/19676630) Remove when bug is fixed.
-  }
-
-  @dagger.Module
-  class Module {
-    @Provides
-    public CommandRunner cmd() {
-      return cmd;
-    }
-
-    @Provides
-    public FileSystem mockFS() {
-      return mockFS;
-    }
-  }
-
   public void testCloneLocally() throws Exception {
-    Injector.INSTANCE =
-        DaggerHgClonedRepositoryTest_Component.builder().module(new Module()).build().context();
-
     expect(repositoryConfig.getUrl()).andReturn(repositoryURL).anyTimes();
     expect(repositoryConfig.getBranch()).andReturn(Optional.of("mybranch")).anyTimes();
     String localCloneTempDir = "/tmp/hg_clone_mockrepo_12345";

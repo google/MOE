@@ -22,8 +22,6 @@ import static org.easymock.EasyMock.expect;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
-import com.google.devtools.moe.client.Injector;
-import com.google.devtools.moe.client.NoopFileSystemModule;
 import com.google.devtools.moe.client.database.DbStorage;
 import com.google.devtools.moe.client.database.FileDb;
 import com.google.devtools.moe.client.database.RepositoryEquivalence;
@@ -34,10 +32,7 @@ import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory.SearchType;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.testing.DummyDb;
-import com.google.devtools.moe.client.testing.TestingModule;
-import dagger.Provides;
 import java.util.List;
-import javax.inject.Singleton;
 import javax.xml.parsers.DocumentBuilderFactory;
 import junit.framework.TestCase;
 import org.easymock.EasyMock;
@@ -57,28 +52,6 @@ public class SvnRevisionHistoryTest extends TestCase {
   private final IMocksControl control = EasyMock.createControl();
   private final CommandRunner cmd = control.createMock(CommandRunner.class);
   private final SvnUtil util = new SvnUtil(cmd);
-
-  // TODO(cgruber): Rework these when statics aren't inherent in the design.
-  @dagger.Component(modules = {TestingModule.class, NoopFileSystemModule.class, Module.class})
-  @Singleton
-  interface Component {
-    Injector context(); // TODO (b/19676630) Remove when bug is fixed.
-  }
-
-  @dagger.Module
-  class Module {
-    @Provides
-    public CommandRunner commandRunner() {
-      return cmd;
-    }
-  }
-
-  @Override
-  protected void setUp() throws Exception {
-    super.setUp();
-    Injector.INSTANCE =
-        DaggerSvnRevisionHistoryTest_Component.builder().module(new Module()).build().context();
-  }
 
   public void testParseRevisions() {
     List<Revision> rs =

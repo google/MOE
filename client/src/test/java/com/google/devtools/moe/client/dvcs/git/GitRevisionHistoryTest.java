@@ -25,10 +25,7 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
-import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
-import com.google.devtools.moe.client.NoopFileSystemModule;
-import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.database.DbStorage;
 import com.google.devtools.moe.client.database.FileDb;
 import com.google.devtools.moe.client.database.RepositoryEquivalence;
@@ -40,10 +37,8 @@ import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory.SearchType;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.testing.DummyDb;
-import com.google.devtools.moe.client.testing.TestingModule;
 import java.util.List;
 import java.util.Set;
-import javax.inject.Singleton;
 import junit.framework.TestCase;
 import org.easymock.EasyMock;
 import org.easymock.IExpectationSetters;
@@ -68,20 +63,6 @@ public class GitRevisionHistoryTest extends TestCase {
   private final IMocksControl control = EasyMock.createControl();
   private final String repositoryName = "mockrepo";
   private final String localCloneTempDir = "/tmp/git_tipclone_mockrepo_12345";
-
-  // TODO(cgruber): Rework these when statics aren't inherent in the design.
-  @dagger.Component(
-      modules = {TestingModule.class, SystemCommandRunner.Module.class, NoopFileSystemModule.class})
-  @Singleton
-  interface Component {
-    Injector context(); // TODO (b/19676630) Remove when bug is fixed.
-  }
-
-  @Override
-  protected void setUp() throws Exception {
-    super.setUp();
-    Injector.INSTANCE = DaggerGitRevisionHistoryTest_Component.create().context();
-  }
 
   private GitClonedRepository mockClonedRepo(String repoName) throws CommandException {
     GitClonedRepository mockRepo = control.createMock(GitClonedRepository.class);

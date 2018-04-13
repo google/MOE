@@ -21,13 +21,9 @@ import static org.easymock.EasyMock.expect;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
-import com.google.devtools.moe.client.Injector;
-import com.google.devtools.moe.client.testing.TestingModule;
 import com.google.devtools.moe.client.tools.FileDifference.Comparison;
 import com.google.devtools.moe.client.tools.FileDifference.ConcreteFileDiffer;
-import dagger.Provides;
 import java.io.File;
-import javax.inject.Singleton;
 import junit.framework.TestCase;
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
@@ -38,33 +34,6 @@ public class FileDifferenceTest extends TestCase {
   private final FileSystem fileSystem = control.createMock(FileSystem.class);
   private final CommandRunner cmd = control.createMock(CommandRunner.class);
   private final ConcreteFileDiffer differ = new ConcreteFileDiffer(cmd, fileSystem);
-
-  // TODO(cgruber): Rework these when statics aren't inherent in the design.
-  @dagger.Component(modules = {TestingModule.class, Module.class})
-  @Singleton
-  interface Component {
-    Injector context(); // TODO (b/19676630) Remove when bug is fixed.
-  }
-
-  @dagger.Module
-  class Module {
-    @Provides
-    public CommandRunner commandRunner() {
-      return cmd;
-    }
-
-    @Provides
-    public FileSystem fileSystem() {
-      return fileSystem;
-    }
-  }
-
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    Injector.INSTANCE =
-        DaggerFileDifferenceTest_Component.builder().module(new Module()).build().context();
-  }
 
   public void testExistence() throws Exception {
     File file1 = new File("/1/foo");

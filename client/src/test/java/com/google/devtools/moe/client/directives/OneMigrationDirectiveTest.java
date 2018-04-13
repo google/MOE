@@ -20,7 +20,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.SystemFileSystem;
@@ -50,7 +49,6 @@ public class OneMigrationDirectiveTest extends TestCase {
 
   @Override
   public void setUp() throws Exception {
-    Injector.INSTANCE = new Injector(null, ui);
     super.setUp();
     Repositories repositories = new Repositories(ImmutableSet.of(new DummyRepositoryFactory()));
     InMemoryProjectContextFactory contextFactory =
