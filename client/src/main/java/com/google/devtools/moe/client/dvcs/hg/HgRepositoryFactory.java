@@ -37,14 +37,20 @@ public class HgRepositoryFactory implements RepositoryType.Factory {
   private final FileSystem filesystem;
   private final File hgBinary;
   private final Ui ui;
+  private final Lifetimes lifetimes;
 
   @Inject
   HgRepositoryFactory(
-      CommandRunner cmd, FileSystem filesystem, @Named("hg_binary") File hgBinary, Ui ui) {
+      CommandRunner cmd,
+      FileSystem filesystem,
+      @Named("hg_binary") File hgBinary,
+      Ui ui,
+      Lifetimes lifetimes) {
     this.cmd = cmd;
     this.filesystem = filesystem;
     this.hgBinary = hgBinary;
     this.ui = ui;
+    this.lifetimes = lifetimes;
   }
 
   @Override
@@ -70,8 +76,8 @@ public class HgRepositoryFactory implements RepositoryType.Factory {
     Supplier<HgClonedRepository> freshSupplier =
         () -> {
           HgClonedRepository tipClone =
-              new HgClonedRepository(cmd, filesystem, hgBinary, name, config);
-          tipClone.cloneLocallyAtHead(Lifetimes.currentTask());
+              new HgClonedRepository(cmd, filesystem, hgBinary, name, config, lifetimes);
+          tipClone.cloneLocallyAtHead(lifetimes.currentTask());
           return tipClone;
         };
 
@@ -81,8 +87,8 @@ public class HgRepositoryFactory implements RepositoryType.Factory {
         Suppliers.memoize(
             () -> {
               HgClonedRepository tipClone =
-                  new HgClonedRepository(cmd, filesystem, hgBinary, name, config);
-              tipClone.cloneLocallyAtHead(Lifetimes.moeExecution());
+                  new HgClonedRepository(cmd, filesystem, hgBinary, name, config, lifetimes);
+              tipClone.cloneLocallyAtHead(lifetimes.moeExecution());
               return tipClone;
             });
 
@@ -95,7 +101,7 @@ public class HgRepositoryFactory implements RepositoryType.Factory {
 
     HgCodebaseCreator cc =
         new HgCodebaseCreator(
-            cmd, filesystem, hgBinary, memoizedSupplier, rh, projectSpace, name, config);
+            cmd, filesystem, hgBinary, memoizedSupplier, rh, projectSpace, name, config, lifetimes);
 
     HgWriterCreator wc = new HgWriterCreator(freshSupplier, rh, filesystem, ui);
 

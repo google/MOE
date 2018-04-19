@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Lifetimes;
+import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import java.io.File;
 import java.util.List;
@@ -39,6 +40,7 @@ public class GitClonedRepositoryTest extends TestCase {
   private final FileSystem mockFS = control.createMock(FileSystem.class);
   private final CommandRunner cmd = control.createMock(CommandRunner.class);
   private final RepositoryConfig repositoryConfig = control.createMock(RepositoryConfig.class);
+  private final Lifetimes lifetimes = new Lifetimes(new Ui(System.err));
 
   private final String repositoryName = "mockrepo";
   private final String repositoryURL = "http://foo/git";
@@ -112,7 +114,7 @@ public class GitClonedRepositoryTest extends TestCase {
 
     control.replay();
     GitClonedRepository repo =
-        new GitClonedRepository(cmd, mockFS, repositoryName, repositoryConfig);
+        new GitClonedRepository(cmd, mockFS, repositoryName, repositoryConfig, lifetimes);
     repo.cloneLocallyAtHead(Lifetimes.persistent());
     assertEquals(repositoryName, repo.getRepositoryName());
     assertEquals(repositoryURL, repo.getConfig().getUrl());
@@ -171,7 +173,7 @@ public class GitClonedRepositoryTest extends TestCase {
 
     control.replay();
     GitClonedRepository repo =
-        new GitClonedRepository(cmd, mockFS, repositoryName, repositoryConfig);
+        new GitClonedRepository(cmd, mockFS, repositoryName, repositoryConfig, lifetimes);
     repo.cloneLocallyAtHead(Lifetimes.persistent());
     repo.updateToRevision(updateRevId);
     control.verify();
@@ -206,7 +208,7 @@ public class GitClonedRepositoryTest extends TestCase {
 
     control.replay();
     GitClonedRepository repo =
-        new GitClonedRepository(cmd, mockFS, repositoryName, repositoryConfig);
+        new GitClonedRepository(cmd, mockFS, repositoryName, repositoryConfig, lifetimes);
     repo.cloneLocallyAtHead(Lifetimes.persistent());
     repo.updateToRevision(updateRevId);
     control.verify();
@@ -226,7 +228,7 @@ public class GitClonedRepositoryTest extends TestCase {
 
     control.replay();
     GitClonedRepository repo =
-        new GitClonedRepository(cmd, mockFS, repositoryName, repositoryConfig);
+        new GitClonedRepository(cmd, mockFS, repositoryName, repositoryConfig, lifetimes);
     repo.cloneLocallyAtHead(Lifetimes.persistent());
     repo.updateToRevision(updateRevId);
     control.verify();

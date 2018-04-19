@@ -17,13 +17,18 @@
 package com.google.devtools.moe.client;
 
 import com.google.devtools.moe.client.FileSystem.Lifetime;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
-/**
- * Static utility methods that return common {@link Lifetime}s.
- */
+/** Static utility methods that return common {@link Lifetime}s. */
+@Singleton
 public final class Lifetimes {
+  private final Ui ui;
 
-  private Lifetimes() {} // Do not instantiate.
+  @Inject
+  public Lifetimes(Ui ui) {
+    this.ui = ui;
+  }
 
   private static final Lifetime PERSISTENT =
       new Lifetime() {
@@ -34,18 +39,18 @@ public final class Lifetimes {
       };
 
   /**
-   * Returns a {@code Lifetime} for a temp dir that should be cleaned up when the current
-   * {@link Ui.Task} is completed.
+   * Returns a {@code Lifetime} for a temp dir that should be cleaned up when the current {@link
+   * Ui.Task} is completed.
    */
-  public static final Lifetime currentTask() {
-    return Injector.INSTANCE.ui().currentTaskLifetime();
+  public final Lifetime currentTask() {
+    return ui.currentTaskLifetime();
   }
 
   /**
    * Returns a {@code Lifetime} for a temp dir that should only be cleaned up when MOE terminates.
    */
-  public static final Lifetime moeExecution() {
-    return Injector.INSTANCE.ui().moeExecutionLifetime();
+  public final Lifetime moeExecution() {
+    return ui.moeExecutionLifetime();
   }
 
   /**

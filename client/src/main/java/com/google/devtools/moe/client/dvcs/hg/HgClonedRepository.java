@@ -42,6 +42,7 @@ public class HgClonedRepository implements LocalWorkspace {
   private final File hgBinary;
   private final String repositoryName;
   private final RepositoryConfig repositoryConfig;
+  private final Lifetimes lifetimes;
 
   /**
    * The location to clone from. If snapshotting a locally modified Writer, this will <em>not</em>
@@ -59,8 +60,16 @@ public class HgClonedRepository implements LocalWorkspace {
       FileSystem filesystem,
       File hgBinary,
       String repositoryName,
-      RepositoryConfig repositoryConfig) {
-    this(cmd, filesystem, hgBinary, repositoryName, repositoryConfig, repositoryConfig.getUrl());
+      RepositoryConfig repositoryConfig,
+      Lifetimes lifetimes) {
+    this(
+        cmd,
+        filesystem,
+        hgBinary,
+        repositoryName,
+        repositoryConfig,
+        repositoryConfig.getUrl(),
+        lifetimes);
   }
 
   HgClonedRepository(
@@ -69,7 +78,8 @@ public class HgClonedRepository implements LocalWorkspace {
       File hgBinary,
       String repositoryName,
       RepositoryConfig repositoryConfig,
-      String repositoryUrl) {
+      String repositoryUrl,
+      Lifetimes lifetimes) {
     this.cmd = cmd;
     this.filesystem = filesystem;
     this.hgBinary = hgBinary;
@@ -77,6 +87,7 @@ public class HgClonedRepository implements LocalWorkspace {
     this.repositoryConfig = repositoryConfig;
     this.repositoryUrl = repositoryUrl;
     this.clonedLocally = false;
+    this.lifetimes = lifetimes;
   }
 
   @Override
@@ -142,7 +153,7 @@ public class HgClonedRepository implements LocalWorkspace {
     Preconditions.checkState(clonedLocally);
     File archiveLocation =
         filesystem.getTemporaryDirectory(
-            String.format("hg_archive_%s_%s_", repositoryName, revId), Lifetimes.currentTask());
+            String.format("hg_archive_%s_%s_", repositoryName, revId), lifetimes.currentTask());
     try {
       ImmutableList.Builder<String> archiveArgs = ImmutableList.<String>builder();
       archiveArgs.add("archive", archiveLocation.getAbsolutePath());

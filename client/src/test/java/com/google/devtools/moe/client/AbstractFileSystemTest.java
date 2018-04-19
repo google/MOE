@@ -25,7 +25,7 @@ import junit.framework.TestCase;
 
 public class AbstractFileSystemTest extends TestCase {
   private final FileSystem fileSystem =
-      new InMemoryFileSystem(ImmutableMap.of("/src/dummy/file", "contents"));
+      new InMemoryFileSystem(ImmutableMap.of("/src/dummy/file", "contents"), null);
 
   public void testCopyDirectory() throws Exception {
     File src = new File("/src");

@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import javax.inject.Inject;
 import javax.inject.Singleton;
 
 /** An in-memory {@link FileSystem} for use in testing. */
@@ -52,18 +53,21 @@ public class InMemoryFileSystem extends AbstractFileSystem {
   private int tempDirCounter = 0;
 
   private final Map<File, Lifetime> tempDirLifetimes = Maps.newHashMap();
+  Lifetimes lifetimes;
 
-  /**
-   * Constructs an {@code InMemoryFileSystem} that is initially empty.
-   */
-  public InMemoryFileSystem() {}
+  /** Constructs an {@code InMemoryFileSystem} that is initially empty. */
+  @Inject
+  public InMemoryFileSystem(Lifetimes lifetimes) {
+    this.lifetimes = lifetimes;
+  }
 
   /**
    * Constructs an {@code InMemoryFileSystem} with the given initial contents. Keys are paths,
    * values are contents. Paths/keys ending in {@link File#separator} are directories, and their
    * contents/values are ignored. Parent directories are automatically inferred and created.
    */
-  public InMemoryFileSystem(Map<String, String> startingFiles) {
+  public InMemoryFileSystem(Map<String, String> startingFiles, Lifetimes lifetimes) {
+    this(lifetimes);
     for (Entry<String, String> entry : startingFiles.entrySet()) {
       files.putAll(getParentDirEntries(entry.getKey()));
 
@@ -94,7 +98,7 @@ public class InMemoryFileSystem extends AbstractFileSystem {
 
   @Override
   public File getTemporaryDirectory(String prefix) {
-    return getTemporaryDirectory(prefix, Lifetimes.currentTask());
+    return getTemporaryDirectory(prefix, lifetimes.currentTask());
   }
 
   @Override
@@ -250,7 +254,7 @@ public class InMemoryFileSystem extends AbstractFileSystem {
   public File getResourceAsFile(String resource) {
     File outFile =
         new File(
-            getTemporaryDirectory("resource_extraction_", Lifetimes.moeExecution()),
+            getTemporaryDirectory("resource_extraction_", lifetimes.moeExecution()),
             new File(resource).getName());
     files.put(outFile.getAbsolutePath(), resource);
     return outFile;

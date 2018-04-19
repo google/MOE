@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
+import com.google.devtools.moe.client.Lifetimes;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.ExpressionEngine;
 import com.google.devtools.moe.client.database.Bookkeeper;
@@ -113,7 +114,7 @@ public class BookkeepingDirectiveTest extends TestCase {
             "migrated_from",
             "/dummy/codebase/pub/migrated_to/",
             "dir (different)");
-    FileSystem filesystem = new InMemoryFileSystem(files);
+    FileSystem filesystem = new InMemoryFileSystem(files, new Lifetimes(new Ui(System.err)));
     FileDiffer fileDiffer = new ConcreteFileDiffer(cmd, filesystem);
     CodebaseDiffer codebaseDiffer = new CodebaseDiffer(fileDiffer, filesystem);
     Repositories repositories =
@@ -162,7 +163,7 @@ public class BookkeepingDirectiveTest extends TestCase {
             "/dummy/codebase/pub/1/", "empty dir (different)",
             "/dummy/codebase/int/migrated_from/file", "migrated_from",
             "/dummy/codebase/pub/migrated_to/", "empty dir (different)");
-    FileSystem filesystem = new InMemoryFileSystem(files);
+    FileSystem filesystem = new InMemoryFileSystem(files, new Lifetimes(new Ui(System.err)));
     FileDiffer fileDiffer = new ConcreteFileDiffer(cmd, filesystem);
     CodebaseDiffer codebaseDiffer = new CodebaseDiffer(fileDiffer, filesystem);
     Repositories repositories =
@@ -206,7 +207,7 @@ public class BookkeepingDirectiveTest extends TestCase {
             "/dummy/codebase/pub/1/", "empty dir (different)",
             "/dummy/codebase/int/migrated_from/file", "migrated_from",
             "/dummy/codebase/pub/migrated_to/file", "migrated_to (equivalent)");
-    FileSystem filesystem = new InMemoryFileSystem(files);
+    FileSystem filesystem = new InMemoryFileSystem(files, new Lifetimes(new Ui(System.err)));
     FileDiffer fileDiffer = new ConcreteFileDiffer(cmd, filesystem);
     CodebaseDiffer codebaseDiffer = new CodebaseDiffer(fileDiffer, filesystem);
     Repositories repositories =

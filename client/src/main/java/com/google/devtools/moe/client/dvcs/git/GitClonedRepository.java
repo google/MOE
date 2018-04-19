@@ -55,6 +55,8 @@ public class GitClonedRepository implements LocalWorkspace {
    */
   private final String repositoryUrl;
 
+  private final Lifetimes lifetimes;
+
   private File localCloneTempDir;
   private boolean clonedLocally;
   /** The revision of this clone, a Git hash ID */
@@ -64,8 +66,9 @@ public class GitClonedRepository implements LocalWorkspace {
       CommandRunner cmd,
       FileSystem filesystem,
       String repositoryName,
-      RepositoryConfig repositoryConfig) {
-    this(cmd, filesystem, repositoryName, repositoryConfig, repositoryConfig.getUrl());
+      RepositoryConfig repositoryConfig,
+      Lifetimes lifetimes) {
+    this(cmd, filesystem, repositoryName, repositoryConfig, repositoryConfig.getUrl(), lifetimes);
   }
 
   GitClonedRepository(
@@ -73,13 +76,15 @@ public class GitClonedRepository implements LocalWorkspace {
       FileSystem filesystem,
       String repositoryName,
       RepositoryConfig repositoryConfig,
-      String repositoryUrl) {
+      String repositoryUrl,
+      Lifetimes lifetimes) {
     this.cmd = cmd;
     this.filesystem = filesystem;
     this.repositoryName = repositoryName;
     this.repositoryConfig = repositoryConfig;
     this.repositoryUrl = repositoryUrl;
     this.clonedLocally = false;
+    this.lifetimes = lifetimes;
   }
 
   @Override
@@ -176,7 +181,7 @@ public class GitClonedRepository implements LocalWorkspace {
     }
     File archiveLocation =
         filesystem.getTemporaryDirectory(
-            String.format("git_archive_%s_%s_", repositoryName, revId), Lifetimes.currentTask());
+            String.format("git_archive_%s_%s_", repositoryName, revId), lifetimes.currentTask());
     try {
       filesystem.makeDirs(archiveLocation);
       if (repositoryConfig.getCheckoutPaths().isEmpty()) {
@@ -185,7 +190,7 @@ public class GitClonedRepository implements LocalWorkspace {
             filesystem
                 .getTemporaryDirectory(
                     String.format("git_tarball_%s_%s.tar.", repositoryName, revId),
-                    Lifetimes.currentTask())
+                    lifetimes.currentTask())
                 .getAbsolutePath();
 
         // Git doesn't support archiving to a directory: it only supports

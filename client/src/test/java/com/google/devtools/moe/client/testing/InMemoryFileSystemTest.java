@@ -19,31 +19,15 @@ package com.google.devtools.moe.client.testing;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.FileSystem.Lifetime;
-import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.Lifetimes;
-import com.google.devtools.moe.client.NoopFileSystemModule;
-import com.google.devtools.moe.client.SystemCommandRunner;
-
+import com.google.devtools.moe.client.Ui;
+import java.io.File;
 import junit.framework.TestCase;
 
-import java.io.File;
-
-import javax.inject.Singleton;
-
 public class InMemoryFileSystemTest extends TestCase {
-  // TODO(cgruber): Rework these when statics aren't inherent in the design.
-  @dagger.Component(
-      modules = {TestingModule.class, SystemCommandRunner.Module.class, NoopFileSystemModule.class})
-  @Singleton
-  interface Component {
-    Injector context(); // TODO (b/19676630) Remove when bug is fixed.
-  }
-
-  @Override
-  protected void setUp() throws Exception {
-    super.setUp();
-    Injector.INSTANCE = DaggerInMemoryFileSystemTest_Component.create().context();
-  }
+  private final Lifetimes lifetimes = new Lifetimes(new Ui(System.err));
+  // Class under test
+  private final InMemoryFileSystem fs = new InMemoryFileSystem(lifetimes);
 
   private static final Lifetime TRANSIENT =
       new Lifetime() {
@@ -52,9 +36,6 @@ public class InMemoryFileSystemTest extends TestCase {
           return true;
         }
       };
-
-  // Class under test
-  private final InMemoryFileSystem fs = new InMemoryFileSystem();
 
   public void testGetTemporaryDirectory() throws Exception {
     File tempDirPineapple = fs.getTemporaryDirectory("pineapple", Lifetimes.persistent());
@@ -98,7 +79,8 @@ public class InMemoryFileSystemTest extends TestCase {
                 "/dir/1", "1 contents",
                 "/dir/2", "2 contents",
                 "/dir/subdir/1", "subdir/1 contents",
-                "/otherdir/1", "/otherdir/1 contents"));
+                "/otherdir/1", "/otherdir/1 contents"),
+            lifetimes);
 
     assertEquals(
         ImmutableSet.of(new File("/dir/1"), new File("/dir/2"), new File("/dir/subdir/1")),
@@ -112,7 +94,8 @@ public class InMemoryFileSystemTest extends TestCase {
                 "/dir/1", "1 contents",
                 "/dir/2", "2 contents",
                 "/dir/subdir/1", "subdir/1 contents",
-                "/otherdir/1", "/otherdir/1 contents"));
+                "/otherdir/1", "/otherdir/1 contents"),
+            lifetimes);
 
     assertEquals(
         ImmutableSet.of(new File("/dir/1"), new File("/dir/2"), new File("/dir/subdir")),
@@ -125,7 +108,8 @@ public class InMemoryFileSystemTest extends TestCase {
             ImmutableMap.of(
                 "/dir/1", "1 contents",
                 "/dir/subdir/1", "subdir/1 contents",
-                "/otherdir/1", "/otherdir/1 contents"));
+                "/otherdir/1", "/otherdir/1 contents"),
+            lifetimes);
 
     assertTrue(fs.exists(new File("/dir")));
     assertTrue(fs.exists(new File("/dir/1")));
@@ -142,7 +126,8 @@ public class InMemoryFileSystemTest extends TestCase {
         new InMemoryFileSystem(
             ImmutableMap.of(
                 "/dir/1", "1 contents",
-                "/dir/subdir/1", "subdir/1 contents"));
+                "/dir/subdir/1", "subdir/1 contents"),
+            lifetimes);
 
     assertFalse(fs.isFile(new File("/dir")));
     assertTrue(fs.isFile(new File("/dir/1")));
@@ -156,7 +141,8 @@ public class InMemoryFileSystemTest extends TestCase {
         new InMemoryFileSystem(
             ImmutableMap.of(
                 "/dir/1", "1 contents",
-                "/dir/subdir/1", "subdir/1 contents"));
+                "/dir/subdir/1", "subdir/1 contents"),
+            lifetimes);
 
     assertTrue(fs.isDirectory(new File("/dir")));
     assertFalse(fs.isDirectory(new File("/dir/1")));
@@ -184,7 +170,7 @@ public class InMemoryFileSystemTest extends TestCase {
   }
 
   public void testCopyFile() throws Exception {
-    InMemoryFileSystem fs = new InMemoryFileSystem(ImmutableMap.of("/src", "contents"));
+    InMemoryFileSystem fs = new InMemoryFileSystem(ImmutableMap.of("/src", "contents"), lifetimes);
     fs.copyFile(new File("/src"), new File("/dest"));
     assertEquals("contents", fs.fileToString(new File("/dest")));
   }
@@ -200,7 +186,7 @@ public class InMemoryFileSystemTest extends TestCase {
   }
 
   public void testFileToString() throws Exception {
-    InMemoryFileSystem fs = new InMemoryFileSystem(ImmutableMap.of("/file", "contents"));
+    InMemoryFileSystem fs = new InMemoryFileSystem(ImmutableMap.of("/file", "contents"), lifetimes);
     assertEquals("contents", fs.fileToString(new File("/file")));
   }
 }

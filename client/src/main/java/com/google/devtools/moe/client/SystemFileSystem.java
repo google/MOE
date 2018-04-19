@@ -26,6 +26,7 @@ import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
 import dagger.Binds;
+import dagger.Lazy;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -46,13 +47,14 @@ import javax.inject.Singleton;
 @Singleton
 public class SystemFileSystem extends AbstractFileSystem {
   private final Map<File, Lifetime> tempDirLifetimes = Maps.newHashMap();
+  @Inject Lazy<Lifetimes> lifetimes;
 
   @Inject
   public SystemFileSystem() {}
 
   @Override
   public File getTemporaryDirectory(String prefix) {
-    return getTemporaryDirectory(prefix, Lifetimes.currentTask());
+    return getTemporaryDirectory(prefix, lifetimes.get().currentTask());
   }
 
   @Override
@@ -227,7 +229,8 @@ public class SystemFileSystem extends AbstractFileSystem {
     }
 
     File extractedFile =
-        new File(getTemporaryDirectory("resource_extraction_", Lifetimes.moeExecution()), name);
+        new File(
+            getTemporaryDirectory("resource_extraction_", lifetimes.get().moeExecution()), name);
     makeDirsForFile(extractedFile);
     OutputStream os = Files.asByteSink(extractedFile).openStream();
     Resources.copy(SystemFileSystem.class.getResource(resource), os);

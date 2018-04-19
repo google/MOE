@@ -32,6 +32,7 @@ public class GitCodebaseCreator extends AbstractDvcsCodebaseCreator {
 
   private final String repositoryName;
   private final RepositoryConfig config;
+  private final Lifetimes lifetimes;
 
   public GitCodebaseCreator(
       CommandRunner cmd,
@@ -40,17 +41,19 @@ public class GitCodebaseCreator extends AbstractDvcsCodebaseCreator {
       RevisionHistory revisionHistory,
       String projectSpace,
       String repositoryName,
-      RepositoryConfig config) {
+      RepositoryConfig config,
+      Lifetimes lifetimes) {
     super(cmd, filesystem, headCloneSupplier, revisionHistory, projectSpace);
     this.repositoryName = repositoryName;
     this.config = config;
+    this.lifetimes = lifetimes;
   }
 
   @Override
   protected LocalWorkspace cloneAtLocalRoot(String localroot) {
     GitClonedRepository clone =
-        new GitClonedRepository(cmd, filesystem, repositoryName, config, localroot);
-    clone.cloneLocallyAtHead(Lifetimes.currentTask());
+        new GitClonedRepository(cmd, filesystem, repositoryName, config, localroot, lifetimes);
+    clone.cloneLocallyAtHead(lifetimes.currentTask());
     return clone;
   }
 }

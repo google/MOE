@@ -32,6 +32,7 @@ import junit.framework.TestCase;
 public class SystemFileSystemTest extends TestCase {
   @Inject Ui ui;
   @Inject FileSystem fs;
+  @Inject Lifetimes lifetimes;
 
   public void testFindFiles() throws Exception {
     FileSystem fs = new SystemFileSystem();
@@ -183,7 +184,7 @@ public class SystemFileSystemTest extends TestCase {
   }
 
   private File touchTempDir(String prefix, FileSystem fs) throws IOException {
-    File out = fs.getTemporaryDirectory(prefix, Lifetimes.currentTask());
+    File out = fs.getTemporaryDirectory(prefix, lifetimes.currentTask());
     Files.touch(out);
     return out;
   }
@@ -195,16 +196,13 @@ public class SystemFileSystemTest extends TestCase {
       })
   @Singleton
   interface Component {
-    Injector context(); // TODO (b/19676630) Remove when bug is fixed.
     void inject(SystemFileSystemTest instance);
   }
 
   public void testCleanUpTempDirsWithTasks() throws Exception {
-    Component c =  DaggerSystemFileSystemTest_Component.create();
-    c.inject(this);
-    Injector.INSTANCE = c.context();
+    DaggerSystemFileSystemTest_Component.create().inject(this);
 
-    File taskless = fs.getTemporaryDirectory("taskless", Lifetimes.moeExecution());
+    File taskless = fs.getTemporaryDirectory("taskless", lifetimes.moeExecution());
     Files.touch(taskless);
 
     Task outer = ui.pushTask("outer", "outer");
@@ -214,7 +212,7 @@ public class SystemFileSystemTest extends TestCase {
     Task inner = ui.pushTask("inner", "inner");
     File inner1 = touchTempDir("inner1", fs);
     File inner2 = touchTempDir("inner2", fs);
-    File innerPersist = fs.getTemporaryDirectory("innerPersist", Lifetimes.moeExecution());
+    File innerPersist = fs.getTemporaryDirectory("innerPersist", lifetimes.moeExecution());
     Files.touch(innerPersist);
 
     ui.popTask(inner, "popping inner, persisting nothing");
@@ -240,9 +238,7 @@ public class SystemFileSystemTest extends TestCase {
   }
 
   public void testMarkAsPersistentWithTasks() throws Exception {
-    Component c =  DaggerSystemFileSystemTest_Component.create();
-    c.inject(this);
-    Injector.INSTANCE = c.context();
+    DaggerSystemFileSystemTest_Component.create().inject(this);
 
     Task outer = ui.pushTask("outer", "outer");
     File outer1 = touchTempDir("outer1", fs);

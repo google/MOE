@@ -34,6 +34,7 @@ public class HgCodebaseCreator extends AbstractDvcsCodebaseCreator {
   private final String repositoryName;
   private final RepositoryConfig config;
   private final File hgBinary;
+  private final Lifetimes lifetimes;
 
   public HgCodebaseCreator(
       CommandRunner cmd,
@@ -43,18 +44,21 @@ public class HgCodebaseCreator extends AbstractDvcsCodebaseCreator {
       RevisionHistory revisionHistory,
       String projectSpace,
       String repositoryName,
-      RepositoryConfig config) {
+      RepositoryConfig config,
+      Lifetimes lifetimes) {
     super(cmd, filesystem, headCloneSupplier, revisionHistory, projectSpace);
     this.hgBinary = hgBinary;
     this.repositoryName = repositoryName;
     this.config = config;
+    this.lifetimes = lifetimes;
   }
 
   @Override
   protected LocalWorkspace cloneAtLocalRoot(String localroot) {
     HgClonedRepository clone =
-        new HgClonedRepository(cmd, filesystem, hgBinary, repositoryName, config, localroot);
-    clone.cloneLocallyAtHead(Lifetimes.currentTask());
+        new HgClonedRepository(
+            cmd, filesystem, hgBinary, repositoryName, config, localroot, lifetimes);
+    clone.cloneLocallyAtHead(lifetimes.currentTask());
     return clone;
   }
 }

@@ -24,6 +24,7 @@ import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.FileSystem.Lifetime;
 import com.google.devtools.moe.client.Lifetimes;
+import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import java.io.File;
 import junit.framework.TestCase;
@@ -38,6 +39,7 @@ public class HgClonedRepositoryTest extends TestCase {
 
   private final String repositoryName = "mockrepo";
   private final String repositoryURL = "http://foo/hg";
+  private final Lifetimes lifetimes = new Lifetimes(new Ui(System.err));
 
   public void testCloneLocally() throws Exception {
     expect(repositoryConfig.getUrl()).andReturn(repositoryURL).anyTimes();
@@ -66,7 +68,8 @@ public class HgClonedRepositoryTest extends TestCase {
     control.replay();
 
     HgClonedRepository repo =
-        new HgClonedRepository(cmd, mockFS, new File("hg"), repositoryName, repositoryConfig);
+        new HgClonedRepository(
+            cmd, mockFS, new File("hg"), repositoryName, repositoryConfig, lifetimes);
     repo.cloneLocallyAtHead(Lifetimes.persistent());
 
     assertEquals(repositoryName, repo.getRepositoryName());

@@ -34,12 +34,15 @@ public class GitRepositoryFactory implements RepositoryType.Factory {
   private final CommandRunner cmd;
   private final FileSystem filesystem;
   private final Ui ui;
+  private final Lifetimes lifetimes;
 
   @Inject
-  public GitRepositoryFactory(CommandRunner cmd, FileSystem filesystem, Ui ui) {
+  public GitRepositoryFactory(
+      CommandRunner cmd, FileSystem filesystem, Ui ui, Lifetimes lifetimes) {
     this.cmd = cmd;
     this.filesystem = filesystem;
     this.ui = ui;
+    this.lifetimes = lifetimes;
   }
 
   @Override
@@ -64,8 +67,9 @@ public class GitRepositoryFactory implements RepositoryType.Factory {
 
     Supplier<GitClonedRepository> freshSupplier =
         () -> {
-          GitClonedRepository headClone = new GitClonedRepository(cmd, filesystem, name, config);
-          headClone.cloneLocallyAtHead(Lifetimes.currentTask());
+          GitClonedRepository headClone =
+              new GitClonedRepository(cmd, filesystem, name, config, lifetimes);
+          headClone.cloneLocallyAtHead(lifetimes.currentTask());
           return headClone;
         };
 
@@ -74,8 +78,9 @@ public class GitRepositoryFactory implements RepositoryType.Factory {
     Supplier<GitClonedRepository> memoizedSupplier =
         Suppliers.memoize(
             () -> {
-              GitClonedRepository tipClone = new GitClonedRepository(cmd, filesystem, name, config);
-              tipClone.cloneLocallyAtHead(Lifetimes.moeExecution());
+              GitClonedRepository tipClone =
+                  new GitClonedRepository(cmd, filesystem, name, config, lifetimes);
+              tipClone.cloneLocallyAtHead(lifetimes.moeExecution());
               return tipClone;
             });
 
@@ -87,7 +92,8 @@ public class GitRepositoryFactory implements RepositoryType.Factory {
     }
 
     GitCodebaseCreator cc =
-        new GitCodebaseCreator(cmd, filesystem, memoizedSupplier, rh, projectSpace, name, config);
+        new GitCodebaseCreator(
+            cmd, filesystem, memoizedSupplier, rh, projectSpace, name, config, lifetimes);
 
     GitWriterCreator wc = new GitWriterCreator(freshSupplier, rh, filesystem, ui);
 

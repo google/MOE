@@ -33,21 +33,13 @@ public class Injector {
   public static Injector INSTANCE;
 
   private final FileSystem fileSystem;
-  private final Ui ui;
 
   @Inject
-  public Injector(
-      FileSystem fileSystem,
-      Ui ui) {
+  public Injector(FileSystem fileSystem) {
     this.fileSystem = fileSystem;
-    this.ui = ui;
   }
 
   public FileSystem fileSystem() {
     return fileSystem;
-  }
-
-  public Ui ui() {
-    return ui;
   }
 }
