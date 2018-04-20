@@ -25,10 +25,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.FileSystem.Lifetime;
+import com.google.devtools.moe.client.NoopFileSystem;
 import com.google.devtools.moe.client.MoeProblem;
-import com.google.devtools.moe.client.NoopFileSystemModule;
 import com.google.devtools.moe.client.SystemCommandRunner;
-import com.google.devtools.moe.client.SystemFileSystem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.expressions.EditExpression;
 import com.google.devtools.moe.client.codebase.expressions.Expression;
@@ -39,7 +38,6 @@ import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.project.ProjectContext.NoopProjectContext;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
-import com.google.devtools.moe.client.testing.TestingModule;
 import com.google.devtools.moe.client.testing.TestingUtils;
 import com.google.devtools.moe.client.translation.editors.Editor;
 import com.google.devtools.moe.client.translation.pipeline.ForwardTranslationPipeline;
@@ -48,8 +46,6 @@ import com.google.devtools.moe.client.translation.pipeline.TranslationPipeline;
 import com.google.devtools.moe.client.translation.pipeline.TranslationStep;
 import com.google.devtools.moe.client.writer.WriterCreator;
 import java.io.File;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import junit.framework.TestCase;
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
@@ -59,23 +55,9 @@ public class ExpressionProcessingTest extends TestCase {
   private final Codebase mockRepoCodebase = control.createMock(Codebase.class);
   private final FileSystem mockFs = control.createMock(FileSystem.class);
 
-  @Inject Ui ui;
-  @Inject CommandRunner commandRunner;
-
-  // TODO(cgruber): Rework these when statics aren't inherent in the design.
-  @dagger.Component(
-      modules = {TestingModule.class, SystemCommandRunner.Module.class, NoopFileSystemModule.class})
-  @Singleton
-  interface Component {
-    void inject(ExpressionProcessingTest instance);
-  }
-
-  @Override
-  protected void setUp() throws Exception {
-    super.setUp();
-    Component c = DaggerExpressionProcessingTest_Component.create();
-    c.inject(this);
-  }
+  private final Ui ui = new Ui(System.err);
+  private final CommandRunner commandRunner = new SystemCommandRunner();
+  private final FileSystem noopFs = new NoopFileSystem();
 
   public void testNoSuchRepository() throws Exception {
     RepositoryExpression repositoryExpression = RepositoryExpression.create("foo");
@@ -91,17 +73,7 @@ public class ExpressionProcessingTest extends TestCase {
   }
 
   public void testFileCodebaseCreator() throws Exception {
-    Component component =
-        DaggerExpressionProcessingTest_Component.builder()
-            .noopFileSystemModule(
-                new NoopFileSystemModule() {
-                  @Override
-                  public FileSystem fileSystem() {
-                    return mockFs;
-                  }
-                })
-            .build();
-    component.inject(this);
+    Ui ui = new Ui(System.err, mockFs);
     ExpressionEngine expressionEngine =
         TestingUtils.expressionEngineWithRepo(ui, mockFs, commandRunner);
     File srcLocation = new File("/foo");
@@ -224,7 +196,7 @@ public class ExpressionProcessingTest extends TestCase {
     control.replay();
     Expression expression = Parser.parseExpression("foo>public|bar");
     ExpressionEngine expressionEngine =
-        TestingUtils.expressionEngineWithRepo(ui, new SystemFileSystem(), commandRunner);
+        TestingUtils.expressionEngineWithRepo(ui, noopFs, commandRunner);
     Codebase c = expressionEngine.createCodebase(expression, context);
 
     control.verify();
