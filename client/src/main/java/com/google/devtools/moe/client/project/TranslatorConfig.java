@@ -17,7 +17,9 @@
 package com.google.devtools.moe.client.project;
 
 import com.google.devtools.moe.client.translation.editors.Editor;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Configuration for a MOE Translator
@@ -56,6 +58,17 @@ public class TranslatorConfig {
       }
     }
     return null;
+  }
+
+  public List<ScrubberConfig> scrubbers() {
+    if (getSteps() != null) {
+      return getSteps().stream()
+          .map(StepConfig::getEditorConfig)
+          .filter(ec -> ec.type() == Editor.Type.scrubber)
+          .map(EditorConfig::scrubberConfig)
+          .collect(Collectors.toList());
+    }
+    return new ArrayList<>(0);
   }
 
   void validate() throws InvalidProject {

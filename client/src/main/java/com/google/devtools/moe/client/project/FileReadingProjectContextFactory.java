@@ -16,11 +16,10 @@
 
 package com.google.devtools.moe.client.project;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
-import com.google.common.io.Files;
+import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.ExpressionEngine;
+import com.google.devtools.moe.client.gson.GsonModule;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.translation.editors.Editors;
 import java.io.File;
@@ -31,11 +30,14 @@ import javax.inject.Inject;
  * Creates a ProjectContext from a configuration file loaded from the file system.
  */
 public class FileReadingProjectContextFactory extends ProjectContextFactory {
+  private final FileSystem fileSystem;
 
   @Inject
   public FileReadingProjectContextFactory(
-      ExpressionEngine expressionEngine, Ui ui, Repositories repositories, Editors editors) {
+      ExpressionEngine expressionEngine, Ui ui, Repositories repositories, Editors editors,
+      FileSystem fileSystem) {
     super(expressionEngine, ui, repositories, editors);
+    this.fileSystem = fileSystem;
   }
 
   @Override
@@ -44,11 +46,39 @@ public class FileReadingProjectContextFactory extends ProjectContextFactory {
     Ui.Task task = ui.pushTask("read_config", "Reading config file from %s", configFilename);
     try {
       try {
-        configText = Files.toString(new File(configFilename), UTF_8);
+        configText = fileSystem.fileToString(new File(configFilename));
       } catch (IOException e) {
         throw new InvalidProject("Config File \"" + configFilename + "\" not accessible.");
       }
       return ProjectConfig.parse(configText);
+    } finally {
+      ui.popTask(task, "");
+    }
+  }
+
+  @Override
+  public void loadUsernamesFiles(ProjectConfig config) {
+    for (TranslatorConfig translatorConfig : config.translators()) {
+      for (ScrubberConfig scrubberConfig : translatorConfig.scrubbers()) {
+        if (scrubberConfig == null || scrubberConfig.getUsernamesFile() == null) {
+          continue;
+        }
+        scrubberConfig.updateUsernames(parseUsernamesConfig(scrubberConfig.getUsernamesFile()));
+      }
+    }
+  }
+
+  private UsernamesConfig parseUsernamesConfig(String usernamesFilePath) {
+    File usernamesFile = new File(usernamesFilePath);
+
+    Ui.Task task = ui.pushTask(
+        "read_usernames_file", "Reading usernames file from %s", usernamesFilePath);
+    try {
+      return GsonModule.provideGson()
+          .fromJson(fileSystem.fileToString(usernamesFile), UsernamesConfig.class);
+    } catch (IOException exception) {
+      throw new InvalidProject(
+          "File " + usernamesFilePath + " referenced by usernames_file not found.");
     } finally {
       ui.popTask(task, "");
     }

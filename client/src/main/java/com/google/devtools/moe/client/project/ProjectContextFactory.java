@@ -66,6 +66,7 @@ public abstract class ProjectContextFactory {
    */
   public final ProjectContext create(String configFilename) throws InvalidProject {
     ProjectConfig config = loadConfiguration(configFilename);
+    loadUsernamesFiles(config);
     return ProjectContext.create(
         config,
         buildRepositories(config),
@@ -81,6 +82,10 @@ public abstract class ProjectContextFactory {
    * a filesystem, or from in-memory strings.
    */
   protected abstract ProjectConfig loadConfiguration(String configFilename) throws InvalidProject;
+  /**
+   * Load usernames file if specified in ScrubberConfig and updates ProjectConfig with usernames.
+   */
+  protected abstract void loadUsernamesFiles(ProjectConfig config);
 
   //TODO(cgruber): Consider making InvalidProject an unchecked exception to eliminate these loops.
   private ImmutableMap<String, RepositoryType> buildRepositories(ProjectConfig config)

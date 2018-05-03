@@ -1,11 +1,7 @@
 package com.google.devtools.moe.client.project;
 
-import com.google.devtools.moe.client.Injector;
-import com.google.devtools.moe.client.gson.GsonModule;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -64,6 +60,7 @@ public class ScrubberConfig {
   // proto options
   private boolean scrubProtoComments;
 
+
   private ScrubberConfig() { // Instantiated by GSON.
   }
 
@@ -75,24 +72,23 @@ public class ScrubberConfig {
       return false;
     }
     // TODO(cgruber): Create a custom deserializer that does this logic once, on deserialization.
-    if (usernamesFile != null) {
-      try {
-        UsernamesConfig usernamesConfig =
-            GsonModule.provideGson() // TODO(cgruber): Eliminate this static reference.
-                .fromJson(
-                    Injector.INSTANCE.fileSystem().fileToString(new File(usernamesFile)),
-                    UsernamesConfig.class);
-        addUsernames(usernamesToScrub, usernamesConfig.getScrubbableUsernames());
-        addUsernames(usernamesToPublish, usernamesConfig.getPublishableUsernames());
-      } catch (IOException exception) {
-        throw new InvalidProject(
-            "File " + usernamesFile + " referenced by usernames_file not found.");
-      }
-      usernamesFile = null;
-    }
     return scrubUnknownUsers
         ? !matchesUsername(author, usernamesToPublish)
         : matchesUsername(author, usernamesToScrub);
+  }
+
+  public String getUsernamesFile() {
+    return usernamesFile;
+  }
+
+  /**
+   * Called by ProjectContextFactory to update usernamesConfig with external usernames file.
+   */
+  void updateUsernames(UsernamesConfig usernamesConfig) {
+    addUsernames(usernamesToScrub, usernamesConfig.getScrubbableUsernames());
+    addUsernames(usernamesToPublish, usernamesConfig.getPublishableUsernames());
+    // reset usernamesFile to null so that we don't read the file again
+    usernamesFile = null;
   }
 
   private void addUsernames(List<String> local, List<String> global) {

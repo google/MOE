@@ -51,6 +51,12 @@ public class InMemoryProjectContextFactory extends ProjectContextFactory {
     return parse(projectConfigs.get(configFilename));
   }
 
+  @Override
+  public void loadUsernamesFiles(ProjectConfig config) {
+    // no tests using this factory currently use this feature, no-op for now
+    return;
+  }
+
   /** A Dagger module for binding this implementation of {@link ProjectContextFactory}. */
   @dagger.Module
   public abstract static class Module {
