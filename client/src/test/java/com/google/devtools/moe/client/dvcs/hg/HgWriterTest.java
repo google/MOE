@@ -20,21 +20,15 @@ import static org.easymock.EasyMock.expect;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.FileSystem;
-import com.google.devtools.moe.client.Injector;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.expressions.RepositoryExpression;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
-import com.google.devtools.moe.client.testing.TestingModule;
 import com.google.devtools.moe.client.writer.DraftRevision;
-import dagger.Provides;
 import java.io.File;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import junit.framework.TestCase;
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
@@ -50,12 +44,10 @@ public class HgWriterTest extends TestCase {
 
   private final IMocksControl control = EasyMock.createControl();
   private final FileSystem mockFs = control.createMock(FileSystem.class);
-  private final CommandRunner mockCmd = control.createMock(CommandRunner.class);
   private final RepositoryConfig mockRepoConfig = control.createMock(RepositoryConfig.class);
   private final Codebase codebase = Codebase.create(CODEBASE_ROOT, PROJECT_SPACE, CODEBASE_EXPR);
   private final HgClonedRepository mockRevClone = control.createMock(HgClonedRepository.class);
-
-  @Inject Ui ui;
+  private final Ui ui = new Ui(System.err);
 
   /* Helper methods */
 
@@ -66,32 +58,9 @@ public class HgWriterTest extends TestCase {
 
   /* End helper methods */
 
-  // TODO(cgruber): Rework these when statics aren't inherent in the design.
-  @dagger.Component(modules = {TestingModule.class, Module.class})
-  @Singleton
-  interface Component {
-    Injector context(); // TODO (b/19676630) Remove when bug is fixed.
-
-    void inject(HgWriterTest instance);
-  }
-
-  @dagger.Module
-  class Module {
-    @Provides
-    public CommandRunner cmd() {
-      return mockCmd;
-    }
-
-    @Provides
-    public FileSystem filesystem() {
-      return mockFs;
-    }
-  }
-
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    DaggerHgWriterTest_Component.builder().module(new Module()).build().inject(this);
 
     expect(mockRevClone.getLocalTempDir()).andReturn(WRITER_ROOT).anyTimes();
     expect(mockRevClone.getConfig()).andReturn(mockRepoConfig).anyTimes();

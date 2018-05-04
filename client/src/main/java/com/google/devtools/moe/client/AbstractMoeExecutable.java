@@ -71,7 +71,6 @@ public abstract class AbstractMoeExecutable<T extends AbstractMoeExecutable<T>> 
     globalLogger.setUseParentHandlers(false);
   }
 
-  @Inject Injector services; // Legacy context object for static initialization.
   @Inject OptionsParser optionsParser;
   @Inject Directives directives;
   @Inject Ui ui;
@@ -87,7 +86,6 @@ public abstract class AbstractMoeExecutable<T extends AbstractMoeExecutable<T>> 
     }
 
     initializeComponent(args).inject((T) this);
-    Injector.INSTANCE = services; // TODO(cgruber): Eliminate this.
     debug = optionsParser.debug();
     if (debug) {
       // This should be the only static state set.

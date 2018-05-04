@@ -22,18 +22,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.CommandRunner.CommandException;
 import com.google.devtools.moe.client.FileSystem;
-import com.google.devtools.moe.client.Injector;
-import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.expressions.RepositoryExpression;
 import com.google.devtools.moe.client.project.RepositoryConfig;
-import com.google.devtools.moe.client.testing.TestingModule;
 import com.google.devtools.moe.client.writer.DraftRevision;
-import dagger.Provides;
 import java.io.File;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import junit.framework.TestCase;
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
@@ -50,7 +44,7 @@ public class GitWriterTest extends TestCase {
   private final Codebase codebase = Codebase.create(codebaseRoot, projectSpace, cExp);
   private final GitClonedRepository mockRevClone = control.createMock(GitClonedRepository.class);
   private final RepositoryConfig mockRepoConfig = control.createMock(RepositoryConfig.class);
-  @Inject Ui ui;
+  private final Ui ui = new Ui(System.err);
 
   /* Helper methods */
 
@@ -60,27 +54,9 @@ public class GitWriterTest extends TestCase {
 
   /* End helper methods */
 
-  // TODO(cgruber): Rework these when statics aren't inherent in the design.
-  @dagger.Component(modules = {TestingModule.class, SystemCommandRunner.Module.class, Module.class})
-  @Singleton
-  interface Component {
-    Injector context(); // TODO (b/19676630) Remove when bug is fixed.
-
-    void inject(GitWriterTest instance);
-  }
-
-  @dagger.Module
-  class Module {
-    @Provides
-    public FileSystem filesystem() {
-      return mockFs;
-    }
-  }
-
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    DaggerGitWriterTest_Component.builder().module(new Module()).build().inject(this);
 
     expect(mockRevClone.getLocalTempDir()).andReturn(writerRoot).anyTimes();
     expect(mockRevClone.getConfig()).andReturn(mockRepoConfig).anyTimes();

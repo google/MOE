@@ -3,9 +3,7 @@ package com.google.devtools.moe.client.project;
 
 import com.google.devtools.moe.client.gson.GsonModule;
 
-
 import junit.framework.TestCase;
-
 
 
 
