@@ -16,16 +16,12 @@
 
 package com.google.devtools.moe.client;
 
+import dagger.Binds;
 import dagger.Module;
-import dagger.Provides;
 
-/**
- * A Dagger module for binding a NoopFileSystem
- */
+/** A Dagger module for binding a NoopFileSystem */
 @Module
-public class NoopFileSystemModule {
-  @Provides
-  public FileSystem fileSystem() {
-    return new NoopFileSystem();
-  }
+public interface NoopFileSystemModule {
+  @Binds
+  FileSystem fileSystem(NoopFileSystem noopFileSystem);
 }
