@@ -24,11 +24,11 @@ import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseMerger;
-import com.google.devtools.moe.client.gson.GsonModule;
 import com.google.devtools.moe.client.project.EditorConfig;
 import com.google.devtools.moe.client.project.InvalidProject;
 import com.google.devtools.moe.client.project.ScrubberConfig;
 import com.google.devtools.moe.client.tools.TarUtils;
+import com.google.gson.Gson;
 import dagger.Lazy;
 import java.io.File;
 import java.io.IOException;
@@ -45,6 +45,7 @@ public class ScrubbingEditor implements Editor, InverseEditor {
   private final ScrubberConfig scrubberConfig;
   private final TarUtils tarUtils;
   private final CodebaseMerger merger;
+  private final Gson gson;
 
   ScrubbingEditor(
       @Provided CommandRunner cmd,
@@ -53,7 +54,8 @@ public class ScrubbingEditor implements Editor, InverseEditor {
       @Provided TarUtils tarUtils,
       @Provided CodebaseMerger merger,
       String editorName,
-      EditorConfig config) {
+      EditorConfig config,
+      @Provided Gson gson) {
     this.cmd = cmd;
     this.filesystem = filesystem;
     this.executable = executable;
@@ -61,6 +63,7 @@ public class ScrubbingEditor implements Editor, InverseEditor {
     this.merger = merger;
     this.name = editorName;
     this.scrubberConfig = config.scrubberConfig();
+    this.gson = gson;
   }
 
   /**
@@ -95,8 +98,7 @@ public class ScrubbingEditor implements Editor, InverseEditor {
               outputTar.getAbsolutePath(),
               // TODO(dbentley): allow configuring the scrubber config
               "--config_data",
-              (scrubberConfig == null) ? "{}" : GsonModule.provideGson().toJson(scrubberConfig),
-              // TODO(cgruber): Eliminate this static gson method reference.
+              (scrubberConfig == null) ? "{}" : gson.toJson(scrubberConfig),
               input.path().getAbsolutePath()));
     } catch (CommandRunner.CommandException | IOException e) {
       throw new MoeProblem(e, "Problem executing the scrubber: %s", e.getMessage());

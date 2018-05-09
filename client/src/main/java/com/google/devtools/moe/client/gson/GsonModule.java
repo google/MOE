@@ -24,12 +24,15 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import dagger.Module;
 import dagger.Provides;
+import javax.inject.Singleton;
 
 /**
  * A Dagger module to provide and configure Gson
  */
 @Module
 public final class GsonModule {
+  // TODO(user): eliminate this and make provideGson package private
+  // when ProjectConfig stops using provideGson
   private static final Gson GSON =
       new GsonBuilder()
           .setPrettyPrinting()
@@ -42,6 +45,7 @@ public final class GsonModule {
           .create();
 
   @Provides
+  @Singleton
   public static Gson provideGson() {
     return GSON;
   }

@@ -31,6 +31,7 @@ import com.google.devtools.moe.client.project.EditorConfig;
 import com.google.devtools.moe.client.project.ScrubberConfig;
 import com.google.devtools.moe.client.tools.EagerLazy;
 import com.google.devtools.moe.client.tools.TarUtils;
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import dagger.Lazy;
 import java.io.File;
@@ -95,14 +96,14 @@ public class ScrubbingEditorTest extends TestCase {
     control.replay();
 
 
+    Gson gson = GsonModule.provideGson();
     ScrubberConfig scrubberConfig =
-        GsonModule.provideGson()
-            .fromJson(
-                "{\"scrub_unknown_users\":\"true\",\"usernames_file\":null}", ScrubberConfig.class);
+        gson.fromJson(
+            "{\"scrub_unknown_users\":\"true\",\"usernames_file\":null}", ScrubberConfig.class);
     EditorConfig config =
         EditorConfig.create(scrubber, scrubberConfig, "tar", new JsonObject(), false);
     ScrubbingEditor editor =
-        new ScrubbingEditor(cmd, fileSystem, executable, tarUtils, null, "scrubber", config);
+        new ScrubbingEditor(cmd, fileSystem, executable, tarUtils, null, "scrubber", config, gson);
     editor.edit(codebase, ImmutableMap.<String, String>of());
     control.verify();
   }

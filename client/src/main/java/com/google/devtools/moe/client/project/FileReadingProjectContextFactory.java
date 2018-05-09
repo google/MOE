@@ -19,9 +19,9 @@ package com.google.devtools.moe.client.project;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.ExpressionEngine;
-import com.google.devtools.moe.client.gson.GsonModule;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.translation.editors.Editors;
+import com.google.gson.Gson;
 import java.io.File;
 import java.io.IOException;
 import javax.inject.Inject;
@@ -31,13 +31,15 @@ import javax.inject.Inject;
  */
 public class FileReadingProjectContextFactory extends ProjectContextFactory {
   private final FileSystem fileSystem;
+  private final Gson gson;
 
   @Inject
   public FileReadingProjectContextFactory(
       ExpressionEngine expressionEngine, Ui ui, Repositories repositories, Editors editors,
-      FileSystem fileSystem) {
+      FileSystem fileSystem, Gson gson) {
     super(expressionEngine, ui, repositories, editors);
     this.fileSystem = fileSystem;
+    this.gson = gson;
   }
 
   @Override
@@ -74,8 +76,7 @@ public class FileReadingProjectContextFactory extends ProjectContextFactory {
     Ui.Task task = ui.pushTask(
         "read_usernames_file", "Reading usernames file from %s", usernamesFilePath);
     try {
-      return GsonModule.provideGson()
-          .fromJson(fileSystem.fileToString(usernamesFile), UsernamesConfig.class);
+      return gson.fromJson(fileSystem.fileToString(usernamesFile), UsernamesConfig.class);
     } catch (IOException exception) {
       throw new InvalidProject(
           "File " + usernamesFilePath + " referenced by usernames_file not found.");
