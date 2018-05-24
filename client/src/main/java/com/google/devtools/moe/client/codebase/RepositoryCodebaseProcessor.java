@@ -33,7 +33,7 @@ public class RepositoryCodebaseProcessor implements CodebaseProcessor<Repository
             ? fileCodebaseCreator.get() // for testing
             : context.getRepository(repositoryName).codebaseCreator();
 
-    Ui.Task createTask = ui.pushTask("create_codebase", "Creating codebase for '%s'", this);
+    Ui.Task createTask = ui.pushTask("create_codebase", "Creating codebase for '%s'", expression);
     try {
       Codebase codebase = codebaseCreator.create(expression.term().options());
       ui.popTaskAndPersist(createTask, codebase.path());
