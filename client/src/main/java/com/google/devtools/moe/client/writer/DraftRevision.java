@@ -18,6 +18,7 @@ package com.google.devtools.moe.client.writer;
 
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
+import com.google.devtools.moe.client.Ui.Task;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import javax.annotation.Nullable;
@@ -58,11 +59,8 @@ public interface DraftRevision {
      * @return a DraftRevision on success, or null on failure
      */
     public DraftRevision create(Codebase c, Writer destination, @Nullable RevisionMetadata rm) {
-      try {
-        Ui.Task t = ui.pushTask("push_codebase", "Putting files from Codebase into Writer");
-        DraftRevision r = destination.putCodebase(c, rm);
-        ui.popTask(t, "");
-        return r;
+      try (Task t = ui.newTask("push_codebase", "Putting files from Codebase into Writer")) {
+        return destination.putCodebase(c, rm);
       } catch (WritingError e) {
         throw new MoeProblem(e, "Error creating draft revision to codebase: %s", e.getMessage());
       }

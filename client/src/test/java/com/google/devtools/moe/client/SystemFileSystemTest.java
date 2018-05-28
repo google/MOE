@@ -205,34 +205,41 @@ public class SystemFileSystemTest extends TestCase {
     File taskless = fs.getTemporaryDirectory("taskless", lifetimes.moeExecution());
     Files.touch(taskless);
 
-    Task outer = ui.pushTask("outer", "outer");
-    File outer1 = touchTempDir("outer1", fs);
-    File outer2 = touchTempDir("outer2", fs);
+    File innerPersist;
+    File outer1;
+    File outer2;
+    try (Task outer = ui.newTask("outer", "outer")) {
+      outer1 = touchTempDir("outer1", fs);
+      outer2 = touchTempDir("outer2", fs);
 
-    Task inner = ui.pushTask("inner", "inner");
-    File inner1 = touchTempDir("inner1", fs);
-    File inner2 = touchTempDir("inner2", fs);
-    File innerPersist = fs.getTemporaryDirectory("innerPersist", lifetimes.moeExecution());
-    Files.touch(innerPersist);
+      File inner1;
+      File inner2;
+      try (Task inner = ui.newTask("inner", "inner")) {
+        inner1 = touchTempDir("inner1", fs);
+        inner2 = touchTempDir("inner2", fs);
+        innerPersist = fs.getTemporaryDirectory("innerPersist", lifetimes.moeExecution());
+        Files.touch(innerPersist);
 
-    ui.popTask(inner, "popping inner, persisting nothing");
-    assertFalse("inner1", inner1.exists());
-    assertFalse("inner2", inner2.exists());
-    assertTrue("innerPersist", innerPersist.exists());
-    assertTrue("taskless", taskless.exists());
-    assertTrue("outer1", outer1.exists());
-    assertTrue("outer2", outer2.exists());
+        inner.result().append("popping inner, persisting nothing");
+      }
+      assertFalse("inner1", inner1.exists());
+      assertFalse("inner2", inner2.exists());
+      assertTrue("innerPersist", innerPersist.exists());
+      assertTrue("taskless", taskless.exists());
+      assertTrue("outer1", outer1.exists());
+      assertTrue("outer2", outer2.exists());
 
-    ui.popTask(outer, "popping outer, persisting nothing");
+      outer.result().append("popping outer, persisting nothing");
+    }
     assertFalse("outer1", outer1.exists());
     assertFalse("outer2", outer2.exists());
     assertTrue("innerPersist", innerPersist.exists());
     assertTrue("taskless", taskless.exists());
 
-    Task moeTermination =
-        ui.pushTask(Ui.MOE_TERMINATION_TASK_NAME, "Final clean-up");
-    fs.cleanUpTempDirs();
-    ui.popTask(moeTermination, "Finished clean-up");
+    try (Task moeTermination = ui.newTask(Ui.MOE_TERMINATION_TASK_NAME, "Final clean-up")) {
+      fs.cleanUpTempDirs();
+      moeTermination.result().append("Finished clean-up");
+    }
     assertFalse("innerPersist", innerPersist.exists());
     assertFalse("taskless", taskless.exists());
   }
@@ -240,29 +247,35 @@ public class SystemFileSystemTest extends TestCase {
   public void testMarkAsPersistentWithTasks() throws Exception {
     DaggerSystemFileSystemTest_Component.create().inject(this);
 
-    Task outer = ui.pushTask("outer", "outer");
-    File outer1 = touchTempDir("outer1", fs);
-    File outer2 = touchTempDir("outer2", fs);
+    File inner1;
+    File inner2;
+    File outer1;
+    File outer2;
+    try (Task outer = ui.newTask("outer", "outer")) {
+      outer1 = touchTempDir("outer1", fs);
+      outer2 = touchTempDir("outer2", fs);
 
-    Task inner = ui.pushTask("inner", "inner");
-    File inner1 = touchTempDir("inner1", fs);
-    File inner2 = touchTempDir("inner2", fs);
+      try (Task inner = ui.newTask("inner", "inner")) {
+        inner1 = touchTempDir("inner1", fs);
+        inner2 = touchTempDir("inner2", fs);
 
-    ui.popTaskAndPersist(inner, inner1);
-    assertTrue("inner1", inner1.exists());
-    assertFalse("inner2", inner2.exists());
-    assertTrue("outer1", outer1.exists());
-    assertTrue("outer2", outer2.exists());
+        inner.keep(inner1);
+      }
+      assertTrue("inner1", inner1.exists());
+      assertFalse("inner2", inner2.exists());
+      assertTrue("outer1", outer1.exists());
+      assertTrue("outer2", outer2.exists());
 
-    ui.popTaskAndPersist(outer, outer1);
+      outer.keep(outer1);
+    }
     assertFalse("inner1", inner1.exists());
     assertTrue("outer1", outer1.exists());
     assertFalse("outer2", outer2.exists());
 
-    Task moeTermination =
-        ui.pushTask(Ui.MOE_TERMINATION_TASK_NAME, "Final clean-up");
-    fs.cleanUpTempDirs();
-    ui.popTask(moeTermination, "Finished clean-up");
+    try (Task moeTermination = ui.newTask(Ui.MOE_TERMINATION_TASK_NAME, "Final clean-up")) {
+      fs.cleanUpTempDirs();
+      moeTermination.result().append("Finished clean-up");
+    }
     // outer1 was persisted from a top-level task, so it shouldn't be cleaned up at all.
     assertTrue("outer1", outer1.exists());
   }

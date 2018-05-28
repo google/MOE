@@ -1,6 +1,7 @@
 package com.google.devtools.moe.client.codebase;
 
 import com.google.devtools.moe.client.Ui;
+import com.google.devtools.moe.client.Ui.Task;
 import com.google.devtools.moe.client.codebase.expressions.RepositoryExpression;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.testing.FileCodebaseCreator;
@@ -33,15 +34,15 @@ public class RepositoryCodebaseProcessor implements CodebaseProcessor<Repository
             ? fileCodebaseCreator.get() // for testing
             : context.getRepository(repositoryName).codebaseCreator();
 
-    Ui.Task createTask = ui.pushTask("create_codebase", "Creating codebase for '%s'", expression);
-    try {
-      Codebase codebase = codebaseCreator.create(expression.term().options());
-      ui.popTaskAndPersist(createTask, codebase.path());
-      return codebase;
-    } catch (CodebaseCreationError e) {
-      ui.message("%s", e);
-      ui.popTask(createTask, "Unable to create codebase " + this);
-      throw e;
+    try (Task createTask =
+        ui.newTask("create_codebase", "Creating codebase for '%s'", expression)) {
+      try {
+        return createTask.keep(codebaseCreator.create(expression.term().options()));
+      } catch (CodebaseCreationError e) {
+        ui.message("%s", e);
+        createTask.result().append("Unable to create codebase " + this);
+        throw e;
+      }
     }
   }
 }

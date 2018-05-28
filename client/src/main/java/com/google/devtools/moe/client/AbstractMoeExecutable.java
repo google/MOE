@@ -20,6 +20,7 @@ import static com.google.devtools.moe.client.Ui.MOE_TERMINATION_TASK_NAME;
 import static java.util.logging.Level.SEVERE;
 import static java.util.logging.Level.WARNING;
 
+import com.google.devtools.moe.client.Ui.Task;
 import com.google.devtools.moe.client.directives.Directive;
 import com.google.devtools.moe.client.directives.Directives;
 import com.google.devtools.moe.client.options.OptionsParser;
@@ -123,15 +124,13 @@ public abstract class AbstractMoeExecutable<T extends AbstractMoeExecutable<T>> 
       }
 
       result = directive.perform();
-      Ui.Task terminateTask = ui.pushTask(MOE_TERMINATION_TASK_NAME, "Final clean-up");
-      try {
+      try (Task task = ui.newTask(MOE_TERMINATION_TASK_NAME, "Final clean-up")) {
         filesystem.cleanUpTempDirs();
       } catch (IOException e) {
         ui.message(
-            "WARNING: Moe enocuntered a problem cleaning up temporary directories: %s",
+            "WARNING: Moe encountered a problem cleaning up temporary directories: %s",
             e.getMessage());
       }
-      ui.popTask(terminateTask, "");
       return result;
     } catch (InvalidProject ip) {
       ui.message("ERROR: Invalid project configuration: %s", ip.getMessage());

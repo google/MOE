@@ -27,6 +27,7 @@ import com.google.common.collect.Iterables;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.MoeUserProblem;
 import com.google.devtools.moe.client.Ui;
+import com.google.devtools.moe.client.Ui.Task;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.codebase.ExpressionEngine;
@@ -144,102 +145,104 @@ public class MigrateBranchDirective extends Directive {
         findMigrationConfigForRepository(
             overrideUrl, fromRepositoryName, originalFromRepositoryName);
 
-    Ui.Task migrationTask =
-        ui.pushTask(
+    String draftRevisionLocation = "No draft revision created";
+    try (Task migrationTask =
+        ui.newTask(
             "perform_migration",
             "Performing migration '%s' from branch '%s'",
             migrationConfig.getName(),
-            branchLabel);
+            branchLabel)) {
 
+      RepositoryConfig baseRepoConfig = config.getRepositoryConfig(originalFromRepositoryName);
+      RepositoryType baseRepoType = repositories.create(originalFromRepositoryName, baseRepoConfig);
+      RepositoryConfig fromRepoConfig =
+          config
+              .getRepositoryConfig(originalFromRepositoryName)
+              .copyWithBranch(branchLabel)
+              .copyWithUrl(overrideUrl);
+      RepositoryType fromRepoType =
+          repositories.create(migrationConfig.getFromRepository(), fromRepoConfig);
 
-    RepositoryConfig baseRepoConfig = config.getRepositoryConfig(originalFromRepositoryName);
-    RepositoryType baseRepoType = repositories.create(originalFromRepositoryName, baseRepoConfig);
-    RepositoryConfig fromRepoConfig =
-        config
-            .getRepositoryConfig(originalFromRepositoryName)
-            .copyWithBranch(branchLabel)
-            .copyWithUrl(overrideUrl);
-    RepositoryType fromRepoType =
-        repositories.create(migrationConfig.getFromRepository(), fromRepoConfig);
+      List<Migration> migrations =
+          findMigrationsBetweenBranches(
+              migrationConfig.getFromRepository(),
+              migrationConfig.getToRepository(),
+              baseRepoType.revisionHistory(),
+              fromRepoType.revisionHistory(),
+              !migrationConfig.getSeparateRevisions());
 
-    List<Migration> migrations =
-        findMigrationsBetweenBranches(
-            migrationConfig.getFromRepository(),
-            migrationConfig.getToRepository(),
-            baseRepoType.revisionHistory(),
-            fromRepoType.revisionHistory(),
-            !migrationConfig.getSeparateRevisions());
-
-    if (migrations.isEmpty()) {
-      ui.message("No pending revisions to migrate in branch '%s' (as of %s)", branchLabel, "");
-      ui.popTask(migrationTask, "No migrations to process");
-      return 0;
-    }
-
-    RepositoryExpression toRepoExp = RepositoryExpression.create(migrationConfig.getToRepository());
-    Writer toWriter;
-    try {
-      toWriter = writerFactory.createWriter(toRepoExp, context);
-    } catch (WritingError e) {
-      throw new MoeProblem(e, "Couldn't create local repo %s: %s", toRepoExp, e.getMessage());
-    }
-
-    DraftRevision dr = null; // Store one draft revision to obtain workspace location for UI.
-    for (Migration migration : migrations) {
-      // For each migration, the reference to-codebase for inverse translation is the Writer,
-      // since it contains the latest changes (i.e. previous migrations) to the to-repository.
-      Expression referenceTargetCodebase =
-          RepositoryExpression.create(migrationConfig.getToRepository())
-              .withOption("localroot", toWriter.getRoot().getAbsolutePath());
-
-      Ui.Task performMigration =
-          ui.pushTask(
-              "perform_individual_migration",
-              "Performing individual migration '%s'",
-              migration.toString());
-
-      Revision mostRecentFromRev =
-          migration.fromRevisions().get(migration.fromRevisions().size() - 1);
-      Codebase fromCodebase;
-      try {
-        String toProjectSpace =
-            config.getRepositoryConfig(migration.toRepository()).getProjectSpace();
-        Expression fromExpression =
-            RepositoryExpression.create(migration.fromRepository())
-                .atRevision(mostRecentFromRev.revId())
-                .translateTo(toProjectSpace)
-                .withReferenceTargetCodebase(referenceTargetCodebase);
-        fromCodebase =
-            expressionEngine.createCodebase(
-                fromExpression,
-                contextWithForkedRepository(
-                    context, migrationConfig.getFromRepository(), fromRepoType));
-
-      } catch (CodebaseCreationError e) {
-        throw new MoeProblem("%s", e.getMessage());
+      if (migrations.isEmpty()) {
+        ui.message("No pending revisions to migrate in branch '%s' (as of %s)", branchLabel, "");
+        migrationTask.result().append("No migrations to process");
+        return 0; // autoclosed.
       }
-      ScrubberConfig scrubber =
-          config.findScrubberConfig(originalFromRepositoryName, migration.toRepository());
 
-      dr =
-          migrator.migrate(
-              migration,
-              fromRepoType,
-              fromCodebase,
-              mostRecentFromRev,
-              migrationConfig.getMetadataScrubberConfig(),
-              scrubber,
-              toWriter);
+      RepositoryExpression toRepoExp =
+          RepositoryExpression.create(migrationConfig.getToRepository());
+      Writer toWriter;
+      try {
+        toWriter = writerFactory.createWriter(toRepoExp, context);
+      } catch (WritingError e) {
+        throw new MoeProblem(e, "Couldn't create local repo %s: %s", toRepoExp, e.getMessage());
+      }
 
-      resultDirectory = toWriter.getRoot();
-      ui.popTaskAndPersist(performMigration, toWriter.getRoot()); // preserve toWriter
+      for (Migration migration : migrations) {
+        // For each migration, the reference to-codebase for inverse translation is the Writer,
+        // since it contains the latest changes (i.e. previous migrations) to the to-repository.
+        Expression referenceTargetCodebase =
+            RepositoryExpression.create(migrationConfig.getToRepository())
+                .withOption("localroot", toWriter.getRoot().getAbsolutePath());
+
+        try (Task performMigration =
+            ui.newTask(
+                "perform_individual_migration",
+                "Performing individual migration '%s'",
+                migration)) {
+
+          Revision mostRecentFromRev =
+              migration.fromRevisions().get(migration.fromRevisions().size() - 1);
+          Codebase fromCodebase;
+          try {
+            String toProjectSpace =
+                config.getRepositoryConfig(migration.toRepository()).getProjectSpace();
+            Expression fromExpression =
+                RepositoryExpression.create(migration.fromRepository())
+                    .atRevision(mostRecentFromRev.revId())
+                    .translateTo(toProjectSpace)
+                    .withReferenceTargetCodebase(referenceTargetCodebase);
+            fromCodebase =
+                expressionEngine.createCodebase(
+                    fromExpression,
+                    contextWithForkedRepository(
+                        context, migrationConfig.getFromRepository(), fromRepoType));
+
+          } catch (CodebaseCreationError e) {
+            throw new MoeProblem("%s", e.getMessage());
+          }
+          ScrubberConfig scrubber =
+              config.findScrubberConfig(originalFromRepositoryName, migration.toRepository());
+
+          DraftRevision dr =
+              migrator.migrate(
+                  migration,
+                  fromRepoType,
+                  fromCodebase,
+                  mostRecentFromRev,
+                  migrationConfig.getMetadataScrubberConfig(),
+                  scrubber,
+                  toWriter);
+          draftRevisionLocation = dr.getLocation();
+
+          resultDirectory = toWriter.getRoot();
+          performMigration.keep(toWriter); // promote this writer up.
+        }
+      }
+      toWriter.printPushMessage(ui);
+      migrationTask.keep(toWriter);
     }
-    toWriter.printPushMessage(ui);
-    ui.popTaskAndPersist(migrationTask, toWriter.getRoot());
     ui.message(
         "Created Draft workspace:\n%s in repository '%s'",
-        dr.getLocation(),
-        toRepoExp.getRepositoryName());
+        draftRevisionLocation, migrationConfig.getToRepository());
     return 0;
   }
 
@@ -326,9 +329,11 @@ public class MigrateBranchDirective extends Directive {
       RevisionHistory baseRevisions,
       RevisionHistory fromRevisions,
       boolean batchChanges) {
-    Ui.Task determineMigrationsTask = ui.pushTask("determind migrations", "Determine migrations");
-    List<Revision> toMigrate = findRevisionsToMigrate(ui, fromRevisions, baseRevisions);
-    ui.popTask(determineMigrationsTask, "");
+
+    List<Revision> toMigrate;
+    try (Task t = ui.newTask("determine migrations", "Determine migrations")) {
+      toMigrate = findRevisionsToMigrate(ui, fromRevisions, baseRevisions);
+    }
 
     Result equivMatch = migrator.matchEquivalences(baseRevisions, toRepoName);
 
@@ -384,44 +389,46 @@ public class MigrateBranchDirective extends Directive {
     Revision head = parentBranch.findHighestRevision(null);
     String parentRepositoryName = head.repositoryName();
 
-    Ui.Task ancestorTask =
-        ui.pushTask("scan_ancestor_branch", "Gathering revisions to consider migrating");
     Deque<Revision> revisionsToProcess = new ArrayDeque<>();
-    revisionsToProcess.add(head);
-    int count = 0;
-    while (!revisionsToProcess.isEmpty()) {
-      Revision revision = revisionsToProcess.remove();
-      if (!commitsInParentBranch.contains(revision.revId())) {
-        commitsInParentBranch.add(revision.revId());
-        RevisionMetadata metadata =
-            parentBranch.getMetadata(Revision.create(revision.revId(), parentRepositoryName));
-        if (metadata == null) {
-          throw new MoeProblem("Could not load revision metadata for %s", revision);
+    try (Task ancestorTask =
+        ui.newTask("scan_ancestor_branch", "Gathering revisions to consider migrating")) {
+      revisionsToProcess.add(head);
+      int count = 0;
+      while (!revisionsToProcess.isEmpty()) {
+        Revision revision = revisionsToProcess.remove();
+        if (!commitsInParentBranch.contains(revision.revId())) {
+          commitsInParentBranch.add(revision.revId());
+          RevisionMetadata metadata =
+              parentBranch.getMetadata(Revision.create(revision.revId(), parentRepositoryName));
+          if (metadata == null) {
+            throw new MoeProblem("Could not load revision metadata for %s", revision);
+          }
+          revisionsToProcess.addAll(metadata.parents());
+          count++;
         }
-        revisionsToProcess.addAll(metadata.parents());
-        count++;
       }
+      ancestorTask.result().append("Scanned revisions: " + count);
     }
-    ui.popTask(ancestorTask, "Scanned revisions: " + count);
 
-    Ui.Task migrationBranchTask = ui.pushTask("scan_target_branch", "Finding mergeable commits");
     LinkedHashSet<String> commitsNotInDestinationBranch = new LinkedHashSet<>();
-    revisionsToProcess = new ArrayDeque<>();
-    revisionsToProcess.add(branch.findHighestRevision(null)); // most recent.
+    try (Task t = ui.newTask("scan_target_branch", "Finding mergeable commits")) {
+      revisionsToProcess = new ArrayDeque<>();
+      revisionsToProcess.add(branch.findHighestRevision(null)); // most recent.
 
-    // Walk up the branch history until we get to a commit that is already in common.
-    while (!revisionsToProcess.isEmpty()) {
-      Revision revision = revisionsToProcess.remove();
-      RevisionMetadata metadata = branch.getMetadata(revision);
-      if (metadata == null) {
-        throw new MoeProblem("Revision %s did not appear in branch history as expected", revision);
-      }
-      if (!commitsInParentBranch.contains(revision.revId())) {
-        commitsNotInDestinationBranch.add(revision.revId());
-        revisionsToProcess.addAll(metadata.parents());
+      // Walk up the branch history until we get to a commit that is already in common.
+      while (!revisionsToProcess.isEmpty()) {
+        Revision revision = revisionsToProcess.remove();
+        RevisionMetadata metadata = branch.getMetadata(revision);
+        if (metadata == null) {
+          throw new MoeProblem(
+              "Revision %s did not appear in branch history as expected", revision);
+        }
+        if (!commitsInParentBranch.contains(revision.revId())) {
+          commitsNotInDestinationBranch.add(revision.revId());
+          revisionsToProcess.addAll(metadata.parents());
+        }
       }
     }
-    ui.popTask(migrationBranchTask, "");
 
     return commitsNotInDestinationBranch
         .stream()

@@ -1,6 +1,7 @@
 package com.google.devtools.moe.client.codebase;
 
 import com.google.devtools.moe.client.Ui;
+import com.google.devtools.moe.client.Ui.Task;
 import com.google.devtools.moe.client.codebase.expressions.TranslateExpression;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.translation.pipeline.TranslationPath;
@@ -39,24 +40,26 @@ public class TranslatedCodebaseProcessor implements CodebaseProcessor<TranslateE
           codebaseToTranslate.projectSpace(), toProjectSpace, context.translators().keySet());
     }
 
-    Ui.Task translateTask =
-        ui.pushTask(
+    try (Task translateTask =
+        ui.newTask(
             "translate",
             "Translating %s from project space \"%s\" to \"%s\"",
             codebaseToTranslate.path(),
             codebaseToTranslate.projectSpace(),
-            toProjectSpace);
+            toProjectSpace)) {
 
-    Codebase translatedCodebase =
-        translator.translate(codebaseToTranslate, expression.operation().term().options(), context);
+      Codebase translatedCodebase =
+          translator.translate(
+              codebaseToTranslate, expression.operation().term().options(), context);
 
-    // Don't mark the translated codebase for persistence if it wasn't allocated by the
-    // Translator.
-    if (translatedCodebase.equals(codebaseToTranslate)) {
-      ui.popTask(translateTask, translatedCodebase.path() + " (unmodified)");
-    } else {
-      ui.popTaskAndPersist(translateTask, translatedCodebase.path());
+      // Don't mark the translated codebase for persistence if it wasn't allocated by the
+      // Translator.
+      if (translatedCodebase.equals(codebaseToTranslate)) {
+        translateTask.result().append(translatedCodebase.path() + " (unmodified)");
+      } else {
+        translateTask.keep(translatedCodebase);
+      }
+      return translatedCodebase.copyWithExpression(expression).copyWithProjectSpace(toProjectSpace);
     }
-    return translatedCodebase.copyWithExpression(expression).copyWithProjectSpace(toProjectSpace);
   }
 }

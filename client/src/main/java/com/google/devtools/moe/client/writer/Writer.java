@@ -16,16 +16,19 @@
 
 package com.google.devtools.moe.client.writer;
 
+import static java.util.Arrays.asList;
+
 import com.google.devtools.moe.client.Ui;
+import com.google.devtools.moe.client.Ui.Keepable;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import java.io.File;
+import java.nio.file.Path;
+import java.util.Collection;
 import javax.annotation.Nullable;
 
-/**
- * An Writer is the interface to create a revision in MOE.
- */
-public interface Writer {
+/** An Writer is the interface to create a revision in MOE. */
+public interface Writer extends Keepable<Writer> {
   /**
    * Makes a draft revision in which the Source Control system behind this Writer contains c and
    * (optionally) metadata for the revision.
@@ -43,6 +46,11 @@ public interface Writer {
    * Returns a conceptual root for the writer.
    */
   File getRoot();
+
+  @Override
+  default Collection<Path> toKeep() {
+    return asList(getRoot().toPath());
+  }
 
   /** Print out (to Ui) instructions for pushing any changes in this Writer to the remote source. */
   void printPushMessage(Ui ui);

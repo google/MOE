@@ -16,10 +16,15 @@
 
 package com.google.devtools.moe.client.codebase;
 
+import static java.util.Arrays.asList;
+
 import com.google.auto.value.AutoValue;
 import com.google.devtools.moe.client.MoeProblem;
+import com.google.devtools.moe.client.Ui.Keepable;
 import com.google.devtools.moe.client.codebase.expressions.Expression;
 import java.io.File;
+import java.nio.file.Path;
+import java.util.Collection;
 
 /**
  * A Codebase is a set of Files and their contents.
@@ -28,8 +33,13 @@ import java.io.File;
  * came from.
  */
 @AutoValue
-public abstract class Codebase {
+public abstract class Codebase implements Keepable<Codebase> {
   public abstract File path();
+
+  @Override
+  public Collection<Path> toKeep() {
+    return asList(path().toPath());
+  }
 
   public abstract String projectSpace();
 

@@ -129,21 +129,21 @@ public class InverseTranslationPipeline implements TranslationPipeline {
     Codebase inverseTranslated = toTranslate;
 
     for (InverseTranslationStep inverseStep : inverseSteps) {
-      Task task =
-          ui.pushTask(
+      try (Task task =
+          ui.newTask(
               "inverseEdit",
               "Inverse-translating step %s by merging codebase %s onto %s",
               inverseStep.name(),
               referenceTargetCodebase,
-              referenceFromCodebase);
+              referenceFromCodebase)) {
 
-      inverseTranslated =
-          inverseStep
-              .getInverseEditor()
-              .inverseEdit(
-                  inverseTranslated, referenceFromCodebase, referenceTargetCodebase, options);
-
-      ui.popTaskAndPersist(task, inverseTranslated.path());
+        inverseTranslated =
+            inverseStep
+                .getInverseEditor()
+                .inverseEdit(
+                    inverseTranslated, referenceFromCodebase, referenceTargetCodebase, options);
+        task.keep(inverseTranslated);
+      }
       referenceFromCodebase = forwardTranslationStack.pop();
       referenceTargetCodebase = forwardTranslationStack.peek();
     }
@@ -156,15 +156,13 @@ public class InverseTranslationPipeline implements TranslationPipeline {
     Deque<Codebase> forwardTransStack = new ArrayDeque<>(forwardSteps.size() + 1);
 
     Codebase refTo;
-    try {
-      Task task =
-          ui.pushTask(
-              "refTo",
-              "Pushing to forward-translation stack: " + options.get("referenceTargetCodebase"));
+    try (Task task =
+        ui.newTask(
+            "refTo",
+            "Pushing to forward-translation stack: " + options.get("referenceTargetCodebase"))) {
       Expression expression = Parser.parseExpression(options.get("referenceTargetCodebase"));
       refTo = expressionEngine.createCodebase(expression, context);
-      forwardTransStack.push(refTo);
-      ui.popTaskAndPersist(task, refTo.path());
+      forwardTransStack.push(task.keep(refTo));
     } catch (ParseError e) {
       throw new CodebaseCreationError(e, "Couldn't parse in translation: %s", e);
     }
@@ -173,11 +171,11 @@ public class InverseTranslationPipeline implements TranslationPipeline {
     Expression forwardEditExp = refTo.expression();
     for (TranslationStep forwardStep : forwardSteps) {
       forwardEditExp = forwardEditExp.editWith(forwardStep.name, ImmutableMap.<String, String>of());
-      Task task =
-          ui.pushTask("edit", "Pushing to forward-translation stack: " + forwardEditExp);
-      refTo = forwardStep.editor.edit(refTo, options).copyWithExpression(forwardEditExp);
-      forwardTransStack.push(refTo);
-      ui.popTaskAndPersist(task, refTo.path());
+      try (Task task =
+          ui.newTask("edit", "Pushing to forward-translation stack: " + forwardEditExp)) {
+        refTo = forwardStep.editor.edit(refTo, options).copyWithExpression(forwardEditExp);
+        forwardTransStack.push(task.keep(refTo));
+      }
     }
 
     return forwardTransStack;

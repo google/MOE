@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
+import com.google.devtools.moe.client.Ui.Task;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreationError;
 import com.google.devtools.moe.client.codebase.ExpressionEngine;
@@ -118,123 +119,122 @@ public class MagicDirective extends Directive {
     ImmutableList.Builder<String> migrationsMadeBuilder = ImmutableList.builder();
 
     for (String migrationName : migrationNames) {
-      Ui.Task migrationTask =
-          ui.pushTask("perform_migration", "Performing migration '%s'", migrationName);
+      try (Task migrationTask =
+          ui.newTask("perform_migration", "Performing migration '%s'", migrationName)) {
 
-      MigrationConfig migrationConfig = context.migrationConfigs().get(migrationName);
-      if (migrationConfig == null) {
-        ui.message("No migration found with name %s... skipping.", migrationName);
-        continue;
-      }
-
-      RepositoryType fromRepositoryType =
-          context.getRepository(migrationConfig.getFromRepository());
-      List<Migration> migrations =
-          migrator.findMigrationsFromEquivalency(fromRepositoryType, migrationConfig);
-
-      if (migrations.isEmpty()) {
-        ui.message("No pending revisions to migrate for %s", migrationName);
-        continue;
-      }
-
-      RepositoryEquivalence lastRecordedEquivalence = migrations.get(0).sinceEquivalence();
-      RepositoryExpression targetRepositoryPointOfEquivalency =
-          RepositoryExpression.create(migrationConfig.getToRepository());
-      if (lastRecordedEquivalence != null) {
-        targetRepositoryPointOfEquivalency =
-            targetRepositoryPointOfEquivalency.atRevision(
-                lastRecordedEquivalence
-                    .getRevisionForRepository(migrationConfig.getToRepository())
-                    .revId());
-      }
-
-      Writer targetCodebaseWriter;
-      try {
-        targetCodebaseWriter =
-            writerFactory.createWriter(targetRepositoryPointOfEquivalency, context);
-      } catch (WritingError e) {
-        throw new MoeProblem(
-            "Couldn't create local repo %s: %s", targetRepositoryPointOfEquivalency, e);
-      }
-
-      DraftRevision draftRevision = null;
-      int currentlyPerformedMigration = 1; // To display to users.
-      for (Migration migration : migrations) {
-
-        // First check if we should even do this migration at all.
-        int skipped = 0;
-        for (Revision revision : migration.fromRevisions()) {
-          if (skipRevisions.contains(revision.toString())) {
-            skipped++;
-          }
-        }
-        if (skipped > 0) {
-          if (skipped != migration.fromRevisions().size()) {
-            throw new MoeProblem(
-                "Cannot skip subset of revisions in a single migration: %s", migration);
-          }
-          ui.message(
-              "Skipping %s/%s migration `%s`",
-              currentlyPerformedMigration++,
-              migrations.size(),
-              migration);
+        MigrationConfig migrationConfig = context.migrationConfigs().get(migrationName);
+        if (migrationConfig == null) {
+          ui.message("No migration found with name %s... skipping.", migrationName);
           continue;
         }
 
-        // For each migration, the reference to-codebase for inverse translation is the Writer,
-        // since it contains the latest changes (i.e. previous migrations) to the to-repository.
-        Expression referenceTargetCodebase =
-            RepositoryExpression.create(migrationConfig.getToRepository())
-                .withOption("localroot", targetCodebaseWriter.getRoot().getAbsolutePath());
+        RepositoryType fromRepositoryType =
+            context.getRepository(migrationConfig.getFromRepository());
+        List<Migration> migrations =
+            migrator.findMigrationsFromEquivalency(fromRepositoryType, migrationConfig);
 
-        Ui.Task oneMigrationTask =
-            ui.pushTask(
-                "perform_individual_migration",
-                "Performing %s/%s migration '%s'",
-                currentlyPerformedMigration++,
-                migrations.size(),
-                migration);
-
-        Revision mostRecentFromRev =
-            migration.fromRevisions().get(migration.fromRevisions().size() - 1);
-        Codebase fromCodebase;
-        try {
-          String targetProjectSpace =
-              config.getRepositoryConfig(migration.toRepository()).getProjectSpace();
-          Expression fromExpression =
-              RepositoryExpression.create(migration.fromRepository())
-                  .atRevision(mostRecentFromRev.revId())
-                  .translateTo(targetProjectSpace)
-                  .withReferenceTargetCodebase(referenceTargetCodebase);
-          fromCodebase = expressionEngine.createCodebase(fromExpression, context);
-
-        } catch (CodebaseCreationError e) {
-          throw new MoeProblem("%s", e.getMessage());
+        if (migrations.isEmpty()) {
+          ui.message("No pending revisions to migrate for %s", migrationName);
+          continue;
         }
 
-        RepositoryType fromRepoType = context.getRepository(migrationConfig.getFromRepository());
-        ScrubberConfig scrubber =
-            config.findScrubberConfig(migration.fromRepository(), migration.toRepository());
-        draftRevision =
-            migrator.migrate(
-                migration,
-                fromRepoType,
-                fromCodebase,
-                mostRecentFromRev,
-                migrationConfig.getMetadataScrubberConfig(),
-                scrubber,
-                targetCodebaseWriter);
+        RepositoryEquivalence lastRecordedEquivalence = migrations.get(0).sinceEquivalence();
+        RepositoryExpression targetRepositoryPointOfEquivalency =
+            RepositoryExpression.create(migrationConfig.getToRepository());
+        if (lastRecordedEquivalence != null) {
+          targetRepositoryPointOfEquivalency =
+              targetRepositoryPointOfEquivalency.atRevision(
+                  lastRecordedEquivalence
+                      .getRevisionForRepository(migrationConfig.getToRepository())
+                      .revId());
+        }
 
-        ui.popTask(oneMigrationTask, "");
+        Writer targetCodebaseWriter;
+        try {
+          targetCodebaseWriter =
+              migrationTask.keep(
+                  writerFactory.createWriter(targetRepositoryPointOfEquivalency, context));
+        } catch (WritingError e) {
+          throw new MoeProblem(
+              "Couldn't create local repo %s: %s", targetRepositoryPointOfEquivalency, e);
+        }
+
+        DraftRevision draftRevision = null;
+        int currentlyPerformedMigration = 1; // To display to users.
+        for (Migration migration : migrations) {
+
+          // First check if we should even do this migration at all.
+          int skipped = 0;
+          for (Revision revision : migration.fromRevisions()) {
+            if (skipRevisions.contains(revision.toString())) {
+              skipped++;
+            }
+          }
+          if (skipped > 0) {
+            if (skipped != migration.fromRevisions().size()) {
+              throw new MoeProblem(
+                  "Cannot skip subset of revisions in a single migration: %s", migration);
+            }
+            ui.message(
+                "Skipping %s/%s migration `%s`",
+                currentlyPerformedMigration++, migrations.size(), migration);
+            continue;
+          }
+
+          // For each migration, the reference to-codebase for inverse translation is the Writer,
+          // since it contains the latest changes (i.e. previous migrations) to the to-repository.
+          Expression referenceTargetCodebase =
+              RepositoryExpression.create(migrationConfig.getToRepository())
+                  .withOption("localroot", targetCodebaseWriter.getRoot().getAbsolutePath());
+
+          try (Task oneMigrationTask =
+              ui.newTask(
+                  "perform_individual_migration",
+                  "Performing %s/%s migration '%s'",
+                  currentlyPerformedMigration++,
+                  migrations.size(),
+                  migration)) {
+
+            Revision mostRecentFromRev =
+                migration.fromRevisions().get(migration.fromRevisions().size() - 1);
+            Codebase fromCodebase;
+            try {
+              String targetProjectSpace =
+                  config.getRepositoryConfig(migration.toRepository()).getProjectSpace();
+              Expression fromExpression =
+                  RepositoryExpression.create(migration.fromRepository())
+                      .atRevision(mostRecentFromRev.revId())
+                      .translateTo(targetProjectSpace)
+                      .withReferenceTargetCodebase(referenceTargetCodebase);
+              fromCodebase = expressionEngine.createCodebase(fromExpression, context);
+
+            } catch (CodebaseCreationError e) {
+              throw new MoeProblem("%s", e.getMessage());
+            }
+
+            RepositoryType fromRepoType =
+                context.getRepository(migrationConfig.getFromRepository());
+            ScrubberConfig scrubber =
+                config.findScrubberConfig(migration.fromRepository(), migration.toRepository());
+            draftRevision =
+                migrator.migrate(
+                    migration,
+                    fromRepoType,
+                    fromCodebase,
+                    mostRecentFromRev,
+                    migrationConfig.getMetadataScrubberConfig(),
+                    scrubber,
+                    targetCodebaseWriter);
+          }
+        }
+
+        // TODO(user): Add properly formatted one-DraftRevison-per-Migration message for svn.
+        migrationsMadeBuilder.add(
+            String.format(
+                "%s in repository %s",
+                draftRevision.getLocation(), migrationConfig.getToRepository()));
+        targetCodebaseWriter.printPushMessage(ui);
       }
-
-      // TODO(user): Add properly formatted one-DraftRevison-per-Migration message for svn.
-      migrationsMadeBuilder.add(
-          String.format(
-              "%s in repository %s",
-              draftRevision.getLocation(), migrationConfig.getToRepository()));
-      targetCodebaseWriter.printPushMessage(ui);
-      ui.popTaskAndPersist(migrationTask, targetCodebaseWriter.getRoot());
     }
 
     List<String> migrationsMade = migrationsMadeBuilder.build();

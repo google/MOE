@@ -45,7 +45,6 @@ public class CreateCodebaseDirective extends Directive {
 
   @Option(
     name = "--tarfile",
-    required = false,
     usage = "Path where tarfile of the resulting codebase should be written"
   )
   String tarfile = null;
@@ -66,22 +65,16 @@ public class CreateCodebaseDirective extends Directive {
 
   @Override
   protected int performDirectiveBehavior() {
-    Task createCodebaseTask = ui.pushTask("create_codebase", "Creating codebase %s", codebase);
-    Codebase c;
-    try {
-      c = expressionEngine.createCodebase(Parser.parseExpression(codebase), context);
+    try (Task task = ui.newTask("create_codebase", "Creating codebase %s", codebase)) {
+      Codebase realCodebase =
+          task.keep(expressionEngine.createCodebase(Parser.parseExpression(codebase), context));
+      ui.message("Codebase \"%s\" created at %s", realCodebase, realCodebase.path());
+      maybeWriteTar(realCodebase);
+    } catch (CommandException e) {
+      throw new MoeProblem(e, "Error creating codebase tarfile");
     } catch (ParseError | CodebaseCreationError e) {
       throw new MoeProblem(e, "Error creating codebase");
     }
-    ui.message("Codebase \"%s\" created at %s", c, c.path());
-
-    try {
-      maybeWriteTar(c);
-    } catch (CommandException e) {
-      throw new MoeProblem(e, "Error creating codebase tarfile");
-    }
-
-    ui.popTaskAndPersist(createCodebaseTask, c.path());
     return 0;
   }
 

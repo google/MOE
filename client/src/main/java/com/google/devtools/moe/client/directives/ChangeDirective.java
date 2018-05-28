@@ -68,38 +68,37 @@ public class ChangeDirective extends Directive {
 
   @Override
   protected int performDirectiveBehavior() {
-    Task changeTask =
-        ui.pushTask(
+    try (Task changeTask =
+        ui.newTask(
             "create_change",
             "Creating a change in \"%s\" with contents \"%s\"",
             destination,
-            codebase);
+            codebase)) {
 
-    Codebase c;
-    try {
-      c = expressionEngine.createCodebase(Parser.parseExpression(codebase), context);
-    } catch (ParseError e) {
-      throw new MoeProblem(e, "Error parsing codebase");
-    } catch (CodebaseCreationError e) {
-      throw new MoeProblem(e, "Error creating codebase");
+      Codebase c;
+      try {
+        c = expressionEngine.createCodebase(Parser.parseExpression(codebase), context);
+      } catch (ParseError e) {
+        throw new MoeProblem(e, "Error parsing codebase");
+      } catch (CodebaseCreationError e) {
+        throw new MoeProblem(e, "Error creating codebase");
+      }
+
+      Writer writer;
+      try {
+        RepositoryExpression destinationExpression = Parser.parseRepositoryExpression(destination);
+        writer = changeTask.keep(writerFactory.createWriter(destinationExpression, context));
+      } catch (ParseError e) {
+        throw new MoeProblem(e, "Error parsing change destination");
+      } catch (WritingError e) {
+        throw new MoeProblem(e, "Error writing change");
+      }
+
+      DraftRevision r = revisionFactory.create(c, writer, null);
+      if (r == null) {
+        return 1;
+      }
     }
-
-    Writer writer;
-    try {
-      RepositoryExpression destinationExpression = Parser.parseRepositoryExpression(destination);
-      writer = writerFactory.createWriter(destinationExpression, context);
-    } catch (ParseError e) {
-      throw new MoeProblem(e, "Error parsing change destination");
-    } catch (WritingError e) {
-      throw new MoeProblem(e, "Error writing change");
-    }
-
-    DraftRevision r = revisionFactory.create(c, writer, null);
-    if (r == null) {
-      return 1;
-    }
-
-    ui.popTaskAndPersist(changeTask, writer.getRoot());
     return 0;
   }
 

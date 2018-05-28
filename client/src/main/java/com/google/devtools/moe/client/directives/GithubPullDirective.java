@@ -26,16 +26,13 @@ import com.google.devtools.moe.client.github.GithubClient;
 import com.google.devtools.moe.client.github.PullRequestUrl;
 import com.google.devtools.moe.client.project.ProjectConfig;
 import com.google.devtools.moe.client.project.RepositoryConfig;
-
 import dagger.Provides;
 import dagger.multibindings.IntoMap;
 import dagger.multibindings.StringKey;
-
-import org.kohsuke.args4j.Option;
-
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.kohsuke.args4j.Option;
 
 /**
  * Extracts branch metadata from a github pull request and uses this information to
@@ -71,49 +68,48 @@ public class GithubPullDirective extends Directive {
 
   @Override
   protected int performDirectiveBehavior() {
-    Task task =
-        ui.pushTask("github-import", "Import a github pull-request and stage it in a workspace.");
-    PullRequest metadata = client.getPullRequest(url);
-    if (debug()) {
-      // TODO(cgruber) Re-work debug mode into ui messenger when flags are separated from directives
-      ui.message("DEBUG: Pull Request Metadata: '%s'", metadata);
-    }
-    if (metadata.merged()) {
-      throw new MoeProblem("This pull request has already been merged on github: '%s'", url);
-    }
-    switch (metadata.mergeableState()) {
-      case CLEAN:
-        ui.message("Pull request %s is ready to merge", metadata.number());
-        break;
-      case UNSTABLE:
-        ui.message(
-            "WARNING: Pull request %s is ready to merge, but GitHub is reporting it as failing. "
-                + "Continuing, but this branch may have problems. ",
-            metadata.number());
-        break;
-      default:
-        throw new MoeProblem(
-            "Pull request %s is in an indeterminate state. "
-                + "Please please check the pull request status, "
-                + "perform any needed rebase/merge, and re-run",
-            metadata.number());
-    }
+    try (Task task =
+        ui.newTask("github-import", "Import a github pull-request and stage it in a workspace.")) {
+      PullRequest metadata = client.getPullRequest(url);
+      if (debug()) {
+        // TODO(cgruber) Re-work debug mode into ui messenger when flags are separated from
+        // directives
+        ui.message("DEBUG: Pull Request Metadata: '%s'", metadata);
+      }
+      if (metadata.merged()) {
+        throw new MoeProblem("This pull request has already been merged on github: '%s'", url);
+      }
+      switch (metadata.mergeableState()) {
+        case CLEAN:
+          ui.message("Pull request %s is ready to merge", metadata.number());
+          break;
+        case UNSTABLE:
+          ui.message(
+              "WARNING: Pull request %s is ready to merge, but GitHub is reporting it as failing. "
+                  + "Continuing, but this branch may have problems. ",
+              metadata.number());
+          break;
+        default:
+          throw new MoeProblem(
+              "Pull request %s is in an indeterminate state. "
+                  + "Please please check the pull request status, "
+                  + "perform any needed rebase/merge, and re-run",
+              metadata.number());
+      }
 
-
-    String repoConfigName = findRepoConfig(config.repositories(), metadata);
-    ui.message("Using '%s' as the source repository.", repoConfigName);
-    int result =
-        delegate.performBranchMigration(
-            metadata.head().repo().owner().login() + "_" + metadata.head().ref(),
-            repoConfigName,
-            metadata.head().ref(),
-            metadata.head().repo().cloneUrl());
-    if (delegate.resultDirectory != null) {
-      ui.popTaskAndPersist(task, delegate.resultDirectory);
-    } else {
-      ui.popTask(task, "");
+      String repoConfigName = findRepoConfig(config.repositories(), metadata);
+      ui.message("Using '%s' as the source repository.", repoConfigName);
+      int result =
+          delegate.performBranchMigration(
+              metadata.head().repo().owner().login() + "_" + metadata.head().ref(),
+              repoConfigName,
+              metadata.head().ref(),
+              metadata.head().repo().cloneUrl());
+      if (delegate.resultDirectory != null) {
+        task.keep(delegate.resultDirectory);
+      }
+      return result;
     }
-    return result;
   }
 
   /**

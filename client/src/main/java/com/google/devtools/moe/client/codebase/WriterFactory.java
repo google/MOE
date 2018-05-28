@@ -2,6 +2,7 @@ package com.google.devtools.moe.client.codebase;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.devtools.moe.client.Ui;
+import com.google.devtools.moe.client.Ui.Task;
 import com.google.devtools.moe.client.codebase.expressions.RepositoryExpression;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.RepositoryType;
@@ -37,9 +38,8 @@ public class WriterFactory {
     RepositoryType repositoryType = context.getRepository(expression.term().identifier());
     WriterCreator wc = repositoryType.writerCreator();
 
-    Ui.Task t = ui.pushTask("create_writer", "Creating Writer \"%s\"", expression.term());
-    Writer writer = wc.create(expression.term().options());
-    ui.popTaskAndPersist(t, writer.getRoot());
-    return writer;
+    try (Task task = ui.newTask("create_writer", "Creating Writer \"%s\"", expression.term())) {
+      return task.keep(wc.create(expression.term().options()));
+    }
   }
 }

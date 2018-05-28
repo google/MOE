@@ -1,6 +1,7 @@
 package com.google.devtools.moe.client.codebase;
 
 import com.google.devtools.moe.client.Ui;
+import com.google.devtools.moe.client.Ui.Task;
 import com.google.devtools.moe.client.codebase.expressions.EditExpression;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.translation.editors.Editor;
@@ -30,13 +31,11 @@ public class EditedCodebaseProcessor implements CodebaseProcessor<EditExpression
       throw new CodebaseCreationError("no editor %s", editorName);
     }
 
-    Ui.Task editTask =
-        ui.pushTask(
-            "edit", "Editing %s with editor %s", codebaseToEdit.path(), editor.getDescription());
-
-    Codebase editedCodebase = editor.edit(codebaseToEdit, expression.operation().term().options());
-
-    ui.popTaskAndPersist(editTask, editedCodebase.path());
-    return editedCodebase.copyWithExpression(expression);
+    try (Task task =
+        ui.newTask(
+            "edit", "Editing %s with editor %s", codebaseToEdit.path(), editor.getDescription())) {
+      return task.keep(editor.edit(codebaseToEdit, expression.operation().term().options()))
+          .copyWithExpression(expression);
+    }
   }
 }

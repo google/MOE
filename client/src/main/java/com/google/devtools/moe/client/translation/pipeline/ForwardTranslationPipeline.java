@@ -17,6 +17,7 @@
 package com.google.devtools.moe.client.translation.pipeline;
 
 import com.google.devtools.moe.client.Ui;
+import com.google.devtools.moe.client.Ui.Task;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.project.ProjectContext;
 import java.util.List;
@@ -41,10 +42,11 @@ public class ForwardTranslationPipeline implements TranslationPipeline {
       Codebase toTranslate, Map<String, String> options, ProjectContext context) {
     Codebase translated = toTranslate;
     for (TranslationStep s : steps) {
-      Ui.Task editTask = ui.pushTask("edit", "Translation editor: " + s.name);
-      // Pass the translation options to each editor.
-      translated = s.editor.edit(translated, options);
-      ui.popTaskAndPersist(editTask, translated.path());
+      // TODO(cgruber) use streams here.
+      try (Task task = ui.newTask("edit", "Translation editor: " + s.name)) {
+        // Pass the translation options to each editor.
+        translated = task.keep(s.editor.edit(translated, options));
+      }
     }
     return translated;
   }

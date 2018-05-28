@@ -16,21 +16,29 @@
 
 package com.google.devtools.moe.client;
 
+import static com.google.common.base.Strings.repeat;
+
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.devtools.moe.client.FileSystem.Lifetime;
 import com.google.devtools.moe.client.qualifiers.Flag;
 import dagger.Provides;
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
+import java.nio.file.Path;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Deque;
+import java.util.List;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import org.joda.time.DateTime;
@@ -48,8 +56,8 @@ public class Ui {
   public static final String MOE_TERMINATION_TASK_NAME = "moe_termination";
 
   private final PrintStream out;
-  private final Deque<Task> stack = new ArrayDeque<Task>();
-  private final boolean trace;
+  private final Deque<Task> tasks;
+  private final boolean shouldTrace;
 
   // We store the task that is the current output, if any, so that we can special case a Task that
   // is popped right after it is pushed. In this case, we can output: "Doing...Done" on one line.
@@ -66,14 +74,24 @@ public class Ui {
   }
 
   @Inject
-  public Ui(OutputStream out, FileSystem fileSystem, @Flag("trace") boolean trace) {
+  public Ui(OutputStream out, FileSystem fileSystem, @Flag("trace") boolean shouldTrace) {
+    this(out, fileSystem, shouldTrace, new ArrayDeque<>());
+  }
+
+  @VisibleForTesting
+  public Ui(
+      OutputStream out,
+      FileSystem fileSystem,
+      @Flag("trace") boolean shouldTrace,
+      Deque<Task> tasks) {
     try {
       this.out = new PrintStream(out, /*autoFlush*/ true, "UTF-8");
     } catch (UnsupportedEncodingException e) {
       throw new MoeProblem(e, "Invalid character set.");
     }
-    this.trace = trace;
+    this.shouldTrace = shouldTrace;
     this.fileSystem = fileSystem;
+    this.tasks = tasks;
   }
 
   /**
@@ -87,8 +105,11 @@ public class Ui {
     currentOutput = null;
   }
 
-  private String indent(String msg) {
-    String indentation = Strings.repeat("  ", stack.size());
+  private String indent(CharSequence msg) {
+    String indentation =
+        this.shouldTrace
+            ? repeat("  ", tasks.size()) // use all tasks, including trace tasks.
+            : repeat("  ", (int) tasks.stream().filter(t -> !t.traceOnly).count());
     return indentation + Joiner.on("\n" + indentation).join(Splitter.on('\n').split(msg));
   }
 
@@ -97,20 +118,20 @@ public class Ui {
     out.println(indent(String.format(msg, args)));
   }
 
-
-  public static class Task {
+  public static class Task implements Closeable {
+    public final Ui ui;
     public final String taskName;
     public final String description;
+    public final boolean traceOnly;
     public final DateTime start = DateTime.now();
+    public final StringBuilder result = new StringBuilder();
+    private final List<File> kept = new ArrayList<>();
 
-    public Task(String taskName, String description) {
+    Task(Ui ui, String taskName, boolean traceOnly, String descriptionFormat, Object... args) {
+      ui.tasks.push(this);
+      this.ui = ui;
       this.taskName = taskName;
-      this.description = description;
-    }
-
-    public Task(String taskName, String descriptionFormat, Object... args) {
-      this.taskName = taskName;
-      // TODO(cgruber) make this lazy once Task is an autovalue.
+      this.traceOnly = traceOnly;
       this.description = String.format(descriptionFormat, args);
     }
 
@@ -122,6 +143,118 @@ public class Ui {
     public Duration duration() {
       return new Duration(start, DateTime.now());
     }
+
+    public StringBuilder result() {
+      return result;
+    }
+
+    /**
+     * Pops a task from the Task Stack, persisting any "kept" Files beyond this Task. In general,
+     * use this if you call {@link FileSystem#getTemporaryDirectory(String, Lifetime)} within a Task
+     * and need to keep the resulting temp dir past completion of this Task.
+     *
+     * @see #keep(File)
+     */
+    @Override
+    public void close() {
+      result.append(kept.stream().map(f -> f.getAbsolutePath()).collect(Collectors.joining(",")));
+      if (ui.tasks.isEmpty()) {
+        throw new MoeProblem("Tried to end task %s, but stack is empty", taskName);
+      }
+
+      Task current = ui.tasks.pop();
+
+      if (current != this) {
+        throw new MoeProblem(
+            "Tried to end task %s, but the current task was: %s", taskName, current);
+      }
+
+      if (ui.fileSystem != null && !this.traceOnly) {
+        try {
+          ui.fileSystem.cleanUpTempDirs();
+        } catch (IOException ioEx) {
+          throw new MoeProblem(ioEx, "Error cleaning up temp dirs.");
+        }
+      }
+
+      if (ui.shouldTrace || !this.traceOnly) {
+        if (result.length() == 0) {
+          result.append("Done");
+        }
+        if (ui.shouldTrace) {
+          result.append(" [").append(duration().getMillis()).append("ms]");
+        }
+        String output =
+            ui.currentOutput == this
+                ? this.result.toString() // The last thing we printed was starting this task
+                : ui.indent("DONE: " + description + ": " + result);
+
+        ui.out.println(output);
+      }
+      ui.currentOutput = null;
+    }
+
+    /**
+     * Keep the key files of a resource. This will execute {@link #keep(File)} on each path in the
+     * returned iterable.
+     */
+    public <T extends Keepable<T>> T keep(T toKeep) {
+      Collection<Path> paths = toKeep.toKeep();
+      paths.forEach(path -> this.keep(path));
+      return toKeep;
+    }
+
+    /**
+     * Keep a file past the life of this task (specifically don't clean up the supplied file when
+     * this task is closed).
+     *
+     * <p>If there is a parent Task on the stack after the one being popped here, then {@code file}
+     * will be cleaned up when the parent Task is popped (unless it's kept within that Task too). If
+     * there is no parent Task, then {@code file} will be persisted beyond MOE execution. So any
+     * results persisted beyond a top-level Task constitute outputs of MOE execution.
+     */
+    public Path keep(Path toKeep) {
+      return keep(toKeep.toFile()).toPath();
+    }
+
+    /**
+     * Keep a file past the life of this task (specifically don't clean up the supplied file when
+     * this task is closed).
+     *
+     * <p>If there is a parent Task on the stack after the one being popped here, then {@code file}
+     * will be cleaned up when the parent Task is popped (unless it's kept within that Task too). If
+     * there is no parent Task, then {@code file} will be persisted beyond MOE execution. So any
+     * results persisted beyond a top-level Task constitute outputs of MOE execution.
+     */
+    public File keep(File toKeep) {
+      kept.add(toKeep);
+      if (ui.fileSystem != null) {
+        Lifetime newLifetime;
+        if (ui.tasks.size() == 1) {
+          newLifetime = Lifetimes.persistent();
+        } else {
+          Task parentTask = Iterables.get(ui.tasks, 1);
+          newLifetime = new TaskLifetime(parentTask, ui);
+        }
+        ui.fileSystem.setLifetime(toKeep, newLifetime);
+      }
+      return toKeep;
+    }
+  }
+
+  /**
+   * Represents a resource that has specific paths which may need to be omitted from filesystem
+   * cleanup.
+   */
+  public interface Keepable<T extends Keepable<T>> {
+    /** Return any resources that need to be omitted from cleanup by a task. */
+    Collection<Path> toKeep();
+
+    /** A convenience method to allow chaining to work cleanly, while still using the keep apis. */
+    @SuppressWarnings("unchecked") // self type.
+    default T keep(Task task) {
+      return task.keep((T) this);
+    }
   }
 
   /**
@@ -130,96 +263,48 @@ public class Ui {
    * <p>MOE's UI operates on a stack model. Tasks get pushed onto the stack and then what is popped
    * must be the top task on the stack, allowing nesting only.
    *
-   * @param taskName  the name of the task; should be sensical to a computer
-   * @param descriptionFormat  a String.format() template for the description of what MOE is
-   *     about to do, suitable for a user.
-   * @param args  arguments which will be used to format the descriptionFormat template
-   *
-   * @returns the Task created
+   * @param taskName the name of the task; should be sensical to a computer
+   * @param descriptionFormat a String.format() template for the description of what MOE is about to
+   *     do, suitable for a user.
+   * @param args arguments which will be used to format the descriptionFormat template
+   * @return the Task created
    */
-  public Task pushTask(String taskName, String descriptionFormat, Object... args) {
-    clearOutput();
-    String description = String.format(descriptionFormat, args);
-    String indented = indent(description + "... ");
-    out.print(indented);
-    Task t = new Task(taskName, descriptionFormat, args);
-    stack.push(t);
-    currentOutput = t;
-    return t;
+  public Task newTask(String taskName, String descriptionFormat, Object... args) {
+    return newTask(taskName, false, descriptionFormat, args);
   }
 
   /**
-   * Pops a task from the Task Stack. No files or directories are persisted beyond this Task. After
-   * the Task is popped, temp dirs are cleaned up via {@link FileSystem#cleanUpTempDirs()}.
+   * Pushes a task onto the Task Stack.
    *
-   * @param task  the task to pop. This must be the task on the top of the stack.
-   * @param result  the result of the task, if applicable, or "".
-   * @throws MoeProblem  if task is not on the top of the stack
-   */
-  public void popTask(Task task, String result) {
-    if (stack.isEmpty()) {
-      throw new MoeProblem("Tried to end task %s, but stack is empty", task.taskName);
-    }
-
-    Task top = stack.pop();
-
-    if (top != task) {
-      throw new MoeProblem("Tried to end task %s, but top level task was: %s", task.taskName, top);
-    }
-
-    if (fileSystem != null) {
-      try {
-        fileSystem.cleanUpTempDirs();
-      } catch (IOException ioEx) {
-        throw new MoeProblem(ioEx, "Error cleaning up temp dirs.");
-      }
-    }
-
-    if (result.isEmpty()) {
-      result = "Done";
-    }
-    if (trace) {
-      result = result + " [" + task.duration().getMillis() + "ms]";
-    }
-    if (currentOutput == task) {
-      // The last thing we printed was starting this task
-      out.println(result);
-    } else {
-      // We need to print the description again
-      out.println(indent("DONE: " + task.description + ": " + result));
-    }
-    currentOutput = null;
-  }
-
-  /**
-   * Pops a task from the Task Stack, persisting the given File beyond this Task. In general, use
-   * this if you call {@link FileSystem#getTemporaryDirectory(String, Lifetime)} within a Task and
-   * need to keep the resulting temp dir past completion of this Task.
+   * <p>MOE's UI operates on a stack model. Tasks get pushed onto the stack and then what is popped
+   * must be the top task on the stack, allowing nesting only.
    *
-   * If there is a parent Task on the stack after the one being popped here, then
-   * {@code persistentResult} will be cleaned up when the parent Task is popped (unless it's
-   * persisted within that Task too). If there is no parent Task, then {@code persistentResult}
-   * will be persisted beyond MOE execution. So any results persisted beyond a top-level Task
-   * constitute outputs of MOE execution.
+   * <p>Tasks generally clean up after themselves, unless their completion preserves a file created.
+   * The {@code trace} parameter both disables this cleanup. It also disables output unless the
+   * --trace flag is set.
+   *
+   * @param taskName the name of the task; should be sensical to a computer
+   * @param traceTask Whether this task should report output only with --trace
+   * @param descriptionFormat a String.format() template for the description of what MOE is about to
+   *     do, suitable for a user.
+   * @param args arguments which will be used to format the descriptionFormat template
+   * @return the Task created
    */
-  public void popTaskAndPersist(Task task, File persistentResult) {
-    if (fileSystem != null) {
-      Lifetime newLifetime;
-      if (stack.size() == 1) {
-        newLifetime = Lifetimes.persistent();
-      } else {
-        Task parentTask = Iterables.get(stack, 1);
-        newLifetime = new TaskLifetime(parentTask);
-      }
-      fileSystem.setLifetime(persistentResult, newLifetime);
+  public Task newTask(
+      String taskName, boolean traceTask, String descriptionFormat, Object... args) {
+    // If not a trace task, or if --trace is enabled.
+    if (this.shouldTrace || !traceTask) {
+      clearOutput();
+      String description = String.format(descriptionFormat, args);
+      String indented = indent(description + "... ");
+      out.print(indented);
     }
-
-    popTask(task, persistentResult.getAbsolutePath());
+    return currentOutput = new Task(this, taskName, traceTask, descriptionFormat, args);
   }
 
   Lifetime currentTaskLifetime() {
-    Preconditions.checkState(!stack.isEmpty());
-    return new TaskLifetime(stack.peek());
+    Preconditions.checkState(!tasks.isEmpty());
+    return new TaskLifetime(tasks.peek(), this);
   }
 
   Lifetime moeExecutionLifetime() {
@@ -229,17 +314,19 @@ public class Ui {
   /**
    * A {@code Lifetime} for a temp dir that should be cleaned up when the given Task is completed.
    */
-  private class TaskLifetime implements Lifetime {
+  private static class TaskLifetime implements Lifetime {
 
     private final Task task;
+    private final Ui ui;
 
-    TaskLifetime(Task task) {
+    TaskLifetime(Task task, Ui ui) {
+      this.ui = ui;
       this.task = task;
     }
 
     @Override
     public boolean shouldCleanUp() {
-      return !stack.contains(task);
+      return !ui.tasks.contains(task);
     }
   }
 
@@ -250,7 +337,7 @@ public class Ui {
 
     @Override
     public boolean shouldCleanUp() {
-      return !stack.isEmpty() && stack.peek().taskName.equals(MOE_TERMINATION_TASK_NAME);
+      return !tasks.isEmpty() && tasks.peek().taskName.equals(MOE_TERMINATION_TASK_NAME);
     }
   }
 
@@ -262,6 +349,7 @@ public class Ui {
   public static class UiModule {
     @Provides
     @Singleton
+    @SuppressWarnings("CloseableProvides") // Provided for the life of the application.
     public OutputStream uiOutputStream() {
       return System.err;
     }

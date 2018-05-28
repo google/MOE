@@ -18,6 +18,7 @@ package com.google.devtools.moe.client.project;
 
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Ui;
+import com.google.devtools.moe.client.Ui.Task;
 import com.google.devtools.moe.client.codebase.ExpressionEngine;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.translation.editors.Editors;
@@ -45,16 +46,11 @@ public class FileReadingProjectContextFactory extends ProjectContextFactory {
   @Override
   public ProjectConfig loadConfiguration(String configFilename) throws InvalidProject {
     String configText;
-    Ui.Task task = ui.pushTask("read_config", "Reading config file from %s", configFilename);
-    try {
-      try {
-        configText = fileSystem.fileToString(new File(configFilename));
-      } catch (IOException e) {
-        throw new InvalidProject("Config File \"" + configFilename + "\" not accessible.");
-      }
+    try (Task t = ui.newTask("read_config", "Reading config file from %s", configFilename)) {
+      configText = fileSystem.fileToString(new File(configFilename));
       return ProjectConfig.parse(configText);
-    } finally {
-      ui.popTask(task, "");
+    } catch (IOException e) {
+      throw new InvalidProject("Config File \"" + configFilename + "\" not accessible.");
     }
   }
 
@@ -73,15 +69,12 @@ public class FileReadingProjectContextFactory extends ProjectContextFactory {
   private UsernamesConfig parseUsernamesConfig(String usernamesFilePath) {
     File usernamesFile = new File(usernamesFilePath);
 
-    Ui.Task task = ui.pushTask(
-        "read_usernames_file", "Reading usernames file from %s", usernamesFilePath);
-    try {
+    try (Task t =
+        ui.newTask("read_usernames_file", "Reading usernames file from %s", usernamesFilePath)) {
       return gson.fromJson(fileSystem.fileToString(usernamesFile), UsernamesConfig.class);
     } catch (IOException exception) {
       throw new InvalidProject(
           "File " + usernamesFilePath + " referenced by usernames_file not found.");
-    } finally {
-      ui.popTask(task, "");
     }
   }
 }
