@@ -270,6 +270,7 @@ public class Parser {
     result.wordChars('a', 'z');
     result.wordChars('A', 'Z');
     result.wordChars('0', '9');
+    result.wordChars('_', '_');
     result.whitespaceChars(0, 32);
     result.quoteChar('"');
 
