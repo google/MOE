@@ -16,6 +16,7 @@
 
 package com.google.devtools.moe.client;
 
+import static com.google.common.truth.Truth.assertThat;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.collect.ImmutableSet;
@@ -26,161 +27,155 @@ import java.io.File;
 import java.io.IOException;
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import junit.framework.TestCase;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 
-public class SystemFileSystemTest extends TestCase {
+@RunWith(JUnit4.class)
+public class SystemFileSystemTest {
   @Inject Ui ui;
   @Inject FileSystem fs;
   @Inject Lifetimes lifetimes;
 
+  private File tempDir;
+
+  @Before
+  public void setUp() {
+    fs = new SystemFileSystem(); // default for non-daggerized tests.
+    tempDir = Files.createTempDir();
+  }
+
+  @Test
   public void testFindFiles() throws Exception {
-    FileSystem fs = new SystemFileSystem();
-    File tempDir = Files.createTempDir();
-    File foo = new File(tempDir, "foo");
-    Files.touch(foo);
-    File baz = new File(tempDir, "bar/baz");
-    Files.createParentDirs(baz);
-    Files.touch(baz);
+    touchAndCreate(tempDir, "file");
+    touchAndCreate(tempDir, "bar/baz");
 
-    assertEquals(
-        ImmutableSet.of("foo", "bar/baz"),
-        Utils.makeFilenamesRelative(fs.findFiles(tempDir), tempDir));
+    assertThat(Utils.makeFilenamesRelative(fs.findFiles(tempDir), tempDir))
+        .containsExactly("file", "bar/baz");
   }
 
+  @Test
   public void testListFiles() throws Exception {
-    FileSystem fs = new SystemFileSystem();
-    File tempDir = Files.createTempDir();
-    File foo = new File(tempDir, "foo");
-    File bar = new File(tempDir, "bar");
-    Files.touch(foo);
-    Files.touch(bar);
+    File file = touchAndCreate(tempDir, "file");
+    File otherfile = touchAndCreate(tempDir, "otherfile");
+
     ImmutableSet<File> files = ImmutableSet.copyOf(fs.listFiles(tempDir));
-    assertEquals(true, files.contains(foo));
-    assertEquals(true, files.contains(bar));
+    assertThat(files).contains(file);
+    assertThat(files).contains(otherfile);
   }
 
+  @Test
   public void testExists() throws Exception {
-    FileSystem fs = new SystemFileSystem();
-    File tempDir = Files.createTempDir();
-    File foo = new File(tempDir, "foo");
-    Files.touch(foo);
-    assertEquals(true, fs.exists(foo));
+    File file = touchAndCreate(tempDir, "file");
+
+    assertThat(fs.exists(file)).isTrue();
   }
 
+  @Test
   public void testGetName() throws Exception {
-    FileSystem fs = new SystemFileSystem();
-    File tempDir = Files.createTempDir();
-    File foo = new File(tempDir, "foo");
-    Files.touch(foo);
-    assertEquals(foo.getName(), fs.getName(foo));
+    File file = touchAndCreate(tempDir, "file");
+
+    assertThat(fs.getName(file)).isEqualTo(file.getName());
   }
 
+  @Test
   public void testIsFile() throws Exception {
-    FileSystem fs = new SystemFileSystem();
-    File tempDir = Files.createTempDir();
-    File foo = new File(tempDir, "foo");
-    Files.touch(foo);
-    assertEquals(true, fs.isFile(foo));
-    assertEquals(false, fs.isFile(tempDir));
+    File file = touchAndCreate(tempDir, "file");
+
+    assertThat(fs.isFile(file)).isTrue();
+    assertThat(fs.isFile(tempDir)).isFalse();
   }
 
+  @Test
   public void testIsDirectory() throws Exception {
-    FileSystem fs = new SystemFileSystem();
-    File tempDir = Files.createTempDir();
-    File foo = new File(tempDir, "foo");
-    Files.touch(foo);
-    assertEquals(true, fs.isDirectory(tempDir));
-    assertEquals(false, fs.isDirectory(foo));
+    File file = touchAndCreate(tempDir, "file");
+
+    assertThat(fs.isDirectory(tempDir)).isTrue();
+    assertThat(fs.isDirectory(file)).isFalse();
   }
 
+  @Test
   public void testExecutable() throws Exception {
-    FileSystem fs = new SystemFileSystem();
-    File tempDir = Files.createTempDir();
-    File foo = new File(tempDir, "foo");
-    Files.touch(foo);
-    foo.setExecutable(true);
-    assertEquals(true, fs.isExecutable(foo));
+    File file = touchAndCreate(tempDir, "file");
+
+    file.setExecutable(true);
+    assertThat(fs.isExecutable(file)).isTrue();
   }
 
+  @Test
   public void testReadable() throws Exception {
-    FileSystem fs = new SystemFileSystem();
-    File tempDir = Files.createTempDir();
-    File foo = new File(tempDir, "foo");
-    Files.touch(foo);
-    foo.setReadable(true);
-    assertEquals(true, fs.isReadable(foo));
+    File file = touchAndCreate(tempDir, "file");
+
+    file.setReadable(true);
+    assertThat(fs.isReadable(file)).isTrue();
   }
 
+  @Test
   public void testSetExecutable() throws Exception {
-    FileSystem fs = new SystemFileSystem();
-    File tempDir = Files.createTempDir();
-    File foo = new File(tempDir, "foo");
-    Files.touch(foo);
-    fs.setExecutable(foo);
-    assertEquals(true, foo.canExecute());
+    File file = touchAndCreate(tempDir, "file");
+
+    fs.setExecutable(file);
+    assertThat(file.canExecute()).isTrue();
   }
 
+  @Test
   public void testMakeDirsForFile() throws Exception {
-    FileSystem fs = new SystemFileSystem();
-    File tempDir = Files.createTempDir();
     File baz = new File(tempDir, "foo/bar/baz");
     File bar = new File(tempDir, "foo/bar");
+
     fs.makeDirsForFile(baz);
-    assertEquals(true, bar.exists());
-    assertEquals(true, bar.isDirectory());
-    assertEquals(false, baz.exists());
+    assertThat(bar.exists()).isTrue();
+    assertThat(bar.isDirectory()).isTrue();
+    assertThat(baz.exists()).isFalse();
   }
 
+  @Test
   public void testMakeDirs() throws Exception {
-    FileSystem fs = new SystemFileSystem();
-    File tempDir = Files.createTempDir();
     File baz = new File(tempDir, "foo/bar/baz");
     File bar = new File(tempDir, "foo/bar");
+
     fs.makeDirs(baz);
-    assertEquals(true, bar.exists());
-    assertEquals(true, bar.isDirectory());
-    assertEquals(true, baz.exists());
-    assertEquals(true, baz.isDirectory());
+    assertThat(bar.exists()).isTrue();
+    assertThat(bar.isDirectory()).isTrue();
+    assertThat(baz.exists()).isTrue();
+    assertThat(baz.isDirectory()).isTrue();
   }
 
+  @Test
   public void testCopy() throws Exception {
-    FileSystem fs = new SystemFileSystem();
-    File tempDir = Files.createTempDir();
-    File foo = new File(tempDir, "foo");
-    File bar = new File(tempDir, "bar");
-    Files.write("Contents!", foo, UTF_8);
-    fs.copyFile(foo, bar);
-    assertEquals(true, Files.equal(foo, bar));
+    File file = touchAndCreate(tempDir, "file");
+    File copy = new File(tempDir, "copy");
+    Files.write("Contents!", file, UTF_8);
+    fs.copyFile(file, copy);
+    assertThat(Files.equal(file, copy)).isTrue();
   }
 
+  @Test
   public void testWrite() throws Exception {
-    FileSystem fs = new SystemFileSystem();
-    File tempDir = Files.createTempDir();
-    File foo = new File(tempDir, "foo");
-    fs.write("Contents!", foo);
-    assertEquals("Contents!", Files.toString(foo, UTF_8));
+    File file = touchAndCreate(tempDir, "file");
+    fs.write("Contents!", file);
+    assertThat(Files.toString(file, UTF_8)).isEqualTo("Contents!");
   }
 
+  @Test
   public void testDeleteRecursively() throws Exception {
-    FileSystem fs = new SystemFileSystem();
-    File tempDir = Files.createTempDir();
-    File foo = new File(tempDir, "foo");
-    File bar = new File(tempDir, "bar");
-    Files.write("Contents!", foo, UTF_8);
-    fs.copyFile(foo, bar);
+    File file = touchAndCreate(tempDir, "file");
+    File copy = new File(tempDir, "bar");
+    Files.write("Contents!", file, UTF_8);
+    fs.copyFile(file, copy);
     fs.deleteRecursively(tempDir);
-    assertEquals(false, tempDir.exists());
-    assertEquals(false, foo.exists());
-    assertEquals(false, bar.exists());
+    assertThat(tempDir.exists()).isFalse();
+    assertThat(file.exists()).isFalse();
+    assertThat(copy.exists()).isFalse();
   }
 
+  @Test
   public void testFileToString() throws Exception {
-    FileSystem fs = new SystemFileSystem();
-    File tempDir = Files.createTempDir();
-    File foo = new File(tempDir, "foo");
-    Files.write("Contents!", foo, UTF_8);
-    assertEquals("Contents!", fs.fileToString(foo));
+    File file = touchAndCreate(tempDir, "file");
+    Files.write("Contents!", file, UTF_8);
+    assertThat(fs.fileToString(file)).isEqualTo("Contents!");
   }
 
   private File touchTempDir(String prefix, FileSystem fs) throws IOException {
@@ -189,16 +184,7 @@ public class SystemFileSystemTest extends TestCase {
     return out;
   }
 
-  // TODO(cgruber): Rework these when statics aren't inherent in the design.
-  @dagger.Component(
-      modules = {
-        TestingModule.class, SystemCommandRunner.Module.class, SystemFileSystem.Module.class
-      })
-  @Singleton
-  interface Component {
-    void inject(SystemFileSystemTest instance);
-  }
-
+  @Test
   public void testCleanUpTempDirsWithTasks() throws Exception {
     DaggerSystemFileSystemTest_Component.create().inject(this);
 
@@ -222,28 +208,29 @@ public class SystemFileSystemTest extends TestCase {
 
         inner.result().append("popping inner, persisting nothing");
       }
-      assertFalse("inner1", inner1.exists());
-      assertFalse("inner2", inner2.exists());
-      assertTrue("innerPersist", innerPersist.exists());
-      assertTrue("taskless", taskless.exists());
-      assertTrue("outer1", outer1.exists());
-      assertTrue("outer2", outer2.exists());
+      assertThat(inner1.exists()).named("inner1").isFalse();
+      assertThat(inner2.exists()).named("inner2").isFalse();
+      assertThat(innerPersist.exists()).named("innerPersist").isTrue();
+      assertThat(taskless.exists()).named("taskless").isTrue();
+      assertThat(outer1.exists()).named("outer1").isTrue();
+      assertThat(outer2.exists()).named("outer2").isTrue();
 
       outer.result().append("popping outer, persisting nothing");
     }
-    assertFalse("outer1", outer1.exists());
-    assertFalse("outer2", outer2.exists());
-    assertTrue("innerPersist", innerPersist.exists());
-    assertTrue("taskless", taskless.exists());
+    assertThat(outer1.exists()).named("outer1").isFalse();
+    assertThat(outer2.exists()).named("outer2").isFalse();
+    assertThat(innerPersist.exists()).named("innerPersist").isTrue();
+    assertThat(taskless.exists()).named("taskless").isTrue();
 
     try (Task moeTermination = ui.newTask(Ui.MOE_TERMINATION_TASK_NAME, "Final clean-up")) {
       fs.cleanUpTempDirs();
       moeTermination.result().append("Finished clean-up");
     }
-    assertFalse("innerPersist", innerPersist.exists());
-    assertFalse("taskless", taskless.exists());
+    assertThat(innerPersist.exists()).named("innerPersist").isFalse();
+    assertThat(taskless.exists()).named("taskless").isFalse();
   }
 
+  @Test
   public void testMarkAsPersistentWithTasks() throws Exception {
     DaggerSystemFileSystemTest_Component.create().inject(this);
 
@@ -261,22 +248,42 @@ public class SystemFileSystemTest extends TestCase {
 
         inner.keep(inner1);
       }
-      assertTrue("inner1", inner1.exists());
-      assertFalse("inner2", inner2.exists());
-      assertTrue("outer1", outer1.exists());
-      assertTrue("outer2", outer2.exists());
+      assertThat(inner1.exists()).named("inner1").isTrue();
+      assertThat(inner2.exists()).named("inner2").isFalse();
+      assertThat(outer1.exists()).named("outer1").isTrue();
+      assertThat(outer2.exists()).named("outer2").isTrue();
 
       outer.keep(outer1);
     }
-    assertFalse("inner1", inner1.exists());
-    assertTrue("outer1", outer1.exists());
-    assertFalse("outer2", outer2.exists());
+    assertThat(inner1.exists()).named("inner1").isFalse();
+    assertThat(outer1.exists()).named("outer1").isTrue();
+    assertThat(outer2.exists()).named("outer2").isFalse();
 
     try (Task moeTermination = ui.newTask(Ui.MOE_TERMINATION_TASK_NAME, "Final clean-up")) {
       fs.cleanUpTempDirs();
       moeTermination.result().append("Finished clean-up");
     }
     // outer1 was persisted from a top-level task, so it shouldn't be cleaned up at all.
-    assertTrue("outer1", outer1.exists());
+    assertThat(outer1.exists()).named("outer1").isTrue();
+  }
+
+  /** Create a file and its parent directories, returning the File object */
+  private File touchAndCreate(File parent, String child) throws IOException {
+    File file = new File(parent, child);
+    Files.createParentDirs(file);
+    Files.touch(file);
+    return file;
+  }
+
+  // TODO(cgruber): Rework these when statics aren't inherent in the design.
+  @dagger.Component(
+      modules = {
+        TestingModule.class,
+        SystemCommandRunner.Module.class,
+        SystemFileSystem.Module.class
+      })
+  @Singleton
+  interface Component {
+    void inject(SystemFileSystemTest instance);
   }
 }
