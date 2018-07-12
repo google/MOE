@@ -66,8 +66,14 @@ public class SvnCodebaseCreator extends CodebaseCreator {
         filesystem.getTemporaryDirectory(String.format("svn_export_%s_%s_", name, rev.revId()));
 
     try {
-      util.runSvnCommand(
-          "export", config.getUrl(), "-r", rev.revId(), exportPath.getAbsolutePath());
+      if (config.getCheckoutPaths().isEmpty()) {
+        util.runSvnCommand("export", config.getUrl(), "-r", rev.revId(), exportPath.getAbsolutePath());
+      } else {
+        exportPath.mkdir();
+        for (String subPath: config.getCheckoutPaths()) {
+          fetchSubPath(rev, exportPath, subPath);
+        }
+      }
     } catch (CommandRunner.CommandException e) {
       throw new MoeProblem("could not export from svn: %s", e.getMessage());
     }
@@ -79,5 +85,15 @@ public class SvnCodebaseCreator extends CodebaseCreator {
 
     return Codebase.create(
         exportPath, config.getProjectSpace(), new RepositoryExpression(new Term(name, options)));
+  }
+
+  private void fetchSubPath(Revision rev, File exportPath, String subPath) throws CommandRunner.CommandException {
+    String url = config.getUrl();
+    if (!url.endsWith("/")) {
+      url = url.concat("/");
+    }
+    url = url.concat(subPath);
+    String path = exportPath.toPath().resolve(subPath).toAbsolutePath().toString();
+    util.runSvnCommand("export", url, "-r", rev.revId(), path);
   }
 }

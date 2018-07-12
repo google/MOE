@@ -77,6 +77,7 @@ public class SvnCodebaseCreatorTest extends TestCase {
     expect(mockConfig.getUrl()).andReturn("http://foo/svn/trunk/").anyTimes();
     expect(mockConfig.getProjectSpace()).andReturn("internal").anyTimes();
     expect(mockConfig.getIgnoreFilePatterns()).andReturn(ImmutableList.<String>of()).anyTimes();
+    expect(mockConfig.getCheckoutPaths()).andReturn(ImmutableList.<String>of()).anyTimes();
 
     expect(revisionHistory.findHighestRevision("46")).andReturn(result);
     expect(fileSystem.getTemporaryDirectory("svn_export_testing_45_"))
