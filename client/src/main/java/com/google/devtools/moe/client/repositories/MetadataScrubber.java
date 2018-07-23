@@ -92,7 +92,7 @@ public abstract class MetadataScrubber {
     for (String word : words) {
       String regex = (wordAlone) ? ("(?i)(\\b)" + word + "(\\b)") : ("(?i)" + word);
       newId = newId.replaceAll(regex, replacement);
-      newAuthor = newAuthor.replaceAll(regex, replacement);
+      newAuthor = replaceAuthor(newAuthor, word, replacement);
       newDescription = newDescription.replaceAll(regex, replacement);
       for (Entry<String, String> entry : newFields.entries()) {
         entry.setValue(entry.getValue().replaceAll(regex, replacement));
@@ -104,6 +104,20 @@ public abstract class MetadataScrubber {
         .description(newDescription)
         .fields(ImmutableSetMultimap.copyOf(newFields))
         .build();
+  }
+
+  /** Replaces the author with a possibly scrubbed replacement. */
+  static String replaceAuthor(String authorTag, String nameToReplace, String replacement) {
+    String regex = "(?i)(\\b)" + nameToReplace + "(\\b)";
+    if (authorTag.trim().equals(nameToReplace.trim())) {
+      return "\"" + replacement + "\" <" + replacement + ">";
+    }
+    // Match and replace, but if the result ends up being <<foo>> strip the extra <>.
+    // This could be managed by a better regex but that regex is terrible, and this is clearer.
+    String replaced = authorTag.replaceAll(regex, "<" + replacement + ">");
+    replaced = replaced.replace("<<", ">");
+    replaced = replaced.replace(">>", ">");
+    return replaced;
   }
 
   /** Provides the set of default metadata scrubbers */

@@ -22,7 +22,7 @@ import javax.inject.Inject;
  * This MetadataScrubber replaces any of the target usernames with the replacement string.
  */
 public class MetadataUsernameScrubber extends MetadataScrubber {
-  private static final String REPLACEMENT = "<user>";
+  private static final String REPLACEMENT = "user";
 
   @Inject
   public MetadataUsernameScrubber() {}
