@@ -17,7 +17,6 @@
 package com.google.devtools.moe.client.repositories;
 
 import com.google.devtools.moe.client.Ui;
-
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
@@ -64,15 +63,14 @@ public class OriginalAuthorMetadataScrubber extends MetadataScrubber {
     author = author.trim();
     if (author.matches(GIT_AUTHOR_RE)) {
       return author;
-    }
-    if (author.matches(SIMPLE_EMAIL_RE)) {
+    } else if (author.matches(SIMPLE_EMAIL_RE)) {
       return author.split("@")[0] + " <" + author + ">";
     } else if (author.matches(SIMPLE_USERNAME_RE)) {
       return author + " <" + author + ">";
     } else {
       // TODO(cgruber): Find a safer handling of degenerate cases.
       ui.message("WARNING: unknown author format found in commit metadata: \"%s\"", author);
-      return author + " <undetermined_user>";
+      return "\"" + author + "\" <undetermined_user>";
     }
   }
 

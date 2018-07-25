@@ -110,14 +110,9 @@ public abstract class MetadataScrubber {
   static String replaceAuthor(String authorTag, String nameToReplace, String replacement) {
     String regex = "(?i)(\\b)" + nameToReplace + "(\\b)";
     if (authorTag.trim().equals(nameToReplace.trim())) {
-      return "\"" + replacement + "\" <" + replacement + ">";
+      return replacement;
     }
-    // Match and replace, but if the result ends up being <<foo>> strip the extra <>.
-    // This could be managed by a better regex but that regex is terrible, and this is clearer.
-    String replaced = authorTag.replaceAll(regex, "<" + replacement + ">");
-    replaced = replaced.replace("<<", ">");
-    replaced = replaced.replace(">>", ">");
-    return replaced;
+    return authorTag.replaceAll(regex, replacement);
   }
 
   /** Provides the set of default metadata scrubbers */

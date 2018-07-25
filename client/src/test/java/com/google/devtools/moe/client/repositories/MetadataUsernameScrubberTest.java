@@ -43,7 +43,7 @@ public class MetadataUsernameScrubberTest extends TestCase {
     RevisionMetadata expected =
         RevisionMetadata.builder()
             .id("100")
-            .author("Bob <user>")
+            .author("Bob user")
             .date(new DateTime(1L))
             .description("user fixed ALL the bugs.")
             .build();
@@ -55,6 +55,35 @@ public class MetadataUsernameScrubberTest extends TestCase {
               @Override
               public List<String> getUsernamesToScrub() {
                 return ImmutableList.of("saget");
+              }
+            });
+    assertThat(after).isEqualTo(expected);
+  }
+
+  public void testScrubOnOneUserWithMailBrackets() throws Exception {
+    RevisionMetadata before =
+        RevisionMetadata.builder()
+            .id("100")
+            .author("<bob>")
+            .date(new DateTime(1L))
+            .description("bob fixed ALL the bugs.")
+            .build();
+    before = parseLegacyFields(before);
+    RevisionMetadata expected =
+        RevisionMetadata.builder()
+            .id("100")
+            .author("<user>")
+            .date(new DateTime(1L))
+            .description("user fixed ALL the bugs.")
+            .build();
+    expected = parseLegacyFields(expected);
+    RevisionMetadata after =
+        mus.scrub(
+            before,
+            new MetadataScrubberConfig() {
+              @Override
+              public List<String> getUsernamesToScrub() {
+                return ImmutableList.of("bob");
               }
             });
     assertThat(after).isEqualTo(expected);
@@ -72,7 +101,7 @@ public class MetadataUsernameScrubberTest extends TestCase {
     RevisionMetadata expected =
         RevisionMetadata.builder()
             .id("100")
-            .author("\"user\" <user>")
+            .author("user")
             .date(new DateTime(1L))
             .description("user fixed ALL the bugs.")
             .build();
@@ -101,7 +130,7 @@ public class MetadataUsernameScrubberTest extends TestCase {
     RevisionMetadata expected =
         RevisionMetadata.builder()
             .id("100")
-            .author("<user>, <user>")
+            .author("user, user")
             .date(new DateTime(1L))
             .description("user and user fixed ALL the bugs.")
             .build();
@@ -131,7 +160,7 @@ public class MetadataUsernameScrubberTest extends TestCase {
     RevisionMetadata expected =
         RevisionMetadata.builder()
             .id("100")
-            .author("<user>, <user>")
+            .author("user, user")
             .date(new DateTime(1L))
             .description("user and \nuser went bobbing for apples in Sagetopolis.")
             .build();

@@ -111,7 +111,7 @@ public class OriginalAuthorMetadataScrubberTest extends TestCase {
   }
 
   public void testSanitizeAuthor_Dirty_Unknown() {
-    assertThat(oams.sanitizeAuthor("user blah")).isEqualTo("user blah <undetermined_user>");
+    assertThat(oams.sanitizeAuthor("user blah")).isEqualTo("\"user blah\" <undetermined_user>");
     assertThat(out.toString()).contains("WARNING: unknown author format");
     assertThat(out.toString()).contains("user blah");
   }
