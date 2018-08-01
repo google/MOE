@@ -16,8 +16,13 @@
 
 package com.google.devtools.moe.client;
 
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
+
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.PathMatcher;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -60,11 +65,59 @@ public interface FileSystem {
   public void setLifetime(File path, Lifetime lifetime);
 
   /**
-   * Find the relative names of files under  path.
+   * Find the names of files under path.
    *
-   * NB: returns only files, not directories
+   * <p>NB: returns only files, not directories
    */
   public Set<File> findFiles(File path);
+
+  /**
+   * Find the relative names of files under path, if they match the supplied globs and exclusions
+   *
+   * <p>NB: returns only file names, not directories
+   */
+  default Set<String> findFiles(File root, List<String> globs, List<String> exclusions) {
+    return findFiles(root, root, globs, exclusions);
+  }
+
+  /**
+   * Find the relative names of files under path, if they match the supplied globs and exclusions
+   *
+   * <p>This overload separately defines the root of the search from the directory to which the
+   * files should be relative. The {@code findRoot} should be a subfolder of the {@code
+   * relativeRoot}, or the inverse (or the same folder). They should not be siblings.
+   *
+   * <p>Java globs are weird, and so playing with different search roots and relativization roots
+   * can interact badly with certain globs (especially seemingly simple ones like {@code *.java},
+   * which will only match files at the root of the search, where {@code **.java} matches all files
+   * ending in java).
+   *
+   * <p>NB: returns only file names, not directories
+   */
+  default Set<String> findFiles(
+      File relativeTo, File findIn, List<String> globs, List<String> exclusions) {
+    java.nio.file.FileSystem fs = findIn.toPath().getFileSystem();
+    Set<File> found = findFiles(findIn);
+    Set<String> files = Utils.makeFilenamesRelative(found, relativeTo);
+
+    List<PathMatcher> matchers =
+        globs
+            .stream()
+            .map(g -> findIn.toPath().getFileSystem().getPathMatcher("glob:" + g))
+            .collect(toList());
+    List<PathMatcher> excludingMatchers =
+        exclusions
+            .stream()
+            .map(g -> findIn.toPath().getFileSystem().getPathMatcher("glob:" + g))
+            .collect(toList());
+    return files
+        .stream()
+        .map(fs::getPath)
+        .filter(path -> excludingMatchers.stream().noneMatch(matcher -> matcher.matches(path)))
+        .filter(path -> matchers.stream().anyMatch(matcher -> matcher.matches(path)))
+        .map(Object::toString)
+        .collect(toSet());
+  }
 
   /**
    * Returns an array of files and directories under path.

@@ -24,7 +24,7 @@ public class ProjectConfigTest extends TestCase {
 
   public void testValidConfig() throws Exception {
     ProjectConfig p =
-        ProjectConfig.parse("{\"name\": \"foo\", \"repositories\": {\"public\": {}}}");
+        ProjectConfig.parse("{'name': 'foo', 'repositories': {'public': {'type': 'blah'}}}");
     assertEquals("foo", p.name());
   }
 
@@ -41,7 +41,7 @@ public class ProjectConfigTest extends TestCase {
         "{"
             + " 'name': 'foo',"
             + " 'repositories': {"
-            + "   'x': {}"
+            + "   'x': {'type': 'blah'}"
             + " },"
             + " 'editors': {'e1': {}}"
             + "}",
@@ -53,7 +53,7 @@ public class ProjectConfigTest extends TestCase {
         "{"
             + " 'name': 'foo',"
             + " 'repositories': {"
-            + "   'x': {}"
+            + "   'x': {'type': 'blah'}"
             + " },"
             + " 'translators': [{}]"
             + "}",
@@ -65,7 +65,7 @@ public class ProjectConfigTest extends TestCase {
         "{"
             + " 'name': 'foo',"
             + " 'repositories': {"
-            + "   'x': {}"
+            + "   'x': {'type': 'blah'}"
             + " },"
             + " 'translators': [{'from_project_space': 'x'}]"
             + "}",
@@ -77,7 +77,7 @@ public class ProjectConfigTest extends TestCase {
         "{"
             + " 'name': 'foo',"
             + " 'repositories': {"
-            + "   'x': {}"
+            + "   'x': {'type': 'blah'}"
             + " },"
             + " 'translators': [{'from_project_space': 'x',"
             + "                  'to_project_space': 'y'}]"
@@ -90,7 +90,7 @@ public class ProjectConfigTest extends TestCase {
         "{"
             + " 'name': 'foo',"
             + " 'repositories': {"
-            + "   'x': {}"
+            + "   'x': {'type': 'blah'}"
             + " },"
             + " 'translators': [{'from_project_space': 'x',"
             + "                  'to_project_space': 'y',"
@@ -104,7 +104,7 @@ public class ProjectConfigTest extends TestCase {
         "{"
             + " 'name': 'foo',"
             + " 'repositories': {"
-            + "   'x': {}"
+            + "   'x': {'type': 'blah'}"
             + " },"
             + " 'translators': [{'from_project_space': 'x',"
             + "                  'to_project_space': 'y',"
@@ -118,7 +118,7 @@ public class ProjectConfigTest extends TestCase {
         "{"
             + " 'name': 'foo',"
             + " 'repositories': {"
-            + "   'x': {}"
+            + "   'x': {'type': 'blah'}"
             + " },"
             + " 'migrations': [{}]"
             + "}",
@@ -162,7 +162,7 @@ public class ProjectConfigTest extends TestCase {
                 + " 'name': 'foo',"
                 + " 'database_uri': '/foo/bar/database.json',"
                 + " 'repositories': {"
-                + "   'x': {}"
+                + "   'x': {'type': 'blah'}"
                 + " }"
                 + "}");
     assertThat(p.databaseUri()).isEqualTo("/foo/bar/database.json");
@@ -170,24 +170,22 @@ public class ProjectConfigTest extends TestCase {
 
   public void testDatabaseFileNull() {
     ProjectConfig p =
-        ProjectConfig.parse(
-            "{" + " 'name': 'foo'," + " 'repositories': {" + "   'x': {}" + " }" + "}");
+        ProjectConfig.parse("{'name': 'foo', 'repositories': {'x': {'type': 'blah'} } }");
     assertThat(p.databaseUri()).isNull();
   }
 
   public void testJsonSemanticsMismatch() throws Exception {
     assertInvalidConfig(
         "{"
-        + " 'name': 'foo',"
-        + " 'repositories': {"
-        + "   'x': {}"
-        + " },"
-        // The trailing comma here leads to a null value in GSON
-        // but not per JavaScript Array constructor semantics.
-        + " 'migrations': [{'name': 'foo'},]"
-        + "}",
+            + " 'name': 'foo',"
+            + " 'repositories': {"
+            + "   'x': {'type': 'blah'}"
+            + " },"
+            // The trailing comma here leads to a null value in GSON
+            // but not per JavaScript Array constructor semantics.
+            + " 'migrations': [{'name': 'foo'},]"
+            + "}",
         "MOE config uses problematic JavaScript constructs at key chain .migrations[1].");
-
 
     assertInvalidConfig(
         "{"
@@ -212,4 +210,12 @@ public class ProjectConfigTest extends TestCase {
         + ".translators.steps[0].editor.mappings[\"foo/bar\"][1].");
   }
 
+  public void testInvalidRepositoryType() throws Exception {
+    assertInvalidConfig(
+        "{\"name\": \"foo\"," + "\"repositories\": {" + "\"internal\": {}}}",
+        "Must set repository type.");
+    assertInvalidConfig(
+        "{\"name\": \"foo\"," + "\"repositories\": {" + "\"internal\": {\"type\":\"\"}}}",
+        "Must set repository type.");
+  }
 }

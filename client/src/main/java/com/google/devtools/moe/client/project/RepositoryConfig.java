@@ -16,20 +16,21 @@
 
 package com.google.devtools.moe.client.project;
 
+import static com.google.devtools.moe.client.project.InvalidProject.assertFalse;
+import static com.google.devtools.moe.client.project.InvalidProject.assertNotNull;
+
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.devtools.moe.client.gson.GsonUtil;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 import com.google.gson.annotations.SerializedName;
-
 import java.util.List;
 
-/**
- * Configuration for a MOE Repository.
- */
+/** Configuration for a MOE Repository. */
 // TODO: Add a validation step for configs such that each repo type can pre-validate if options used
 // are supported.
+@SuppressWarnings("FieldCanBeFinal") // Gson reflectively updates these fields.
 public class RepositoryConfig {
   private String type;
   private String url;
@@ -38,7 +39,7 @@ public class RepositoryConfig {
   @SerializedName("package")
   private String buildTargetPackage;
   private boolean preserveAuthors;
-  private List<String> paths;
+  private List<String> paths = Lists.newArrayList();
 
 
   /**
@@ -206,6 +207,13 @@ public class RepositoryConfig {
     return newConfig;
   }
 
-  @SuppressWarnings("unused")
-  void validate() throws InvalidProject {}
+  /**
+   * Validates the repository configuration.
+   *
+   * @throws InvalidProject an error describing an error in the project configuration.
+   */
+  void validate() {
+    assertNotNull(getType(), "Must set repository type.");
+    assertFalse(getType().trim().isEmpty(), "Must set repository type.");
+  }
 }

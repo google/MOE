@@ -17,7 +17,9 @@
 package com.google.devtools.moe.client;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.devtools.moe.client.Utils.makeFilenamesRelative;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Arrays.asList;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
@@ -52,8 +54,84 @@ public class SystemFileSystemTest {
     touchAndCreate(tempDir, "file");
     touchAndCreate(tempDir, "bar/baz");
 
-    assertThat(Utils.makeFilenamesRelative(fs.findFiles(tempDir), tempDir))
+    assertThat(makeFilenamesRelative(fs.findFiles(tempDir), tempDir))
         .containsExactly("file", "bar/baz");
+  }
+
+  @Test
+  public void testFindFilesWithGlob() throws Exception {
+    touchAndCreate(tempDir, "foo");
+    touchAndCreate(tempDir, "blah.java");
+    touchAndCreate(tempDir, "bar/baz");
+    touchAndCreate(tempDir, "bar/foo.java");
+    touchAndCreate(tempDir, "bar/bar.java");
+    touchAndCreate(tempDir, "bar/baz.java");
+    touchAndCreate(tempDir, "babar/baz.java");
+
+    // This glob converts to "^[^/]*\.java$" so bar/baz.java doesn't match
+    assertThat(fs.findFiles(tempDir, asList("*.java"), asList())).containsExactly("blah.java");
+
+    // This glob converst to "^.*/[^/]*\.java$" so bar/baz.java doesn't match
+    assertThat(fs.findFiles(tempDir, asList("**/*.java"), asList()))
+        .containsExactly("bar/foo.java", "bar/bar.java", "bar/baz.java", "babar/baz.java");
+
+    // This glob converts to "^.*\.java$", which is what good for "all .java files in any folder".
+    assertThat(fs.findFiles(tempDir, asList("**.java"), asList()))
+        .containsExactly(
+            "blah.java", "bar/foo.java", "bar/bar.java", "bar/baz.java", "babar/baz.java");
+
+    // This glob converts to "^bar/[^/]*\.java$", which is what good for "all .java files in foo/".
+    assertThat(fs.findFiles(tempDir, asList("bar/*.java"), asList()))
+        .containsExactly("bar/foo.java", "bar/bar.java", "bar/baz.java");
+
+    // This glob converts to "^.*/bar/[^/]*\.java$", which won't match bar/baz.java, for instance,
+    // because it's not /bar/baz.java.
+    assertThat(fs.findFiles(tempDir, asList("**/bar/*.java"), asList())).isEmpty();
+
+    // This glob converts to "^.*bar/[^/]*\.java$", which will match anything up to and including
+    // bar/baz.java (but would also match babar/baz.java)
+    assertThat(fs.findFiles(tempDir, asList("**bar/*.java"), asList()))
+        .containsExactly("bar/foo.java", "bar/bar.java", "bar/baz.java", "babar/baz.java");
+  }
+
+  @Test
+  public void testFindFilesWithGlobAndDifferentRelativePath() throws Exception {
+    touchAndCreate(tempDir, "a/b/foo");
+    touchAndCreate(tempDir, "a/b/blah.java");
+    touchAndCreate(tempDir, "a/b/bar/foo.java");
+    touchAndCreate(tempDir, "a/c/bar/bar.java");
+    touchAndCreate(tempDir, "a/c/bar/baz.java");
+    touchAndCreate(tempDir, "a/c/babar/baz.java");
+
+    assertThat(fs.findFiles(tempDir, new File(tempDir, "a/b"), asList("**.java"), asList()))
+        .containsExactly("a/b/blah.java", "a/b/bar/foo.java");
+
+    assertThat(fs.findFiles(tempDir, new File(tempDir, "a/c"), asList("**.java"), asList()))
+        .containsExactly("a/c/bar/bar.java", "a/c/bar/baz.java", "a/c/babar/baz.java");
+  }
+
+  @Test
+  public void testFindFilesWithGlobAndExclusions() throws Exception {
+    touchAndCreate(tempDir, "foo");
+    touchAndCreate(tempDir, "blah.java");
+    touchAndCreate(tempDir, "bar/baz");
+    touchAndCreate(tempDir, "bar/foo.java");
+    touchAndCreate(tempDir, "bar/bar.java");
+    touchAndCreate(tempDir, "bar/baz.java");
+    touchAndCreate(tempDir, "babar/baz.java");
+
+    // match all the java files.
+    assertThat(fs.findFiles(tempDir, asList("**.java"), asList()))
+        .containsExactly(
+            "blah.java", "bar/foo.java", "bar/bar.java", "bar/baz.java", "babar/baz.java");
+
+    // exclude babar
+    assertThat(fs.findFiles(tempDir, asList("**.java"), asList("**babar**")))
+        .containsExactly("blah.java", "bar/foo.java", "bar/bar.java", "bar/baz.java");
+
+    // exclude babar
+    assertThat(fs.findFiles(tempDir, asList("**"), asList("**.java")))
+        .containsExactly("foo", "bar/baz");
   }
 
   @Test

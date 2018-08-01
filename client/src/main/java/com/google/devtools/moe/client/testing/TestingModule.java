@@ -53,5 +53,11 @@ public abstract class TestingModule {
     static boolean trace() {
       return false;
     }
+
+    @Provides
+    @Flag("debug")
+    static boolean debug() {
+      return false;
+    }
   }
 }

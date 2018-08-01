@@ -25,6 +25,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
+import com.google.devtools.moe.client.qualifiers.Flag;
 import dagger.Binds;
 import dagger.Lazy;
 import java.io.File;
@@ -50,6 +51,10 @@ public class SystemFileSystem extends AbstractFileSystem {
   @Inject Lazy<Lifetimes> lifetimes;
 
   @Inject
+  @Flag("debug")
+  Lazy<Boolean> debug = () -> false;
+
+  @Inject
   public SystemFileSystem() {}
 
   @Override
@@ -73,11 +78,13 @@ public class SystemFileSystem extends AbstractFileSystem {
   @Override
   public void cleanUpTempDirs() throws IOException {
     Iterator<Entry<File, Lifetime>> tempDirIterator = tempDirLifetimes.entrySet().iterator();
-    while (tempDirIterator.hasNext()) {
-      Entry<File, Lifetime> entry = tempDirIterator.next();
-      if (entry.getValue().shouldCleanUp()) {
-        deleteRecursively(entry.getKey());
-        tempDirIterator.remove();
+    if (!debug.get()) {
+      while (tempDirIterator.hasNext()) {
+        Entry<File, Lifetime> entry = tempDirIterator.next();
+        if (entry.getValue().shouldCleanUp()) {
+          deleteRecursively(entry.getKey());
+          tempDirIterator.remove();
+        }
       }
     }
   }
@@ -107,9 +114,13 @@ public class SystemFileSystem extends AbstractFileSystem {
       return;
     }
 
-    for (File subFile : f.listFiles()) {
+    for (File subFile : nullSafeArray(f.listFiles())) {
       findFilesRecursiveHelper(subFile, result);
     }
+  }
+
+  private File[] nullSafeArray(File[] array) {
+    return array == null ? new File[0] : array;
   }
 
   @Override
