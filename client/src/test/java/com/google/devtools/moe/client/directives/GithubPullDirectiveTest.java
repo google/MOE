@@ -29,14 +29,12 @@ import com.google.devtools.moe.client.github.PullRequestUrl;
 import com.google.devtools.moe.client.gson.GsonModule;
 import com.google.devtools.moe.client.project.RepositoryConfig;
 import com.google.gson.Gson;
-
-import junit.framework.TestCase;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import junit.framework.TestCase;
 
 /**
  * Tests for {@link GithubPullDirective}.
