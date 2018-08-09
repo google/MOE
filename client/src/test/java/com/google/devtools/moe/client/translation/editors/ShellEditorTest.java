@@ -46,7 +46,7 @@ public class ShellEditorTest extends TestCase {
     File codebaseFile = new File("/codebase");
 
     Codebase codebase =
-        Codebase.create(codebaseFile, "internal", RepositoryExpression.create("ignored"));
+        Codebase.create(codebaseFile, "internal", new RepositoryExpression("ignored"));
 
     expect(fileSystem.getTemporaryDirectory("shell_run_")).andReturn(shellRun);
     fileSystem.copyDirectory(codebaseFile, shellRun);

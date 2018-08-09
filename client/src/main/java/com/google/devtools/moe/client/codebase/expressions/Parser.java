@@ -28,11 +28,11 @@ import java.util.Map;
 /**
  * Parser for Terms; useful for various Expression Languages
  *
- * This allows MOE to embed options in one string instead of having many
- * orthogonal flags.
+ * <p>This allows MOE to embed options in one string instead of having many orthogonal flags.
  *
- * The syntax for a Term is:
+ * <p>The syntax for a Term is:
  *
+ * <pre>{@code
  * TERM -> LITERAL OPTIONS
  * OPTIONS ->
  * OPTIONS -> (OPTIONLIST)
@@ -42,20 +42,25 @@ import java.util.Map;
  * OPTION -> LITERAL = LITERAL
  * LITERAL -> alphanumeric+
  * LITERAL -> "[^"]"*
+ * }</pre>
  *
- * Examples:
+ * <p>Examples:
  *
+ * <pre>{@code
  * internal
  * internal(revision=45)
  * public
  * file(path="/path/to/public.tar")
+ * }</pre>
  *
- * Users should use the high-level functions:
+ * <p>Users should use the high-level functions:
+ *
+ * <pre>{@code
  * parseOperator
  * parseTerm
  * parseTermCompletely
  * tokenize
- *
+ * }</pre>
  */
 public class Parser {
 
@@ -82,9 +87,9 @@ public class Parser {
     StreamTokenizer t = Parser.tokenize(toParse);
     Term creator = Parser.parseTerm(t);
     List<Operation> operations = Parser.parseOperationList(t);
-    Expression ex = RepositoryExpression.create(creator);
+    Expression ex = new RepositoryExpression(creator);
     for (Operation op : operations) {
-      switch (op.operator()) {
+      switch (op.getOperator()) {
         case EDIT:
           ex = ex.editWith(op);
           break;
@@ -92,7 +97,7 @@ public class Parser {
           ex = ex.translateTo(op);
           break;
         default:
-          throw new ParseError("Unexpected operator: " + op.operator());
+          throw new ParseError("Unexpected operator: " + op.getOperator());
       }
     }
     return ex;
@@ -106,7 +111,7 @@ public class Parser {
     StreamTokenizer t = Parser.tokenize(toParse);
     Term creator = Parser.parseTerm(t);
     List<Operation> operations = Parser.parseOperationList(t);
-    RepositoryExpression ex = RepositoryExpression.create(creator);
+    RepositoryExpression ex = new RepositoryExpression(creator);
     if (!operations.isEmpty()) {
       throw new ParseError(
           "Expression must represent a simple repository, e.g. 'internal(revision=3)'.");
@@ -185,8 +190,7 @@ public class Parser {
   /**
    * Parses a Term.
    *
-   * @param input  text to parse
-   *
+   * @param input text to parse
    * @return the parsed term
    */
   public static Term parseTerm(StreamTokenizer input) throws ParseError {
@@ -198,7 +202,7 @@ public class Parser {
       String identifier = input.sval;
 
       Map<String, String> options = parseOptions(input);
-      return Term.create(identifier).withOptions(options);
+      return new Term(identifier).withOptions(options);
     } catch (IOException e) {
       throw new ParseError(e.getMessage());
     }
@@ -207,7 +211,7 @@ public class Parser {
   /**
    * Determines if the input is exhausted.
    *
-   * @param input  the input tokenizer
+   * @param input the input tokenizer
    */
   private static boolean isInputExhausted(StreamTokenizer input) throws ParseError {
     try {
@@ -224,8 +228,7 @@ public class Parser {
   /**
    * Parses a Term from input, throwing an error if the input contains more than a Term.
    *
-   * @param input  text to parse
-   *
+   * @param input text to parse
    * @return the parsed term
    * @throws ParseError if the string is not exactly a Term
    */
@@ -258,7 +261,7 @@ public class Parser {
     while (!Parser.isInputExhausted(input)) {
       Operator operator = parseOperator(input);
       Term t = Parser.parseTerm(input);
-      operations.add(Operation.create(operator, t));
+      operations.add(new Operation(operator, t));
     }
     return operations.build();
   }

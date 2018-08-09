@@ -93,8 +93,8 @@ public class ParserTest extends TestCase {
       String input, String identifier, ImmutableMap<String, String> options)
       throws Parser.ParseError {
     Term r = Parser.parseTermCompletely(input);
-    assertEquals(identifier, r.identifier());
-    assertEquals(options, r.options());
+    assertEquals(identifier, r.getIdentifier());
+    assertEquals(options, r.getOptions());
   }
 
   public void assertParseTermCompletelyFails(String input, String errorMessage) {
@@ -104,9 +104,9 @@ public class ParserTest extends TestCase {
           "Successfully parsed invalid string: "
               + input
               + " into "
-              + r.identifier()
+              + r.getIdentifier()
               + " and "
-              + r.options());
+              + r.getOptions());
     } catch (Parser.ParseError e) {
       assertEquals("Cannot parse: " + errorMessage, e.getMessage());
     }
@@ -135,8 +135,8 @@ public class ParserTest extends TestCase {
   public void assertParseTerm(String input, String identifier, ImmutableMap<String, String> options)
       throws Parser.ParseError {
     Term r = Parser.parseTerm(Parser.tokenize(input));
-    assertEquals(identifier, r.identifier());
-    assertEquals(options, r.options());
+    assertEquals(identifier, r.getIdentifier());
+    assertEquals(options, r.getOptions());
   }
 
   public void assertParseTermFails(String input, String errorMessage) {
@@ -146,9 +146,9 @@ public class ParserTest extends TestCase {
           "Successfully parsed invalid string: "
               + input
               + " into "
-              + r.identifier()
+              + r.getIdentifier()
               + " and "
-              + r.options());
+              + r.getOptions());
     } catch (Parser.ParseError e) {
       assertEquals("Cannot parse: " + errorMessage, e.getMessage());
     }
@@ -198,8 +198,8 @@ public class ParserTest extends TestCase {
     List<Operation> terms = Parser.parseOperationList(tokenize(input));
     StringBuilder r = new StringBuilder();
     for (Operation op : terms) {
-      r.append(op.operator());
-      r.append(op.term());
+      r.append(op.getOperator());
+      r.append(op.getTerm());
     }
     assertEquals(expected, r.toString());
   }
@@ -218,42 +218,41 @@ public class ParserTest extends TestCase {
 
   public void testParseExpression() throws Exception {
 
-    testParseExHelper("internal", RepositoryExpression.create("internal"));
+    testParseExHelper("internal", new RepositoryExpression("internal"));
 
     testParseExHelper(
-        "internal(revision=1)",
-        RepositoryExpression.create("internal").withOption("revision", "1"));
+        "internal(revision=1)", new RepositoryExpression("internal").withOption("revision", "1"));
 
     testParseExHelper(
-        "internal>public", RepositoryExpression.create("internal").translateTo("public"));
+        "internal>public", new RepositoryExpression("internal").translateTo("public"));
 
     testParseExHelper(
         "internal(revision=1)>public",
-        RepositoryExpression.create("internal").atRevision("1").translateTo("public"));
+        new RepositoryExpression("internal").atRevision("1").translateTo("public"));
 
     testParseExHelper(
-        "internal|editor", RepositoryExpression.create("internal").editWith("editor", EMPTY_MAP));
+        "internal|editor", new RepositoryExpression("internal").editWith("editor", EMPTY_MAP));
 
     testParseExHelper(
         "internal(revision=1)|editor",
-        RepositoryExpression.create("internal")
+        new RepositoryExpression("internal")
             .withOption("revision", "1")
             .editWith("editor", EMPTY_MAP));
 
     testParseExHelper(
         "internal|editor(locale=\"en_US\")",
-        RepositoryExpression.create("internal")
+        new RepositoryExpression("internal")
             .editWith("editor", ImmutableMap.of("locale", "en_US")));
 
     testParseExHelper(
         "internal(revision=1)|editor(locale=\"en_US\")",
-        RepositoryExpression.create("internal")
+        new RepositoryExpression("internal")
             .withOption("revision", "1")
             .editWith("editor", ImmutableMap.of("locale", "en_US")));
 
     testParseExHelper(
         "internal(revision=1)|editor(locale=\"en_US\")>public",
-        RepositoryExpression.create("internal")
+        new RepositoryExpression("internal")
             .withOption("revision", "1")
             .editWith("editor", ImmutableMap.of("locale", "en_US"))
             .translateTo("public"));
@@ -265,14 +264,14 @@ public class ParserTest extends TestCase {
   }
 
   public void testParseRepositoryExpression() throws Exception {
-    testParseRepoExHelper("internal", RepositoryExpression.create("internal"));
+    testParseRepoExHelper("internal", new RepositoryExpression("internal"));
 
     testParseRepoExHelper(
-        "internal(revision=1)", RepositoryExpression.create("internal").atRevision("1"));
+        "internal(revision=1)", new RepositoryExpression("internal").atRevision("1"));
 
     testParseRepoExHelper(
         "file(path=\"/tmp\",projectSpace=internal)",
-        RepositoryExpression.create("file")
+        new RepositoryExpression("file")
             .withOption("path", "/tmp")
             .withOption("projectSpace", "internal"));
 

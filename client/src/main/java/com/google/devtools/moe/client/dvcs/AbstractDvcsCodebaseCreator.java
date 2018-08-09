@@ -103,6 +103,6 @@ public abstract class AbstractDvcsCodebaseCreator extends CodebaseCreator {
     return Codebase.create(
         archiveLocation,
         projectSpace,
-        RepositoryExpression.create(headClone.getRepositoryName()).withOptions(options));
+        new RepositoryExpression(headClone.getRepositoryName()).withOptions(options));
   }
 }

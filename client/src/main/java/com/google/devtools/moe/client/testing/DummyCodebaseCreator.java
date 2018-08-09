@@ -43,6 +43,6 @@ public class DummyCodebaseCreator extends CodebaseCreator {
     return Codebase.create(
         new File("/dummy/codebase/" + name + "/" + revId),
         projectSpace,
-        RepositoryExpression.create(name));
+        new RepositoryExpression(name));
   }
 }

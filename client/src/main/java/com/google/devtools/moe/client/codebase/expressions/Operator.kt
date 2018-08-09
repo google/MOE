@@ -14,33 +14,21 @@
  * limitations under the License.
  */
 
-package com.google.devtools.moe.client.codebase.expressions;
+package com.google.devtools.moe.client.codebase.expressions
 
-/**
- * Operators in the MOE Codebase Expression Language.
- */
-public enum Operator {
+/** Operators in the MOE Codebase Expression Language.  */
+enum class Operator constructor(private val op: Char) {
   EDIT('|'),
   TRANSLATE('>');
 
-  private final char op;
+  override fun toString() = op.toString()
 
-  Operator(char op) {
-    this.op = op;
-  }
-
-  @Override
-  public String toString() {
-    return String.valueOf(op);
-  }
-
-  public static Operator getOperator(char c) throws IllegalArgumentException {
-    if (c == '|') {
-      return EDIT;
-    }
-    if (c == '>') {
-      return TRANSLATE;
-    }
-    throw new IllegalArgumentException("Invalid operator: " + c);
+  companion object {
+    @JvmStatic fun getOperator(c: Char): Operator =
+      when (c) {
+        '|' -> EDIT
+        '>' -> TRANSLATE
+        else -> throw IllegalArgumentException("Invalid operator: $c")
+      }
   }
 }

@@ -140,7 +140,7 @@ public class MagicDirective extends Directive {
 
         RepositoryEquivalence lastRecordedEquivalence = migrations.get(0).sinceEquivalence();
         RepositoryExpression targetRepositoryPointOfEquivalency =
-            RepositoryExpression.create(migrationConfig.getToRepository());
+            new RepositoryExpression(migrationConfig.getToRepository());
         if (lastRecordedEquivalence != null) {
           targetRepositoryPointOfEquivalency =
               targetRepositoryPointOfEquivalency.atRevision(
@@ -184,9 +184,8 @@ public class MagicDirective extends Directive {
           // For each migration, the reference to-codebase for inverse translation is the Writer,
           // since it contains the latest changes (i.e. previous migrations) to the to-repository.
           Expression referenceTargetCodebase =
-              RepositoryExpression.create(migrationConfig.getToRepository())
+              new RepositoryExpression(migrationConfig.getToRepository())
                   .withOption("localroot", targetCodebaseWriter.getRoot().getAbsolutePath());
-
           try (Task oneMigrationTask =
               ui.newTask(
                   "perform_individual_migration",
@@ -202,7 +201,7 @@ public class MagicDirective extends Directive {
               String targetProjectSpace =
                   config.getRepositoryConfig(migration.toRepository()).getProjectSpace();
               Expression fromExpression =
-                  RepositoryExpression.create(migration.fromRepository())
+                  new RepositoryExpression(migration.fromRepository())
                       .atRevision(mostRecentFromRev.revId())
                       .translateTo(targetProjectSpace)
                       .withReferenceTargetCodebase(referenceTargetCodebase);

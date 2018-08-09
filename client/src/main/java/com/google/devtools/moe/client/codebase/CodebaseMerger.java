@@ -105,7 +105,7 @@ public class CodebaseMerger {
   public MergeResult merge(Codebase original, Codebase modified, Codebase destination) {
     MergeResult.Builder resultBuilder = MergeResult.builder();
     File mergedDir = filesystem.getTemporaryDirectory("merged_codebase_");
-    RepositoryExpression mergedExpression = RepositoryExpression.create("merged");
+    RepositoryExpression mergedExpression = new RepositoryExpression("merged");
     resultBuilder.setMergedCodebase(Codebase.create(mergedDir, "merged", mergedExpression));
     Set<String> filesToMerge = Sets.union(findFiles(destination), findFiles(modified));
 

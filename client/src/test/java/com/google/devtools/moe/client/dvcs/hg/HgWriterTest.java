@@ -39,8 +39,7 @@ public class HgWriterTest extends TestCase {
   private static final File CODEBASE_ROOT = new File("/codebase");
   private static final File WRITER_ROOT = new File("/writer");
   private static final String PROJECT_SPACE = "public";
-  private static final RepositoryExpression CODEBASE_EXPR =
-      RepositoryExpression.create(PROJECT_SPACE);
+  private static final RepositoryExpression CODEBASE_EXPR = new RepositoryExpression(PROJECT_SPACE);
 
   private final IMocksControl control = EasyMock.createControl();
   private final FileSystem mockFs = control.createMock(FileSystem.class);

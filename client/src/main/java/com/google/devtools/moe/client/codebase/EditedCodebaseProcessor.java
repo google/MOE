@@ -24,8 +24,8 @@ public class EditedCodebaseProcessor implements CodebaseProcessor<EditExpression
   @Override
   public Codebase createCodebase(EditExpression expression, ProjectContext context)
       throws CodebaseCreationError {
-    Codebase codebaseToEdit = expressionEngine.createCodebase(expression.operand(), context);
-    String editorName = expression.operation().term().identifier();
+    Codebase codebaseToEdit = expressionEngine.createCodebase(expression.getOperand(), context);
+    String editorName = expression.getOperation().getTerm().getIdentifier();
     Editor editor = context.editors().get(editorName);
     if (editor == null) {
       throw new CodebaseCreationError("no editor %s", editorName);
@@ -34,7 +34,8 @@ public class EditedCodebaseProcessor implements CodebaseProcessor<EditExpression
     try (Task task =
         ui.newTask(
             "edit", "Editing %s with editor %s", codebaseToEdit.path(), editor.getDescription())) {
-      return task.keep(editor.edit(codebaseToEdit, expression.operation().term().options()))
+      return task.keep(
+              editor.edit(codebaseToEdit, expression.getOperation().getTerm().getOptions()))
           .copyWithExpression(expression);
     }
   }

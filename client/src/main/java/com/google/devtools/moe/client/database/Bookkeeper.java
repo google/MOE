@@ -125,8 +125,7 @@ public class Bookkeeper {
   }
 
   private Codebase createCodebaseForRevision(Revision rev, String translateSpace) {
-    Expression expression =
-        RepositoryExpression.create(rev.repositoryName()).atRevision(rev.revId());
+    Expression expression = new RepositoryExpression(rev.repositoryName()).atRevision(rev.revId());
     if (translateSpace != null) {
       expression = expression.translateTo(translateSpace);
     }

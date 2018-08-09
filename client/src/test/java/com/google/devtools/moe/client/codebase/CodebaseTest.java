@@ -27,10 +27,10 @@ import junit.framework.TestCase;
 public class CodebaseTest extends TestCase {
 
   public void testCheckProjectSpace() throws Exception {
-    Codebase c = Codebase.create(new File("/foo"), "internal", RepositoryExpression.create("foo"));
+    Codebase c = Codebase.create(new File("/foo"), "internal", new RepositoryExpression("foo"));
     c.checkProjectSpace("internal");
     try {
-      c = Codebase.create(new File("/foo"), "internal", RepositoryExpression.create("foo"));
+      c = Codebase.create(new File("/foo"), "internal", new RepositoryExpression("foo"));
       c.checkProjectSpace("public");
       fail();
     } catch (MoeProblem expected) {

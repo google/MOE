@@ -95,7 +95,7 @@ public class SvnWriterTest extends TestCase {
 
   private RepositoryExpression e(
       String creatorIdentifier, ImmutableMap<String, String> creatorOptions) {
-    return RepositoryExpression.create(creatorIdentifier).withOptions(creatorOptions);
+    return new RepositoryExpression(creatorIdentifier).withOptions(creatorOptions);
   }
 
   public void testPutEmptyCodebase() throws Exception {

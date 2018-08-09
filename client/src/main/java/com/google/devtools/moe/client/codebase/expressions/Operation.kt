@@ -16,26 +16,11 @@
 
 package com.google.devtools.moe.client.codebase.expressions;
 
-import com.google.auto.value.AutoValue;
-
 /**
  * An Operation in the MOE Expression Language is an operator followed by a term.
  *
  * <p>E.g., |patch(file="/path/to/path.txt") or >public
  */
-@AutoValue
-public abstract class Operation {
-
-  public abstract Operator operator();
-
-  public abstract Term term();
-
-  @Override
-  public String toString() {
-    return "" + operator() + term();
-  }
-
-  static Operation create(Operator operator, Term term) {
-    return new AutoValue_Operation(operator, term);
-  }
+data class Operation(val operator: Operator, val term: Term) {
+  override fun toString(): String = "$operator$term"
 }

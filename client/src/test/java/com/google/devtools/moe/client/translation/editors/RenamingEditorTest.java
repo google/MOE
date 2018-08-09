@@ -114,7 +114,7 @@ public class RenamingEditorTest extends TestCase {
   public void testEdit() throws Exception {
     File codebaseFile = new File("/codebase/");
     Codebase codebase =
-        Codebase.create(codebaseFile, "internal", RepositoryExpression.create("ignored"));
+        Codebase.create(codebaseFile, "internal", new RepositoryExpression("ignored"));
 
     File oldSubFile = new File("/codebase/moe.txt");
     File renameRun = new File("/rename_run_foo");

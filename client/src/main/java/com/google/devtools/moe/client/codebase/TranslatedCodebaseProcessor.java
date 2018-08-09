@@ -28,8 +28,9 @@ public class TranslatedCodebaseProcessor implements CodebaseProcessor<TranslateE
   @Override
   public Codebase createCodebase(TranslateExpression expression, ProjectContext context)
       throws CodebaseCreationError {
-    Codebase codebaseToTranslate = expressionEngine.createCodebase(expression.operand(), context);
-    String toProjectSpace = expression.operation().term().identifier();
+    Codebase codebaseToTranslate =
+        expressionEngine.createCodebase(expression.getOperand(), context);
+    String toProjectSpace = expression.getOperation().getTerm().getIdentifier();
     TranslationPath path =
         TranslationPath.create(codebaseToTranslate.projectSpace(), toProjectSpace);
     TranslationPipeline translator = context.translators().get(path);
@@ -50,7 +51,7 @@ public class TranslatedCodebaseProcessor implements CodebaseProcessor<TranslateE
 
       Codebase translatedCodebase =
           translator.translate(
-              codebaseToTranslate, expression.operation().term().options(), context);
+              codebaseToTranslate, expression.getOperation().getTerm().getOptions(), context);
 
       // Don't mark the translated codebase for persistence if it wasn't allocated by the
       // Translator.

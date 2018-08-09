@@ -77,8 +77,6 @@ public class SvnCodebaseCreator extends CodebaseCreator {
     Utils.filterFiles(exportPath, nonIgnoredFilePred, filesystem);
 
     return Codebase.create(
-        exportPath,
-        config.getProjectSpace(),
-        RepositoryExpression.create(name).withOptions(options));
+        exportPath, config.getProjectSpace(), new RepositoryExpression(name).withOptions(options));
   }
 }

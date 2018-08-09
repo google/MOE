@@ -28,7 +28,7 @@ public class RepositoryCodebaseProcessor implements CodebaseProcessor<Repository
   @Override
   public Codebase createCodebase(RepositoryExpression expression, ProjectContext context)
       throws CodebaseCreationError {
-    String repositoryName = expression.term().identifier();
+    String repositoryName = expression.getTerm().getIdentifier();
     CodebaseCreator codebaseCreator =
         (repositoryName.equals("file"))
             ? fileCodebaseCreator.get() // for testing
@@ -37,7 +37,7 @@ public class RepositoryCodebaseProcessor implements CodebaseProcessor<Repository
     try (Task createTask =
         ui.newTask("create_codebase", "Creating codebase for '%s'", expression)) {
       try {
-        return createTask.keep(codebaseCreator.create(expression.term().options()));
+        return createTask.keep(codebaseCreator.create(expression.getTerm().getOptions()));
       } catch (CodebaseCreationError e) {
         ui.message("%s", e);
         createTask.result().append("Unable to create codebase " + this);

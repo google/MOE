@@ -177,8 +177,7 @@ public class MigrateBranchDirective extends Directive {
         return 0; // autoclosed.
       }
 
-      RepositoryExpression toRepoExp =
-          RepositoryExpression.create(migrationConfig.getToRepository());
+      RepositoryExpression toRepoExp = new RepositoryExpression(migrationConfig.getToRepository());
       Writer toWriter;
       try {
         toWriter = writerFactory.createWriter(toRepoExp, context);
@@ -190,7 +189,7 @@ public class MigrateBranchDirective extends Directive {
         // For each migration, the reference to-codebase for inverse translation is the Writer,
         // since it contains the latest changes (i.e. previous migrations) to the to-repository.
         Expression referenceTargetCodebase =
-            RepositoryExpression.create(migrationConfig.getToRepository())
+            new RepositoryExpression(migrationConfig.getToRepository())
                 .withOption("localroot", toWriter.getRoot().getAbsolutePath());
 
         try (Task performMigration =
@@ -206,7 +205,7 @@ public class MigrateBranchDirective extends Directive {
             String toProjectSpace =
                 config.getRepositoryConfig(migration.toRepository()).getProjectSpace();
             Expression fromExpression =
-                RepositoryExpression.create(migration.fromRepository())
+                new RepositoryExpression(migration.fromRepository())
                     .atRevision(mostRecentFromRev.revId())
                     .translateTo(toProjectSpace)
                     .withReferenceTargetCodebase(referenceTargetCodebase);

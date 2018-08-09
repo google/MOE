@@ -31,9 +31,9 @@ import junit.framework.TestCase;
 public class CodebaseDifferenceTest extends TestCase {
   private final FileSystem filesystem = mock(FileSystem.class);
   private final Codebase c1 =
-      Codebase.create(new File("/1"), "internal", RepositoryExpression.create("ignored"));
+      Codebase.create(new File("/1"), "internal", new RepositoryExpression("ignored"));
   private final Codebase c2 =
-      Codebase.create(new File("/2"), "internal", RepositoryExpression.create("ignored"));
+      Codebase.create(new File("/2"), "internal", new RepositoryExpression("ignored"));
   private final File f1 = new File("/1/foo");
   private final File f2 = new File("/2/foo");
   private final FileDifference.FileDiffer fileDiffer = mock(FileDifference.FileDiffer.class);

@@ -25,8 +25,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.FileSystem.Lifetime;
-import com.google.devtools.moe.client.NoopFileSystem;
 import com.google.devtools.moe.client.MoeProblem;
+import com.google.devtools.moe.client.NoopFileSystem;
 import com.google.devtools.moe.client.SystemCommandRunner;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.expressions.EditExpression;
@@ -60,7 +60,7 @@ public class ExpressionProcessingTest extends TestCase {
   private final FileSystem noopFs = new NoopFileSystem();
 
   public void testNoSuchRepository() throws Exception {
-    RepositoryExpression repositoryExpression = RepositoryExpression.create("foo");
+    RepositoryExpression repositoryExpression = new RepositoryExpression("foo");
     RepositoryCodebaseProcessor repositoryCodebaseProcessor =
         new RepositoryCodebaseProcessor(ui, () -> null);
     MoeProblem err =
@@ -86,7 +86,7 @@ public class ExpressionProcessingTest extends TestCase {
     mockFs.setLifetime(EasyMock.eq(copyLocation), EasyMock.<Lifetime>anyObject());
     mockFs.cleanUpTempDirs();
 
-    RepositoryExpression repoEx = RepositoryExpression.create("file").withOption("path", "/foo");
+    RepositoryExpression repoEx = new RepositoryExpression("file").withOption("path", "/foo");
 
     control.replay();
     Codebase c = expressionEngine.createCodebase(repoEx, new NoopProjectContext());
@@ -99,7 +99,7 @@ public class ExpressionProcessingTest extends TestCase {
 
   public void testNoSuchEditor() throws Exception {
     ProjectContext context = new NoopProjectContext();
-    RepositoryExpression repoExpression = RepositoryExpression.create("testrepo");
+    RepositoryExpression repoExpression = new RepositoryExpression("testrepo");
     ExpressionEngine expressionEngine = control.createMock(ExpressionEngine.class);
     expect(expressionEngine.createCodebase(repoExpression, context)).andReturn(mockRepoCodebase);
     EditedCodebaseProcessor processor = new EditedCodebaseProcessor(ui, expressionEngine);
@@ -128,7 +128,7 @@ public class ExpressionProcessingTest extends TestCase {
         };
 
     ExpressionEngine expressionEngine = control.createMock(ExpressionEngine.class);
-    RepositoryExpression repositoryExpression = RepositoryExpression.create("testrepo");
+    RepositoryExpression repositoryExpression = new RepositoryExpression("testrepo");
     expect(expressionEngine.createCodebase(repositoryExpression, context))
         .andReturn(mockRepoCodebase);
     expect(mockRepoCodebase.projectSpace()).andReturn("internal").times(2);
@@ -182,11 +182,11 @@ public class ExpressionProcessingTest extends TestCase {
           }
         };
 
-    Codebase firstCb = Codebase.create(firstDir, "foo", RepositoryExpression.create("foo"));
+    Codebase firstCb = Codebase.create(firstDir, "foo", new RepositoryExpression("foo"));
 
-    Codebase secondCb = Codebase.create(secondDir, "public", RepositoryExpression.create("foo2"));
+    Codebase secondCb = Codebase.create(secondDir, "public", new RepositoryExpression("foo2"));
 
-    Codebase finalCb = Codebase.create(finalDir, "public", RepositoryExpression.create("foo3"));
+    Codebase finalCb = Codebase.create(finalDir, "public", new RepositoryExpression("foo3"));
 
     expect(cc.create(ImmutableMap.of())).andReturn(firstCb);
     expect(translatorEditor.edit(firstCb, ImmutableMap.of())).andReturn(secondCb);

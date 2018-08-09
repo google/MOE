@@ -50,10 +50,10 @@ public class InverseRenamingEditorTest extends TestCase {
     RenamingEditor inverseRenamey = new RenamingEditor(mockFs, gson, "renamey", config);
 
     Codebase input =
-        Codebase.create(new File("/input"), "public", RepositoryExpression.create("input"));
+        Codebase.create(new File("/input"), "public", new RepositoryExpression("input"));
     Codebase destination =
         Codebase.create(
-            new File("/destination"), "public", RepositoryExpression.create("destination"));
+            new File("/destination"), "public", new RepositoryExpression("destination"));
 
     expect(mockFs.getTemporaryDirectory("inverse_rename_run_")).andReturn(new File("/output"));
 

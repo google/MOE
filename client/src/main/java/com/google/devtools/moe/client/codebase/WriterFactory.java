@@ -35,11 +35,11 @@ public class WriterFactory {
    */
   public Writer createWriter(RepositoryExpression expression, ProjectContext context)
       throws WritingError {
-    RepositoryType repositoryType = context.getRepository(expression.term().identifier());
+    RepositoryType repositoryType = context.getRepository(expression.getTerm().getIdentifier());
     WriterCreator wc = repositoryType.writerCreator();
 
-    try (Task task = ui.newTask("create_writer", "Creating Writer \"%s\"", expression.term())) {
-      return task.keep(wc.create(expression.term().options()));
+    try (Task task = ui.newTask("create_writer", "Creating Writer \"%s\"", expression.getTerm())) {
+      return task.keep(wc.create(expression.getTerm().getOptions()));
     }
   }
 }

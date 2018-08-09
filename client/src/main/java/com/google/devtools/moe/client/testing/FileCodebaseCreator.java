@@ -67,7 +67,7 @@ public class FileCodebaseCreator extends CodebaseCreator {
     File codebasePath = getCodebasePath(new File(source));
     String projectSpace =
         options.containsKey(PROJECT_SPACE_OPTION) ? options.get(PROJECT_SPACE_OPTION) : "public";
-    RepositoryExpression expression = RepositoryExpression.create("file").withOptions(options);
+    RepositoryExpression expression = new RepositoryExpression("file").withOptions(options);
     return Codebase.create(codebasePath, projectSpace, expression);
   }
 

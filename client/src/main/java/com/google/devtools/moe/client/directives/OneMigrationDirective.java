@@ -102,7 +102,7 @@ public class OneMigrationDirective extends Directive {
     Codebase sourceCodebase;
     try {
       Expression sourceExpression =
-          RepositoryExpression.create(fromRepoEx.getRepositoryName())
+          new RepositoryExpression(fromRepoEx.getRepositoryName())
               .atRevision(revs.get(0).revId())
               .translateTo(toProjectSpace);
       sourceCodebase = expressionEngine.createCodebase(sourceExpression, context);

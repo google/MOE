@@ -8,25 +8,32 @@
     <module>client</module>
   </modules>
   <properties>
+    <kotlin.version>1.2.30</kotlin.version>
     <joda.time.version>2.9.9</joda.time.version>
-    <guava.version>23.0</guava.version>
+    <guava.version>25.1-jre</guava.version>
     <gson.version>2.8.1</gson.version>
     <okhttp.version>2.5.0</okhttp.version>
     <json.sanitizer.version>1.1</json.sanitizer.version>
-    <dagger.version>2.11</dagger.version>
-    <auto.value.version>1.5</auto.value.version>
+    <dagger.version>2.16</dagger.version>
+    <auto.value.version>1.6.2</auto.value.version>
     <auto.factory.version>1.0-beta5</auto.factory.version>
-    <auto.value.gson.version>0.4.4</auto.value.gson.version>
+    <auto.value.gson.version>0.8.0</auto.value.gson.version>
     <jsr305.version>3.0.2</jsr305.version>
     <args4j.version>2.32</args4j.version>
     <junit.version>4.13-SNAPSHOT</junit.version>
-    <truth.version>0.35</truth.version>
+    <truth.version>0.42</truth.version>
     <easymock.version>3.1</easymock.version>
     <mockito.version>1.9.5</mockito.version>
-    <errorprone.version>2.1.1</errorprone.version>
+    <errorprone.version>2.3.1</errorprone.version>
+    <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
   </properties>
   <dependencyManagement>
     <dependencies>
+      <dependency>
+        <groupId>org.jetbrains.kotlin</groupId>
+        <artifactId>kotlin-stdlib</artifactId>
+        <version>${kotlin.version}</version>
+      </dependency>
       <dependency>
         <groupId>joda-time</groupId>
         <artifactId>joda-time</artifactId>
@@ -128,11 +135,19 @@
     <resources>
       <resource>
         <directory>src/main/java</directory>
+        <excludes>
+          <exclude>**/*.java</exclude>
+          <exclude>**/*.kt</exclude>
+        </excludes>
       </resource>
     </resources>
     <testResources>
       <testResource>
         <directory>src/test/java</directory>
+        <excludes>
+          <exclude>**/*.java</exclude>
+          <exclude>**/*.kt</exclude>
+        </excludes>
       </testResource>
     </testResources>
     <pluginManagement>

@@ -40,7 +40,7 @@ public class GitWriterTest extends TestCase {
   private final File codebaseRoot = new File("/codebase");
   private final File writerRoot = new File("/writer");
   private final String projectSpace = "public";
-  private final RepositoryExpression cExp = RepositoryExpression.create(projectSpace);
+  private final RepositoryExpression cExp = new RepositoryExpression(projectSpace);
   private final Codebase codebase = Codebase.create(codebaseRoot, projectSpace, cExp);
   private final GitClonedRepository mockRevClone = control.createMock(GitClonedRepository.class);
   private final RepositoryConfig mockRepoConfig = control.createMock(RepositoryConfig.class);
