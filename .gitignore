@@ -1,6 +1,9 @@
-build/
 target/
 .project
 .classpath
 .settings/
 .factorypath
+.idea/
+*.iml
+*.ipr
+
