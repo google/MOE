@@ -1,0 +1,135 @@
+load("//tools/build_defs:tests.bzl", "jvm_unit_test")
+
+jvm_unit_test(
+    name = "BookkeepingDirectiveTest",
+    deps = [
+        "//client/src/main/java/com/google/devtools/moe/client",
+        "//client/src/main/java/com/google/devtools/moe/client:core",
+        "//client/src/test/java/com/google/devtools/moe/client/testing",
+        "@maven//com/google/guava",
+        "@maven//com/google/truth",
+        "@maven//org/easymock",
+        "@maven//junit",
+    ],
+)
+
+jvm_unit_test(
+    name = "ChangeDirectiveTest",
+    deps = [
+        "//client/src/main/java/com/google/devtools/moe/client",
+        "//client/src/main/java/com/google/devtools/moe/client:core",
+        "//client/src/test/java/com/google/devtools/moe/client/testing",
+        "@maven//com/google/guava",
+        "@maven//com/google/truth",
+        "@maven//junit",
+    ],
+)
+
+jvm_unit_test(
+    name = "CreateCodebaseDirectiveTest",
+    deps = [
+        "//client/src/main/java/com/google/devtools/moe/client",
+        "//client/src/main/java/com/google/devtools/moe/client:core",
+        "//client/src/test/java/com/google/devtools/moe/client/testing",
+        "@maven//com/google/guava",
+        "@maven//com/google/truth",
+        "@maven//junit",
+    ],
+)
+
+jvm_unit_test(
+    name = "DetermineMetadataDirectiveTest",
+    deps = [
+        "//client/src/main/java/com/google/devtools/moe/client",
+        "//client/src/main/java/com/google/devtools/moe/client:core",
+        "@maven//com/google/guava",
+        "@maven//com/google/truth",
+        "@maven//joda-time:joda_time",
+        "@maven//junit",
+    ],
+)
+
+jvm_unit_test(
+    name = "FindEquivalenceDirectiveTest",
+    deps = [
+        "//client/src/main/java/com/google/devtools/moe/client",
+        "//client/src/main/java/com/google/devtools/moe/client:core",
+        "@maven//com/google/guava",
+        "@maven//com/google/truth",
+        "@maven//junit",
+    ],
+)
+
+jvm_unit_test(
+    name = "GithubPullDirectiveTest",
+    resources = [
+        "//client/src/test/java/com/google/devtools/moe/client/github:resources",
+    ],
+    deps = [
+        "//client/src/main/java/com/google/devtools/moe/client",
+        "//client/src/main/java/com/google/devtools/moe/client:core",
+        "@maven//com/google/code/gson",
+        "@maven//com/google/guava",
+        "@maven//com/google/truth",
+        "@maven//junit",
+    ],
+)
+
+jvm_unit_test(
+    name = "HighestRevisionDirectiveTest",
+    deps = [
+        "//client/src/main/java/com/google/devtools/moe/client",
+        "//client/src/main/java/com/google/devtools/moe/client:core",
+        "@maven//com/google/guava",
+        "@maven//com/google/truth",
+        "@maven//junit",
+    ],
+)
+
+jvm_unit_test(
+    name = "LastEquivalenceDirectiveTest",
+    deps = [
+        "//client/src/main/java/com/google/devtools/moe/client",
+        "//client/src/main/java/com/google/devtools/moe/client:core",
+        "@maven//com/google/guava",
+        "@maven//com/google/truth",
+        "@maven//junit",
+    ],
+)
+
+jvm_unit_test(
+    name = "MigrateBranchDirectiveTest",
+    deps = [
+        "//client/src/main/java/com/google/devtools/moe/client",
+        "//client/src/main/java/com/google/devtools/moe/client:core",
+        "@maven//com/google/truth",
+        "@maven//joda-time:joda_time",
+        "@maven//junit",
+    ],
+)
+
+jvm_unit_test(
+    name = "NoteEquivalenceDirectiveTest",
+    deps = [
+        "//client/src/main/java/com/google/devtools/moe/client",
+        "//client/src/main/java/com/google/devtools/moe/client:core",
+        "@maven//cglib:cglib_nodep",
+        "@maven//com/google/guava",
+        "@maven//com/google/truth",
+        "@maven//org/easymock",
+        "@maven//org/objenesis",
+        "@maven//junit",
+    ],
+)
+
+jvm_unit_test(
+    name = "OneMigrationDirectiveTest",
+    deps = [
+        "//client/src/main/java/com/google/devtools/moe/client",
+        "//client/src/main/java/com/google/devtools/moe/client:core",
+        "//client/src/test/java/com/google/devtools/moe/client/testing",
+        "@maven//com/google/guava",
+        "@maven//com/google/truth",
+        "@maven//junit",
+    ],
+)

@@ -1,0 +1,19 @@
+load("//tools/build_defs:tests.bzl", "jvm_unit_test")
+
+filegroup(
+    name = "resources",
+    srcs = ["pull_request.json"],
+    visibility = ["//client/src/test:__subpackages__"],
+)
+
+jvm_unit_test(
+    name = "GithubClientTest",
+    resources = [":resources"],
+    deps = [
+        "//client/src/main/java/com/google/devtools/moe/client",
+        "@maven//com/google/code/gson",
+        "@maven//com/google/guava",
+        "@maven//com/google/truth",
+        "@maven//junit",
+    ],
+)

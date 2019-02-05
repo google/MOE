@@ -1,0 +1,29 @@
+load("//tools/build_defs:tests.bzl", "jvm_unit_test")
+
+jvm_unit_test(
+    name = "ProjectConfigTest",
+    deps = [
+        "//client/src/main/java/com/google/devtools/moe/client",
+        "@maven//com/google/truth",
+        "@maven//junit",
+    ],
+)
+
+jvm_unit_test(
+    name = "RepositoryConfigTest",
+    deps = [
+        "//client/src/main/java/com/google/devtools/moe/client",
+        "@maven//com/google/guava",
+        "@maven//com/google/truth",
+        "@maven//junit",
+    ],
+)
+
+jvm_unit_test(
+    name = "ScrubberConfigTest",
+    deps = [
+        "//client/src/main/java/com/google/devtools/moe/client",
+        "@maven//com/google/truth",
+        "@maven//junit",
+    ],
+)

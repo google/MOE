@@ -1,0 +1,50 @@
+load("//tools/build_defs:tests.bzl", "jvm_unit_test")
+
+java_library(
+    name = "testing",
+    srcs = ["TestingUtils.java"],
+    visibility = ["//client/src/test:__subpackages__"],
+    deps = [
+        "//client/src/main/java/com/google/devtools/moe/client",
+        "//client/src/main/java/com/google/devtools/moe/client:core",
+        "@maven//com/google/dagger",
+        "@maven//javax/inject:javax_inject",
+    ],
+)
+
+jvm_unit_test(
+    name = "DummyRevisionHistoryTest",
+    deps = [
+        "//client/src/main/java/com/google/devtools/moe/client",
+        "@maven//com/google/guava",
+        "@maven//com/google/truth",
+        "@maven//joda-time:joda_time",
+        "@maven//junit",
+        "@maven//org/mockito:mockito_core",
+    ],
+)
+
+jvm_unit_test(
+    name = "FileCodebaseCreatorTest",
+    deps = [
+        "//client/src/main/java/com/google/devtools/moe/client",
+        "//client/src/main/java/com/google/devtools/moe/client:core",
+        "@maven//cglib:cglib_nodep",
+        "@maven//com/google/guava",
+        "@maven//com/google/truth",
+        "@maven//junit",
+        "@maven//org/easymock",
+        "@maven//org/objenesis",
+    ],
+)
+
+jvm_unit_test(
+    name = "InMemoryFileSystemTest",
+    deps = [
+        "//client/src/main/java/com/google/devtools/moe/client",
+        "//client/src/main/java/com/google/devtools/moe/client:core",
+        "@maven//com/google/guava",
+        "@maven//com/google/truth",
+        "@maven//junit",
+    ],
+)

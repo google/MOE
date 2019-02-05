@@ -1,0 +1,68 @@
+load("//tools/build_defs:tests.bzl", "jvm_unit_test")
+
+jvm_unit_test(
+    name = "AbstractFileSystemTest",
+    deps = [
+        "//client/src/main/java/com/google/devtools/moe/client",
+        "//client/src/main/java/com/google/devtools/moe/client:core",
+        "@maven//com/google/guava",
+        "@maven//com/google/truth",
+        "@maven//junit",
+    ],
+)
+
+java_library(
+    name = "testlib",
+    srcs = ["NullFileSystemModule.java"],
+    deps = [
+        "//client/src/main/java/com/google/devtools/moe/client:core",
+        "@maven//com/google/dagger",
+        "@maven//com/google/code/findbugs:jsr305",
+    ],
+)
+
+jvm_unit_test(
+    name = "SystemCommandRunnerTest",
+    deps = [
+        "//client/src/main/java/com/google/devtools/moe/client",
+        "@maven//com/google/guava",
+        "@maven//com/google/truth",
+        "@maven//junit",
+    ],
+)
+
+jvm_unit_test(
+    name = "SystemFileSystemTest",
+    deps = [
+        "//client/src/main/java/com/google/devtools/moe/client",
+        "//client/src/main/java/com/google/devtools/moe/client:core",
+        "@maven//com/google/dagger",
+        "@maven//com/google/guava",
+        "@maven//com/google/truth",
+        "@maven//javax/inject:javax_inject",
+        "@maven//junit",
+    ],
+)
+
+jvm_unit_test(
+    name = "TaskTest",
+    deps = [
+        "//client/src/main/java/com/google/devtools/moe/client",
+        "//client/src/main/java/com/google/devtools/moe/client:core",
+        "@maven//com/google/truth",
+        "@maven//junit",
+    ],
+)
+
+jvm_unit_test(
+    name = "UtilsTest",
+    deps = [
+        "//client/src/main/java/com/google/devtools/moe/client:core",
+        "@maven//cglib:cglib_nodep",
+        "@maven//com/google/guava",
+        "@maven//com/google/truth",
+        "@maven//junit",
+        "@maven//org/easymock",
+        "@maven//org/objenesis",
+    ],
+)

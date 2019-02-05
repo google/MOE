@@ -1,0 +1,11 @@
+load("//tools/build_defs:tests.bzl", "jvm_unit_test")
+
+jvm_unit_test(
+    name = "OptionsModuleTest",
+    deps = [
+        "//client/src/main/java/com/google/devtools/moe/client",
+        "@maven//com/google/guava",
+        "@maven//com/google/truth",
+        "@maven//junit",
+    ],
+)

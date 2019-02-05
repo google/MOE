@@ -1,0 +1,1 @@
+build --javacopt=-Aautovaluegson.defaultCollectionsToEmpty=true

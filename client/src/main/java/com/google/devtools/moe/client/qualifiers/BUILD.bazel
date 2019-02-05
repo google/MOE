@@ -1,0 +1,9 @@
+package(default_visibility = ["//client:__subpackages__"])
+
+java_library(
+    name = "qualifiers",
+    srcs = glob(["*.java"]),
+    deps = [
+        "@maven//javax/inject:javax_inject",
+    ],
+)
