@@ -29,43 +29,23 @@ kotlin_repositories()
 kt_register_toolchains()
 
 
-# Description:
-#   Substitutes the naive maven_jvm_artifact for com.google.dagger:dagger with a flagor that exports the compiler
-#   plugin.  Contains the `dagger_version` substitution variable.
-DAGGER_BUILD_SUBSTITUTE_WITH_PLUGIN = """
-java_library(
-   name = "dagger",
-   exports = [
-       ":dagger_api",
-       "@maven//javax/inject:javax_inject",
-   ],
-   exported_plugins = [":dagger_plugin"],
-   visibility = ["//visibility:public"],
-)
-
-maven_jvm_artifact(
-   name = "dagger_api",
-   artifact = "com.google.dagger:dagger:{dagger_version}",
-)
-
-java_plugin(
-   name = "dagger_plugin",
-   processor_class = "dagger.internal.codegen.ComponentProcessor",
-   generates_api = True,
-   deps = [":dagger_compiler"],
-)
-"""
-
 # Setup maven repository handling.
 load("@maven_repository_rules//maven:maven.bzl", "maven_repository_specification")
+load(":workspace_maven_substitutes.bzl", "snippets")
 maven_repository_specification(
     name = "maven",
     artifacts = {
         "args4j:args4j:2.32": { "insecure": True },
         "cglib:cglib-nodep:2.2.2": { "insecure": True },
-        "com.google.auto.factory:auto-factory:1.0-beta6": { "insecure": True },
+        "com.google.auto.factory:auto-factory:1.0-beta6": {
+            "insecure": True,
+            "build_snippet": snippets.AUTO_FACTORY.format(version = "1.0-beta6"),
+        },
         "com.google.auto.value:auto-value-annotations:1.6.3": { "insecure": True },
-        "com.google.auto.value:auto-value:1.6.3": { "insecure": True },
+        "com.google.auto.value:auto-value:1.6.3": {
+            "insecure": True,
+            "build_snippet": snippets.AUTO_VALUE.format(version = "1.6.3"),
+        },
         "com.google.auto:auto-common:0.10": { "insecure": True },
         "com.google.code.findbugs:jsr305:3.0.2": { "insecure": True },
         "com.google.code.gson:gson:2.8.1": { "insecure": True },
@@ -74,7 +54,7 @@ maven_repository_specification(
         "com.google.dagger:dagger-spi:2.20": { "insecure": True },
         "com.google.dagger:dagger:2.20": {
             "insecure": True,
-            "build_snippet": DAGGER_BUILD_SUBSTITUTE_WITH_PLUGIN.format(dagger_version = "2.20")
+            "build_snippet": snippets.DAGGER.format(version = "2.20"),
         },
         "com.google.errorprone:error_prone_annotations:2.3.1": { "insecure": True },
         "com.google.errorprone:javac-shaded:9+181-r4173-1": { "insecure": True },
