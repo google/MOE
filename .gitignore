@@ -1,6 +1,18 @@
-build/
+# maven
 target/
+
+# eclipse
 .project
 .classpath
 .settings/
 .factorypath
+
+# Idea/AndroidStudio
+.idea/
+*.iml
+*.ipr
+
+#Bazel
+bazel-*
+.aswb/
+.ijwb/

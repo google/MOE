@@ -1,0 +1,12 @@
+# A stand-in for the javax.annotation.Generated annotation which several annotation processors depend on,
+# but which disappeared after Java8.  Later versions don't rely on the loaded class, so this can be removed
+# once MOE is upgraded to versions of the annotation processors which dynamically detect the right annotation
+# to emit.
+
+java_library(
+    name = "generated",
+    srcs = [
+        "Generated.java",
+    ],
+    visibility = ["//visibility:public"]
+)

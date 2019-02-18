@@ -1,0 +1,62 @@
+java_library(
+    name = "factory",
+    exports = [
+        "@maven//com/google/auto/factory:auto_factory",
+    ],
+    exported_plugins = [":factory_plugin"],
+    visibility = ["//visibility:public"],
+)
+
+java_plugin(
+    name = "factory_plugin",
+    processor_class = "com.google.auto.factory.processor.AutoFactoryProcessor",
+    generates_api = True,
+    deps = [
+        "@maven//com/google/auto/factory:auto_factory",
+        "@maven//com/google/auto:auto_common",
+        "@maven//com/squareup:javapoet",
+    ],
+)
+
+java_library(
+    name = "value",
+    exports = [
+        "@maven//com/google/auto/value:auto_value_annotations",
+        "@maven//com/ryanharter/auto/value:auto_value_gson_annotations",
+    ],
+    exported_plugins = [":value_plugin", ":value_gson_plugin"],
+    visibility = ["//visibility:public"],
+)
+
+
+java_plugin(
+    name = "value_gson_plugin",
+    processor_class = "com.ryanharter.auto.value.gson.AutoValueGsonAdapterFactoryProcessor",
+    generates_api = True,
+    deps = [
+        "//tools/auto/generated/javax/annotation:generated", # For compiling with java9+
+        "@maven//com/google/auto/value:auto_value",
+        "@maven//com/google/auto/value:auto_value_annotations",
+        "@maven//com/google/code/gson",
+        "@maven//com/ryanharter/auto/value:auto_value_gson",
+        "@maven//com/ryanharter/auto/value:auto_value_gson_annotations",
+        "@maven//com/squareup:javapoet",
+    ],
+)
+
+java_plugin(
+    name = "value_plugin",
+    processor_class = "com.google.auto.value.processor.AutoValueProcessor",
+    generates_api = True,
+    deps = [
+        "//tools/auto/generated/javax/annotation:generated", # For compiling with java9+
+        "@maven//com/google/auto/value:auto_value",
+        "@maven//com/google/auto/value:auto_value_annotations",
+        "@maven//com/google/code/gson",
+        "@maven//com/ryanharter/auto/value:auto_value_gson",
+        "@maven//com/ryanharter/auto/value:auto_value_gson_annotations",
+        "@maven//com/squareup:javapoet",
+    ],
+)
+
+

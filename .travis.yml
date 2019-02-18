@@ -1,36 +1,30 @@
+dist: trusty
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - wget
+      - pkg-config
+
+before_install:
+  - wget https://github.com/bazelbuild/bazel/releases/download/0.22.0/bazel_0.22.0-linux-x86_64.deb
+  - sha256sum -c tools/bazel_0.22.0-linux-x86_64.deb.sha256
+  - sudo dpkg -i bazel_0.22.0-linux-x86_64.deb
+
+script:
+  - jdk_switcher use oraclejdk9
+  - bazel test //...
+
 language: java
 
 jdk:
-  - oraclejdk8
-
-# https://github.com/travis-ci/travis-ci/issues/3259#issuecomment-130860338
-addons:
-  apt:
-    packages:
-      - oracle-java8-installer
-
-install: mvn -P!standard-with-extra-repos -U install clean --fail-never --quiet -DskipTests=true -Dinvoker.skip=true
-
-script: mvn -P!standard-with-extra-repos -U verify --fail-at-end -Dsource.skip=true -Dmaven.javadoc.skip=true
-
-env:
-  global:
-    - secure: "P1EUlOHwhpR2FB/Hot5rrHkg6oyCPsVJ0ejKcHdiVH6Ydaag8xYt/fRvfrIW3G4XK/UXWtLrDYvWEZxdJ0EWQhGbl9vUKipZQljYYYRsLG4x0LrQMphX88eF3NjIpB9DTiveJswEtSB/Ad8/OJVe0+ob76AIhsqUbxQIWxJPtkgqDEzTDU76QceTVZ7BJHxcUDY8C3nO6pD+rnMYHt9yM66H+77eT+vBFBkkvieEQCCZyB3IBsX4LsKzETInz7ZQE85oNRkd4fHYIvvnHGPoqxn1wHWQf9HGQZsZ1fxO+4lM/UOKw+b5ic1rIisabSNIrLZme0vA/QdPsEwTgC1oach3p5jZcWJj+6n+KfPDHgpXjWg2h0LHnPdXnjiNPRY3nL8aUtAxSCUU+zhcI4vzIKSzAlaDN59Kb6PfLJkJWF09+t34yhzCqvaKLQzvEolrqHHfFfD278ARc4W+HqK3qusBLdHG1FpTMgH/EzrRknIm2zVsSt2JaZKDuZNPbUmmufASv0T51knvU8fJaa18Z9JKFfYX1LV1fDRv6nmzzVXrczeUMUgONE+8u+KdCWQrtIAnstzq1fGwTCNx9QOf8EdzJw28BF5/MPhs2BgzrueP5aV/aiXu4dfFG6fte/S8mM91qzUNOU0vSycuQA7VwUYKFo6RPNMgFBnA5kPQQbM="
-    - secure: "F9NnyiQXzTsb1sO+ikn+wyf6vNQj0QAti76O2BG6NXpzQ9N1vhhIOlHlJKjNmB9N7ydRrCEx1wCdYl3p4CwUtJ3GC4BppvwpRz1VEjKUSuBSz4V6ANrhK2bhslc6ztieZCJkrTGued2bPEFAUzsZIGjSVTx+ArKfE0QEbjKOCQim1W5WKMYDLnYxs4XfQj0CmQFgsfbj02UIM+5nk4i2PUHdNhSlG8U39V+F0htdUPWRPBLEUx6pn56lTpANlFVK2xQXAHIYfGr9qNAXW1w06XMIIc9XQFTgnim0MCCGMmNZYYmOlLMK4KGjNERE48ftJttrHqlNP8CZKRw1DpdnGgfpJr/YquhIhm8uTzioP7uvRJPNJ9tH36/wXgL10D0M9d5Nw4qFMWNGj/BFsetF+uHEQnjDOb9sRpnAG3/0Gw0Y9FyC92kOvOSpe+uDMN/ZOV1tqbBNmfg27u8CLUYB2S+3gllouwRqtJug9PeOq5Qq6DigWEcCOjaURoYwXAzgmHQB0MJswl69FZu7wc14bpx23bLmwtLHaxU9WxviQp7pQeJjYKNnPQEQPakAhy4uXAf/eUIyKLQYuUeNS3rcM9FZhIgkPbBDr6TNRPUZk6HXZ1etsm1d1ZKAXLDTEsArTZ/rIHwa0B7bFGrtR8lsFzBp8QEh2aoUBOHfm/qGVrs="
-    - secure: "NMy5OMMkXMqWeCpUpBT+EN0YoJd/xoQUPklDXZOljiIfy2uZzmV5hhfbG8lNBTZPHN2zVIQxHZ8dKJ4q290zA07CNkIPh3vK3SRFyKnJ3oL+oELJUKUtMcJyMc91aIcYhztq2829ZWaw9PSdOvt21PKnOiBOXBn8AVCHIeJjw8okXgJJlCK+GWSa21UcvbMDG1T+OJrwMhnn/t09KdWy0vDUvPKU2slgkZIPMmy1JbxJnDP548K1P4lMtJ2XYZ+x+PDeyyWwaPAE8ZJND9av0TXMBgnS6uuntNFm54ABTUAQxDUmdc3qTtd3TLtCHoP2r2bs45M01Sj8LXUU1CtEGA6ktp57qeMcHgWC04n/+BRpjIDvM5S0+n4exENTOjcVxMIc2TgWp7L1HWd0qBxdnGdhuX8BweV74ZoBzW+Dw1RBPcFzx9sMM9yIcnQUjtNiC71QAZ85KTX3DMWJxmv/tUjJlTRmaGbIgWbeSIZ2aB9EF6A1PUGDvkgnVwUXd2epvYn/egvUfTXY7TiCug8D/I8ZcvFbulspKQnjFHOLskKIwBP0Jjed0FJz422Ip5AsnT239V4p9OEF+GMWYVIZoJhUuShubyrLG2qiVCvRW8640CaH84F+YDERuvMdHI2Kgod6DjezkQtXahUwto76e9wuseBoZTklfWwIfJ1isVc="
-
-after_success:
-  - util/generate-latest-docs.sh
-  - util/publish-snapshot-on-commit.sh
+  - oraclejdk9
 
 branches:
   except:
     - gh-pages
 
 notifications:
-  email: cgruber@google.com
-
-cache:
-  directories:
-    - $HOME/.m2
-
+  email: make-open-easy+CI@googlegroups.com
