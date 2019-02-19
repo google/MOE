@@ -72,9 +72,9 @@ public class ShellEditor implements Editor {
   public Codebase edit(Codebase input, Map<String, String> options) {
     File tempDir = filesystem.getTemporaryDirectory("shell_run_");
     try {
-      filesystem.copyDirectory(input.path(), tempDir);
+      filesystem.copyDirectory(input.root(), tempDir);
     } catch (IOException e) {
-      throw new MoeProblem(e, "Failed to copy directory %s to %s", input.path(), tempDir);
+      throw new MoeProblem(e, "Failed to copy directory %s to %s", input.root(), tempDir);
     }
     try {
       cmd.runCommand(tempDir.getAbsolutePath(), "bash", ImmutableList.of("-c", this.commandString));

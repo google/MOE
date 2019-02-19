@@ -88,7 +88,7 @@ public class CodebaseMergerTest {
 
   @Before
   public void setUp() {
-    when(merged.path()).thenReturn(mergedCodebaseLocation);
+    when(merged.root()).thenReturn(mergedCodebaseLocation);
     when(merged.getFile("foo")).thenReturn(new File(mergedCodebaseLocation, "foo"));
     when(fileSystem.getTemporaryDirectory("merged_codebase_")).thenReturn(mergedCodebaseLocation);
 
@@ -316,9 +316,9 @@ public class CodebaseMergerTest {
   public void testMerge() throws Exception {
     Ui ui = mock(Ui.class);
 
-    when(orig.path()).thenReturn(new File("orig"));
-    when(dest.path()).thenReturn(new File("dest"));
-    when(mod.path()).thenReturn(new File("mod"));
+    when(orig.root()).thenReturn(new File("orig"));
+    when(dest.root()).thenReturn(new File("dest"));
+    when(mod.root()).thenReturn(new File("mod"));
     when(fileSystem.exists(origFile)).thenReturn(true);
     when(fileSystem.exists(destFile)).thenReturn(true);
     when(fileSystem.exists(modFile)).thenReturn(true);

@@ -88,7 +88,7 @@ public class SvnWriter implements Writer {
             .build();
 
     Set<String> codebaseFiles =
-        Utils.makeFilenamesRelative(filesystem.findFiles(c.path()), c.path());
+        Utils.makeFilenamesRelative(filesystem.findFiles(c.root()), c.root());
     Set<String> writerFiles =
         Utils.filterByRegEx(
             Utils.makeFilenamesRelative(filesystem.findFiles(rootDirectory), rootDirectory),

@@ -85,7 +85,7 @@ class ExpressionProcessingTest : TestCase() {
         val c = expressionEngine.createCodebase(repoEx, NoopProjectContext())
         control.verify()
 
-        assertThat(c.path()).isEqualTo(copyLocation)
+        assertThat(c.root()).isEqualTo(copyLocation)
         assertThat(c.projectSpace()).isEqualTo("public")
         assertThat(c.expression()).isEqualTo(repoEx)
     }
@@ -185,7 +185,7 @@ class ExpressionProcessingTest : TestCase() {
         val c = expressionEngine.createCodebase(expression, context)
 
         control.verify()
-        assertThat(c.path()).isEqualTo(finalDir)
+        assertThat(c.root()).isEqualTo(finalDir)
         assertThat(c.projectSpace()).isEqualTo("public")
         assertThat(c.expression().toString()).isEqualTo("foo>public|bar")
     }

@@ -34,11 +34,11 @@ import java.util.Collection;
  */
 @AutoValue
 public abstract class Codebase implements Keepable<Codebase> {
-  public abstract File path();
+  public abstract File root();
 
   @Override
   public Collection<Path> toKeep() {
-    return asList(path().toPath());
+    return asList(root().toPath());
   }
 
   public abstract String projectSpace();
@@ -57,8 +57,8 @@ public abstract class Codebase implements Keepable<Codebase> {
    * @param expression an expression that generates this Codebase. This expression identifies the
    *     Codebase.
    */
-  public static Codebase create(File path, String projectSpace, Expression expression) {
-    return new AutoValue_Codebase(path, projectSpace, expression);
+  public static Codebase create(File root, String projectSpace, Expression expression) {
+    return new AutoValue_Codebase(root, projectSpace, expression);
   }
 
   @Override
@@ -73,19 +73,19 @@ public abstract class Codebase implements Keepable<Codebase> {
    */
   @Override
   public boolean equals(Object other) {
-    return other instanceof Codebase && path().equals(((Codebase) other).path());
+    return other instanceof Codebase && root().equals(((Codebase) other).root());
   }
 
   @Override
   public int hashCode() {
-    return path().hashCode();
+    return root().hashCode();
   }
 
   /**
    * @return the path of a file in this Codebase
    */
   public File getFile(String relativeFilename) {
-    return new File(path(), relativeFilename);
+    return new File(root(), relativeFilename);
   }
 
   /**
@@ -109,7 +109,7 @@ public abstract class Codebase implements Keepable<Codebase> {
    * or translating by "imprinting" them with the EditExpression or TranslateExpression.
    */
   public Codebase copyWithExpression(Expression newExpression) {
-    return Codebase.create(path(), projectSpace(), newExpression);
+    return Codebase.create(root(), projectSpace(), newExpression);
   }
 
   /**
@@ -118,6 +118,6 @@ public abstract class Codebase implements Keepable<Codebase> {
    * space it was translated to.
    */
   public Codebase copyWithProjectSpace(String newProjectSpace) {
-    return Codebase.create(path(), newProjectSpace, expression());
+    return Codebase.create(root(), newProjectSpace, expression());
   }
 }

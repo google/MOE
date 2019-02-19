@@ -99,7 +99,7 @@ public class ScrubbingEditor implements Editor, InverseEditor {
               // TODO(dbentley): allow configuring the scrubber config
               "--config_data",
               (scrubberConfig == null) ? "{}" : gson.toJson(scrubberConfig),
-              input.path().getAbsolutePath()));
+              input.root().getAbsolutePath()));
     } catch (CommandRunner.CommandException | IOException e) {
       throw new MoeProblem(e, "Problem executing the scrubber: %s", e.getMessage());
     }

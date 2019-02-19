@@ -45,7 +45,7 @@ public class TranslatedCodebaseProcessor implements CodebaseProcessor<TranslateE
         ui.newTask(
             "translate",
             "Translating %s from project space \"%s\" to \"%s\"",
-            codebaseToTranslate.path(),
+            codebaseToTranslate.root(),
             codebaseToTranslate.projectSpace(),
             toProjectSpace)) {
 
@@ -56,7 +56,7 @@ public class TranslatedCodebaseProcessor implements CodebaseProcessor<TranslateE
       // Don't mark the translated codebase for persistence if it wasn't allocated by the
       // Translator.
       if (translatedCodebase.equals(codebaseToTranslate)) {
-        translateTask.result().append(translatedCodebase.path() + " (unmodified)");
+        translateTask.result().append(translatedCodebase.root() + " (unmodified)");
       } else {
         translateTask.keep(translatedCodebase);
       }

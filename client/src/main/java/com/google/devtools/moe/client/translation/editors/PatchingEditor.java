@@ -72,9 +72,9 @@ public class PatchingEditor implements Editor {
         throw new MoeProblem("cannot read file %s", patchFilePath);
       }
       try {
-        filesystem.copyDirectory(input.path(), tempDir);
+        filesystem.copyDirectory(input.root(), tempDir);
       } catch (IOException e) {
-        throw new MoeProblem(e, "Failed to copy directory %s to %s", input.path(), tempDir);
+        throw new MoeProblem(e, "Failed to copy directory %s to %s", input.root(), tempDir);
       }
       try {
         cmd.runCommand(

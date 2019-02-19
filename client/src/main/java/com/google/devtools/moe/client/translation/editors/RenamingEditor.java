@@ -159,11 +159,11 @@ public class RenamingEditor implements Editor, InverseEditor {
     File tempDir = filesystem.getTemporaryDirectory("rename_run_");
     try {
       copyDirectoryAndRename(
-          input.path().getAbsoluteFile(),
-          input.path().getAbsoluteFile(),
+          input.root().getAbsoluteFile(),
+          input.root().getAbsoluteFile(),
           tempDir.getAbsoluteFile());
     } catch (IOException e) {
-      throw new MoeProblem(e, "Failed to copy %s to %s", input.path(), tempDir);
+      throw new MoeProblem(e, "Failed to copy %s to %s", input.root(), tempDir);
     }
     return Codebase.create(tempDir, input.projectSpace(), input.expression());
   }
@@ -178,14 +178,14 @@ public class RenamingEditor implements Editor, InverseEditor {
 
   private void inverseRenameAndCopy(Codebase input, File destination, Codebase reference) {
     Set<String> renamedFilenames =
-        Utils.makeFilenamesRelative(filesystem.findFiles(input.path()), input.path());
+        Utils.makeFilenamesRelative(filesystem.findFiles(input.root()), input.root());
     Map<String, String> renamedToReferenceMap =
         makeRenamedToReferenceMap(
-            Utils.makeFilenamesRelative(filesystem.findFiles(reference.path()), reference.path()));
+            Utils.makeFilenamesRelative(filesystem.findFiles(reference.root()), reference.root()));
 
     for (String renamedFilename : renamedFilenames) {
       String inverseRenamedFilename = inverseRename(renamedFilename, renamedToReferenceMap);
-      copyFile(renamedFilename, inverseRenamedFilename, input.path(), destination);
+      copyFile(renamedFilename, inverseRenamedFilename, input.root(), destination);
     }
   }
 

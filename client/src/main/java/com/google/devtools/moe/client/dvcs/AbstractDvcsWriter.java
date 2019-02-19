@@ -75,7 +75,7 @@ public abstract class AbstractDvcsWriter<T extends LocalWorkspace> implements Wr
 
     Set<String> codebaseFiles =
         Utils.makeFilenamesRelative(
-            filesystem.findFiles(incomingChangeCodebase.path()), incomingChangeCodebase.path());
+            filesystem.findFiles(incomingChangeCodebase.root()), incomingChangeCodebase.root());
     Set<String> writerRepoFiles =
         Utils.filterByRegEx(
             Utils.makeFilenamesRelative(filesystem.findFiles(getRoot()), getRoot()),

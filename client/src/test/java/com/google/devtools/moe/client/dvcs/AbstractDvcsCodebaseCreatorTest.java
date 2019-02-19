@@ -75,7 +75,7 @@ public class AbstractDvcsCodebaseCreatorTest extends TestCase {
 
     Codebase codebase = codebaseCreator.create(Collections.<String, String>emptyMap());
 
-    assertEquals(new File(archiveTempDir), codebase.path());
+    assertEquals(new File(archiveTempDir), codebase.root());
     assertEquals("public", codebase.projectSpace());
     assertEquals("mockrepo", codebase.expression().toString());
 
@@ -96,7 +96,7 @@ public class AbstractDvcsCodebaseCreatorTest extends TestCase {
 
     Codebase codebase = codebaseCreator.create(ImmutableMap.of("revision", givenRev));
 
-    assertEquals(new File(archiveTempDir), codebase.path());
+    assertEquals(new File(archiveTempDir), codebase.root());
     assertEquals("public", codebase.projectSpace());
     assertEquals("mockrepo(revision=" + givenRev + ")", codebase.expression().toString());
 

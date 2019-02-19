@@ -41,8 +41,8 @@ public class CodebaseDiffer {
   public CodebaseDifference diffCodebases(Codebase codebase1, Codebase codebase2) {
     Set<String> filenames =
         Sets.union(
-            Utils.makeFilenamesRelative(filesystem.findFiles(codebase1.path()), codebase1.path()),
-            Utils.makeFilenamesRelative(filesystem.findFiles(codebase2.path()), codebase2.path()));
+            Utils.makeFilenamesRelative(filesystem.findFiles(codebase1.root()), codebase1.root()),
+            Utils.makeFilenamesRelative(filesystem.findFiles(codebase2.root()), codebase2.root()));
 
     ImmutableSet.Builder<FileDifference> fileDiffs = ImmutableSet.builder();
 

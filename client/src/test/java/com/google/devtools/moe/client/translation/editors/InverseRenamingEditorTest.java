@@ -80,7 +80,7 @@ public class InverseRenamingEditorTest extends TestCase {
     Codebase inverseRenamed =
         inverseRenamey.inverseEdit(
             input, null /*referenceFrom*/, destination, ImmutableMap.<String, String>of());
-    assertEquals(new File("/output"), inverseRenamed.path());
+    assertEquals(new File("/output"), inverseRenamed.root());
     control.verify();
   }
 
