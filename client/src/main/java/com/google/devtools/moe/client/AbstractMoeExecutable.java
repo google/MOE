@@ -24,7 +24,7 @@ import com.google.devtools.moe.client.Ui.Task;
 import com.google.devtools.moe.client.directives.Directive;
 import com.google.devtools.moe.client.directives.Directives;
 import com.google.devtools.moe.client.options.OptionsParser;
-import com.google.devtools.moe.client.project.InvalidProject;
+
 import java.io.IOException;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.devtools.moe.client.project;
+package com.google.devtools.moe.client.config;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Strings;
@@ -22,18 +22,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.devtools.moe.client.MoeProblem;
-import com.google.devtools.moe.client.gson.GsonModule;
-import com.google.devtools.moe.client.gson.JsonStructureChecker;
-import com.google.devtools.moe.client.migrations.MigrationConfig;
+import com.google.devtools.moe.client.InvalidProject;
 import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParseException;
-import com.google.gson.JsonParser;
 import com.google.gson.TypeAdapter;
 import com.google.gson.annotations.SerializedName;
-import com.google.gson.stream.JsonReader;
-import com.google.json.JsonSanitizer;
-import java.io.StringReader;
 import java.util.Map;
 import javax.annotation.Nullable;
 
@@ -135,7 +127,7 @@ public abstract class ProjectConfig {
     return (translator == null) ? null : translator.scrubber();
   }
 
-  void validate() throws InvalidProject {
+  public void validate() throws InvalidProject {
     InvalidProject.assertFalse(Strings.isNullOrEmpty(name()), "Must specify a name");
     InvalidProject.assertFalse(repositories().isEmpty(), "Must specify repositories");
 
@@ -151,37 +143,6 @@ public abstract class ProjectConfig {
     for (MigrationConfig m : migrations()) {
       m.validate();
     }
-  }
-
-  public static ProjectConfig parse(String configText) throws InvalidProject {
-    ProjectConfig config = null;
-    if (configText != null) {
-      try {
-        JsonReader configReader = new JsonReader(new StringReader(configText));
-        configReader.setLenient(true);
-        JsonElement configJsonElement = new JsonParser().parse(configReader);
-        if (configJsonElement != null) {
-          // Config files often contain JavaScript idioms like comments, single quoted strings,
-          // and trailing commas in lists.
-          // Check that the JSON parsed from configText is structurally the same as that
-          // produced when it is interpreted by GSON in lax mode.
-          String normalConfigText = JsonSanitizer.sanitize(configText);
-          JsonElement normalConfigJsonElement = new JsonParser().parse(normalConfigText);
-          JsonStructureChecker.requireSimilar(configJsonElement, normalConfigJsonElement);
-
-          Gson gson = GsonModule.provideGson(); // TODO(user): Remove this static reference.
-          config = gson.fromJson(configText, ProjectConfig.class);
-        }
-      } catch (JsonParseException e) {
-        throw new InvalidProject(e, "Could not parse MOE config: " + e.getMessage());
-      }
-    }
-
-    if (config == null) {
-      throw new InvalidProject("Could not parse MOE config");
-    }
-    config.validate();
-    return config;
   }
 
   public static TypeAdapter<ProjectConfig> typeAdapter(Gson gson) {

@@ -22,7 +22,7 @@ import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Lifetimes;
 import com.google.devtools.moe.client.codebase.LocalWorkspace;
 import com.google.devtools.moe.client.dvcs.AbstractDvcsCodebaseCreator;
-import com.google.devtools.moe.client.project.RepositoryConfig;
+import com.google.devtools.moe.client.config.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
 import java.io.File;
 

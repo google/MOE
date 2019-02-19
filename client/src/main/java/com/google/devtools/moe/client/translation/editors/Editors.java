@@ -16,16 +16,17 @@
 
 package com.google.devtools.moe.client.translation.editors;
 
-import static com.google.devtools.moe.client.translation.editors.Editor.Type.identity;
-import static com.google.devtools.moe.client.translation.editors.Editor.Type.patcher;
-import static com.google.devtools.moe.client.translation.editors.Editor.Type.renamer;
-import static com.google.devtools.moe.client.translation.editors.Editor.Type.scrubber;
-import static com.google.devtools.moe.client.translation.editors.Editor.Type.shell;
+import static com.google.devtools.moe.client.config.EditorType.identity;
+import static com.google.devtools.moe.client.config.EditorType.patcher;
+import static com.google.devtools.moe.client.config.EditorType.renamer;
+import static com.google.devtools.moe.client.config.EditorType.scrubber;
+import static com.google.devtools.moe.client.config.EditorType.shell;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.moe.client.project.EditorConfig;
-import com.google.devtools.moe.client.project.InvalidProject;
+import com.google.devtools.moe.client.config.EditorType;
+import com.google.devtools.moe.client.config.EditorConfig;
+import com.google.devtools.moe.client.InvalidProject;
 import dagger.Binds;
 import dagger.MapKey;
 import dagger.multibindings.IntoMap;
@@ -38,10 +39,10 @@ import javax.inject.Inject;
  */
 public class Editors {
 
-  private final ImmutableMap<Editor.Type, Editor.Factory> editorFactories;
+  private final ImmutableMap<EditorType, Editor.Factory> editorFactories;
 
   @Inject
-  Editors(Map<Editor.Type, Editor.Factory> editorFactories) {
+  Editors(Map<EditorType, Editor.Factory> editorFactories) {
     this.editorFactories = ImmutableMap.copyOf(editorFactories);
   }
 
@@ -66,7 +67,7 @@ public class Editors {
    */
   @MapKey
   @interface EditorKey {
-    Editor.Type value();
+    EditorType value();
   }
 
   /** The default editor types available for moe configuration, arranged as a Map. */

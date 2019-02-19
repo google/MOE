@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package com.google.devtools.moe.client.project;
+package com.google.devtools.moe.client.config;
 
-import static com.google.devtools.moe.client.project.InvalidProject.assertFalse;
-import static com.google.devtools.moe.client.project.InvalidProject.assertNotNull;
+import static com.google.devtools.moe.client.InvalidProject.assertFalse;
+import static com.google.devtools.moe.client.InvalidProject.assertNotNull;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.devtools.moe.client.gson.GsonUtil;
-import com.google.devtools.moe.client.repositories.RepositoryType;
+import com.google.devtools.moe.client.InvalidProject;
 import com.google.gson.annotations.SerializedName;
 import java.util.List;
 
@@ -175,21 +175,6 @@ public class RepositoryConfig {
   }
 
   /**
-   * Validates that the supplied
-   * {@link com.google.devtools.moe.client.repositories.RepositoryType.Factory} targets the
-   * correct repo type, throwing an {@link InvalidProject} exception if it does not.
-   */
-  public void checkType(RepositoryType.Factory repositoryFactory) throws InvalidProject {
-    if (!repositoryFactory.type().equals(getType())) {
-      // TODO(cgruber): Make it so this can't happen at runtime, ever, and throw AssertionError.
-      throw new InvalidProject(
-          "Invalid repository type '%s' for %s",
-          getType(),
-          repositoryFactory.getClass().getSimpleName());
-    }
-  }
-
-  /**
    * Modified copy creator, that supplies a clone with the branch field altered.
    */
   public RepositoryConfig copyWithBranch(String branch) {
@@ -212,7 +197,7 @@ public class RepositoryConfig {
    *
    * @throws InvalidProject an error describing an error in the project configuration.
    */
-  void validate() {
+  public void validate() {
     assertNotNull(getType(), "Must set repository type.");
     assertFalse(getType().trim().isEmpty(), "Must set repository type.");
   }

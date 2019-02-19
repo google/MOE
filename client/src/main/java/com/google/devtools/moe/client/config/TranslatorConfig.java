@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package com.google.devtools.moe.client.project;
+package com.google.devtools.moe.client.config;
 
-import com.google.devtools.moe.client.translation.editors.Editor;
+import com.google.devtools.moe.client.InvalidProject;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -52,7 +53,7 @@ public class TranslatorConfig {
   public ScrubberConfig scrubber() {
     if (getSteps() != null) {
       for (StepConfig step : getSteps()) {
-        if (step.getEditorConfig().type() == Editor.Type.scrubber) {
+        if (step.getEditorConfig().type() == EditorType.scrubber) {
           return step.getEditorConfig().scrubberConfig();
         }
       }
@@ -64,14 +65,14 @@ public class TranslatorConfig {
     if (getSteps() != null) {
       return getSteps().stream()
           .map(StepConfig::getEditorConfig)
-          .filter(ec -> ec.type() == Editor.Type.scrubber)
+          .filter(ec -> ec.type() == EditorType.scrubber)
           .map(EditorConfig::scrubberConfig)
           .collect(Collectors.toList());
     }
     return new ArrayList<>(0);
   }
 
-  void validate() throws InvalidProject {
+  public void validate() throws InvalidProject {
     InvalidProject.assertNotEmpty(fromProjectSpace, "Translator requires from_project_space");
     InvalidProject.assertNotEmpty(toProjectSpace, "Translator requires to_project_space");
     if (inverse) {

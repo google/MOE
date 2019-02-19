@@ -25,7 +25,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.LocalWorkspace;
-import com.google.devtools.moe.client.project.RepositoryConfig;
+import com.google.devtools.moe.client.config.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
 import java.io.File;
@@ -75,7 +75,7 @@ public class AbstractDvcsCodebaseCreatorTest extends TestCase {
 
     Codebase codebase = codebaseCreator.create(Collections.<String, String>emptyMap());
 
-    assertEquals(new File(archiveTempDir), codebase.path());
+    assertEquals(new File(archiveTempDir), codebase.root());
     assertEquals("public", codebase.projectSpace());
     assertEquals("mockrepo", codebase.expression().toString());
 
@@ -96,7 +96,7 @@ public class AbstractDvcsCodebaseCreatorTest extends TestCase {
 
     Codebase codebase = codebaseCreator.create(ImmutableMap.of("revision", givenRev));
 
-    assertEquals(new File(archiveTempDir), codebase.path());
+    assertEquals(new File(archiveTempDir), codebase.root());
     assertEquals("public", codebase.projectSpace());
     assertEquals("mockrepo(revision=" + givenRev + ")", codebase.expression().toString());
 

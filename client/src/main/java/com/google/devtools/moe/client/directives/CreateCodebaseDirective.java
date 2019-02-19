@@ -68,7 +68,7 @@ public class CreateCodebaseDirective extends Directive {
     try (Task task = ui.newTask("create_codebase", "Creating codebase %s", codebase)) {
       Codebase realCodebase =
           task.keep(expressionEngine.createCodebase(Parser.parseExpression(codebase), context));
-      ui.message("Codebase \"%s\" created at %s", realCodebase, realCodebase.path());
+      ui.message("Codebase \"%s\" created at %s", realCodebase, realCodebase.root());
       maybeWriteTar(realCodebase);
     } catch (CommandException e) {
       throw new MoeProblem(e, "Error creating codebase tarfile");
@@ -89,7 +89,7 @@ public class CreateCodebaseDirective extends Directive {
     }
 
     cmd.runCommand(
-        codebase.path().getAbsolutePath(),
+        codebase.root().getAbsolutePath(),
         "tar",
         ImmutableList.of("--mtime=1980-01-01", "--owner=0", "--group=0", "-c", "-f", tarfile, "."));
 

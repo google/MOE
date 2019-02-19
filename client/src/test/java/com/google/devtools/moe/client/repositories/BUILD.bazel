@@ -4,6 +4,7 @@ jvm_unit_test(
     name = "DescriptionMetadataScrubberTest",
     deps = [
         "//client/src/main/java/com/google/devtools/moe/client",
+        "//client/src/main/java/com/google/devtools/moe/client/config",
         "@maven//com/google/truth",
         "@maven//joda-time:joda_time",
         "@maven//junit",
@@ -14,6 +15,7 @@ jvm_unit_test(
     name = "MetadataUsernameScrubberTest",
     deps = [
         "//client/src/main/java/com/google/devtools/moe/client",
+        "//client/src/main/java/com/google/devtools/moe/client/config",
         "@maven//com/google/guava",
         "@maven//com/google/truth",
         "@maven//joda-time:joda_time",
@@ -26,6 +28,7 @@ jvm_unit_test(
     deps = [
         "//client/src/main/java/com/google/devtools/moe/client",
         "//client/src/main/java/com/google/devtools/moe/client:core",
+        "//client/src/main/java/com/google/devtools/moe/client/config",
         "@maven//com/google/truth",
         "@maven//joda-time:joda_time",
         "@maven//junit",
@@ -47,6 +50,8 @@ jvm_unit_test(
     name = "RepositoriesTest",
     deps = [
         "//client/src/main/java/com/google/devtools/moe/client",
+        "//client/src/main/java/com/google/devtools/moe/client:core",
+        "//client/src/main/java/com/google/devtools/moe/client/config",
         "@maven//cglib:cglib_nodep",
         "@maven//com/google/guava",
         "@maven//com/google/truth",

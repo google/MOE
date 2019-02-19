@@ -24,6 +24,7 @@ import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.Utils;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.LocalWorkspace;
+import com.google.devtools.moe.client.config.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;
 import com.google.devtools.moe.client.writer.DraftRevision;
 import com.google.devtools.moe.client.writer.Writer;
@@ -63,7 +64,7 @@ public abstract class AbstractDvcsWriter<T extends LocalWorkspace> implements Wr
 
   /**
    * Returns the regexes, a la {@link
-   * com.google.devtools.moe.client.project.RepositoryConfig#getIgnoreFilePatterns()}, of filepaths
+   * RepositoryConfig#getIgnoreFilePatterns()}, of filepaths
    * to ignore in this Writer. For example, an Hg implementation of this method would return the
    * getIgnoreFileRes() in its RepositoryConfig along with any Hg-specific paths in its LocalClone,
    * such as "^.hg/.*". Otherwise, this Writer would attempt to modify hg-metadata files.
@@ -75,7 +76,7 @@ public abstract class AbstractDvcsWriter<T extends LocalWorkspace> implements Wr
 
     Set<String> codebaseFiles =
         Utils.makeFilenamesRelative(
-            filesystem.findFiles(incomingChangeCodebase.path()), incomingChangeCodebase.path());
+            filesystem.findFiles(incomingChangeCodebase.root()), incomingChangeCodebase.root());
     Set<String> writerRepoFiles =
         Utils.filterByRegEx(
             Utils.makeFilenamesRelative(filesystem.findFiles(getRoot()), getRoot()),

@@ -15,6 +15,7 @@ jvm_unit_test(
     deps = [
         "//client/src/main/java/com/google/devtools/moe/client",
         "//client/src/main/java/com/google/devtools/moe/client:core",
+        "//client/src/main/java/com/google/devtools/moe/client/config",
         "//client/src/main/java/com/google/devtools/moe/client/qualifiers",
         "//client/src/main/java/com/google/devtools/moe/client/codebase/expressions",
         "@maven//com/google/dagger",

@@ -16,7 +16,7 @@
 package com.google.devtools.moe.client.translation.editors;
 
 import com.google.devtools.moe.client.codebase.Codebase;
-import com.google.devtools.moe.client.project.InvalidProject;
+import com.google.devtools.moe.client.InvalidProject;
 import java.util.Map;
 
 /**

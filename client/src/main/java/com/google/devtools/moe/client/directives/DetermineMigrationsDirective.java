@@ -19,7 +19,7 @@ package com.google.devtools.moe.client.directives;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.migrations.Migration;
-import com.google.devtools.moe.client.migrations.MigrationConfig;
+import com.google.devtools.moe.client.config.MigrationConfig;
 import com.google.devtools.moe.client.migrations.Migrator;
 import com.google.devtools.moe.client.project.ProjectContext;
 import com.google.devtools.moe.client.repositories.RepositoryType;

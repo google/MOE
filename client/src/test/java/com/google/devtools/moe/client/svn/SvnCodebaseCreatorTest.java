@@ -25,7 +25,7 @@ import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseCreator;
-import com.google.devtools.moe.client.project.RepositoryConfig;
+import com.google.devtools.moe.client.config.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.Revision;
 import java.io.File;
 import junit.framework.TestCase;
@@ -69,7 +69,7 @@ public class SvnCodebaseCreatorTest extends TestCase {
     CodebaseCreator cc =
         new SvnCodebaseCreator(fileSystem, "testing", mockConfig, revisionHistory, util);
     Codebase r = cc.create(ImmutableMap.of("revision", "46"));
-    assertEquals("/dummy/path/45", r.path().getAbsolutePath());
+    assertEquals("/dummy/path/45", r.root().getAbsolutePath());
     assertEquals("internal", r.projectSpace());
     control.verify();
   }

@@ -16,13 +16,13 @@
 
 package com.google.devtools.moe.client.testing;
 
-import static com.google.devtools.moe.client.project.ProjectConfig.parse;
+import static com.google.devtools.moe.client.project.ProjectConfigs.parse;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.ExpressionEngine;
-import com.google.devtools.moe.client.project.InvalidProject;
-import com.google.devtools.moe.client.project.ProjectConfig;
+import com.google.devtools.moe.client.InvalidProject;
+import com.google.devtools.moe.client.config.ProjectConfig;
 import com.google.devtools.moe.client.project.ProjectContextFactory;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.translation.editors.Editors;

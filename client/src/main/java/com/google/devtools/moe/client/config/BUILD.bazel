@@ -1,0 +1,14 @@
+package(default_visibility = ["//client:__subpackages__"])
+
+java_library(
+    name = "config",
+    srcs = glob(["*.java", "*.kt"]),
+    javacopts = ["-Aautovaluegson.defaultCollectionsToEmpty=true"],
+    deps = [
+        "//client/src/main/java/com/google/devtools/moe/client:core",
+        "//client/src/main/java/com/google/devtools/moe/client/gson",
+        "@maven//com/google/auto/value",
+        "@maven//com/google/code/gson",
+        "@maven//com/google/guava",
+    ],
+)

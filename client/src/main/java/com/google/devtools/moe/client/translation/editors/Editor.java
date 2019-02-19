@@ -17,7 +17,7 @@
 package com.google.devtools.moe.client.translation.editors;
 
 import com.google.devtools.moe.client.codebase.Codebase;
-import com.google.devtools.moe.client.project.EditorConfig;
+import com.google.devtools.moe.client.config.EditorConfig;
 import java.util.Map;
 
 /**
@@ -48,16 +48,4 @@ public interface Editor {
     Editor newEditor(String name, EditorConfig config);
   }
 
-  /**
-   * Enum of all known editor implementations.
-   *
-   * All values are valid JSON editor types.
-   */
-  public enum Type {
-    identity,
-    scrubber,
-    patcher,
-    shell,
-    renamer;
-  }
 }

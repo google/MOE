@@ -18,8 +18,8 @@ package com.google.devtools.moe.client.repositories;
 
 import com.google.auto.value.AutoValue;
 import com.google.devtools.moe.client.codebase.CodebaseCreator;
-import com.google.devtools.moe.client.project.InvalidProject;
-import com.google.devtools.moe.client.project.RepositoryConfig;
+import com.google.devtools.moe.client.InvalidProject;
+import com.google.devtools.moe.client.config.RepositoryConfig;
 import com.google.devtools.moe.client.writer.WriterCreator;
 
 /**
@@ -60,5 +60,22 @@ public abstract class RepositoryType {
      */
     // TODO(cgruber): Consider making this an abstract class with a template method for validation.
     RepositoryType create(String name, RepositoryConfig config) throws InvalidProject;
+
+
+    /**
+     * Validates that the supplied
+     * {@link com.google.devtools.moe.client.repositories.RepositoryType.Factory} targets the
+     * correct repo type, throwing an {@link InvalidProject} exception if it does not.
+     */
+    default void checkType(RepositoryConfig config) throws InvalidProject {
+      if (!this.type().equals(config.getType())) {
+        // TODO(cgruber): Make it so this can't happen at runtime, ever, and throw AssertionError.
+        throw new InvalidProject(
+                "Invalid repository type '%s' for %s",
+                config.getType(),
+                this.getClass().getSimpleName());
+      }
+    }
+
   }
 }

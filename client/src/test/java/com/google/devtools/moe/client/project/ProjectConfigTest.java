@@ -16,6 +16,9 @@
 
 package com.google.devtools.moe.client.project;
 
+import com.google.devtools.moe.client.InvalidProject;
+import com.google.devtools.moe.client.config.ProjectConfig;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import junit.framework.TestCase;
@@ -24,7 +27,7 @@ public class ProjectConfigTest extends TestCase {
 
   public void testValidConfig() throws Exception {
     ProjectConfig p =
-        ProjectConfig.parse("{'name': 'foo', 'repositories': {'public': {'type': 'blah'}}}");
+        ProjectConfigs.parse("{'name': 'foo', 'repositories': {'public': {'type': 'blah'}}}");
     assertEquals("foo", p.name());
   }
 
@@ -127,7 +130,7 @@ public class ProjectConfigTest extends TestCase {
 
   private void assertInvalidConfig(String text, String error) {
     try {
-      ProjectConfig.parse(text);
+      ProjectConfigs.parse(text);
       fail("Expected error");
     } catch (InvalidProject e) {
       assertEquals(error, e.getMessage());
@@ -146,7 +149,7 @@ public class ProjectConfigTest extends TestCase {
   public void testConfigWithScrubberConfig() throws Exception {
     // The scrubber config should not be parsed.
     ProjectConfig p =
-        ProjectConfig.parse(
+        ProjectConfigs.parse(
             "{\"name\": \"foo\","
                 + " \"scrubber_config\": {\"a\": 1, \"b\": 2},"
                 + " \"repositories\": {\"internal\": {\"type\":\"svn\"}}"
@@ -157,7 +160,7 @@ public class ProjectConfigTest extends TestCase {
 
   public void testDatabaseFile() {
     ProjectConfig p =
-        ProjectConfig.parse(
+        ProjectConfigs.parse(
             "{"
                 + " 'name': 'foo',"
                 + " 'database_uri': '/foo/bar/database.json',"
@@ -170,7 +173,7 @@ public class ProjectConfigTest extends TestCase {
 
   public void testDatabaseFileNull() {
     ProjectConfig p =
-        ProjectConfig.parse("{'name': 'foo', 'repositories': {'x': {'type': 'blah'} } }");
+        ProjectConfigs.parse("{'name': 'foo', 'repositories': {'x': {'type': 'blah'} } }");
     assertThat(p.databaseUri()).isNull();
   }
 

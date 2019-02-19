@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package com.google.devtools.moe.client.migrations;
+package com.google.devtools.moe.client.config;
 
 import com.google.devtools.moe.client.gson.GsonUtil;
-import com.google.devtools.moe.client.project.InvalidProject;
-import com.google.devtools.moe.client.repositories.MetadataScrubberConfig;
+import com.google.devtools.moe.client.InvalidProject;
 
 /**
  * Configuration for a MOE migration.

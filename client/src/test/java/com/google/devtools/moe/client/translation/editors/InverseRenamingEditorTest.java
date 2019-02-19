@@ -16,7 +16,7 @@
 
 package com.google.devtools.moe.client.translation.editors;
 
-import static com.google.devtools.moe.client.translation.editors.Editor.Type.renamer;
+import static com.google.devtools.moe.client.config.EditorType.renamer;
 import static org.easymock.EasyMock.expect;
 
 import com.google.common.collect.ImmutableMap;
@@ -24,9 +24,9 @@ import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.expressions.RepositoryExpression;
-import com.google.devtools.moe.client.gson.GsonModule;
-import com.google.devtools.moe.client.project.EditorConfig;
-import com.google.devtools.moe.client.project.ScrubberConfig;
+import com.google.devtools.moe.client.GsonModule;
+import com.google.devtools.moe.client.config.EditorConfig;
+import com.google.devtools.moe.client.config.ScrubberConfig;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -80,7 +80,7 @@ public class InverseRenamingEditorTest extends TestCase {
     Codebase inverseRenamed =
         inverseRenamey.inverseEdit(
             input, null /*referenceFrom*/, destination, ImmutableMap.<String, String>of());
-    assertEquals(new File("/output"), inverseRenamed.path());
+    assertEquals(new File("/output"), inverseRenamed.root());
     control.verify();
   }
 

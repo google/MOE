@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.google.devtools.moe.client.project;
+package com.google.devtools.moe.client.config;
 
 import com.google.auto.value.AutoValue;
-import com.google.devtools.moe.client.translation.editors.Editor;
+import com.google.devtools.moe.client.InvalidProject;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.TypeAdapter;
@@ -30,7 +30,7 @@ import javax.annotation.Nullable;
 @AutoValue
 public abstract class EditorConfig {
   @Nullable
-  public abstract Editor.Type type();
+  public abstract EditorType type();
 
   @Nullable
   @SerializedName("scrubber_config") // TODO(cushon): remove pending rharter/auto-value-gson#18
@@ -47,12 +47,12 @@ public abstract class EditorConfig {
   public abstract boolean useRegex();
 
   // TODO(cgruber): Push validation around the whole structure.
-  void validate() throws InvalidProject {
+  public void validate() throws InvalidProject {
     InvalidProject.assertNotNull(type(), "Missing type in editor");
   }
 
   public static EditorConfig create(
-      Editor.Type type,
+      EditorType type,
       ScrubberConfig scrubberConfig,
       String commandString,
       JsonObject mappings,

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.devtools.moe.client.repositories;
+package com.google.devtools.moe.client.config;
 
 import com.google.common.collect.ImmutableList;
 
@@ -30,7 +30,7 @@ public class MetadataScrubberConfig {
 
   /**
    * Formatting for changelog adapted from fromRepository for commits in toRepository. See
-   * {@link DescriptionMetadataScrubber}.
+   * {@link com.google.devtools.moe.client.repositories.DescriptionMetadataScrubber}.
    */
   private String logFormat = "{description}\n\n\tChange on {date} by {author}\n";
 

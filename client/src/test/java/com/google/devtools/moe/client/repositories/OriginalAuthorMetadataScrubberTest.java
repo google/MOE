@@ -20,6 +20,8 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.devtools.moe.client.testing.DummyRevisionHistory.parseLegacyFields;
 
 import com.google.devtools.moe.client.Ui;
+import com.google.devtools.moe.client.config.MetadataScrubberConfig;
+
 import java.io.ByteArrayOutputStream;
 import java.util.concurrent.atomic.AtomicBoolean;
 import junit.framework.TestCase;

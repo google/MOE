@@ -33,7 +33,7 @@ public class EditedCodebaseProcessor implements CodebaseProcessor<EditExpression
 
     try (Task task =
         ui.newTask(
-            "edit", "Editing %s with editor %s", codebaseToEdit.path(), editor.getDescription())) {
+            "edit", "Editing %s with editor %s", codebaseToEdit.root(), editor.getDescription())) {
       return task.keep(
               editor.edit(codebaseToEdit, expression.getOperation().getTerm().getOptions()))
           .copyWithExpression(expression);

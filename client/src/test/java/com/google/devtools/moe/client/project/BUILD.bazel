@@ -4,6 +4,8 @@ jvm_unit_test(
     name = "ProjectConfigTest",
     deps = [
         "//client/src/main/java/com/google/devtools/moe/client",
+        "//client/src/main/java/com/google/devtools/moe/client:core",
+        "//client/src/main/java/com/google/devtools/moe/client/config",
         "@maven//com/google/truth",
         "@maven//junit",
     ],
@@ -13,6 +15,8 @@ jvm_unit_test(
     name = "RepositoryConfigTest",
     deps = [
         "//client/src/main/java/com/google/devtools/moe/client",
+        "//client/src/main/java/com/google/devtools/moe/client:core",
+        "//client/src/main/java/com/google/devtools/moe/client/config",
         "@maven//com/google/guava",
         "@maven//com/google/truth",
         "@maven//junit",
@@ -23,6 +27,7 @@ jvm_unit_test(
     name = "ScrubberConfigTest",
     deps = [
         "//client/src/main/java/com/google/devtools/moe/client",
+        "//client/src/main/java/com/google/devtools/moe/client/config",
         "@maven//com/google/truth",
         "@maven//junit",
     ],

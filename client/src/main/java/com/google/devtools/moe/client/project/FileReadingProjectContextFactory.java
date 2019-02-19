@@ -17,9 +17,14 @@
 package com.google.devtools.moe.client.project;
 
 import com.google.devtools.moe.client.FileSystem;
+import com.google.devtools.moe.client.InvalidProject;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.Ui.Task;
 import com.google.devtools.moe.client.codebase.ExpressionEngine;
+import com.google.devtools.moe.client.config.ProjectConfig;
+import com.google.devtools.moe.client.config.ScrubberConfig;
+import com.google.devtools.moe.client.config.TranslatorConfig;
+import com.google.devtools.moe.client.config.UsernamesConfig;
 import com.google.devtools.moe.client.repositories.Repositories;
 import com.google.devtools.moe.client.translation.editors.Editors;
 import com.google.gson.Gson;
@@ -48,7 +53,7 @@ public class FileReadingProjectContextFactory extends ProjectContextFactory {
     String configText;
     try (Task t = ui.newTask("read_config", "Reading config file from %s", configFilename)) {
       configText = fileSystem.fileToString(new File(configFilename));
-      return ProjectConfig.parse(configText);
+      return ProjectConfigs.parse(configText);
     } catch (IOException e) {
       throw new InvalidProject("Config File \"" + configFilename + "\" not accessible.");
     }

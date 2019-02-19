@@ -24,9 +24,9 @@ import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.CodebaseMerger;
-import com.google.devtools.moe.client.project.EditorConfig;
-import com.google.devtools.moe.client.project.InvalidProject;
-import com.google.devtools.moe.client.project.ScrubberConfig;
+import com.google.devtools.moe.client.config.EditorConfig;
+import com.google.devtools.moe.client.InvalidProject;
+import com.google.devtools.moe.client.config.ScrubberConfig;
 import com.google.devtools.moe.client.tools.TarUtils;
 import com.google.gson.Gson;
 import dagger.Lazy;
@@ -99,7 +99,7 @@ public class ScrubbingEditor implements Editor, InverseEditor {
               // TODO(dbentley): allow configuring the scrubber config
               "--config_data",
               (scrubberConfig == null) ? "{}" : gson.toJson(scrubberConfig),
-              input.path().getAbsolutePath()));
+              input.root().getAbsolutePath()));
     } catch (CommandRunner.CommandException | IOException e) {
       throw new MoeProblem(e, "Problem executing the scrubber: %s", e.getMessage());
     }

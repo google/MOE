@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package com.google.devtools.moe.client.project;
+package com.google.devtools.moe.client.config;
 
+import com.google.devtools.moe.client.InvalidProject;
 import com.google.gson.annotations.SerializedName;
 
 /**

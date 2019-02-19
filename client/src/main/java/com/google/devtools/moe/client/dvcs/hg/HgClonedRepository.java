@@ -27,7 +27,7 @@ import com.google.devtools.moe.client.FileSystem.Lifetime;
 import com.google.devtools.moe.client.Lifetimes;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.codebase.LocalWorkspace;
-import com.google.devtools.moe.client.project.RepositoryConfig;
+import com.google.devtools.moe.client.config.RepositoryConfig;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;

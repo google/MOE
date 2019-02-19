@@ -1,7 +1,8 @@
 package com.google.devtools.moe.client.project;
 
 
-import com.google.devtools.moe.client.gson.GsonModule;
+import com.google.devtools.moe.client.config.ScrubberConfig;
+import com.google.devtools.moe.client.GsonModule;
 
 import junit.framework.TestCase;
 

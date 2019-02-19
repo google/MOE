@@ -1,0 +1,16 @@
+package(default_visibility = ["//client:__subpackages__"])
+
+java_library(
+    name = "gson",
+    srcs = glob(["*.java"]),
+    deps = [
+        "//client/src/main/java/com/google/devtools/moe/client:core",
+        "@maven//args4j",
+        "@maven//com/google/auto/value",
+        "@maven//com/google/guava",
+        "@maven//com/google/code/gson",
+        "@maven//com/mikesamuel:json_sanitizer",
+        "@maven//com/google/code/findbugs:jsr305",
+        "@maven//joda-time:joda_time",
+    ],
+)

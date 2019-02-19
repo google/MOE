@@ -25,7 +25,7 @@ import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.MoeProblem;
 import com.google.devtools.moe.client.codebase.Codebase;
-import com.google.devtools.moe.client.project.EditorConfig;
+import com.google.devtools.moe.client.config.EditorConfig;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
@@ -72,9 +72,9 @@ public class PatchingEditor implements Editor {
         throw new MoeProblem("cannot read file %s", patchFilePath);
       }
       try {
-        filesystem.copyDirectory(input.path(), tempDir);
+        filesystem.copyDirectory(input.root(), tempDir);
       } catch (IOException e) {
-        throw new MoeProblem(e, "Failed to copy directory %s to %s", input.path(), tempDir);
+        throw new MoeProblem(e, "Failed to copy directory %s to %s", input.root(), tempDir);
       }
       try {
         cmd.runCommand(

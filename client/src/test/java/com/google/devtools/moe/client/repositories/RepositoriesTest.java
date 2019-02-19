@@ -20,8 +20,8 @@ import static org.easymock.EasyMock.expect;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.moe.client.project.InvalidProject;
-import com.google.devtools.moe.client.project.RepositoryConfig;
+import com.google.devtools.moe.client.InvalidProject;
+import com.google.devtools.moe.client.config.RepositoryConfig;
 import com.google.devtools.moe.client.testing.DummyRepositoryFactory;
 import junit.framework.TestCase;
 import org.easymock.EasyMock;

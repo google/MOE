@@ -17,7 +17,7 @@ package com.google.devtools.moe.client.repositories;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.devtools.moe.client.gson.GsonModule;
+import com.google.devtools.moe.client.GsonModule;
 import com.google.gson.Gson;
 
 import junit.framework.TestCase;

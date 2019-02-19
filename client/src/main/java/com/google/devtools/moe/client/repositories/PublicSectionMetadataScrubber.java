@@ -18,6 +18,7 @@ package com.google.devtools.moe.client.repositories;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
+import com.google.devtools.moe.client.config.MetadataScrubberConfig;
 
 import java.util.List;
 import java.util.regex.Pattern;

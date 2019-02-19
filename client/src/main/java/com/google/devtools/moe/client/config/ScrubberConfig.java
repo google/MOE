@@ -1,5 +1,6 @@
-package com.google.devtools.moe.client.project;
+package com.google.devtools.moe.client.config;
 
+import com.google.devtools.moe.client.InvalidProject;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import java.util.ArrayList;
@@ -84,7 +85,7 @@ public class ScrubberConfig {
   /**
    * Called by ProjectContextFactory to update usernamesConfig with external usernames file.
    */
-  void updateUsernames(UsernamesConfig usernamesConfig) {
+  public void updateUsernames(UsernamesConfig usernamesConfig) {
     addUsernames(usernamesToScrub, usernamesConfig.getScrubbableUsernames());
     addUsernames(usernamesToPublish, usernamesConfig.getPublishableUsernames());
     // reset usernamesFile to null so that we don't read the file again

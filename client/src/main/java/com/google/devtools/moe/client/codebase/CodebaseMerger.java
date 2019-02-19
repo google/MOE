@@ -118,7 +118,7 @@ public class CodebaseMerger {
   }
 
   private Set<String> findFiles(Codebase codebase) {
-    return makeFilenamesRelative(filesystem.findFiles(codebase.path()), codebase.path());
+    return makeFilenamesRelative(filesystem.findFiles(codebase.root()), codebase.root());
   }
 
   private boolean areDifferent(String filename, File x, File y) {
@@ -211,7 +211,7 @@ public class CodebaseMerger {
       // Merges the changes that lead from origFile to modFile into mergedFile (which is a copy
       // of destFile). After, mergedFile will have the combined changes of modFile and destFile.
       cmd.runCommand(
-          resultBuilder.mergedCodebase().path().getAbsolutePath(),
+          resultBuilder.mergedCodebase().root().getAbsolutePath(),
           "merge",
           ImmutableList.of(
               mergedFile.getAbsolutePath(), origFile.getAbsolutePath(), modFile.getAbsolutePath()));
@@ -248,7 +248,7 @@ public class CodebaseMerger {
 
     /** Print the results of a merge to the UI. */
     public void report(Ui ui) {
-      ui.message("Merged codebase generated at: %s", mergedCodebase().path().getAbsolutePath());
+      ui.message("Merged codebase generated at: %s", mergedCodebase().root().getAbsolutePath());
       if (failedFiles().isEmpty()) {
         ui.message("%d files merged successfully. No merge conflicts.", mergedFiles().size());
       } else {

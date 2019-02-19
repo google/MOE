@@ -13,12 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.devtools.moe.client.gson;
+package com.google.devtools.moe.client;
 
 import static com.google.gson.FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES;
 
 import com.google.common.collect.ImmutableList;
+import com.google.devtools.moe.client.MoeTypeAdapterFactory;
+import com.google.devtools.moe.client.config.ConfigTypeAdapterFactory;
 import com.google.devtools.moe.client.database.RepositoryEquivalence;
+import com.google.devtools.moe.client.gson.ImmutableListDeserializer;
+import com.google.devtools.moe.client.gson.JsonObjectDeserializer;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
@@ -26,9 +30,7 @@ import dagger.Module;
 import dagger.Provides;
 import javax.inject.Singleton;
 
-/**
- * A Dagger module to provide and configure Gson
- */
+/** A Dagger module to provide and configure Gson */
 @Module
 public final class GsonModule {
   // TODO(user): eliminate this and make provideGson package private
@@ -37,6 +39,7 @@ public final class GsonModule {
       new GsonBuilder()
           .setPrettyPrinting()
           .setFieldNamingPolicy(LOWER_CASE_WITH_UNDERSCORES)
+          .registerTypeAdapterFactory(ConfigTypeAdapterFactory.create())
           .registerTypeAdapterFactory(MoeTypeAdapterFactory.create())
           .registerTypeHierarchyAdapter(ImmutableList.class, new ImmutableListDeserializer())
           .registerTypeHierarchyAdapter(

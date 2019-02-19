@@ -17,7 +17,7 @@
 package com.google.devtools.moe.client.directives;
 
 import com.google.devtools.moe.client.options.MoeOptions;
-import com.google.devtools.moe.client.project.InvalidProject;
+import com.google.devtools.moe.client.InvalidProject;
 
 /**
  * A Directive is what MOE should do in this run.

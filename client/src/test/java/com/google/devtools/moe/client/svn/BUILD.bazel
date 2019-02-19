@@ -5,6 +5,7 @@ jvm_unit_test(
     deps = [
         "//client/src/main/java/com/google/devtools/moe/client",
         "//client/src/main/java/com/google/devtools/moe/client:core",
+        "//client/src/main/java/com/google/devtools/moe/client/config",
         "@maven//cglib:cglib_nodep",
         "@maven//com/google/guava",
         "@maven//com/google/truth",
@@ -42,6 +43,7 @@ jvm_unit_test(
     deps = [
         "//client/src/main/java/com/google/devtools/moe/client",
         "//client/src/main/java/com/google/devtools/moe/client:core",
+        "//client/src/main/java/com/google/devtools/moe/client/config",
         "@maven//com/google/dagger",
         "@maven//cglib:cglib_nodep",
         "@maven//com/google/guava",
@@ -57,6 +59,7 @@ jvm_unit_test(
     deps = [
         "//client/src/main/java/com/google/devtools/moe/client",
         "//client/src/main/java/com/google/devtools/moe/client:core",
+        "//client/src/main/java/com/google/devtools/moe/client/config",
         "//client/src/main/java/com/google/devtools/moe/client/codebase/expressions",
         "@maven//com/google/dagger",
         "@maven//cglib:cglib_nodep",
