@@ -16,7 +16,7 @@
 
 package com.google.devtools.moe.client.translation.editors;
 
-import static com.google.devtools.moe.client.translation.editors.Editor.Type.shell;
+import static com.google.devtools.moe.client.config.EditorType.shell;
 import static org.easymock.EasyMock.expect;
 
 import com.google.common.collect.ImmutableMap;
@@ -24,9 +24,9 @@ import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.expressions.RepositoryExpression;
-import com.google.devtools.moe.client.gson.GsonModule;
-import com.google.devtools.moe.client.project.EditorConfig;
-import com.google.devtools.moe.client.project.ScrubberConfig;
+import com.google.devtools.moe.client.GsonModule;
+import com.google.devtools.moe.client.config.EditorConfig;
+import com.google.devtools.moe.client.config.ScrubberConfig;
 import com.google.gson.JsonObject;
 import java.io.File;
 import java.util.ArrayList;

@@ -16,6 +16,8 @@
 
 package com.google.devtools.moe.client.repositories;
 
+import com.google.devtools.moe.client.config.MetadataScrubberConfig;
+
 import javax.inject.Inject;
 
 /**

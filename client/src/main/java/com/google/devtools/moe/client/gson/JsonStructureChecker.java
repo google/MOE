@@ -17,7 +17,7 @@
 package com.google.devtools.moe.client.gson;
 
 import com.google.common.base.Joiner;
-import com.google.devtools.moe.client.project.InvalidProject;
+import com.google.devtools.moe.client.InvalidProject;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;

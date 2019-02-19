@@ -25,7 +25,7 @@ import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Ui;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.expressions.RepositoryExpression;
-import com.google.devtools.moe.client.project.RepositoryConfig;
+import com.google.devtools.moe.client.config.RepositoryConfig;
 import com.google.devtools.moe.client.writer.DraftRevision;
 import java.io.File;
 import junit.framework.TestCase;

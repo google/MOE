@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.devtools.moe.client.gson;
+package com.google.devtools.moe.client.config;
 
 import com.google.gson.TypeAdapterFactory;
 import com.ryanharter.auto.value.gson.GsonTypeAdapterFactory;
 
 @GsonTypeAdapterFactory
-public abstract class MoeTypeAdapterFactory implements TypeAdapterFactory {
+public abstract class ConfigTypeAdapterFactory implements TypeAdapterFactory {
   public static TypeAdapterFactory create() {
-    return new AutoValueGson_MoeTypeAdapterFactory();
+    return new AutoValueGson_ConfigTypeAdapterFactory();
   }
 }

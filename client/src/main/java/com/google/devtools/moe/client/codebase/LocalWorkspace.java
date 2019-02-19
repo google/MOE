@@ -17,7 +17,7 @@
 package com.google.devtools.moe.client.codebase;
 
 import com.google.devtools.moe.client.FileSystem.Lifetime;
-import com.google.devtools.moe.client.project.RepositoryConfig;
+import com.google.devtools.moe.client.config.RepositoryConfig;
 import java.io.File;
 import javax.annotation.Nullable;
 

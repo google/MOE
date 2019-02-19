@@ -24,8 +24,8 @@ import com.google.devtools.moe.client.CommandRunner;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.Lifetimes;
 import com.google.devtools.moe.client.Ui;
-import com.google.devtools.moe.client.project.InvalidProject;
-import com.google.devtools.moe.client.project.RepositoryConfig;
+import com.google.devtools.moe.client.InvalidProject;
+import com.google.devtools.moe.client.config.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.RepositoryType;
 import java.io.File;
 import javax.inject.Inject;
@@ -66,7 +66,7 @@ public class HgRepositoryFactory implements RepositoryType.Factory {
   @Override
   public RepositoryType create(final String name, final RepositoryConfig config)
       throws InvalidProject {
-    config.checkType(this);
+    checkType(config);
 
     final String url = config.getUrl();
     if (isNullOrEmpty(url)) {

@@ -1,4 +1,4 @@
-package com.google.devtools.moe.client.project;
+package com.google.devtools.moe.client.config;
 
 import java.util.List;
 

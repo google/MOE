@@ -17,6 +17,8 @@
 package com.google.devtools.moe.client.repositories;
 
 import com.google.devtools.moe.client.Ui;
+import com.google.devtools.moe.client.config.MetadataScrubberConfig;
+
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 

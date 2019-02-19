@@ -25,7 +25,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.List;
 
-final class ImmutableListDeserializer implements JsonDeserializer<ImmutableList<?>> {
+public final class ImmutableListDeserializer implements JsonDeserializer<ImmutableList<?>> {
   @Override
   public ImmutableList<?> deserialize(
       JsonElement json, Type type, JsonDeserializationContext context) throws JsonParseException {

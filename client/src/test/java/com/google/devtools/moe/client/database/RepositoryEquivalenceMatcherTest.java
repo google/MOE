@@ -17,8 +17,8 @@
 package com.google.devtools.moe.client.database;
 
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.moe.client.gson.GsonModule;
-import com.google.devtools.moe.client.project.InvalidProject;
+import com.google.devtools.moe.client.GsonModule;
+import com.google.devtools.moe.client.InvalidProject;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionGraph;
 import com.google.devtools.moe.client.repositories.RevisionMetadata;

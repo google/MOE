@@ -25,7 +25,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.devtools.moe.client.FileSystem;
 import com.google.devtools.moe.client.codebase.Codebase;
 import com.google.devtools.moe.client.codebase.LocalWorkspace;
-import com.google.devtools.moe.client.project.RepositoryConfig;
+import com.google.devtools.moe.client.config.RepositoryConfig;
 import com.google.devtools.moe.client.repositories.Revision;
 import com.google.devtools.moe.client.repositories.RevisionHistory;
 import java.io.File;

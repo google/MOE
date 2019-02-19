@@ -16,6 +16,8 @@
 
 package com.google.devtools.moe.client.repositories;
 
+import com.google.devtools.moe.client.config.MetadataScrubberConfig;
+
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 

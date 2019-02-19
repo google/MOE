@@ -17,7 +17,7 @@ package com.google.devtools.moe.client.github;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.devtools.moe.client.gson.MoeTypeAdapterFactory;
+import com.google.devtools.moe.client.MoeTypeAdapterFactory;
 import com.google.common.io.Resources;
 import com.google.devtools.moe.client.github.GithubAPI.IssueState;
 import com.google.devtools.moe.client.github.GithubAPI.PullRequest;

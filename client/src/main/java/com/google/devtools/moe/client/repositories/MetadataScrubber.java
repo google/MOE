@@ -18,6 +18,8 @@ package com.google.devtools.moe.client.repositories;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
+import com.google.devtools.moe.client.config.MetadataScrubberConfig;
+
 import dagger.Binds;
 import dagger.multibindings.IntKey;
 import dagger.multibindings.IntoMap;

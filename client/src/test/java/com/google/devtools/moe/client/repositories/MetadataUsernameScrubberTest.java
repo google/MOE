@@ -20,6 +20,8 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.devtools.moe.client.testing.DummyRevisionHistory.parseLegacyFields;
 
 import com.google.common.collect.ImmutableList;
+import com.google.devtools.moe.client.config.MetadataScrubberConfig;
+
 import java.util.List;
 import junit.framework.TestCase;
 import org.joda.time.DateTime;
