@@ -1,2 +1,4 @@
 build --javacopt=-Aautovaluegson.defaultCollectionsToEmpty=true
 build --strategy=KotlinCompile=worker
+build --nouse_ijars
+
