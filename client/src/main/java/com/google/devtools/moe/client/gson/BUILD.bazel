@@ -9,8 +9,8 @@ java_library(
         "@maven//com/google/auto/value",
         "@maven//com/google/guava",
         "@maven//com/google/code/gson",
-        "@maven//com/mikesamuel:json_sanitizer",
+        "@maven//com/mikesamuel:json-sanitizer",
         "@maven//com/google/code/findbugs:jsr305",
-        "@maven//joda-time:joda_time",
+        "@maven//joda-time",
     ],
 )

@@ -2,35 +2,36 @@ workspace(name = "moe")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 # Rules and tooling versions
-RULES_KOTLIN_VERSION = "porque_no_les_dos"
-MAVEN_REPOSITORY_RULES_VERSION = "1.0-rc4"
-MAVEN_REPOSITORY_RULES_SHA = "57357874e88da816857a8ec1f8e6ffa059161ac26fecdd35202e2488dba72d57"
-KOTLIN_VERSION = "1.2.71"
-KOTLINC_RELEASE = {
-    "urls": ["https://github.com/JetBrains/kotlin/releases/download/v{version}/kotlin-compiler-{version}.zip".format(version = KOTLIN_VERSION)],
-    "sha256": "e48292fdfed42f44230bc01f92ffd17002101d8c5aeedfa3dba3cb29c5b6ea7b",
-}
+RULES_KOTLIN_VERSION = "legacy-1.4.0-rc3"
+RULES_KOTLIN_SHA = "da0e6e1543fcc79e93d4d93c3333378f3bd5d29e82c1bc2518de0dbe048e6598"
+
+
+MAVEN_REPOSITORY_RULES_VERSION = "2.0.0-alpha-3"
+MAVEN_REPOSITORY_RULES_SHA = "853976a2e4908f010568aad8f47b1a1e87e258f33b114e6e92599dc2779938c4"
+KOTLIN_VERSION = "1.3.72"
+KOTLINC_ROOT = "https://github.com/JetBrains/kotlin/releases/download"
+KOTLINC_URL = "{root}/v{v}/kotlin-compiler-{v}.zip".format(root = KOTLINC_ROOT, v = KOTLIN_VERSION)
+KOTLINC_SHA = "ccd0db87981f1c0e3f209a1a4acb6778f14e63fe3e561a98948b5317e526cc6c"
+
 
 # Rules and tools repositories
 http_archive(
     name = "io_bazel_rules_kotlin",
-    urls = ["https://github.com/cgruber/rules_kotlin/archive/%s.zip" % RULES_KOTLIN_VERSION],
-    type = "zip",
-    strip_prefix = "rules_kotlin-%s" % RULES_KOTLIN_VERSION
+    sha256 = RULES_KOTLIN_SHA,
+    urls = ["https://github.com/bazelbuild/rules_kotlin/releases/download/%s/rules_kotlin_release.tgz" % RULES_KOTLIN_VERSION],
 )
-#local_repository(name = "io_bazel_rules_kotlin", path="../../bazelbuild/rules_kotlin")
+
 http_archive(
     name = "maven_repository_rules",
-    urls = ["https://github.com/square/bazel_maven_repository/archive/%s.zip" % MAVEN_REPOSITORY_RULES_VERSION],
-    type = "zip",
-    strip_prefix = "bazel_maven_repository-%s" % MAVEN_REPOSITORY_RULES_VERSION,
     sha256 = MAVEN_REPOSITORY_RULES_SHA,
+    strip_prefix = "bazel_maven_repository-%s" % MAVEN_REPOSITORY_RULES_VERSION,
+    type = "zip",
+    urls = ["https://github.com/square/bazel_maven_repository/archive/%s.zip" % MAVEN_REPOSITORY_RULES_VERSION],
 )
-#local_repository(name = "maven_repository_rules", path="../../bazel_maven_repository")
 
 # Setup Kotlin
 load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kotlin_repositories", "kt_register_toolchains")
-kotlin_repositories(compiler_release = KOTLINC_RELEASE)
+kotlin_repositories(compiler_release = { "urls": [KOTLINC_URL], "sha256": KOTLINC_SHA })
 kt_register_toolchains()
 
 
@@ -96,6 +97,6 @@ maven_repository_specification(
         "org.hamcrest:hamcrest-core:1.3": { "insecure": True },
     },
     dependency_target_substitutes = {
-        "com.google.dagger": {"@maven//com/google/dagger:dagger": "@maven//com/google/dagger:dagger_api"},
+        "com.google.dagger": {"@maven//com/google/dagger:dagger": "@maven//com/google/dagger:dagger-api"},
     },
 )

@@ -6,7 +6,7 @@ jvm_unit_test(
         "//client/src/main/java/com/google/devtools/moe/client",
         "//client/src/main/java/com/google/devtools/moe/client:core",
         "//client/src/main/java/com/google/devtools/moe/client/config",
-        "@maven//cglib:cglib_nodep",
+        "@maven//cglib:cglib-nodep",
         "@maven//com/google/guava",
         "@maven//com/google/truth",
         "@maven//org/easymock",
@@ -19,7 +19,7 @@ jvm_unit_test(
     name = "DvcsDraftRevisionTest",
     deps = [
         "//client/src/main/java/com/google/devtools/moe/client",
-        "@maven//cglib:cglib_nodep",
+        "@maven//cglib:cglib-nodep",
         "@maven//com/google/truth",
         "@maven//org/easymock",
         "@maven//org/objenesis",

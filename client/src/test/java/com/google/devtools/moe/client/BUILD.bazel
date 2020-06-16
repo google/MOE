@@ -58,7 +58,7 @@ jvm_unit_test(
     name = "UtilsTest",
     deps = [
         "//client/src/main/java/com/google/devtools/moe/client:core",
-        "@maven//cglib:cglib_nodep",
+        "@maven//cglib:cglib-nodep",
         "@maven//com/google/guava",
         "@maven//com/google/truth",
         "@maven//junit",

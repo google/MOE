@@ -7,6 +7,7 @@ java_library(
     deps = [
         "//client/src/main/java/com/google/devtools/moe/client:core",
         "//client/src/main/java/com/google/devtools/moe/client/gson",
+        "@maven//com/google/code/findbugs:jsr305",
         "@maven//com/google/auto/value",
         "@maven//com/google/code/gson",
         "@maven//com/google/guava",
