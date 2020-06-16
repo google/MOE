@@ -31,11 +31,12 @@ jobs:
         key: caches-${{ runner.os }}
     - name: Install bazelisk
       run: |
-        curl -LO "https://github.com/bazelbuild/bazelisk/releases/download/v1.4.0/bazelisk-darwin-amd64"
+        curl -LO "https://github.com/bazelbuild/bazelisk/releases/download/v1.5.0/bazelisk-darwin-amd64"
         mkdir -p "${GITHUB_WORKSPACE}/bin/"
         mv bazelisk-darwin-amd64 "${GITHUB_WORKSPACE}/bin/bazel"
         chmod a+x "${GITHUB_WORKSPACE}/bin/bazel"
         echo "::set-env name=BAZELISK_GITHUB_TOKEN::${{ secrets.GITHUB_TOKEN }}"
+        "${GITHUB_WORKSPACE}/bin/bazel" version
     - name: Build All
       run: |
         "${GITHUB_WORKSPACE}/bin/bazel" build //...
@@ -59,11 +60,12 @@ jobs:
         key: caches-${{ runner.os }}
     - name: Install bazelisk
       run: |
-        curl -LO "https://github.com/bazelbuild/bazelisk/releases/download/v1.4.0/bazelisk-linux-amd64"
+        curl -LO "https://github.com/bazelbuild/bazelisk/releases/download/v1.5.0/bazelisk-linux-amd64"
         mkdir -p "${GITHUB_WORKSPACE}/bin/"
         mv bazelisk-linux-amd64 "${GITHUB_WORKSPACE}/bin/bazel"
         chmod a+x "${GITHUB_WORKSPACE}/bin/bazel"
         echo "::set-env name=BAZELISK_GITHUB_TOKEN::${{ secrets.GITHUB_TOKEN }}"
+        "${GITHUB_WORKSPACE}/bin/bazel" version
     - name: Build All
       run: |
         "${GITHUB_WORKSPACE}/bin/bazel" build //...
